@@ -24,10 +24,9 @@ import type {
   OsVerifyOptions,
   OsVerifyRawOptions,
 } from "./os_test_options_types.ts";
+import { resolveOsTestBaseUrl } from "./os_test_client.ts";
 import {
   devOsServerBaseUrl,
-  OS_SERVER_PRODUCTION_DEFAULT_PORT,
-  osServerPortForOffset,
   parsePortOffsetSpec,
   type PortOffsetSpec,
 } from "./port_offset.ts";
@@ -66,18 +65,6 @@ export function parseWrapperPortOffsetArg(
   return spec;
 }
 
-/** Whether the two base-URL sources name an explicitly requested target. */
-function explicitBaseUrl(
-  baseUrlFlag: string | undefined,
-  envBaseUrl: string | undefined,
-): string | undefined {
-  const flag = baseUrlFlag?.trim();
-  if (flag) return flag;
-  const env = envBaseUrl?.trim();
-  if (env) return env;
-  return undefined;
-}
-
 /**
  * Resolve the wrapper options.
  *
@@ -89,18 +76,16 @@ function explicitBaseUrl(
 export function resolveOsVerifyOptions(
   raw: OsVerifyRawOptions,
 ): OsVerifyOptions {
-  if (raw.portOffset !== undefined) {
-    // validates and discards; port offset itself is carried through as is
-    osServerPortForOffset(raw.portOffset);
-  }
-  const explicit = explicitBaseUrl(raw.baseUrlFlag, raw.envBaseUrl);
-
   // An explicit --port-offset always signals a dev launch target, even
   // together with --skip-start.
   const targetsDevLaunch = !raw.skipStart || raw.portOffset !== undefined;
 
   if (targetsDevLaunch) {
-    const baseUrl = explicit ?? devOsServerBaseUrl(raw.portOffset ?? 0);
+    const baseUrl = resolveOsTestBaseUrl(
+      raw.baseUrlFlag,
+      raw.envBaseUrl,
+      devOsServerBaseUrl(raw.portOffset ?? 0),
+    );
     return {
       baseUrl,
       // Only the auto-start path actually launches: skip-start targets an
@@ -114,10 +99,8 @@ export function resolveOsVerifyOptions(
 
   // skip-start without an offset: existing already-running target, keep the
   // packaged production default for installed-Floorp compatibility.
-  const baseUrl = explicit ??
-    "http://127.0.0.1:" + OS_SERVER_PRODUCTION_DEFAULT_PORT;
   return {
-    baseUrl,
+    baseUrl: resolveOsTestBaseUrl(raw.baseUrlFlag, raw.envBaseUrl),
     startCommandArgs: [],
     portOffset: raw.portOffset ?? 0,
   };

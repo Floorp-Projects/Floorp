@@ -27,6 +27,7 @@ function comment(value: unknown, author: string, authorAssociation: string) {
     body: `<!-- fdh-review-receipt:v1 ${JSON.stringify(value)} -->`,
     author,
     authorAssociation,
+    authorPermission: "write",
   };
 }
 
@@ -45,7 +46,7 @@ Deno.test("trusted receipt check publishes success only for two head-bound trust
   assertEquals(result.conclusion, "success");
 });
 
-Deno.test("trusted receipt check retains legacy MEMBER association policy", () => {
+Deno.test("trusted receipt check accepts members with repository write access", () => {
   const result = validateTrustedReceiptCheck({
     prNumber: 42,
     expectedHeadSha: HEAD,
@@ -100,6 +101,7 @@ Deno.test("trusted receipt check fails for insufficient, malformed, or nonmergea
           body: "<!-- fdh-review-receipt:v1 {bad} -->",
           author: "member",
           authorAssociation: "MEMBER",
+          authorPermission: "write",
         }],
       }),
     Error,

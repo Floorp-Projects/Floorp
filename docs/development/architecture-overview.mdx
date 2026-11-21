@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "02c261e851d21de7ce22d1b8c1aca0aed20a8720"
+floorp_commit: "dc76113e254486b2d71afb17939bfc41698144c6"
 generated: true
 ---
 # Architecture Overview
@@ -30,7 +30,7 @@ The loader development server is configured by `bridge/loader-features/vite.conf
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:561`. The current inventory lists 24 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:562`. The current inventory lists 24 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
@@ -135,7 +135,7 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
-- `.github/workflows/fdh-review-gate.yml` - triggers: `issue_comment`, `pull_request`
+- `.github/workflows/fdh-review-gate.yml` - triggers: `pull_request`
 - `.github/workflows/fdh-trusted-review-gate.yml` - triggers: `issue_comment`, `pull_request_target`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
