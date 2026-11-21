@@ -6,8 +6,7 @@
 // substrings. They are deliberately NOT a YAML parser or GitHub expression
 // evaluator: they cannot prove runtime semantics (environment approval gates,
 // workflow_dispatch behavior, job conclusions, continue-on-error handling).
-// Runtime behavior must be observed on GitHub Actions. See
-// docs/qa/fdh-coordinator-followup/PUBLISH-GATE-DESIGN.md for the known gap.
+// Runtime behavior must be observed on GitHub Actions.
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
 
@@ -62,54 +61,67 @@ Deno.test("alpha publish declares exactly one protected environment gate", async
   assertEquals(stepsIndex > environmentIndex, true);
 });
 
-Deno.test("alpha publication contract and permissions are unchanged", async () => {
+Deno.test("alpha publication requires QA and writes only from the protected job", async () => {
   const alpha = await readWorkflow("publish_alpha.yml");
-  assertStringIncludes(alpha, "permissions:\n  contents: write");
-  assertStringIncludes(alpha, "workflow_dispatch:");
+  const qa = jobBlock(alpha, "final-package-qa");
+  const main = jobBlock(alpha, "main");
+  assertEquals(alpha.includes("workflow_dispatch:"), false);
   assertStringIncludes(alpha, "workflow_call:");
-  assertStringIncludes(alpha, "win_runtime_artifact_workflow_call:");
-  assertStringIncludes(alpha, "linux_runtime_artifact_workflow_call:");
-  assertStringIncludes(alpha, "mac_runtime_artifact_workflow_call:");
-  assertStringIncludes(alpha, `tag_name: "alpha"`);
-  assertStringIncludes(alpha, "draft: false");
-  assertStringIncludes(alpha, "prerelease: true");
-  assertStringIncludes(alpha, "name: noraneko-publish");
-  // No new credentials or secrets may be introduced by the gate wiring.
-  assertEquals(alpha.match(/secrets\.[A-Za-z0-9_]+/g), [
-    "secrets.GITHUB_TOKEN",
-  ]);
+  assertStringIncludes(
+    qa,
+    "uses: ./.github/workflows/validate-final-package-qa.yml",
+  );
+  assertStringIncludes(qa, "alpha: true");
+  assertStringIncludes(qa, "bundle_artifact: ${{ inputs.bundle_artifact }}");
+  assertStringIncludes(main, "needs: final-package-qa");
+  assertStringIncludes(main, "contents: write");
+  assertEquals(alpha.match(/contents: write/g)?.length, 1);
+  assertStringIncludes(main, "validate-release-bundle --bundle-dir");
+  assertStringIncludes(
+    main,
+    "generateUpdateXml(Deno.args[0], Deno.args[1], Deno.args[2])",
+  );
+  assertStringIncludes(main, '"$BUNDLE_DIR/win-meta.json"');
+  assertStringIncludes(main, `tag_name: "alpha"`);
+  assertStringIncludes(main, "prerelease: true");
+  assertStringIncludes(main, "name: noraneko-publish");
+  const publishIndex = main.indexOf("- name: Deploy to GitHub Releases");
+  const bindTagIndex = main.indexOf("- name: Bind the rolling Alpha tag");
+  assertEquals(publishIndex >= 0 && bindTagIndex > publishIndex, true);
+  const bindTag = main.slice(bindTagIndex);
+  assertStringIncludes(bindTag, "ref: 'tags/alpha'");
+  assertStringIncludes(bindTag, "github.rest.git.updateRef");
+  assertStringIncludes(bindTag, "sha: context.sha, force: true");
 });
 
-Deno.test("alpha caller does not duplicate the environment gate", async () => {
+Deno.test("alpha caller supplies Runtime identity to the shared package workflow", async () => {
   const caller = await readWorkflow("package_and_publish_alpha.yml");
-  // GitHub ignores or rejects a caller job environment for reusable workflows;
-  // the single gate must live in publish_alpha.yml only.
   assertEquals(caller.includes("environment:"), false);
-  const publishs = jobBlock(caller, "publishs");
+  const packageJob = jobBlock(caller, "package-and-publish");
   assertStringIncludes(
-    publishs,
-    "uses: ./.github/workflows/publish_alpha.yml",
+    packageJob,
+    "uses: ./.github/workflows/package_and_publish_release.yml",
   );
   assertStringIncludes(
-    publishs,
-    "needs: [package-windows, package-linux, package-macos]",
+    packageJob,
+    "runtime_manifest_artifact_id: ${{ inputs.runtime_manifest_artifact_id }}",
   );
+  assertStringIncludes(packageJob, "alpha: true");
 });
 
-Deno.test("final package QA keeps dispatch scope and Windows shadow", async () => {
+Deno.test("final package QA keeps manual dispatch and stable Windows shadow", async () => {
   const qa = await readWorkflow("validate-final-package-qa.yml");
   assertStringIncludes(qa, "workflow_dispatch:");
+  assertStringIncludes(qa, "workflow_call:");
   assertStringIncludes(qa, "package_run_id:");
   assertStringIncludes(qa, "floorp_head_sha:");
   assertStringIncludes(qa, "validation_only:");
   assertStringIncludes(qa, "pre_publication:");
   assertStringIncludes(qa, "default: true");
   assertStringIncludes(qa, "default: false");
-  // Windows remains a recorded shadow result, not a mandatory leg. Removing
-  // this fiat would misrepresent the qualification scope.
   assertStringIncludes(
     qa,
-    "continue-on-error: ${{ matrix.platform == 'windows' }}",
+    "continue-on-error: ${{ matrix.platform == 'windows' && !inputs.alpha }}",
   );
   assertStringIncludes(
     qa,
@@ -121,6 +133,32 @@ Deno.test("final package QA keeps dispatch scope and Windows shadow", async () =
 
 Deno.test("stable publisher keeps its protected release boundaries", async () => {
   const publish = await readWorkflow("publish_release.yml");
+  const qa = jobBlock(publish, "final-package-qa");
+  const prepare = jobBlock(publish, "prepare_release");
+  const releaseCheck = jobBlock(publish, "release_check");
+  assertStringIncludes(
+    qa,
+    "uses: ./.github/workflows/validate-final-package-qa.yml",
+  );
+  assertStringIncludes(
+    qa,
+    "installer_artifact_ids: ${{ inputs.installer_artifact_ids }}",
+  );
+  assertStringIncludes(prepare, "needs: final-package-qa");
+  assertStringIncludes(prepare, "draft: true");
+  assertStringIncludes(
+    releaseCheck,
+    "needs: [final-package-qa, prepare_release]",
+  );
+  assertStringIncludes(
+    releaseCheck,
+    "environment: Deploy-to-installer-release",
+  );
+  assertStringIncludes(releaseCheck, "await github.rest.repos.updateRelease(");
+  assertStringIncludes(
+    jobBlock(publish, "publish_updates"),
+    "needs: [prepare_release, release_check]",
+  );
   for (
     const expected of [
       "environment: Deploy-to-installer-release",
@@ -165,17 +203,44 @@ Deno.test("stable publisher keeps its protected release boundaries", async () =>
   );
 });
 
-Deno.test("stable entrypoint still calls the publisher only for production", async () => {
+Deno.test("shared packaging selects the channel and isolates validation-only runs", async () => {
   const entry = await readWorkflow("package_and_publish_release.yml");
+  const callInputs =
+    entry.split("  workflow_call:")[1].split("\npermissions:")[0];
+  assertStringIncludes(
+    callInputs,
+    "validation_only:\n        type: boolean\n        default: false",
+  );
   const publish = jobBlock(entry, "publish");
+  const alpha = jobBlock(entry, "publish-alpha");
   assertStringIncludes(
     publish,
     "uses: ./.github/workflows/publish_release.yml",
   );
-  assertStringIncludes(publish, "if: ${{ inputs.validation_only != true }}");
+  assertStringIncludes(
+    publish,
+    "if: ${{ inputs.validation_only != true && inputs.alpha != true }}",
+  );
   assertStringIncludes(publish, "source_workflow_run_id: ${{ github.run_id }}");
   assertStringIncludes(publish, "publish_ppa: true");
-  // No final package QA dependency exists yet; this is the documented KAN-133
-  // release-gate gap, not a claimed completed gate.
-  assertEquals(entry.includes("validate-final-package-qa.yml"), false);
+  assertStringIncludes(
+    alpha,
+    "if: ${{ inputs.validation_only != true && inputs.alpha == true }}",
+  );
+  assertStringIncludes(alpha, "uses: ./.github/workflows/publish_alpha.yml");
+  for (const job of [publish, alpha]) {
+    assertStringIncludes(job, "needs: assemble-release-bundle");
+    assertStringIncludes(
+      job,
+      "needs.assemble-release-bundle.outputs.artifact_id",
+    );
+    assertStringIncludes(
+      job,
+      "needs.assemble-release-bundle.outputs.artifact_digest",
+    );
+    assertStringIncludes(
+      job,
+      "needs.assemble-release-bundle.outputs.installer_artifact_ids",
+    );
+  }
 });
