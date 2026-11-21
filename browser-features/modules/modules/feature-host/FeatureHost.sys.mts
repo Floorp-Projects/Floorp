@@ -120,6 +120,15 @@ interface WriteFaultPlan {
   skip: number;
 }
 
+export type M0DurableWriteObserverForTests = (
+  snapshot: Readonly<Record<string, unknown>>,
+) => Promise<void>;
+
+export interface M0FeatureHostTestOptions {
+  afterDurableWriteForTests?: M0DurableWriteObserverForTests;
+  excludeWindowsForTests?: boolean;
+}
+
 const owners = new Map<string, M0FeatureHost>();
 const openingHosts = new Map<string, Promise<M0FeatureHost>>();
 let m0PayloadEvaluations = 0;
@@ -707,6 +716,7 @@ export class M0FeatureHost {
   #shutdownPromise: Promise<DisposeReport> | null = null;
   #nextWriteFault: WriteFaultPlan | null = null;
   #committedPendingPublishForTests: M0Record | null = null;
+  readonly #afterDurableWriteForTests: M0DurableWriteObserverForTests | null;
   #evaluations = 0;
   readonly #markerKeys = new Set<string>();
   readonly #testWritesEnabled: boolean;
@@ -719,8 +729,15 @@ export class M0FeatureHost {
   #testExcludeWindows = false;
   #testOnlyWindow: Window | null = null;
 
-  private constructor(readonly root: string, testWritesEnabled: boolean) {
+  private constructor(
+    readonly root: string,
+    testWritesEnabled: boolean,
+    testOptions?: M0FeatureHostTestOptions,
+  ) {
     this.#testWritesEnabled = testWritesEnabled;
+    this.#afterDurableWriteForTests = testOptions?.afterDurableWriteForTests ??
+      null;
+    this.#testExcludeWindows = testOptions?.excludeWindowsForTests ?? false;
     this.#store = new PackageStore(root);
     this.#recordPath = PathUtils.join(root, "state.json");
   }
@@ -731,7 +748,11 @@ export class M0FeatureHost {
     testRoot = false,
     reopenTestRoot = false,
     initialWriteFaultForTests?: WriteFaultPlan,
+    testOptions?: M0FeatureHostTestOptions,
   ): Promise<M0FeatureHost> {
+    if (testOptions && !testRoot) {
+      throw new Error("M0 test write observers require a test root");
+    }
     const mode = Services.prefs.getStringPref("nora.startup.mode", "");
     if (
       (mode !== "dev" && mode !== "test") ||
@@ -742,10 +763,24 @@ export class M0FeatureHost {
         : root !== ROOT)
     ) throw new Error("M0 host is dev/test opt-in only");
     const opening = openingHosts.get(root);
-    if (opening) return opening;
+    if (opening) {
+      if (testOptions?.afterDurableWriteForTests) {
+        throw new Error("M0 test observer must be installed before open");
+      }
+      return opening;
+    }
     const existing = owners.get(root);
-    if (existing) return existing;
-    const host = new M0FeatureHost(root, testRoot);
+    if (existing) {
+      if (testOptions?.afterDurableWriteForTests) {
+        throw new Error("M0 test observer must be installed before open");
+      }
+      return existing;
+    }
+    const host = new M0FeatureHost(
+      root,
+      testRoot,
+      testOptions,
+    );
     if (initialWriteFaultForTests) {
       if (!testRoot) throw new Error("test write fault disabled");
       host.setNextWriteFaultForTests(
@@ -1390,6 +1425,13 @@ export class M0FeatureHost {
     ) this.#committedPendingPublishForTests = committed;
     if (fault === "after_replace") throw new StorageFailure();
     this.#record = committed;
+    if (this.#afterDurableWriteForTests) {
+      const snapshot = JSON.parse(JSON.stringify(committed)) as Record<
+        string,
+        unknown
+      >;
+      await this.#afterDurableWriteForTests(snapshot);
+    }
     return committed;
   }
 
@@ -2760,6 +2802,7 @@ export async function createM0FeatureHostForTests(
     mode: "before_replace" | "after_replace";
     skip?: number;
   },
+  testOptions?: M0FeatureHostTestOptions,
 ): Promise<M0TestHostHandle> {
   const suffix = Services.uuid.generateUUID().toString().replace(/[{}]/g, "")
     .toLowerCase();
@@ -2776,6 +2819,7 @@ export async function createM0FeatureHostForTests(
         skip: initialWriteFaultForTests.skip ?? 0,
       }
       : undefined,
+    testOptions,
   );
   let cleanupPromise: Promise<DisposeReport> | null = null;
   return {

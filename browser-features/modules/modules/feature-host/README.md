@@ -57,11 +57,30 @@ leaving the runner's original window open.
 
 Browser tests may reopen the same UUID-named test root after stopping its host.
 The test-only write-fault adapter injects failures before or after native
-`IOUtils.writeJSON`; reads still use native `IOUtils`. Recovery-boundary tests
-seed real journal records after shutdown, so they are synthetic crash-boundary
-tests, not evidence from killing a Floorp process mid-write. The production
-singleton has no fault-injection option. HUB publication/readiness, signing,
-migration, and production loader integration are not included.
+`IOUtils.writeJSON`; reads still use native `IOUtils`. The test-only durable
+write observer runs after the flushed atomic journal replacement and the
+in-memory record update, and receives a detached snapshot. The production
+singleton rejects this test option. These barriers do not simulate power loss,
+failure during rename, or failure during flush.
+
+`deno task test:hotfix-process` is a Linux-only process-death runner. It uses a
+fresh private profile and M0 UUID root, a dedicated Marionette port, and a
+verified browser session/process group. The scenario driver uses the packaged
+FeatureHost system ESM and normal install/enable/update/disable operations; the
+journal is not seeded and crash boundaries do not call graceful host shutdown.
+The process matrix runs with W0 empty and test windows excluded; existing UI
+window lifecycle coverage remains in the native FeatureHost tests, separately.
+The supervisor records the durable journal snapshots, process identities,
+BuildID, runtime-lock hashes, per-process payload evaluation counts, recovery
+results, and assertions in `_dist/hotfix-process-test-runs/`; browser stdout and
+stderr are retained there as well. Current Linux process-death coverage kills at
+update `PREPARED`, `OLD_STOPPED`, `CANDIDATE_READY`, and
+`committed_pending_publish`; repeats fallback-pending interruption before the
+attempt marker; interrupts after the fallback attempt marker and verifies
+exhaustion without re-evaluation; and covers disabled-update `PREPARED`, durable
+disable intent, and interrupted enable. This is not evidence for other platforms
+or for power-failure / in-rename / in-flush behavior. HUB publication/readiness,
+signing, migration, and production loader integration are not included.
 
 ## Design acceptance cases
 
@@ -73,8 +92,8 @@ acceptance.
 | -- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | 1  | import top-level failure                          | Partial: broken fixture rejection exists; legacy ownership is out of scope.                                       |
 | 2  | install                                           | Pinned fixture installation is pointer-only and performs zero evaluation.                                         |
-| 3  | disabled update crash                             | Journal restores the before pointer without evaluation; synthetic native case added.                              |
-| 4  | enable failure / disable crash intent             | Failed enable restores disabled state; durable disable wins on reopen.                                            |
+| 3  | disabled update crash                             | Native synthetic case and Linux process-kill `PREPARED` case restore the before pointer without evaluation.       |
+| 4  | enable failure / disable crash intent             | Native recovery and Linux process kills cover interrupted enable and durable disable intent without evaluation.   |
 | 5  | v1→v2→v1 and re-enable                            | Existing native lifecycle test exercises fresh sandbox generations.                                               |
 | 6  | old callback/disposer delay                       | Partial: stale wrappers and broker callbacks are measured; no sandbox security or heap-leak claim.                |
 | 7  | hook needs task release                           | Partial: deactivate and resource disposal are independently bounded; full task-drain protocol is absent.          |
@@ -83,8 +102,8 @@ acceptance.
 | 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                                  |
 | 11 | precommit / revision update                       | Atomic record revisions and before/after-replace write faults are covered; full request matrix is partial.        |
 | 12 | postcommit publication / attach failure           | Partial: staged-close cleanup failure quarantines before commit; failed admission quarantines; HUB is deferred.   |
-| 13 | PREPARED crash recovery                           | Schema-2 recovery covers all three actual replaced phases and disabled before state.                              |
-| 14 | interrupted / repeated attempts                   | Durable two-digest episodes survive reopen; exhaustion quarantines without automatic retry.                       |
+| 13 | PREPARED crash recovery                           | Schema-2 recovery has Linux process-kill coverage at PREPARED, OLD_STOPPED, CANDIDATE_READY, and disabled update. |
+| 14 | interrupted / repeated attempts                   | Linux process kills repeat fallback-before-mark and verify bounded digest exhaustion without retry.               |
 | 15 | rejected selected package / corrupt record        | Preflight rejection may use one proof-eligible fallback; malformed/incompatible records evaluate nothing.         |
 | 16 | candidate failure / old restore / cleanup failure | Candidate failure restores only a current-health before generation within the two-candidate budget.               |
 | 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                   |
@@ -93,12 +112,14 @@ acceptance.
 | 20 | terminal write after publish                      | Before/after-replace fault paths preserve durable success when present and block the current runtime.             |
 | 21 | new request / lost response / txId reuse / expiry | Partial: retry/query and descriptor conflict are supported; retention expiry remains untested.                    |
 | 22 | host/runtime build tuple change                   | Package compatibility metadata and rollback health proof are separately exact-tuple gated.                        |
-| 23 | startup fallback / crash boundary                 | Startup selected/fallback recovery and synthetic interrupted episodes are covered; killed-process faults are not. |
+| 23 | startup fallback / crash boundary                 | Linux process kills cover committed update publication and fallback recovery; other crash models remain open.     |
 
 The colocated browser test is `M0FeatureHost.test.mts`; compile the production
 modules before starting the browser with
 `deno task feles-build build --phase before-mach`, then run
 `deno task test --near browser-features/modules/modules/feature-host/M0FeatureHost.test.mts --layer esm`.
-The 50-update lifecycle case remains part of `runAllTests`. Passing these tests
-does not validate HUB readiness, real process-kill recovery, or complete M0
-acceptance.
+The 50-update lifecycle case remains part of `runAllTests`. The Deno harness
+checks run with `deno task test:host`; the separate Linux process matrix runs
+with `deno task test:hotfix-process`. Passing these tests does not validate HUB
+readiness, power-failure behavior, other-platform process recovery, or complete
+M0 acceptance.

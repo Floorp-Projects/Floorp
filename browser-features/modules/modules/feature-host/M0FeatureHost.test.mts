@@ -14,6 +14,7 @@ import type { M0Lifecycle } from "./M0ModuleHost.sys.mts";
 
 type FeatureHostModule = typeof import("./FeatureHost.sys.mts");
 const {
+  M0FeatureHost,
   createM0FeatureHostForTests,
   hasUnfinishedM0FinalizationForTests,
   isEligibleM0MainWindowForTests,
@@ -1332,6 +1333,73 @@ async function testActualPendingPhaseRecovery(): Promise<void> {
   }
 }
 
+async function testDurableWriteObserverIsolation(): Promise<void> {
+  let session: M0TestHostHandle | null = null;
+  const changedSnapshots: number[] = [];
+  try {
+    let productionRejectedObserver = false;
+    try {
+      await M0FeatureHost.open(
+        "not-a-test-root",
+        true,
+        false,
+        false,
+        undefined,
+        { afterDurableWriteForTests: () => Promise.resolve() },
+      );
+    } catch (error) {
+      productionRejectedObserver = String(error) ===
+        "Error: M0 test write observers require a test root";
+    }
+    assert(
+      productionRejectedObserver,
+      "the production singleton rejects test write observers",
+    );
+
+    session = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      {
+        afterDurableWriteForTests: (snapshot) => {
+          if (snapshot.selectedVersion === "v1") {
+            const changed = Reflect.set(snapshot, "selectedVersion", "v2");
+            assert(changed, "test observer can mutate its detached snapshot");
+            changedSnapshots.push(Number(snapshot.stateRevision));
+          }
+          return Promise.resolve();
+        },
+      },
+    );
+    await session.host.install("observer-install", 0, "v1");
+    await session.host.enable(
+      "observer-enable",
+      session.host.diagnostics.stateRevision,
+    );
+
+    assert(
+      changedSnapshots.length > 0,
+      "observer receives a detached snapshot after a durable write",
+    );
+    assertEquals(
+      session.host.diagnostics.selectedVersion,
+      "v1",
+      "mutating the observer snapshot cannot mutate the canonical record",
+    );
+    const persisted = await IOUtils.readJSON(
+      PathUtils.join(session.root, "state.json"),
+    ) as JsonRecord;
+    assertEquals(
+      persisted.selectedVersion,
+      "v1",
+      "mutating the observer snapshot cannot mutate the journal",
+    );
+  } finally {
+    if (session) await session.cleanup();
+  }
+}
+
 async function testCommittedFallbackResumesAcrossInterruptions(): Promise<
   void
 > {
@@ -2560,6 +2628,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "actual journal phases and rollback pair recovery",
       fn: testActualPendingPhaseRecovery,
+    },
+    {
+      name: "durable write observer is test-root-only and detached",
+      fn: testDurableWriteObserverIsolation,
     },
     {
       name: "committed fallback resumes after repeated pre-mark interruption",

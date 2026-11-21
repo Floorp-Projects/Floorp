@@ -85,6 +85,7 @@
     "test": "deno run -A tools/src/colocated_test_runner.ts",
     "test:firefox-tests": "deno test --allow-read --allow-write --allow-run=git tools/firefox-tests/",
     "test:host": "deno test --allow-read --allow-write tools/src/ tools/design-matrix/",
+    "test:hotfix-process": "deno run -A tools/src/hotfix_process_recovery.ts",
     "test:docs-pipeline": "deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/",
     "test:smoke": "deno run -A tools/src/smoke_runner.ts",
     "test:tab-stacks-session": "deno run -A tools/tab-stacks-session-regression.ts",
