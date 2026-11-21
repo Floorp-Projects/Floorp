@@ -64,12 +64,29 @@
     "service": {
       "new-workspace": "Novo espaço de trabalho ({{count}})"
     },
+    "sync": {
+      "help": "Sincronize este espaço de trabalho e suas abas da web com sua conta Mozilla.",
+      "error-title": "Sincronização do Espaço de Trabalho",
+      "incoming-failed": "Não foi possível ler alguns dados sincronizados. As abas existentes serão mantidas até que a sincronização seja bem-sucedida.",
+      "invalid-workspace": "Não foi possível sincronizar este espaço de trabalho. Use um nome e um ícone com no máximo 256 caracteres e tente novamente. Os demais espaços de trabalho continuam sendo sincronizados.",
+      "deleted-workspace": "Este espaço de trabalho foi excluído do Sync. Recupere-o a partir de um arquivo ou crie um novo espaço de trabalho para sincronizá-lo novamente.",
+      "indicator-selected": "{{name}} — Incluído na sincronização do espaço de trabalho",
+      "indicator-attention": "{{name}} — Erro de sincronização do espaço de trabalho: {{error}}",
+      "status-selected": "Incluído na sincronização",
+      "status-error": "Erro de sincronização",
+      "status-paused": "Sincronização em pausa",
+      "indicator-paused": "{{name}} — Erro de sincronização do espaço de trabalho: {{error}}",
+      "engine-disabled": "A sincronização do espaço de trabalho está desativada. Selecione “Retomar sincronização do espaço de trabalho” no menu do espaço de trabalho para sincronizar os espaços de trabalho selecionados."
+    },
     "context-menu": {
       "move-up": "Mover este espaço de trabalho para cima",
       "move-down": "Mover este espaço de trabalho para baixo",
       "delete": "Excluir espaço de trabalho",
       "manage": "Gerenciar espaço de trabalho",
-      "archive": "Arquivo de espaços de trabalho"
+      "archive": "Arquivo de espaços de trabalho",
+      "sync": "Sincronize este espaço de trabalho e suas abas",
+      "sync-paused": "A sincronização do espaço de trabalho requer atenção",
+      "sync-resume": "Retomar a sincronização da espaço de trabalho"
     },
     "popup": {
       "create-new": "Criar novo espaço de trabalho...",
@@ -101,6 +118,36 @@
     },
     "error": {
       "invalidWorkspaceID": "ID inválida para espaços de trabalho (talvez a ordem não esteja atualizada)"
+    },
+    "containers": {
+      "title": "Contêineres de espaços de trabalho",
+      "setup": "Configurar contêineres de espaço de trabalho…",
+      "reopen": "Reabrir uma aba em seu contêiner sincronizado…",
+      "status-pending": "Configuração do contêiner necessária",
+      "indicator-pending": "{{name}} — Configuração de contêiner necessária: {{error}}",
+      "definition-missing": "As informações sobre o contêiner ainda não chegaram. As abas serão abertas assim que estiverem disponíveis.",
+      "legacy-unresolved": "Algumas abas sincronizadas mais antigas não têm nenhum contêiner atribuído. Use a opção “Configurar contêineres da área de trabalho” para escolher onde elas devem ser abertas.",
+      "confirmation": "Escolha o contêiner a ser usado para “{{name}}”. Os logins já existentes nesse contêiner serão utilizados neste dispositivo.",
+      "deleted": "O contêiner vinculado a “{{name}}” foi excluído. Vincule outro contêiner, crie um ou interrompa a sincronização deste espaço de trabalho.",
+      "creating": "O contêiner do espaço de trabalho está sendo criado. Suas abas estão aguardando.",
+      "disabled": "Os contêineres estão desativados neste dispositivo. Ative os contêineres para abrir essas abas.",
+      "deleting": "O contêiner vinculado está sendo removido. Suas abas estão em espera.",
+      "creation-failed": "Não foi possível criar ou salvar o contêiner “{{name}}”. Escolha um contêiner existente ou tente criá-lo novamente.",
+      "confirm": "Deseja usar o contêiner existente “{{name}}” para este contêiner sincronizado? As abas usarão seus dados de login neste dispositivo.",
+      "create": "Crie um novo contêiner “{{name}}” (é necessário fazer login)",
+      "unsubscribe": "Interromper a sincronização deste espaço de trabalho",
+      "operation-failed": "Não foi possível concluir a operação do contêiner. Verifique o status no menu da área de trabalho e tente novamente.",
+      "reopen-needed": "Algumas abas existentes precisam ser reabertas em seu contêiner sincronizado. Selecione a ação “Reabrir” no menu da área de trabalho.",
+      "reopen-select": "Escolha uma aba para reabri-la em seu contêiner sincronizado.",
+      "reopen-confirm": "Deseja reabrir esta aba em seu contêiner sincronizado? A aba atual será substituída assim que a nova página for carregada. As entradas de formulário e o estado da página que não tiverem sido salvos poderão ser perdidos.",
+      "default-unavailable": "Contêiner — utilize primeiro a opção “Configurar contêineres da área de trabalho” no menu da área de trabalho.",
+      "legacy-scope": "Quais atribuições de contêineres ausentes devem ser definidas? “Abas” refere-se a todas as abas neste espaço de trabalho cujo contêiner ainda é desconhecido.",
+      "legacy-scope-default": "Espaço de trabalho padrão apenas",
+      "legacy-scope-tabs": "Todas as abas com contêineres desconhecidos",
+      "legacy-scope-all": "Padrão do espaço de trabalho e todas as guias com contêineres desconhecidos",
+      "legacy-target": "Escolha o contêiner para as tarefas selecionadas. Serão utilizadas as sessões de login existentes neste dispositivo.",
+      "legacy-none": "Sem contêiner (navegação normal)",
+      "legacy-create": "Crie um contêiner usando o nome do espaço de trabalho (é necessário fazer login)"
     }
   },
   "profile-manager-button": {
@@ -285,7 +332,12 @@
   },
   "qrcode-generate-page-action": "Gerar código QR para esta página",
   "qrcode-generate-page-action-title": "Gerador de código QR",
+  "firefoxSidebar": {
+    "edgeToggle": "Abrir ou fixar a barra lateral do Firefox",
+    "resize": "Redimensionar a barra lateral do Firefox"
+  },
   "panelSidebar": {
+    "resize": "Redimensionar a barra lateral do painel",
     "modal": {
       "type": "Tipo de painel",
       "typeOptions": {
@@ -510,8 +562,8 @@
       "media": "Mídia",
       "open-tabs": "Abrir abas",
       "switcher": "Console web",
-      "history-suggestions": "Histórico",
-      "bookmark-suggestions": "Marcadores"
+      "history-suggestions": "Histórico (Pesquisa dinâmica)",
+      "bookmark-suggestions": "Favoritos (Pesquisa dinâmica)"
     },
     "noResults": "Nenhum comando encontrado",
     "noResultsHint": "Experimente um termo de pesquisa diferente.",
@@ -596,7 +648,15 @@
     "bookmarkSwitcherWhereLabel": "Onde abrir",
     "bookmarkSwitcherWhereNewTab": "Nova aba",
     "bookmarkSwitcherWhereNewTabDesc": "Abrir em uma nova aba em primeiro plano",
-    "bookmarkSwitcherWherePlaceholder": "Selecione onde abrir..."
+    "bookmarkSwitcherWherePlaceholder": "Selecione onde abrir...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Pesquisar por \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Pesquisar abas abertas",
+      "reservedBookmarkSearch": "Pesquisar favoritos",
+      "reservedHistorySearch": "Pesquisar no histórico"
+    }
   },
   "commandPaletteReadings": {}
 }

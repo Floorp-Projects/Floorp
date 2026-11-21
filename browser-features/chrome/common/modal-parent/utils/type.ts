@@ -21,6 +21,7 @@ export interface TFormItem {
   value?: string | number;
   displayValue?: string;
   required?: boolean;
+  disabled?: boolean;
   classList?: string;
   placeholder?: string;
   rows?: number;

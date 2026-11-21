@@ -7,6 +7,7 @@
         "welcomeContent": "{{productName}} Notlar'a hoş geldiniz! İşte nasıl kullanacağınız:\n\n{{productName}} Notlar, cihazlarınız arasında senkronize edilebilen bir not alma özelliğidir. Senkronizasyonu etkinleştirmek için bir Mozilla hesabıyla {{productName}}'da oturum açmanız gerekir.\n{{productName}} Notlar {{productName}}'da saklanır ve Firefox Sync kullanılarak cihazlar arasında senkronize edilir. Firefox Sync, senkronizasyon içeriğini Mozilla hesap parolanızla şifreler, böylece başkaları içeriğinizi göremez.",
         "new": "Yeni Not",
         "reorder": "Yeniden sırala",
+        "export": "Export as Markdown",
         "done": "Bitti",
         "emptyTitle": "Başlıksız",
         "emptyContent": "İçerik yok",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Not verileri yüklenemedi",
         "saveFailed": "Not verileri kaydedilemedi",
+        "exportFailed": "Failed to export note",
         "indexOutOfRange": "Dizin {{index}} aralık dışında"
     }
 }

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "jobId": "intent-20261110t185526z-7e1ae2",
+  "taskId": "ac06-kan138",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "intent",
+  "step": null,
+  "intent": {
+    "op": "external",
+    "target": "Jira transition to 完了 [key KAN-138:pr.state:完了#3]"
+  },
+  "inputs": {
+    "baseCommit": "e84a10f7f08861bb9aa3abc4770277be6100f63a",
+    "head": "",
+    "guardEnv": {}
+  },
+  "executionDigest": "dfef8d8d5f9bd75d85a4203b9b69dc20973b008f9214c173ba311bc8152805ed",
+  "state": "succeeded",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 1800000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "claude-main",
+      "scheduledAt": "2026-11-10T18:55:26.560Z",
+      "startedAt": "2026-11-10T18:55:26.560Z",
+      "endedAt": "2026-11-10T18:55:37.095Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": null,
+      "process": null,
+      "notes": ""
+    }
+  ],
+  "checkpoint": 0,
+  "commandResults": [],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T18:55:26.560Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T18:55:26.560Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T18:55:26.560Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T18:55:37.095Z",
+      "reason": "attempt 1 exited 0"
+    }
+  ],
+  "events": [],
+  "createdAt": "2026-11-10T18:55:26.560Z",
+  "updatedAt": "2026-11-10T18:55:37.095Z"
+}

@@ -5,7 +5,25 @@
 
 import { readNewTabClipboard } from "./clipboard.ts";
 import Workspaces from "#features-chrome/common/workspaces";
-import { resolveWorkspaceOpenLinkUserContext } from "./open-link-user-context.ts";
+import { chooseNewTabContainer } from "#features-chrome/common/workspaces/workspace-container-ui.ts";
+import { WORKSPACE_ENABLED_PREF_NAME } from "#features-chrome/common/workspaces/utils/workspaces-static-names.ts";
+import {
+  resolveWorkspaceOpenLinkUserContext,
+  shouldBlockWorkspaceOpenLink,
+  workspaceDefaultIsPending,
+} from "./open-link-user-context.ts";
+
+const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+);
+
+function defaultContainerPending(canOpen: boolean | undefined): boolean {
+  return workspaceDefaultIsPending(
+    Services.prefs.getBoolPref(WORKSPACE_ENABLED_PREF_NAME, true),
+    PrivateBrowsingUtils.isWindowPrivate(window),
+    canOpen,
+  );
+}
 
 console.log("Workspaces override loaded");
 
@@ -77,6 +95,18 @@ export const overrides = [
       }
 
       const gWorkspacesServices = Workspaces.getCtx();
+      if (
+        shouldBlockWorkspaceOpenLink(
+          options,
+          where,
+          defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab()),
+        )
+      ) {
+        console.error(
+          "[Workspaces] Trusted link blocked: default container is pending",
+        );
+        return;
+      }
       const workspaceUserContextId =
         gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
@@ -114,6 +144,18 @@ export const overrides = [
         },
       ) {
         const gWorkspacesServices = Workspaces.getCtx();
+        if (
+          shouldBlockWorkspaceOpenLink(
+            params,
+            where,
+            defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab()),
+          )
+        ) {
+          console.error(
+            "[Workspaces] UI link blocked: default container is pending",
+          );
+          return;
+        }
         const workspaceUserContextId =
           gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0;
 
@@ -139,6 +181,7 @@ export const overrides = [
       };
     }
 
+    let choosingNewTabContainer = false;
     globalThis.BrowserCommands.openTab = ({
       event,
       url,
@@ -146,6 +189,12 @@ export const overrides = [
       event?: MouseEvent;
       url?: string;
     } = {}) => {
+      if (choosingNewTabContainer) {
+        console.error(
+          "[Workspaces] New tab blocked: container chooser is open",
+        );
+        return;
+      }
       const werePassedURL = !!url;
       url ??= globalThis.BROWSER_NEW_TAB_URL;
       const searchClipboard = globalThis.gMiddleClickNewTabUsesPasteboard &&
@@ -194,6 +243,48 @@ export const overrides = [
       //         the New Tab page.
 
       const gWorkspacesServices = Workspaces.getCtx();
+      const containersEnabled = Services.prefs.getBoolPref(
+        "privacy.userContext.enabled",
+        false,
+      );
+      const opensProvidedLocation = werePassedURL || searchClipboard;
+      let userContextId: number;
+      if (defaultContainerPending(gWorkspacesServices?.canOpenWorkspaceTab())) {
+        // The native macOS menu dispatches a trusted command outside the user-input scope.
+        const userRequested = window.windowUtils.isHandlingUserInput ||
+          (event?.isTrusted && event.type === "command");
+        if (
+          opensProvidedLocation ||
+          !userRequested
+        ) {
+          console.error(
+            "[Workspaces] New tab blocked: default container is pending",
+          );
+          return;
+        }
+        if (containersEnabled) {
+          const workspaceId = gWorkspacesServices?.getSelectedWorkspaceID();
+          choosingNewTabContainer = true;
+          let selectedContainer: number | null;
+          try {
+            selectedContainer = chooseNewTabContainer();
+          } finally {
+            choosingNewTabContainer = false;
+          }
+          if (
+            selectedContainer === null || window.closed ||
+            workspaceId !== Workspaces.getCtx()?.getSelectedWorkspaceID()
+          ) return;
+          userContextId = selectedContainer;
+        } else {
+          if (url !== "about:newtab") url = "about:blank";
+          userContextId = 0;
+        }
+      } else {
+        userContextId = containersEnabled || opensProvidedLocation
+          ? gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0
+          : 0;
+      }
 
       console.log(
         "gWorkspacesServices?.getCurrentWorkspaceUserContextId()",
@@ -206,8 +297,7 @@ export const overrides = [
             const options = {
               relatedToCurrent,
               resolveOnNewTabCreated: resolve,
-              userContextId:
-                gWorkspacesServices?.getCurrentWorkspaceUserContextId() ?? 0,
+              userContextId,
               allowThirdPartyFixup: undefined as boolean | undefined,
             } satisfies {
               relatedToCurrent: boolean;

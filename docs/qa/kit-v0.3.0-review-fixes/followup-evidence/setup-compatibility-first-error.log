@@ -1,0 +1,7 @@
+First compatibility run stopped while reading the third pinned base file, before comparing any configuration. The helper raised CalledProcessError before recording its captured git stderr; it did not overwrite any prior evidence.
+
+Traceback (most recent call last):
+  File <stdin>, line 22, in <module>
+  File /opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py, line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command ['git', 'show', '81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53:.github/workflows/mozconfigs/linux-x86_64.mozconfig'] returned non-zero exit status 128.

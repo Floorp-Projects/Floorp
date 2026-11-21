@@ -17,9 +17,18 @@
  *
  * 1. "One surface" (PRIMARY — every design, every theme):
  *    `#nav-bar` == `#PersonalToolbar` == `#panel-sidebar-box` ==
- *    `#nora-statusbar`. This is the invariant the Gecko 152 fix restored:
- *    all chrome bars must share the SAME background color. It does NOT
- *    require them to match the selected tab — that is a per-design choice.
+ *    `#nora-statusbar` == `#browser`. This is the invariant the Gecko 152
+ *    fix restored: all chrome bars must share the SAME background color. It
+ *    does NOT require them to match the selected tab — that is a per-design
+ *    choice. `#browser` is the strip behind the native sidebar launcher and
+ *    around rounded page corners; since Gecko 152 Firefox paints it with
+ *    `--toolbar-background-color`. Lepton before v8.7.6 overrode only the
+ *    legacy `--toolbar-bgcolor`, so with Lepton-family designs on Windows
+ *    `#browser` stayed lighter than the Floorp surfaces (Issue #2531). The
+ *    diverging palettes are gated on `-moz-platform: windows` (and a macOS
+ *    palette behind `layout.css.osx-font-smoothing.enabled`, unverified),
+ *    so on Linux this check passes either way. It is transparent with
+ *    vertical tabs and is then skipped like any other absent surface.
  *
  * 2. "Tab tracks toolbar" (SECONDARY — `color_like_toolbar` designs only):
  *    For `lepton`, `photon`, `fluerial` the selected tab is aligned to the
@@ -82,20 +91,34 @@ const TAB_TRACKS_TOOLBAR_DESIGNS: readonly DesignName[] = [
 ] as const;
 
 /**
- * Tolerance for the PRIMARY "one surface" invariant. The Gecko 152 fix makes
- * all bar surfaces resolve to the exact same token, so this can be tight.
- * A small slack absorbs sub-pixel/rounding in computed colors.
+ * Per-channel tolerance for the PRIMARY "one surface" invariant (also the
+ * "stopped changing" threshold in `waitForColorStable`). All bar surfaces
+ * resolve to the same token, so they match exactly once settled: measured
+ * max channel gap 0 in every design × scheme case (Windows 11, Gecko 159).
+ * Linux CI has never failed this check at tolerance 2 except on real token
+ * splits (e.g. protonfix/dark 43 vs 84). 2 leaves room for rounding when an
+ * alpha color is composited over white in `parseRgbColor`.
  */
 const SURFACE_TOLERANCE = 2;
 
 /**
- * Tolerance for the SECONDARY "tab tracks toolbar" invariant. Lepton aligns
- * the tab to the toolbar but via alpha compositing / lwt-accent blending, so
- * a tint gap is normal (measured: around 20 in current light Lepton-family
- * builds). The primary one-surface invariant above remains the strict
- * regression check for the Gecko 152 toolbar token split.
+ * Per-channel tolerance for the SECONDARY "tab tracks toolbar" invariant.
+ * Once transitions have finished, the selected tab of lepton / photon /
+ * fluerial matches `#nav-bar` exactly: measured max channel gap 0 in all six
+ * cases (Windows 11, Gecko 159), and the same designs read identical tab and
+ * nav-bar colors in a Linux run of Floorp 12.21.1 (no theme / Light / Dark /
+ * LWT / Alpenglow). The old value 22 covered reads taken mid-transition
+ * (gaps of 18-20), which `waitForTransitionsToFinish` now prevents. 3 keeps
+ * rounding headroom only.
+ *
+ * Linux CI once failed photon/light with nav-bar 255 vs tab 232 (gap 23),
+ * only on commits that revived a no-theme palette rule setting the legacy
+ * `--toolbar-bgcolor` to white. The cause is unconfirmed: it may be that
+ * rule splitting the tokens, or a mid-transition read, since tab
+ * rgb(232, 232, 233) is 89% of the way from the previous case's
+ * rgb(43, 42, 51) to white. The transition wait would catch the second case.
  */
-const TAB_TRACKS_TOLERANCE = 22;
+const TAB_TRACKS_TOLERANCE = 3;
 
 /** Elements whose background should share one color (the "one surface"
  * invariant). `[selector, humanLabel]`. */
@@ -104,6 +127,7 @@ const SURFACE_ELEMENTS: readonly [string, string][] = [
   ["#PersonalToolbar", "PersonalToolbar"],
   ["#panel-sidebar-box", "panel-sidebar-box"],
   ["#nora-statusbar", "nora-statusbar"],
+  ["#browser", "browser"],
 ];
 
 /** Selectors that may yield the selected tab's background, tried in order. */
@@ -307,6 +331,88 @@ async function waitForColorStable(
 }
 
 // ---------------------------------------------------------------------------
+// Transition settling
+// ---------------------------------------------------------------------------
+
+/**
+ * Upper bound for waiting on running transitions before sampling colors.
+ * Lepton's `userChrome.decoration.animate` rules give `stack` / `vbox` (so
+ * the selected tab's `.tab-stack` / `.tab-background`) a 1s
+ * `background-color` transition; the longest Lepton color transition is
+ * 2.5s.
+ */
+const TRANSITION_SETTLE_TIMEOUT_MS = 5000;
+
+/** Every element whose computed background the assertions may read. */
+function getColorSampledElements(): Element[] {
+  const elements = new Set<Element>();
+  for (const [selector] of SURFACE_ELEMENTS) {
+    const el = document.querySelector(selector);
+    if (el) elements.add(el);
+  }
+  const selectedTab = (globalThis as { gBrowser?: { selectedTab?: Element } })
+    .gBrowser?.selectedTab;
+  if (selectedTab) {
+    for (const selector of SELECTED_TAB_RELATIVE_SELECTORS) {
+      const el = selectedTab.querySelector(selector);
+      if (el) elements.add(el);
+    }
+  }
+  for (const selector of SELECTED_TAB_SELECTORS) {
+    const el = document.querySelector(selector);
+    if (el) elements.add(el);
+  }
+  return [...elements];
+}
+
+/** Finite animations/transitions still in progress on `elements`.
+ * `getAnimations()` flushes style first, so a transition triggered by a
+ * pending style change is included. Infinite animations are ignored because
+ * they never finish. */
+function getRunningFiniteAnimations(elements: Element[]): Animation[] {
+  const running: Animation[] = [];
+  for (const el of elements) {
+    for (const animation of el.getAnimations()) {
+      if (
+        animation.playState === "finished" || animation.playState === "idle"
+      ) {
+        continue;
+      }
+      const endTime = animation.effect?.getComputedTiming().endTime;
+      if (typeof endTime === "number" && Number.isFinite(endTime)) {
+        running.push(animation);
+      }
+    }
+  }
+  return running;
+}
+
+/**
+ * Wait until no sampled element has a running transition, so colors are read
+ * at their end values rather than mid-transition. A design or color-scheme
+ * switch starts the selected tab's 1s background transition while the
+ * nav-bar (a `toolbar`, which Lepton does not animate) changes at once, so
+ * `waitForColorStable` on the nav-bar alone can return while the tab is
+ * still blending. Re-checks after each batch finishes because a cancelled or
+ * retargeted transition is replaced by a new one. Returns false on timeout.
+ */
+async function waitForTransitionsToFinish(
+  timeoutMs = TRANSITION_SETTLE_TIMEOUT_MS,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    const running = getRunningFiniteAnimations(getColorSampledElements());
+    if (running.length === 0) return true;
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) return false;
+    await Promise.race([
+      Promise.allSettled(running.map((animation) => animation.finished)),
+      sleep(remaining),
+    ]);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Design / theme switching
 // ---------------------------------------------------------------------------
 
@@ -434,7 +540,7 @@ function readAllSurfaces(): SurfaceReadings {
 /**
  * PRIMARY invariant: every present chrome surface reads the SAME color.
  * This is what the Gecko 152 fix restored — nav-bar, PersonalToolbar,
- * panel-sidebar and status bar must all share one background. Missing
+ * panel-sidebar, status bar and #browser must all share one background. Missing
  * elements are skipped; if too few surfaces are present to compare, the
  * case is skipped rather than failed.
  */
@@ -460,9 +566,9 @@ function assertOneSurface(label: string, reading: SurfaceReadings): void {
 
 /**
  * SECONDARY invariant: for designs with `color_like_toolbar = true`, the
- * selected tab must be CLOSE to the bar surface color (Lepton aligns the tab
- * to the toolbar, but via blending so a small tint gap is normal). Skipped
- * when no selected-tab color is readable.
+ * selected tab must match the bar surface color within
+ * `TAB_TRACKS_TOLERANCE` (Lepton aligns the tab to the toolbar; settled
+ * colors are identical). Skipped when no selected-tab color is readable.
  */
 function assertTabTracksToolbar(label: string, reading: SurfaceReadings): void {
   if (reading.selectedTab === null) return;
@@ -511,17 +617,22 @@ async function runMatrixCase(
     return { label: caseLabel, ran: false, error: null };
   }
 
-  // Re-stabilize after the scheme change, then snapshot.
+  // Re-stabilize after the scheme change, let every running transition on
+  // the sampled elements finish, then snapshot.
   await waitForColorStable(() => readBgColor("#nav-bar"), 4000, 80);
+  const settled = await waitForTransitionsToFinish();
   const reading = readAllSurfaces();
+  const assertLabel = settled
+    ? caseLabel
+    : `${caseLabel} (transitions still running after ${TRANSITION_SETTLE_TIMEOUT_MS}ms)`;
 
   try {
     // PRIMARY: every design — bars share one color.
-    assertOneSurface(caseLabel, reading);
+    assertOneSurface(assertLabel, reading);
 
     // SECONDARY: tab tracks toolbar, only for color_like_toolbar designs.
     if (designTracksTab(design)) {
-      assertTabTracksToolbar(caseLabel, reading);
+      assertTabTracksToolbar(assertLabel, reading);
     }
     return { label: caseLabel, ran: true, error: null };
   } catch (e) {
@@ -638,6 +749,7 @@ async function testDesignMatrix(): Promise<void> {
  */
 async function testCurrentStateSharesOneSurface(): Promise<void> {
   await waitForColorStable(() => readBgColor("#nav-bar"), 4000, 80);
+  await waitForTransitionsToFinish();
   const reading = readAllSurfaces();
   const active = getActiveDesignFromPref();
 
