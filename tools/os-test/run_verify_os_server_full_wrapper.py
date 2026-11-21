@@ -68,7 +68,7 @@ class OsVerifyOptions:
 
 
 def dev_port_offset_error(value: object) -> str | None:
-    """Mirror parseDevPortOffset's user-facing validation errors."""
+    """Mirror launchPortOffsetError's user-facing validation."""
     if value is None:
         return "no port offset given"
     text = str(value).strip()
@@ -90,6 +90,12 @@ def dev_port_offset_error(value: object) -> str | None:
             f"port offset {offset} is below the non-overlap span "
             f"{DEV_PORT_NON_OVERLAP_SPAN}; concurrent dev/test launch port sets "
             f"would overlap (use 0 or >= {DEV_PORT_NON_OVERLAP_SPAN})"
+        )
+    if uses_packaged_os_server_port(offset):
+        return (
+            f"--port-offset {offset} maps a dev port to the installed Floorp "
+            f"OS-Server port {OS_SERVER_PRODUCTION_DEFAULT_PORT}; "
+            "use a different offset or auto"
         )
     return None
 
@@ -184,15 +190,20 @@ def launch_ports_for_offset(offset: int) -> list[int]:
     return [port + offset for port in DEV_PORTS] + [DEV_OS_SERVER_PORT + offset]
 
 
+def uses_packaged_os_server_port(offset: int) -> bool:
+    return OS_SERVER_PRODUCTION_DEFAULT_PORT in launch_ports_for_offset(offset)
+
+
 def auto_port_offset_candidates() -> list[int]:
-    """Mirror autoPortOffsetCandidates: 0 then the non-overlap ladder."""
+    """Mirror autoPortOffsetCandidates, reserving the installed OS-Server port."""
     candidates = [0]
     for offset in range(
         DEV_PORT_NON_OVERLAP_SPAN,
         DEV_PORT_OFFSET_MAX + 1,
         DEV_PORT_NON_OVERLAP_SPAN,
     ):
-        candidates.append(offset)
+        if not uses_packaged_os_server_port(offset):
+            candidates.append(offset)
     return candidates
 
 

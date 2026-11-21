@@ -11,6 +11,7 @@ import {
 } from "./src/dev_process_selection.ts";
 import {
   describeLaunchPorts,
+  OS_SERVER_PRODUCTION_DEFAULT_PORT,
   parsePortOffsetSpec,
   resolveAutoDevPortOffset,
 } from "./src/port_offset.ts";
@@ -40,10 +41,11 @@ Process management:
   start                     Start feles-build dev (background)
   start --port-offset <n|auto>
                             Start with every dev/test server port (and
-                            Marionette) shifted by n ports; "auto" probes the
-                            smallest free non-overlapping offset. n must be 0
-                            or at least the non-overlap span so concurrent
-                            worktrees cannot share ports.
+                            Marionette and OS-Server) shifted by n ports.
+                            n must be 0 or at least the non-overlap span and
+                            must leave port ${OS_SERVER_PRODUCTION_DEFAULT_PORT} for installed Floorp.
+                            "auto" skips ports with TCP listeners. Windows
+                            may also exclude ports without a listener.
   stop                      Stop dev processes for this checkout
   stop --all                Stop dev processes across ALL checkouts (recovery)
   restart                   Restart dev processes

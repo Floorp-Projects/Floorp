@@ -20,14 +20,9 @@ import {
 
 /**
  * Production/packaged default of the Floorp OS-Server listening port
- * (browser-features/modules/modules/os-server/server.sys.mts). Dev launches
- * avoid it at the default and ladder offsets because the dev profile pref
- * below points at the in-span dev port. One hand-picked exception exists:
- * offset 53086 lands back on 58261 (5175 + 53086). It is not silently
- * shared — the launch probe set includes the OS-Server port, so auto
- * offset resolution and the pre-launch guard reject the rung while a
- * listening installed Floorp holds it, and a direct launch fails at bind
- * time with the server's own port error instead of silently colliding.
+ * (browser-features/modules/modules/os-server/server.sys.mts). Keep this
+ * port out of the entire shifted dev topology, including the Vite servers
+ * and Marionette, even when the installed browser is closed.
  */
 export const OS_SERVER_PRODUCTION_DEFAULT_PORT = 58261;
 
@@ -48,14 +43,28 @@ export const OS_SERVER_PORT_PREF = "floorp.os.server.port";
  */
 export const DEV_OS_SERVER_PORT = 5175;
 
+function usesPackagedOsServerPort(offset: number): boolean {
+  return launchPortsForOffset(offset).includes(
+    OS_SERVER_PRODUCTION_DEFAULT_PORT,
+  );
+}
+
+function launchPortOffsetError(raw: number | string): string | null {
+  const error = devPortOffsetError(raw);
+  if (error !== null) return error;
+  const offset = Number(raw);
+  if (usesPackagedOsServerPort(offset)) {
+    return `--port-offset ${offset} maps a dev port to the installed Floorp OS-Server port ${OS_SERVER_PRODUCTION_DEFAULT_PORT}; use a different offset or auto`;
+  }
+  return null;
+}
+
 /**
  * Validated Floorp OS-Server port for a dev launch with `offset`.
- * Validation reuses the shared dev-port-offset error so NaN, negative and
- * out-of-range offsets fail with the same user-facing message as elsewhere
- * instead of silently producing a bogus port.
+ * Uses the same offset validation as the launcher.
  */
 export function osServerPortForOffset(offset: number): number {
-  const error = devPortOffsetError(offset);
+  const error = launchPortOffsetError(offset);
   if (error !== null) {
     throw new Error(error);
   }
@@ -75,8 +84,8 @@ export type PortOffsetSpec = number | "auto";
  * - omitted/empty → `0` (frozen base topology; identical to main);
  * - `"auto"` → `"auto"` (probe free offsets);
  * - a decimal string → the validated offset (integer, >= 0, inside the port
- *   range, and outside the non-overlap span so concurrent launch port sets
- *   stay disjoint);
+ *   range, outside the non-overlap span unless zero, and leaves the
+ *   packaged OS-Server port available);
  * - anything else throws a user-facing error.
  */
 export function parsePortOffsetSpec(
@@ -89,7 +98,7 @@ export function parsePortOffsetSpec(
     return "auto";
   }
   if (typeof raw === "number" || /^\d+$/.test(raw.trim())) {
-    const error = devPortOffsetError(raw);
+    const error = launchPortOffsetError(raw);
     if (error === null) {
       return Number(String(raw).trim());
     }
@@ -131,15 +140,14 @@ export function launchPortsForOffset(offset: number): number[] {
 
 /**
  * Admissible candidate offsets for `auto`: `0` first (the frozen base
- * topology), then the non-overlap ladder (`span`, `2*span`, ...). Differences
- * between any two candidates are at least the table span, so candidate port
- * sets — Marionette included — are pairwise disjoint by design.
+ * topology), then the non-overlap ladder (`span`, `2*span`, ...) excluding
+ * any topology that uses the packaged OS-Server port.
  */
 export function autoPortOffsetCandidates(): number[] {
   const candidates: number[] = [0];
   const span = DEV_PORT_NON_OVERLAP_SPAN;
   for (let offset = span; offset <= DEV_PORT_OFFSET_MAX; offset += span) {
-    candidates.push(offset);
+    if (!usesPackagedOsServerPort(offset)) candidates.push(offset);
   }
   return candidates;
 }

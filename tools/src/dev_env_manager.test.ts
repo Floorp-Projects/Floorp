@@ -166,18 +166,3 @@ Deno.test(
     );
   },
 );
-
-Deno.test(
-  "the hand-picked offset 53086 documents the one 58261 coincidence",
-  async () => {
-    // 5175 + 53086 = 58261: this offset coincides with the packaged
-    // production default. It is not silently shared: the launch probe set
-    // (launchPortsForOffset, used by auto resolution and the fdh guard)
-    // rejects the rung while the port is held, and a direct bind fails with
-    // the OS-Server's own port error.
-    assertStringIncludes(
-      await generateUserJs(true, 53086),
-      'user_pref("floorp.os.server.port", 58261);',
-    );
-  },
-);
