@@ -420,7 +420,9 @@ async function testResourceScopeRevocation(): Promise<void> {
     "drain reports pending manual disposal",
   );
   assert(
-    timeoutReport.errors.includes("resource cleanup deadline"),
+    timeoutReport.errors.some((error) =>
+      error.includes("resource cleanup deadline")
+    ),
     "drain reports its deadline instead of clean success",
   );
   assertEquals(
@@ -871,6 +873,334 @@ async function testConcurrentModuleHostStopsShareReport(): Promise<void> {
     runtime.scopeDiagnosticsForTests.childScopes,
     0,
     "stop clears child scopes",
+  );
+}
+
+async function testManagedTaskReleaseAndReentrantStop(): Promise<void> {
+  const source =
+    `(() => { let release; const gate = new Promise(resolve => release = resolve); globalThis.__floorpM0 = { activate() {}, attachWindow() {}, waitForRelease() { return gate; }, release() { release(); }, health() { return "ok"; }, deactivate() { release(); } }; })();`;
+  const runtime = new M0ModuleHost(
+    "task-epoch",
+    1,
+    "a".repeat(64),
+    source,
+    () => "{}",
+  );
+  await runtime.start();
+  const lifecycle = runtime.lifecycleForTests as M0Lifecycle & {
+    waitForRelease(): Promise<void>;
+    deactivate(reason: string): void | Promise<void>;
+  };
+  const originalDeactivate = lifecycle.deactivate;
+  const order: string[] = [];
+  const reentrant: { stop?: Promise<unknown> } = {};
+  runtime.scope.signal.addEventListener("abort", () => {
+    order.push("abort");
+    reentrant.stop = runtime.stop("reentrant");
+  });
+  lifecycle.deactivate = function (reason) {
+    order.push(`deactivate:${runtime.scope.signal.aborted}`);
+    return originalDeactivate.call(this, reason);
+  };
+  const task = runtime.scope.runTask(async (signal) => {
+    assert(signal === runtime.scope.signal, "task receives its scope signal");
+    await lifecycle.waitForRelease();
+    try {
+      runtime.scope.register(() => {});
+    } catch {
+      order.push("stale-effect-rejected");
+    }
+  });
+  const stop = runtime.stop("replace");
+  assert(reentrant.stop === stop, "abort reentrancy shares the stop promise");
+  const report = await stop;
+  await task;
+  assertEquals(
+    order.join(","),
+    "abort,deactivate:true,stale-effect-rejected",
+    "abort, deactivate, and task drain order",
+  );
+  assertEquals(
+    report.timedOut,
+    false,
+    "deactivate releases the task before deadline",
+  );
+  assertEquals(report.pendingTasks, 0, "released task is drained");
+  assertEquals(report.taskCount, 1, "managed task is counted separately");
+  assertEquals(
+    runtime.scopeDiagnosticsForTests.resources,
+    0,
+    "stale task cannot register resources",
+  );
+}
+
+async function testManagedTaskRejectionsAreObserved(): Promise<void> {
+  const cancelledScope = new ResourceScope();
+  const cancelled = cancelledScope.runTask((signal) =>
+    new Promise<void>((_, reject) => {
+      signal.addEventListener("abort", () => reject(signal.reason), {
+        once: true,
+      });
+    })
+  );
+  cancelledScope.revoke();
+  await cancelled.catch(() => {});
+  const cancelledReport = await cancelledScope.disposeAll(100);
+  assertEquals(
+    cancelledReport.observedTaskRejections,
+    1,
+    "expected cancellation is observed",
+  );
+  assertEquals(
+    cancelledReport.taskFailures,
+    0,
+    "only exact signal reason is expected cancellation",
+  );
+  assertEquals(
+    cancelledReport.errors.length,
+    0,
+    "expected cancellation is not an error",
+  );
+
+  const failedScope = new ResourceScope();
+  const failure = new Error("managed task failure");
+  await failedScope.runTask(() => Promise.reject(failure)).catch(() => {});
+  let invoked = false;
+  failedScope.revoke();
+  let rejected = false;
+  try {
+    failedScope.runTask(() => {
+      invoked = true;
+    });
+  } catch {
+    rejected = true;
+  }
+  const failedReport = await failedScope.disposeAll(100);
+  assert(
+    rejected && !invoked,
+    "revoked scope rejects task creation before factory execution",
+  );
+  assertEquals(
+    failedReport.observedTaskRejections,
+    1,
+    "task rejection remains observed",
+  );
+  assertEquals(
+    failedReport.taskFailures,
+    1,
+    "non-cancellation rejection remains a failure",
+  );
+  assert(
+    failedReport.errors.some((error) => error.includes("managed task failure")),
+    "task error is reported",
+  );
+}
+
+async function testManagedTaskDeadlineAggregatesCleanup(): Promise<void> {
+  const source =
+    `globalThis.__floorpM0 = { activate() {}, attachWindow() {}, health() { return "ok"; }, deactivate() { throw new Error("deactivate failure"); } };`;
+  const runtime = new M0ModuleHost(
+    "deadline-epoch",
+    1,
+    "b".repeat(64),
+    source,
+    () => "{}",
+  );
+  await runtime.start();
+  let globalDisposed = false;
+  let windowDisposed = false;
+  runtime.scope.register(() => {
+    globalDisposed = true;
+    throw new Error("global disposer failure");
+  });
+  runtime.scope.child("window").register(() => {
+    windowDisposed = true;
+    throw new Error("window disposer failure");
+  });
+  await runtime.scope.runTask(() =>
+    Promise.reject(new Error("managed failure"))
+  ).catch(() => {});
+  runtime.scope.runTask(() => new Promise<void>(() => {}));
+  const baseline = activeM0DeadlineTimersForTests();
+  const lifecycle = runtime.lifecycleForTests;
+  const report = await runtime.stop("deadline");
+  assertEquals(
+    report.timedOut,
+    true,
+    "pending task reaches shared stop deadline",
+  );
+  assertEquals(
+    report.pendingTasks,
+    1,
+    "timeout reports the actual pending task count",
+  );
+  assert(
+    globalDisposed && windowDisposed,
+    "global and window disposers run despite task timeout",
+  );
+  for (
+    const message of [
+      "deactivate failure",
+      "managed failure",
+      "global disposer failure",
+      "window disposer failure",
+    ]
+  ) {
+    assert(
+      report.errors.some((error) => error.includes(message)),
+      `${message} is aggregated`,
+    );
+  }
+  assertEquals(
+    runtime.lifecycleForTests,
+    null,
+    "sandbox lifecycle is released after timeout",
+  );
+  assert(lifecycle !== null, "test retained the lifecycle before teardown");
+  assertThrows(
+    () => lifecycle.health(),
+    "sandbox is nuked after task deadline",
+  );
+  assertEquals(
+    activeM0DeadlineTimersForTests(),
+    baseline,
+    "shared stop deadline timer is cleared",
+  );
+}
+
+async function testReentrantScopeRevocationAbortsCapturedTree(): Promise<void> {
+  const root = new ResourceScope();
+  const branch = root.child("branch");
+  const entries = [
+    { name: "first", scope: branch.child("first") },
+    { name: "nested-sibling", scope: branch.child("nested-sibling") },
+    { name: "root-sibling", scope: root.child("root-sibling") },
+  ];
+  const aborted = new Set<string>();
+  const fallbackReleases: (() => void)[] = [];
+  const reentrant: { dispose?: Promise<unknown> } = {};
+  const tasks = entries.map(({ name, scope }) =>
+    scope.runTask((signal) =>
+      new Promise<void>((resolve) => {
+        let settled = false;
+        const release = (): void => {
+          if (settled) return;
+          settled = true;
+          resolve();
+        };
+        fallbackReleases.push(release);
+        signal.addEventListener("abort", () => {
+          aborted.add(name);
+          if (name === "first") reentrant.dispose = root.disposeAll(100);
+          release();
+        }, { once: true });
+      })
+    )
+  );
+  const baseline = activeM0DeadlineTimersForTests();
+
+  root.revoke();
+  assert(
+    reentrant.dispose !== undefined,
+    "first abort listener reenters disposal",
+  );
+  const disposal = root.disposeAll(100);
+  assert(
+    reentrant.dispose === disposal,
+    "reentrant disposal shares its promise",
+  );
+  const report = await disposal;
+  for (const release of fallbackReleases) release();
+  await Promise.all(tasks);
+
+  assertEquals(
+    [...aborted].sort().join(","),
+    entries.map(({ name }) => name).sort().join(","),
+    "every captured nested and sibling scope receives abort",
+  );
+  assertEquals(report.timedOut, false, "all abort-waiting tasks drain cleanly");
+  assertEquals(report.pendingTasks, 0, "reentrant disposal drains all tasks");
+  assertEquals(report.taskFailures, 0, "abort-waiting tasks do not fail");
+  assertEquals(
+    activeM0DeadlineTimersForTests(),
+    baseline,
+    "reentrant disposal clears its deadline timer",
+  );
+}
+
+async function testChildManagedTaskEvidenceSurvivesClose(): Promise<void> {
+  const failedRoot = new ResourceScope();
+  const failedChild = failedRoot.child("failed-window");
+  await failedChild.runTask(() =>
+    Promise.reject(new Error("prior child task failure"))
+  ).catch(() => {});
+  let aborted = false;
+  const aborting = failedChild.runTask((signal) =>
+    new Promise<void>((_, reject) => {
+      signal.addEventListener("abort", () => {
+        aborted = signal.aborted;
+        reject(signal.reason);
+      }, { once: true });
+    })
+  );
+  const failedClose = await failedRoot.disposeChild("failed-window", 100);
+  await aborting.catch(() => {});
+  assert(aborted, "closing a child aborts its managed task");
+  assert(
+    failedClose.errors.some((error) =>
+      error.includes("prior child task failure")
+    ),
+    "child report retains prior task failure",
+  );
+  const failedRootReport = await failedRoot.disposeAll(100);
+  assert(
+    failedRootReport.errors.some((error) =>
+      error.includes("prior child task failure")
+    ),
+    "root retains child task failure",
+  );
+
+  const root = new ResourceScope();
+  const child = root.child("window");
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => release = resolve);
+  const task = child.runTask(async () => {
+    await gate;
+    throw new Error("late child task failure");
+  });
+  void task.catch(() => {});
+  const closed = await root.disposeChild("window", 5);
+  assertEquals(
+    closed.timedOut,
+    true,
+    "closed child reports pending task timeout",
+  );
+  assertEquals(
+    root.pendingTaskCount,
+    1,
+    "root retains pending closed-child task count",
+  );
+  assertEquals(
+    root.childCount,
+    1,
+    "closed child evidence remains while its task is unsettled",
+  );
+  release();
+  await task.catch(() => {});
+  await waitForCondition(
+    () => root.childCount === 0,
+    "closed child task settles",
+  );
+  const report = await root.disposeAll(100);
+  assertEquals(report.taskCount, 1, "root retains the child task count");
+  assertEquals(
+    report.observedTaskRejections,
+    1,
+    "root observes late child rejection",
+  );
+  assert(
+    report.errors.some((error) => error.includes("late child task failure")),
+    "late child failure remains in root evidence",
   );
 }
 
@@ -2685,6 +3015,29 @@ export async function runAllTests(): Promise<void> {
     {
       name: "concurrent module host stops share one report",
       fn: testConcurrentModuleHostStopsShareReport,
+    },
+    {
+      name:
+        "managed task drain aborts before deactivate and shares reentrant stop",
+      fn: testManagedTaskReleaseAndReentrantStop,
+    },
+    {
+      name:
+        "managed task rejections are observed and classified by exact reason",
+      fn: testManagedTaskRejectionsAreObserved,
+    },
+    {
+      name:
+        "managed task deadline aggregates failures and keeps disposers running",
+      fn: testManagedTaskDeadlineAggregatesCleanup,
+    },
+    {
+      name: "reentrant scope disposal aborts the captured nested tree",
+      fn: testReentrantScopeRevocationAbortsCapturedTree,
+    },
+    {
+      name: "child managed task evidence survives close and reaches root",
+      fn: testChildManagedTaskEvidenceSurvivesClose,
     },
     {
       name: "native main-window admission and close detach",

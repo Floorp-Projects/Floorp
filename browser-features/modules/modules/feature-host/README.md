@@ -27,6 +27,19 @@ pending nested scopes remain counted. The colocated browser test covers
 delayed/manual disposal, child throw/timeout aggregation, nested resource
 counts, and timer/resource bounds.
 
+`ResourceScope.runTask(factory)` synchronously registers host-managed work
+before calling the factory and supplies that scope's `AbortSignal`. Revocation
+marks the whole child tree revoked before delivering abort notifications; task
+creation and broker effects are then rejected while issued cleanup handles
+remain usable. Task counts, pending tasks, observed rejections, and task
+failures are tracked separately from resources. Stop invokes `deactivate` and
+starts scope cleanup concurrently under one total two-second deadline; only
+rejection with the exact scope `signal.reason` is treated as expected
+cancellation. Lifecycle hook promises remain separately bounded rather than
+becoming managed tasks, so activation failure/retry behavior is unchanged. The
+signal and runner are host-internal and are not exposed through the JSON fixture
+broker or as a new network/timer capability.
+
 The experimental journal is schema 2. It records a strict before snapshot and
 `PREPARED`/`OLD_STOPPED`/`CANDIDATE_READY` phase, plus one durable attempt
 episode shared by startup and interrupted operations. Episodes allow at most two
@@ -79,8 +92,10 @@ update `PREPARED`, `OLD_STOPPED`, `CANDIDATE_READY`, and
 attempt marker; interrupts after the fallback attempt marker and verifies
 exhaustion without re-evaluation; and covers disabled-update `PREPARED`, durable
 disable intent, and interrupted enable. This is not evidence for other platforms
-or for power-failure / in-rename / in-flush behavior. HUB publication/readiness,
-signing, migration, and production loader integration are not included.
+or for power-failure / in-rename / in-flush behavior. The recorded process
+matrix evidence is Linux x86_64 only; Linux aarch64 process recovery has not
+been verified. HUB publication/readiness, signing, migration, and production
+loader integration are not included.
 
 ## Design acceptance cases
 
@@ -88,31 +103,31 @@ The case names and numbers below match §16 of `floorp-hotfix-design-v0.2.md`.
 Statuses describe this local prototype and its colocated tests, not full M0
 acceptance.
 
-| #  | Design case                                       | Slice status                                                                                                      |
-| -- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| 1  | import top-level failure                          | Partial: broken fixture rejection exists; legacy ownership is out of scope.                                       |
-| 2  | install                                           | Pinned fixture installation is pointer-only and performs zero evaluation.                                         |
-| 3  | disabled update crash                             | Native synthetic case and Linux process-kill `PREPARED` case restore the before pointer without evaluation.       |
-| 4  | enable failure / disable crash intent             | Native recovery and Linux process kills cover interrupted enable and durable disable intent without evaluation.   |
-| 5  | v1→v2→v1 and re-enable                            | Existing native lifecycle test exercises fresh sandbox generations.                                               |
-| 6  | old callback/disposer delay                       | Partial: stale wrappers and broker callbacks are measured; no sandbox security or heap-leak claim.                |
-| 7  | hook needs task release                           | Partial: deactivate and resource disposal are independently bounded; full task-drain protocol is absent.          |
-| 8  | concurrent dispose / hook throw / timeout         | Partial: child disposal drains, sandbox hook throw/timeout, and host disposal are tested.                         |
-| 9  | W0 capture / window churn                         | Native: finite W0, delayed startup, close detach, admission, filtering, and shutdown teardown are tested.         |
-| 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                                  |
-| 11 | precommit / revision update                       | Atomic record revisions and before/after-replace write faults are covered; full request matrix is partial.        |
-| 12 | postcommit publication / attach failure           | Partial: staged-close cleanup failure quarantines before commit; failed admission quarantines; HUB is deferred.   |
-| 13 | PREPARED crash recovery                           | Schema-2 recovery has Linux process-kill coverage at PREPARED, OLD_STOPPED, CANDIDATE_READY, and disabled update. |
-| 14 | interrupted / repeated attempts                   | Linux process kills repeat fallback-before-mark and verify bounded digest exhaustion without retry.               |
-| 15 | rejected selected package / corrupt record        | Preflight rejection may use one proof-eligible fallback; malformed/incompatible records evaluate nothing.         |
-| 16 | candidate failure / old restore / cleanup failure | Candidate failure restores only a current-health before generation within the two-candidate budget.               |
-| 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                   |
-| 18 | fifty-update session                              | Existing native test tracks resources, wrappers, and timers over 50 updates.                                      |
-| 19 | profile/data compatibility                        | Deferred to M2; no existing feature data is touched.                                                              |
-| 20 | terminal write after publish                      | Before/after-replace fault paths preserve durable success when present and block the current runtime.             |
-| 21 | new request / lost response / txId reuse / expiry | Partial: retry/query and descriptor conflict are supported; retention expiry remains untested.                    |
-| 22 | host/runtime build tuple change                   | Package compatibility metadata and rollback health proof are separately exact-tuple gated.                        |
-| 23 | startup fallback / crash boundary                 | Linux process kills cover committed update publication and fallback recovery; other crash models remain open.     |
+| #  | Design case                                       | Slice status                                                                                                         |
+| -- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1  | import top-level failure                          | Partial: broken fixture rejection exists; legacy ownership is out of scope.                                          |
+| 2  | install                                           | Pinned fixture installation is pointer-only and performs zero evaluation.                                            |
+| 3  | disabled update crash                             | Native synthetic case and Linux process-kill `PREPARED` case restore the before pointer without evaluation.          |
+| 4  | enable failure / disable crash intent             | Native recovery and Linux process kills cover interrupted enable and durable disable intent without evaluation.      |
+| 5  | v1→v2→v1 and re-enable                            | Existing native lifecycle test exercises fresh sandbox generations.                                                  |
+| 6  | old callback/disposer delay                       | Partial: stale wrappers and broker callbacks are measured; no sandbox security or heap-leak claim.                   |
+| 7  | hook needs task release                           | Native: abort precedes deactivate; released tasks drain concurrently with global/window disposal under one deadline. |
+| 8  | concurrent dispose / hook throw / timeout         | Native: task, hook, child/window, resource, deadline, and sandbox teardown outcomes are aggregated.                  |
+| 9  | W0 capture / window churn                         | Native: finite W0, delayed startup, close detach, admission, filtering, and shutdown teardown are tested.            |
+| 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                                     |
+| 11 | precommit / revision update                       | Atomic record revisions and before/after-replace write faults are covered; full request matrix is partial.           |
+| 12 | postcommit publication / attach failure           | Partial: staged-close cleanup failure quarantines before commit; failed admission quarantines; HUB is deferred.      |
+| 13 | PREPARED crash recovery                           | Schema-2 recovery has Linux process-kill coverage at PREPARED, OLD_STOPPED, CANDIDATE_READY, and disabled update.    |
+| 14 | interrupted / repeated attempts                   | Linux process kills repeat fallback-before-mark and verify bounded digest exhaustion without retry.                  |
+| 15 | rejected selected package / corrupt record        | Preflight rejection may use one proof-eligible fallback; malformed/incompatible records evaluate nothing.            |
+| 16 | candidate failure / old restore / cleanup failure | Candidate failure restores only a current-health before generation within the two-candidate budget.                  |
+| 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                      |
+| 18 | fifty-update session                              | Existing native test tracks resources, wrappers, and timers over 50 updates.                                         |
+| 19 | profile/data compatibility                        | Deferred to M2; no existing feature data is touched.                                                                 |
+| 20 | terminal write after publish                      | Before/after-replace fault paths preserve durable success when present and block the current runtime.                |
+| 21 | new request / lost response / txId reuse / expiry | Partial: retry/query and descriptor conflict are supported; retention expiry remains untested.                       |
+| 22 | host/runtime build tuple change                   | Package compatibility metadata and rollback health proof are separately exact-tuple gated.                           |
+| 23 | startup fallback / crash boundary                 | Linux process kills cover committed update publication and fallback recovery; other crash models remain open.        |
 
 The colocated browser test is `M0FeatureHost.test.mts`; compile the production
 modules before starting the browser with

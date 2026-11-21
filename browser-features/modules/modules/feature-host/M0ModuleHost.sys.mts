@@ -9,6 +9,11 @@ export type Cleanup = () => void | Promise<void>;
 export interface DisposeReport {
   errors: string[];
   timedOut: boolean;
+  taskCount?: number;
+  pendingTasks?: number;
+  observedTaskRejections?: number;
+  taskFailures?: number;
+  pendingResources?: number;
 }
 
 type Resource = {
@@ -21,6 +26,40 @@ type Resource = {
 };
 
 let activeDeadlineTimers = 0;
+
+class CleanupDeadline {
+  readonly promise: Promise<void>;
+  #timer!: { cancel(): void };
+  #expired = false;
+
+  constructor(timeoutMs: number) {
+    this.promise = new Promise((resolve) => {
+      this.#timer = startDeadline(() => {
+        this.#expired = true;
+        resolve();
+      }, timeoutMs);
+    });
+  }
+
+  get expired(): boolean {
+    return this.#expired;
+  }
+
+  cancel(): void {
+    this.#timer.cancel();
+  }
+}
+
+function boundedByDeadline<T>(
+  promise: Promise<T>,
+  deadline: CleanupDeadline,
+  message: string,
+): Promise<T> {
+  return Promise.race([
+    promise,
+    deadline.promise.then(() => Promise.reject(new Error(message))),
+  ]);
+}
 
 function startDeadline(callback: () => void, timeoutMs: number): {
   cancel(): void;
@@ -51,15 +90,47 @@ export class ResourceScope {
   readonly #resources = new Map<number, Resource>();
   readonly #children = new Map<string, ResourceScope>();
   readonly #disposals = new Set<Promise<void>>();
+  readonly #tasks = new Set<Promise<void>>();
   readonly #childDisposals = new Map<Promise<DisposeReport>, ResourceScope>();
   readonly #errors: string[] = [];
+  readonly #controller = new AbortController();
+  readonly #abortReason = new Error("resource scope revoked");
+  readonly #parent: ResourceScope | null;
   #nextId = 0;
   #revoked = false;
   #disposing: Promise<DisposeReport> | null = null;
   #timedOut = false;
+  #taskCount = 0;
+  #pendingTaskCount = 0;
+  #observedTaskRejections = 0;
+  #taskFailures = 0;
+
+  constructor(parent: ResourceScope | null = null) {
+    this.#parent = parent;
+  }
 
   get revoked(): boolean {
     return this.#revoked;
+  }
+
+  get signal(): AbortSignal {
+    return this.#controller.signal;
+  }
+
+  get taskCount(): number {
+    return this.#taskCount;
+  }
+
+  get pendingTaskCount(): number {
+    return this.#pendingTaskCount;
+  }
+
+  get observedTaskRejections(): number {
+    return this.#observedTaskRejections;
+  }
+
+  get taskFailures(): number {
+    return this.#taskFailures;
   }
 
   get resourceCount(): number {
@@ -97,7 +168,7 @@ export class ResourceScope {
     if (this.#revoked) throw new Error("resource scope revoked");
     const existing = this.#children.get(windowId);
     if (existing) return existing;
-    const child = new ResourceScope();
+    const child = new ResourceScope(this);
     this.#children.set(windowId, child);
     return child;
   }
@@ -118,6 +189,82 @@ export class ResourceScope {
     }
   }
 
+  #taskStarted(): void {
+    this.#taskCount += 1;
+    this.#pendingTaskCount += 1;
+    if (this.#parent) this.#parent.#descendantTaskStarted();
+  }
+
+  #descendantTaskStarted(): void {
+    this.#taskCount += 1;
+    this.#pendingTaskCount += 1;
+    if (this.#parent) this.#parent.#descendantTaskStarted();
+  }
+
+  #taskSettled(): void {
+    this.#pendingTaskCount -= 1;
+    if (this.#parent) this.#parent.#descendantTaskSettled();
+  }
+
+  #descendantTaskSettled(): void {
+    this.#pendingTaskCount -= 1;
+    if (this.#parent) this.#parent.#descendantTaskSettled();
+  }
+
+  #recordTaskRejection(error: unknown): void {
+    this.#observedTaskRejections += 1;
+    const expected = this.#revoked && error === this.signal.reason;
+    if (this.#parent) {
+      this.#parent.#recordDescendantTaskRejection(error, expected);
+    }
+    if (expected) return;
+    this.#taskFailures += 1;
+    this.#recordError(`managed task rejected: ${String(error)}`);
+  }
+
+  #recordDescendantTaskRejection(error: unknown, expected: boolean): void {
+    this.#observedTaskRejections += 1;
+    if (this.#parent) {
+      this.#parent.#recordDescendantTaskRejection(error, expected);
+    }
+    if (!expected) {
+      this.#recordError(`managed task rejected: ${String(error)}`);
+      this.#taskFailures += 1;
+    }
+  }
+
+  runTask<T>(factory: (signal: AbortSignal) => T | PromiseLike<T>): Promise<T> {
+    if (this.#revoked) throw new Error("resource scope revoked");
+    this.#taskStarted();
+    let settle!: () => void;
+    const settled = new Promise<void>((resolve) => settle = resolve);
+    this.#tasks.add(settled);
+    const finish = (): void => {
+      if (!this.#tasks.delete(settled)) return;
+      this.#taskSettled();
+      settle();
+    };
+    let work: T | PromiseLike<T>;
+    try {
+      work = factory(this.signal);
+    } catch (error) {
+      work = Promise.reject(error);
+    }
+    const tracked = Promise.resolve(work).then(
+      (value) => {
+        finish();
+        return value;
+      },
+      (error) => {
+        this.#recordTaskRejection(error);
+        finish();
+        throw error;
+      },
+    );
+    void tracked.catch(() => {});
+    return tracked;
+  }
+
   #recordReport(report: DisposeReport): void {
     for (const error of report.errors) this.#recordError(error);
     if (report.timedOut) this.#timedOut = true;
@@ -128,20 +275,28 @@ export class ResourceScope {
     if (child.#timedOut) this.#timedOut = true;
   }
 
-  #pendingCleanupCount(): number {
-    return this.#disposals.size +
+  #pendingWorkCount(): number {
+    return this.#disposals.size + this.#tasks.size + this.#childDisposals.size +
+      [...this.#children.values()].reduce(
+        (total, child) => total + child.#pendingWorkCount(),
+        0,
+      ) +
       [...this.#childDisposals.values()].reduce(
-        (total, child) => total + 1 + child.#pendingCleanupCount(),
+        (total, child) => total + child.#pendingWorkCount(),
         0,
       );
   }
 
-  #pendingCleanupSettled(): Promise<void> {
+  #pendingWorkSettled(): Promise<void> {
     const pending: Promise<unknown>[] = [
       ...[...this.#disposals].map((disposal) => disposal.catch(() => {})),
+      ...this.#tasks,
     ];
     for (const [disposal, child] of this.#childDisposals) {
-      pending.push(disposal.catch(() => {}), child.#pendingCleanupSettled());
+      pending.push(disposal.catch(() => {}), child.#pendingWorkSettled());
+    }
+    for (const child of this.#children.values()) {
+      pending.push(child.#pendingWorkSettled());
     }
     return Promise.all(pending).then(() => {});
   }
@@ -153,13 +308,13 @@ export class ResourceScope {
     this.#childDisposals.set(disposal, child);
     const finish = (): void => {
       this.#recordChildEvidence(child);
-      if (child.#pendingCleanupCount() === 0) {
+      if (child.#pendingWorkCount() === 0) {
         if (this.#childDisposals.get(disposal) === child) {
           this.#childDisposals.delete(disposal);
         }
         return;
       }
-      void child.#pendingCleanupSettled().then(() => {
+      void child.#pendingWorkSettled().then(() => {
         this.#recordChildEvidence(child);
         if (this.#childDisposals.get(disposal) === child) {
           this.#childDisposals.delete(disposal);
@@ -216,57 +371,114 @@ export class ResourceScope {
   }
 
   revoke(): void {
-    this.#revoked = true;
-    for (const child of this.#children.values()) child.revoke();
+    if (this.#revoked) return;
+    const tree: Array<{
+      scope: ResourceScope;
+      controller: AbortController;
+      reason: Error;
+    }> = [{
+      scope: this,
+      controller: this.#controller,
+      reason: this.#abortReason,
+    }];
+    for (let index = 0; index < tree.length; index += 1) {
+      const entry = tree[index];
+      if (entry) {
+        for (const child of entry.scope.#children.values()) {
+          tree.push({
+            scope: child,
+            controller: child.#controller,
+            reason: child.#abortReason,
+          });
+        }
+      }
+    }
+    for (const entry of tree) entry.scope.#revoked = true;
+    for (const entry of tree) entry.controller.abort(entry.reason);
   }
 
-  disposeAll(timeoutMs: number): Promise<DisposeReport> {
+  disposeAll(
+    timeoutMs: number,
+    sharedDeadline?: CleanupDeadline,
+  ): Promise<DisposeReport> {
     if (this.#disposing) return this.#disposing;
-    this.revoke();
-    this.#disposing = (async () => {
-      const pendingChildren = [...this.#childDisposals.keys()];
-      const childScopes = [...this.#children.values()];
-      this.#children.clear();
-      const children = childScopes.map((child) =>
-        this.#trackChildDisposal(child, child.disposeAll(timeoutMs))
-      );
-      children.push(...pendingChildren);
-      for (const resource of this.#resources.values()) resource.dispose();
-      const resources = [...this.#disposals];
-      const work = Promise.all([
-        Promise.allSettled(children),
-        Promise.allSettled(resources),
-      ]);
-      let timer: { cancel(): void } | undefined;
-      const deadline = new Promise<"timeout">((resolve) => {
-        timer = startDeadline(() => resolve("timeout"), timeoutMs);
-      });
-      try {
-        const result = await Promise.race([
-          work.then((value) => ({ kind: "complete" as const, value })),
-          deadline.then(() => ({ kind: "timeout" as const })),
-        ]);
-        if (result.kind === "timeout") {
-          this.#timedOut = true;
-          this.#recordError("resource cleanup deadline");
-          return { errors: [...this.#errors], timedOut: true };
-        }
-        const [childResults, resourceResults] = result.value;
-        for (const result of childResults) {
-          if (result.status === "rejected") this.#recordError(result.reason);
-          else this.#recordReport(result.value);
-        }
-        for (const result of resourceResults) {
-          if (result.status === "rejected") this.#recordError(result.reason);
-        }
-      } finally {
-        timer?.cancel();
-        this.#resources.clear();
-        this.#children.clear();
-      }
-      return { errors: [...this.#errors], timedOut: this.#timedOut };
-    })();
+    const deadline = sharedDeadline ?? new CleanupDeadline(timeoutMs);
+    const ownsDeadline = !sharedDeadline;
+    let resolve!: (report: DisposeReport) => void;
+    this.#disposing = new Promise((done) => resolve = done);
+    if (ownsDeadline) {
+      void this.#disposing.then(() => deadline.cancel());
+    }
+    try {
+      this.revoke();
+    } catch (error) {
+      this.#recordError(error);
+    }
+    void this.#drain(deadline).then(resolve, (error) => {
+      this.#recordError(error);
+      resolve(this.#report(deadline.expired, this.pendingTaskCount));
+    });
     return this.#disposing;
+  }
+
+  #report(timedOut: boolean, pendingTasks: number): DisposeReport {
+    return {
+      errors: [...this.#errors],
+      timedOut: timedOut || this.#timedOut,
+      taskCount: this.#taskCount,
+      pendingTasks,
+      observedTaskRejections: this.#observedTaskRejections,
+      taskFailures: this.#taskFailures,
+      pendingResources: this.resourceCount,
+    };
+  }
+
+  async #drain(deadline: CleanupDeadline): Promise<DisposeReport> {
+    const pendingChildren = [...this.#childDisposals.keys()];
+    const pendingChildScopes = [...this.#childDisposals.values()];
+    const childScopes = [...this.#children.values()];
+    this.#children.clear();
+    const children = childScopes.map((child) =>
+      this.#trackChildDisposal(child, child.disposeAll(2_000, deadline))
+    );
+    children.push(...pendingChildren);
+    for (const resource of this.#resources.values()) resource.dispose();
+    const resources = [...this.#disposals];
+    const work = Promise.all([
+      Promise.allSettled(children),
+      Promise.allSettled(resources),
+      Promise.allSettled([...this.#tasks]),
+      Promise.all(
+        pendingChildScopes.map((child) => child.#pendingWorkSettled()),
+      ),
+      Promise.all(childScopes.map((child) => child.#pendingWorkSettled())),
+    ]);
+    const result = await Promise.race([
+      work.then((value) => ({ kind: "complete" as const, value })),
+      deadline.promise.then(() => ({ kind: "timeout" as const })),
+    ]);
+    if (result.kind === "timeout") {
+      this.#timedOut = true;
+      const pendingTasks = this.pendingTaskCount;
+      this.#recordError(
+        `resource cleanup deadline (pendingTasks=${pendingTasks}, pendingResources=${this.resourceCount})`,
+      );
+      return this.#report(true, pendingTasks);
+    }
+    const [childResults, resourceResults] = result.value;
+    for (const childResult of childResults) {
+      if (childResult.status === "rejected") {
+        this.#recordError(childResult.reason);
+      } else this.#recordReport(childResult.value);
+    }
+    for (const resourceResult of resourceResults) {
+      if (resourceResult.status === "rejected") {
+        this.#recordError(resourceResult.reason);
+      }
+    }
+    this.#resources.clear();
+    this.#children.clear();
+    return this.#report(false, this.pendingTaskCount);
   }
 }
 
@@ -345,10 +557,21 @@ export class M0ModuleHost {
     return this.#lifecycle;
   }
 
-  get scopeDiagnosticsForTests(): { resources: number; childScopes: number } {
+  get scopeDiagnosticsForTests(): {
+    resources: number;
+    childScopes: number;
+    tasks: number;
+    pendingTasks: number;
+    observedTaskRejections: number;
+    taskFailures: number;
+  } {
     return {
       resources: this.scope.resourceCount,
       childScopes: this.scope.childCount,
+      tasks: this.scope.taskCount,
+      pendingTasks: this.scope.pendingTaskCount,
+      observedTaskRejections: this.scope.observedTaskRejections,
+      taskFailures: this.scope.taskFailures,
     };
   }
 
@@ -382,8 +605,12 @@ export class M0ModuleHost {
         throw new Error("invalid fixture lifecycle ABI");
       }
       this.#lifecycle = exports;
-      const request = (json: string): string =>
-        broker(this.epoch, this.generation, json);
+      const request = (json: string): string => {
+        if (this.scope.revoked || this.#stopPromise) {
+          throw new Error("resource scope revoked");
+        }
+        return broker(this.epoch, this.generation, json);
+      };
       await bounded(
         Promise.resolve(exports.activate(
           JSON.stringify({
@@ -420,7 +647,12 @@ export class M0ModuleHost {
             generation: this.generation,
             windowId,
           }),
-          (json) => broker(this.epoch, this.generation, json),
+          (json) => {
+            if (this.scope.revoked || this.#stopPromise) {
+              throw new Error("resource scope revoked");
+            }
+            return broker(this.epoch, this.generation, json);
+          },
         )),
         2_000,
       );
@@ -439,23 +671,54 @@ export class M0ModuleHost {
 
   stop(reason: string): Promise<DisposeReport> {
     if (this.#stopPromise) return this.#stopPromise;
-    this.scope.revoke();
-    this.#stopPromise = this.#stopOnce(reason);
-    return this.#stopPromise;
+    let resolve!: (report: DisposeReport) => void;
+    const shared = new Promise<DisposeReport>((done) => resolve = done);
+    this.#stopPromise = shared;
+    const deadline = new CleanupDeadline(2_000);
+    const errors: string[] = [];
+    try {
+      this.scope.revoke();
+    } catch (error) {
+      errors.push(String(error));
+    }
+    void this.#stopOnce(reason, deadline, errors).then(
+      (report) => {
+        deadline.cancel();
+        resolve(report);
+      },
+      (error) => {
+        deadline.cancel();
+        resolve({
+          errors: [...errors, String(error)],
+          timedOut: deadline.expired,
+          taskCount: this.scope.taskCount,
+          pendingTasks: this.scope.pendingTaskCount,
+          observedTaskRejections: this.scope.observedTaskRejections,
+          taskFailures: this.scope.taskFailures,
+          pendingResources: this.scope.resourceCount,
+        });
+      },
+    );
+    return shared;
   }
 
-  async #stopOnce(reason: string): Promise<DisposeReport> {
-    const errors: string[] = [];
-    let timedOut = false;
+  async #stopOnce(
+    reason: string,
+    deadline: CleanupDeadline,
+    initialErrors: string[],
+  ): Promise<DisposeReport> {
+    const errors = [...initialErrors];
+    let cleanupReport: DisposeReport | null = null;
     try {
       const lifecycle = this.#lifecycle;
       const hook = lifecycle
-        ? bounded(
+        ? boundedByDeadline(
           Promise.resolve().then(() => lifecycle.deactivate(reason)),
-          2_000,
+          deadline,
+          "lifecycle deadline",
         )
         : Promise.resolve();
-      const cleanup = this.scope.disposeAll(2_000);
+      const cleanup = this.scope.disposeAll(2_000, deadline);
       const [hookResult, cleanupResult] = await Promise.allSettled([
         hook,
         cleanup,
@@ -466,8 +729,8 @@ export class M0ModuleHost {
       if (cleanupResult.status === "rejected") {
         errors.push(String(cleanupResult.reason));
       } else {
+        cleanupReport = cleanupResult.value;
         errors.push(...cleanupResult.value.errors);
-        timedOut = cleanupResult.value.timedOut;
       }
     } finally {
       const sandbox = this.#sandbox;
@@ -484,6 +747,15 @@ export class M0ModuleHost {
         }
       }
     }
-    return { errors, timedOut };
+    return {
+      errors,
+      timedOut: deadline.expired || cleanupReport?.timedOut === true,
+      taskCount: this.scope.taskCount,
+      pendingTasks: cleanupReport?.pendingTasks ?? this.scope.pendingTaskCount,
+      observedTaskRejections: this.scope.observedTaskRejections,
+      taskFailures: this.scope.taskFailures,
+      pendingResources: cleanupReport?.pendingResources ??
+        this.scope.resourceCount,
+    };
   }
 }
