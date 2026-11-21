@@ -193,6 +193,12 @@ Deno.test("stable publisher keeps its protected release boundaries", async () =>
 
 Deno.test("shared packaging selects the channel and isolates validation-only runs", async () => {
   const entry = await readWorkflow("package_and_publish_release.yml");
+  const callInputs =
+    entry.split("  workflow_call:")[1].split("\npermissions:")[0];
+  assertStringIncludes(
+    callInputs,
+    "validation_only:\n        type: boolean\n        default: false",
+  );
   const publish = jobBlock(entry, "publish");
   const alpha = jobBlock(entry, "publish-alpha");
   assertStringIncludes(
@@ -205,7 +211,10 @@ Deno.test("shared packaging selects the channel and isolates validation-only run
   );
   assertStringIncludes(publish, "source_workflow_run_id: ${{ github.run_id }}");
   assertStringIncludes(publish, "publish_ppa: true");
-  assertStringIncludes(alpha, "if: ${{ inputs.alpha == true }}");
+  assertStringIncludes(
+    alpha,
+    "if: ${{ inputs.validation_only != true && inputs.alpha == true }}",
+  );
   assertStringIncludes(alpha, "uses: ./.github/workflows/publish_alpha.yml");
   for (const job of [publish, alpha]) {
     assertStringIncludes(job, "needs: assemble-release-bundle");

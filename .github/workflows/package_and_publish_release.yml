@@ -26,6 +26,9 @@ name: "(P) ⚠️ Package and Publish Release"
       runtime_manifest_artifact_id:
         required: true
         type: string
+      validation_only:
+        type: boolean
+        default: false
       alpha:
         description: Publish the verified Windows package to Alpha
         required: true
@@ -566,7 +569,7 @@ jobs:
   publish-alpha:
     name: Publish verified Alpha
     needs: assemble-release-bundle
-    if: ${{ inputs.alpha == true }}
+    if: ${{ inputs.validation_only != true && inputs.alpha == true }}
     permissions:
       actions: read
       contents: write
