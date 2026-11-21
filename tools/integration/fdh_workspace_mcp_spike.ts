@@ -136,7 +136,7 @@ async function configureGoogle(
   await admin(base + "/users/profile", "PUT", {
     ...profile,
     attributes,
-    unmanagedAttributePolicy: "DISABLED",
+    unmanagedAttributePolicy: "ADMIN_VIEW",
   });
   await admin(base + "/clients", "POST", {
     clientId: PUBLIC_CLIENT,
@@ -174,6 +174,9 @@ async function configureGoogle(
     standardFlowEnabled: false,
     directAccessGrantsEnabled: false,
     fullScopeAllowed: false,
+    // Keycloak >= 26.6.2 denies introspection when the caller is not in the
+    // token's audience; the RFC 8707 resource aud never contains client ids.
+    attributes: { "allow.token.introspection.without.audience.check": "true" },
   });
   const clients = rows(await admin(base + "/clients", "GET"));
   const client = one(clients, "clientId", PUBLIC_CLIENT);
@@ -181,6 +184,14 @@ async function configureGoogle(
   const management = one(clients, "clientId", "realm-management");
   const scopes = rows(await admin(base + "/client-scopes", "GET"));
   const probe = one(scopes, "name", "fdh:probe");
+  // Keycloak >= 26.8.2: the Admin REST API rejects tokens without the
+  // built-in kc-admin-api scope/audience (RFC 9700 audience check).
+  const kcAdminApi = one(scopes, "name", "kc-admin-api");
+  await admin(
+    base + "/clients/" + id(reader.id) + "/default-client-scopes/" +
+      id(kcAdminApi.id),
+    "PUT",
+  );
   await admin(
     base + "/clients/" + id(client.id) + "/optional-client-scopes/" +
       id(probe.id),
@@ -342,7 +353,7 @@ async function googleFlow(
     rows(await io.readGoogleProviderMappers()).length !== 0
   ) throw fail();
   const hardenedProfile = record(await io.readUserProfile());
-  if (hardenedProfile.unmanagedAttributePolicy !== "DISABLED") throw fail();
+  if (hardenedProfile.unmanagedAttributePolicy !== "ADMIN_VIEW") throw fail();
   for (const name of ["email", "username"]) {
     const edits =
       record(one(rows(hardenedProfile.attributes), "name", name).permissions)
