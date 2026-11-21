@@ -1,11 +1,11 @@
 # QA3 source shadow foundation
 
-This is the first QA3-04/11 host foundation, not product qualification. The
-approved initial mode is **shadow**. Release and Alpha each call the reusable
-source job once, alongside their existing jobs. Its job-level
-`continue-on-error` preserves the current required jobs, signing, approval,
-bundle schema and publisher. The raw receipt retains FAIL/INCOMPLETE even when
-the calling workflow continues. Do not make packages depend on this job yet.
+This is the QA3-04/11 host foundation. FDH decision D-13 keeps source QA in
+**shadow** for v0.1 ([KAN-114](https://floorp-projects.atlassian.net/browse/KAN-114)).
+Release and Alpha each call the reusable source job once, in parallel with
+packaging. The job uses `continue-on-error` and is independent of signing,
+approval, and publishing. The raw receipt retains FAIL/INCOMPLETE even when
+the calling workflow continues.
 
 ## Fixed plan and execution
 
@@ -53,10 +53,12 @@ plan/runner/root-config/root-lock/host-map/host-lock/test-file digests,
 planned/executed IDs and each raw verdict. `--local` explicitly records
 dirty/local execution during development; it does not issue qualification.
 Preflight rejection also writes a FAIL receipt. CI preserves contract-test logs
-and exit codes alongside the source receipt in `source/`. Workflow artifacts are
-named with run and attempt and retained for 14 days. This initial receipt does
-not establish complete history across runs; that requires the QA3-08 trusted
-controller before required promotion.
+and exit codes alongside the source receipt in `source/`. The Actions job
+summary reports the contract-test outcome and the verdict and SHA-256 of a
+receipt matching the expected checkout, run, and attempt. Missing or invalid
+receipts are shown explicitly. The raw evidence is uploaded as
+`qa3-source-<run>-<attempt>` and retained for 14 days. Complete history across
+runs requires the QA3-08 trusted controller.
 
 Child processes receive a small environment without credentials or runner option
 injection. Each group has a 180-second timeout and a 16-MiB limit for regular

@@ -1129,7 +1129,7 @@ async function cmdRecord(parsed: ParsedArgs): Promise<void> {
  *
  * The CLI is still local-only: it writes the receipt JSON under
  * `<worktree>/_dist/fdh/reviews/` and prints the exact comment body. The agent
- * (or human) posts that body to the PR; the `fdh-review-gate` workflow parses
+ * (or human) posts that body to the PR; the `fdh-trusted-review-gate` workflow parses
  * the marker and checks distinct reviewers at the PR head.
  */
 async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
