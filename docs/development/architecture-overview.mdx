@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "ce7919519c99afdea569d79db07f710e7b712106"
+floorp_commit: "02c261e851d21de7ce22d1b8c1aca0aed20a8720"
 generated: true
 ---
 # Architecture Overview
@@ -141,10 +141,10 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_dispatch`
-- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/ppa_index_check.yml` - triggers: `pull_request`, `push`
-- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
@@ -152,6 +152,6 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/qa3-source-shadow.yml` - triggers: `pull_request`, `workflow_call`, `workflow_dispatch`
 - `.github/workflows/qa3-windows-supervisor.yml` - triggers: `pull_request`, `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
-- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
 - `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

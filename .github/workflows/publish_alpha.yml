@@ -103,6 +103,7 @@ jobs:
             ${{ runner.temp }}/noraneko-publish/*
           fail_on_unmatched_files: true
           tag_name: "alpha"
+          target_commitish: ${{ github.sha }}
           name: "Alpha Release"
           body: "Noraneko Alpha for Windows"
           draft: false
