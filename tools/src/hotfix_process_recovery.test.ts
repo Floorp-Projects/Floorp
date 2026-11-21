@@ -3,9 +3,11 @@ import {
   assertOwnedMarionetteListener,
   assertProcessRecoveryPlatform,
   hashUntrackedSourceFiles,
+  isLinuxProcessDisappearanceError,
   matchesDurableBoundary,
   parseBrowserDriverResult,
   parseDurableMarker,
+  parseFirstWindowContinuityResult,
   parseLinuxProcStat,
   resolveExpectedRuntimeBuildId,
   runtimeLockArchitectureForDenoArch,
@@ -64,6 +66,21 @@ Deno.test("Linux proc stat parsing preserves session and start identity", () => 
   assert(
     idle.sessionId === 0 && idle.processGroupId === 0,
     "zero session allowed",
+  );
+});
+
+Deno.test("Linux proc identity reads tolerate exited-process races only", () => {
+  assert(
+    isLinuxProcessDisappearanceError(
+      new Error("No such process (os error 3): readfile '/proc/123/stat'"),
+    ),
+    "ESRCH while reading proc identity is treated as an exited process",
+  );
+  assert(
+    !isLinuxProcessDisappearanceError(
+      new Error("permission denied while reading proc identity"),
+    ),
+    "ownership verification errors are not treated as process exit",
   );
 });
 
@@ -166,6 +183,29 @@ Deno.test("owned kill emits no signal after PID reuse or identity mismatch", asy
     );
     assert(signals === 0, "no signal emitted before all identities validate");
   }
+});
+
+Deno.test("owned kill tolerates a verified child exiting before SIGKILL", async () => {
+  const root = identity(10, 10);
+  const child = { ...identity(11, 11), parentPid: 10, processGroupId: 11 };
+  const signals: number[] = [];
+  const killed = await signalVerifiedOwnedProcessTree({
+    root,
+    profilePath: "/private/profile",
+    previouslyOwned: [root, child],
+    dependencies: {
+      listProcesses: () => Promise.resolve([root, child]),
+      readProcess: (pid) => Promise.resolve(pid === root.pid ? root : child),
+      signal: (pid) => {
+        if (pid === child.pid) throw new Deno.errors.NotFound("already exited");
+        signals.push(pid);
+      },
+    },
+  });
+  assert(
+    killed.length === 2 && signals.length === 1 && signals[0] === root.pid,
+    "exited child is skipped while the verified root is still signaled",
+  );
 });
 
 Deno.test("Marionette listener rejects foreign and ambiguous owners", () => {
@@ -319,6 +359,88 @@ Deno.test("driver result binds nonce launch and BuildID", () => {
       rejected = true;
     }
     assert(rejected, "malformed or replayed result rejected");
+  }
+});
+
+Deno.test("first-window continuity result binds nonce launch build and action", () => {
+  const result = {
+    schemaVersion: 1,
+    kind: "first-window-continuity",
+    runNonce: "nonce",
+    launchId: 4,
+    buildId: "20261112140843",
+    action: "setup-w1",
+    observations: [{
+      label: "w1-active",
+      hostEpoch: "epoch",
+      generation: 1,
+      stateRevision: 4,
+      desiredEnabled: true,
+      selectedVersion: "v1",
+      selectedHealth: "verified",
+      journal: { stateRevision: 4 },
+      windowIds: ["host-w1"],
+      windows: [{
+        windowId: "outer-w1",
+        hostWindowId: "host-w1",
+        windowType: "navigator:browser",
+        private: false,
+        delayedStartupFinished: true,
+        marker: "epoch:1",
+      }],
+      resources: {
+        resources: 1,
+        childScopes: 1,
+        tasks: 0,
+        pendingTasks: 0,
+        observedTaskRejections: 0,
+        taskFailures: 0,
+      },
+      lifecycle: {
+        observers: true,
+        tracked: 1,
+        pendingStartup: 0,
+        readyWaiters: 0,
+        admissionTasks: 0,
+        pendingDetaches: 0,
+        cleanupFailures: 0,
+      },
+    }],
+    details: { installStatus: "succeeded" },
+  };
+  const expected = {
+    runNonce: "nonce",
+    launchId: 4,
+    buildId: result.buildId,
+    action: "setup-w1" as const,
+  };
+  assert(
+    parseFirstWindowContinuityResult(result, expected).action === "setup-w1",
+    "valid continuity action parsed",
+  );
+  for (
+    const altered of [
+      { ...result, runNonce: "old" },
+      { ...result, launchId: 3 },
+      { ...result, buildId: "20260101000000" },
+      { ...result, action: "close-w1" },
+      { ...result, observations: [] },
+      {
+        ...result,
+        observations: [{
+          ...result.observations[0],
+          resources: { resources: -1 },
+        }],
+      },
+    ]
+  ) {
+    let rejected = false;
+    try {
+      parseFirstWindowContinuityResult(altered, expected);
+    } catch {
+      rejected = true;
+    }
+    assert(rejected, "malformed or replayed continuity result rejected");
   }
 });
 

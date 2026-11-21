@@ -56,6 +56,66 @@ export interface BrowserDriverResult {
   postRollbackJournal: Record<string, unknown> | null;
 }
 
+export type FirstWindowContinuityAction =
+  | "setup-w1"
+  | "open-w2"
+  | "await-w2"
+  | "close-w1"
+  | "update-v2"
+  | "disable"
+  | "enable-v2"
+  | "shutdown";
+
+export interface FirstWindowContinuityWindow {
+  windowId: string;
+  hostWindowId: string | null;
+  windowType: string | null;
+  private: boolean;
+  delayedStartupFinished: boolean;
+  marker: string | null;
+}
+
+export interface FirstWindowContinuityObservation {
+  label: string;
+  hostEpoch: string | null;
+  generation: number | null;
+  stateRevision: number;
+  desiredEnabled: boolean;
+  selectedVersion: string | null;
+  selectedHealth: string | null;
+  journal: Record<string, unknown>;
+  windowIds: string[];
+  windows: FirstWindowContinuityWindow[];
+  resources: {
+    resources: number;
+    childScopes: number;
+    tasks: number;
+    pendingTasks: number;
+    observedTaskRejections: number;
+    taskFailures: number;
+  };
+  lifecycle: {
+    observers: boolean;
+    tracked: number;
+    pendingStartup: number;
+    readyWaiters: number;
+    admissionTasks: number;
+    pendingDetaches: number;
+    cleanupFailures: number;
+  };
+}
+
+export interface FirstWindowContinuityActionResult {
+  schemaVersion: 1;
+  kind: "first-window-continuity";
+  runNonce: string;
+  launchId: number;
+  buildId: string;
+  action: FirstWindowContinuityAction;
+  observations: FirstWindowContinuityObservation[];
+  details: Record<string, unknown>;
+}
+
 export interface DiskJournalEvidence {
   path: string;
   byteLength: number;

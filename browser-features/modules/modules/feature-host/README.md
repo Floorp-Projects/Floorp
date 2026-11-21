@@ -81,9 +81,13 @@ fresh private profile and M0 UUID root, a dedicated Marionette port, and a
 verified browser session/process group. The scenario driver uses the packaged
 FeatureHost system ESM and normal install/enable/update/disable operations; the
 journal is not seeded and crash boundaries do not call graceful host shutdown.
-The process matrix runs with W0 empty and test windows excluded; existing UI
-window lifecycle coverage remains in the native FeatureHost tests, separately.
-The supervisor records the durable journal snapshots, process identities,
+The eight crash-boundary scenarios run with W0 empty and test windows excluded;
+existing UI window lifecycle coverage remains in the native FeatureHost tests,
+separately. A distinct ninth first-window continuity scenario opens normal W1
+and W2 with window exclusion disabled, closes W1 from Marionette-controlled W2,
+then updates, disables, enables, and shuts down the host. This continuity
+evidence is Linux x86_64 only; it makes no heap-leak, isolation, or other-OS
+claim. The supervisor records the durable journal snapshots, process identities,
 BuildID, runtime-lock hashes, per-process payload evaluation counts, recovery
 results, and assertions in `_dist/hotfix-process-test-runs/`; browser stdout and
 stderr are retained there as well. Current Linux process-death coverage kills at
@@ -113,7 +117,7 @@ acceptance.
 | 6  | old callback/disposer delay                       | Partial: stale wrappers and broker callbacks are measured; no sandbox security or heap-leak claim.                   |
 | 7  | hook needs task release                           | Native: abort precedes deactivate; released tasks drain concurrently with global/window disposal under one deadline. |
 | 8  | concurrent dispose / hook throw / timeout         | Native: task, hook, child/window, resource, deadline, and sandbox teardown outcomes are aggregated.                  |
-| 9  | W0 capture / window churn                         | Native: finite W0, delayed startup, close detach, admission, filtering, and shutdown teardown are tested.            |
+| 9  | W0 capture / window churn                         | Native: W0/window churn tests; Linux x86_64 process case proves real W1-to-W2 continuity.                            |
 | 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                                     |
 | 11 | precommit / revision update                       | Native tests cover pending replay, descriptor conflict ordering, dequeue revision checks, and bounded-queue busy.    |
 | 12 | postcommit publication / attach failure           | Partial: staged-close cleanup failure quarantines before commit; failed admission quarantines; HUB is deferred.      |

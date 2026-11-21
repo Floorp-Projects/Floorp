@@ -8,6 +8,9 @@ import type {
   BrowserLaunch,
   DurableBoundary,
   DurableMarker,
+  FirstWindowContinuityAction,
+  FirstWindowContinuityActionResult,
+  FirstWindowContinuityObservation,
   LinuxProcessIdentity,
   ProcessOwnershipMonitor,
   ProcessRecoveryTrace,
@@ -268,7 +271,11 @@ export async function signalVerifiedOwnedProcessTree(options: {
     verified.push(current);
   }
   for (const identity of verified) {
-    dependencies.signal(identity.pid, "SIGKILL");
+    try {
+      dependencies.signal(identity.pid, "SIGKILL");
+    } catch (error) {
+      if (!isLinuxProcessDisappearanceError(error)) throw error;
+    }
   }
   return verified;
 }
@@ -328,6 +335,131 @@ export function parseBrowserDriverResult(
   return value as unknown as BrowserDriverResult;
 }
 
+function parseContinuityObservation(
+  value: unknown,
+): FirstWindowContinuityObservation {
+  if (
+    !isRecord(value) || typeof value.label !== "string" ||
+    !(value.hostEpoch === null || typeof value.hostEpoch === "string") ||
+    !(value.generation === null ||
+      (typeof value.generation === "number" &&
+        Number.isSafeInteger(value.generation) && value.generation >= 0)) ||
+    typeof value.stateRevision !== "number" ||
+    !Number.isSafeInteger(value.stateRevision) || value.stateRevision < 0 ||
+    typeof value.desiredEnabled !== "boolean" ||
+    !(value.selectedVersion === null ||
+      typeof value.selectedVersion === "string") ||
+    !(value.selectedHealth === null ||
+      typeof value.selectedHealth === "string") ||
+    !Array.isArray(value.windowIds) ||
+    !value.windowIds.every((id: unknown) => typeof id === "string") ||
+    !Array.isArray(value.windows) || !isRecord(value.journal) ||
+    !isRecord(value.resources) ||
+    !isRecord(value.lifecycle)
+  ) {
+    throw new Error("invalid first-window continuity observation");
+  }
+  for (const item of value.windows as unknown[]) {
+    if (
+      !isRecord(item) || typeof item.windowId !== "string" ||
+      !(item.hostWindowId === null || typeof item.hostWindowId === "string") ||
+      !(item.windowType === null || typeof item.windowType === "string") ||
+      typeof item.private !== "boolean" ||
+      typeof item.delayedStartupFinished !== "boolean" ||
+      !(item.marker === null || typeof item.marker === "string")
+    ) {
+      throw new Error("invalid first-window continuity window observation");
+    }
+  }
+  for (
+    const key of [
+      "resources",
+      "childScopes",
+      "tasks",
+      "pendingTasks",
+      "observedTaskRejections",
+      "taskFailures",
+    ] as const
+  ) {
+    const metric = value.resources[key];
+    if (
+      typeof metric !== "number" || !Number.isSafeInteger(metric) || metric < 0
+    ) {
+      throw new Error("invalid first-window continuity resource metrics");
+    }
+  }
+  if (typeof value.lifecycle.observers !== "boolean") {
+    throw new Error("invalid first-window continuity lifecycle observers");
+  }
+  for (
+    const key of [
+      "tracked",
+      "pendingStartup",
+      "readyWaiters",
+      "admissionTasks",
+      "pendingDetaches",
+      "cleanupFailures",
+    ] as const
+  ) {
+    const metric = value.lifecycle[key];
+    if (
+      typeof metric !== "number" || !Number.isSafeInteger(metric) || metric < 0
+    ) {
+      throw new Error("invalid first-window continuity lifecycle metrics");
+    }
+  }
+  return value as unknown as FirstWindowContinuityObservation;
+}
+
+export function parseFirstWindowContinuityResult(
+  value: unknown,
+  expected: {
+    runNonce: string;
+    launchId: number;
+    buildId: string;
+    action: FirstWindowContinuityAction;
+  },
+): FirstWindowContinuityActionResult {
+  const actions: readonly FirstWindowContinuityAction[] = [
+    "setup-w1",
+    "open-w2",
+    "await-w2",
+    "close-w1",
+    "update-v2",
+    "disable",
+    "enable-v2",
+    "shutdown",
+  ];
+  if (
+    !isRecord(value) || value.schemaVersion !== 1 ||
+    value.kind !== "first-window-continuity" ||
+    value.runNonce !== expected.runNonce ||
+    value.launchId !== expected.launchId ||
+    typeof value.launchId !== "number" ||
+    !Number.isSafeInteger(value.launchId) || value.launchId < 1 ||
+    value.buildId !== expected.buildId || value.action !== expected.action ||
+    !actions.includes(value.action as FirstWindowContinuityAction) ||
+    !Array.isArray(value.observations) || value.observations.length === 0 ||
+    !isRecord(value.details)
+  ) {
+    throw new Error(
+      "first-window continuity result identity or schema mismatch",
+    );
+  }
+  return {
+    schemaVersion: 1,
+    kind: "first-window-continuity",
+    runNonce: value.runNonce,
+    launchId: value.launchId,
+    buildId: value.buildId,
+    action: value.action as FirstWindowContinuityAction,
+    observations: value.observations.map((item: unknown) =>
+      parseContinuityObservation(item)
+    ),
+    details: value.details,
+  };
+}
+
 export async function waitForDurableMarker(options: {
   markerPath: string;
   errorPath: string;
@@ -376,6 +508,12 @@ function hasProfileArgument(
   return false;
 }
 
+export function isLinuxProcessDisappearanceError(error: unknown): boolean {
+  return error instanceof Deno.errors.NotFound ||
+    (error instanceof Error &&
+      /No such process \(os error 3\)/.test(error.message));
+}
+
 async function readProcessIdentity(
   pid: number,
   failOnPermissionDenied = false,
@@ -394,7 +532,7 @@ async function readProcessIdentity(
       .filter(Boolean);
     return { ...parsed, executable, commandLine };
   } catch (error) {
-    if (error instanceof Deno.errors.NotFound) return null;
+    if (isLinuxProcessDisappearanceError(error)) return null;
     if (error instanceof Deno.errors.PermissionDenied) {
       if (failOnPermissionDenied) {
         throw new Error(`cannot verify owned process identity (${pid})`);
@@ -901,6 +1039,392 @@ return "started";
 `;
 }
 
+function firstWindowContinuityScript(): string {
+  return `
+const config = arguments[0];
+const complete = arguments[arguments.length - 1];
+const hostIdentityKey = "__floorpM0FirstWindowContinuityIdentity";
+const run = async () => {
+  const hostModule = ChromeUtils.importESModule(${
+    JSON.stringify(FEATURE_HOST_URI)
+  });
+  const buildId = Services.appinfo.appBuildID;
+  if (buildId !== config.buildId) throw new Error("continuity BuildID mismatch");
+  const privateBrowsing = ChromeUtils.importESModule("resource://gre/modules/PrivateBrowsingUtils.sys.mjs").PrivateBrowsingUtils;
+  const browserWindows = () => {
+    const result = [];
+    const enumerator = Services.wm.getEnumerator("navigator:browser");
+    while (enumerator.hasMoreElements()) result.push(enumerator.getNext());
+    return result;
+  };
+  const browserWindowId = (host, target) => {
+    const outerId = target.windowUtils?.outerWindowID;
+    if (typeof outerId === "number" && Number.isSafeInteger(outerId) && outerId > 0) {
+      return "outer:" + String(outerId);
+    }
+    if (typeof outerId === "string" && /^[1-9][0-9]*$/.test(outerId)) {
+      return "outer:" + outerId;
+    }
+    const contextId = target.docShell?.browsingContext?.id ??
+      target.browsingContext?.id;
+    if (typeof contextId === "number" && Number.isSafeInteger(contextId) && contextId > 0) {
+      return "browsing-context:" + String(contextId);
+    }
+    if (typeof contextId === "string" && /^[1-9][0-9]*$/.test(contextId)) {
+      return "browsing-context:" + String(contextId);
+    }
+    const hostId = host?.windowIdForTests(target);
+    if (typeof hostId === "string" && hostId.length > 0) {
+      return "host-window:" + hostId;
+    }
+    throw new Error("browser window has no stable identity");
+  };
+  const markerFor = target => target.document.documentElement.getAttribute("data-floorp-hotfix-m0");
+  const markerIdentity = marker => {
+    if (typeof marker !== "string") return null;
+    const separator = marker.lastIndexOf(":");
+    if (separator <= 0) return null;
+    const generation = Number(marker.slice(separator + 1));
+    if (!Number.isSafeInteger(generation) || generation < 1) return null;
+    return { epoch: marker.slice(0, separator), generation };
+  };
+  const currentMarkerIdentity = () => {
+    const markers = browserWindows().map(markerFor).filter(marker => marker !== null);
+    if (markers.length === 0) return null;
+    const identities = markers.map(markerIdentity);
+    if (identities.some(identity => identity === null)) throw new Error("invalid host generation marker");
+    const first = identities[0];
+    if (identities.some(identity => identity.epoch !== first.epoch || identity.generation !== first.generation)) {
+      throw new Error("browser windows disagree on host generation marker");
+    }
+    return first;
+  };
+  const isDelayedStartupFinished = target => target.gBrowserInit?.delayedStartupFinished === true;
+  const windowState = (host, target) => ({
+    windowId: browserWindowId(host, target),
+    hostWindowId: host.windowIdForTests(target),
+    windowType: target.document.documentElement.getAttribute("windowtype"),
+    private: privateBrowsing.isWindowPrivate(target),
+    delayedStartupFinished: isDelayedStartupFinished(target),
+    marker: markerFor(target),
+  });
+  const observe = (host, label) => {
+    const record = host.diagnostics;
+    const identity = currentMarkerIdentity();
+    return {
+      label,
+      hostEpoch: identity?.epoch ?? null,
+      generation: identity?.generation ?? null,
+      stateRevision: record.stateRevision,
+      desiredEnabled: record.desiredEnabled,
+      selectedVersion: record.selectedVersion,
+      selectedHealth: record.selectedHealth,
+      journal: record,
+      windowIds: [...host.windowIdsForTests].sort(),
+      windows: browserWindows().map(target => windowState(host, target)).sort((a, b) => a.windowId.localeCompare(b.windowId)),
+      resources: host.runningScopeDiagnosticsForTests,
+      lifecycle: host.windowLifecycleDiagnosticsForTests,
+    };
+  };
+  const waitFor = async (predicate, label) => {
+    const deadline = Date.now() + config.timeoutMs;
+    while (Date.now() < deadline) {
+      if (predicate()) return;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    throw new Error("timed out waiting for " + label);
+  };
+  const openExisting = () => hostModule.M0FeatureHost.open(config.root, true, true, true);
+  const assertHostIdentity = host => {
+    if (host[hostIdentityKey] !== config.hostIdentity) throw new Error("existing-root open returned a different host instance");
+  };
+  const assertNormalBrowserWindow = target => {
+    if (target.document.documentElement.getAttribute("windowtype") !== "navigator:browser" || privateBrowsing.isWindowPrivate(target)) {
+      throw new Error("continuity window is not a normal browser window");
+    }
+  };
+  const activeWindowAdmitted = (host, target) => {
+    const lifecycle = host.runningLifecycleForTests;
+    const token = markerFor(target);
+    const identity = markerIdentity(token);
+    const currentIdentity = currentMarkerIdentity();
+    return isDelayedStartupFinished(target) && host.windowIdForTests(target) !== null &&
+      lifecycle !== null && identity !== null && currentIdentity !== null &&
+      identity.epoch === currentIdentity.epoch && identity.generation === currentIdentity.generation &&
+      host.windowIdsForTests.includes(host.windowIdForTests(target)) &&
+      host.windowLifecycleDiagnosticsForTests.admissionTasks === 0;
+  };
+  const waitForActiveWindow = async (host, target, label) => {
+    try {
+      await waitFor(() => activeWindowAdmitted(host, target), label);
+    } catch (error) {
+      const identity = markerIdentity(markerFor(target));
+      throw new Error(String(error) + "; observation=" + JSON.stringify({
+        windowId: browserWindowId(host, target),
+        delayedStartupFinished: isDelayedStartupFinished(target),
+        hostWindowId: host.windowIdForTests(target),
+        marker: markerFor(target),
+        expectedMarker: identity ? identity.epoch + ":" + identity.generation : null,
+        windowIds: host.windowIdsForTests,
+        resources: host.runningScopeDiagnosticsForTests,
+        lifecycle: host.windowLifecycleDiagnosticsForTests,
+      }));
+    }
+  };
+  const summarizeOutcome = outcome => ({
+    txId: outcome.txId,
+    status: outcome.status,
+    selectedVersion: outcome.selectedVersion,
+  });
+  let host;
+  let observations = [];
+  let details;
+  if (config.action === "setup-w1") {
+    assertNormalBrowserWindow(window);
+    if (!isDelayedStartupFinished(window)) throw new Error("W1 delayed startup is not finished");
+    const initialWindows = browserWindows();
+    if (initialWindows.length !== 1 || initialWindows[0] !== window) throw new Error("unexpected initial browser window identity");
+    host = await hostModule.M0FeatureHost.open(config.root, true, true, false);
+    Object.defineProperty(host, hostIdentityKey, { value: config.hostIdentity, configurable: true });
+    const install = await host.install("window-continuity-" + config.runNonce + "-install", host.diagnostics.stateRevision, "v1");
+    if (install.status !== "succeeded") throw new Error("W1 install did not succeed");
+    const enable = await host.enable("window-continuity-" + config.runNonce + "-enable-v1", host.diagnostics.stateRevision);
+    if (enable.status !== "succeeded") throw new Error("W1 enable v1 did not succeed");
+    await waitForActiveWindow(host, window, "W1 host admission and marker");
+    const hostWindowId = host.windowIdForTests(window);
+    observations = [observe(host, "w1-enabled-v1")];
+    details = {
+      normalWindow: true,
+      w1WindowId: browserWindowId(host, window),
+      w1HostWindowId: hostWindowId,
+      install: summarizeOutcome(install),
+      enable: summarizeOutcome(enable),
+      hostIdentityInstalled: host[hostIdentityKey] === config.hostIdentity,
+    };
+  } else if (config.action === "open-w2") {
+    assertNormalBrowserWindow(window);
+    host = await openExisting();
+    assertHostIdentity(host);
+    if (browserWindowId(host, window) !== config.w1WindowId) throw new Error("W1 identity changed before W2 open");
+    const beforeWindows = browserWindows();
+    if (beforeWindows.length !== 1 || beforeWindows[0] !== window) throw new Error("W1 changed before W2 open");
+    observations.push(observe(host, "before-w2-open"));
+    const opened = globalThis.OpenBrowserWindow();
+    if (!opened || opened === window) throw new Error("OpenBrowserWindow did not create W2");
+    await waitFor(() => browserWindows().length === 2, "normal W2 creation");
+    await waitForActiveWindow(host, opened, "W2 delayed startup, host admission, and marker");
+    const openedId = browserWindowId(host, opened);
+    if (openedId === browserWindowId(host, window)) throw new Error("W2 reused W1 identity");
+    observations.push(observe(host, "w2-admitted"));
+    details = { w1WindowId: browserWindowId(host, window), w2WindowId: openedId };
+  } else if (config.action === "await-w2") {
+    assertNormalBrowserWindow(window);
+    host = await openExisting();
+    assertHostIdentity(host);
+    if (browserWindowId(host, window) !== config.w2WindowId) throw new Error("Marionette did not switch to W2");
+    const windows = browserWindows();
+    if (windows.length !== 2) throw new Error("unexpected browser window count before W1 close");
+    const first = windows.find(target => browserWindowId(host, target) === config.w1WindowId);
+    if (!first || first === window || first.closed) throw new Error("W1 identity missing before close");
+    await waitForActiveWindow(host, window, "W2 delayed startup, host admission, and marker");
+    const firstHostWindowId = host.windowIdForTests(first);
+    const secondHostWindowId = host.windowIdForTests(window);
+    if (!firstHostWindowId || !secondHostWindowId || firstHostWindowId === secondHostWindowId || host.windowIdsForTests.length !== 2) {
+      throw new Error("W1 and W2 are not both admitted by the existing host");
+    }
+    observations = [observe(host, "w1-and-w2-admitted")];
+    details = {
+      w1WindowId: config.w1WindowId,
+      w1HostWindowId: firstHostWindowId,
+      w2WindowId: browserWindowId(host, window),
+      w2HostWindowId: secondHostWindowId,
+      hostInstancePreserved: true,
+    };
+  } else if (config.action === "close-w1") {
+    if (window.closed) throw new Error("W2 is closed");
+    host = await openExisting();
+    assertHostIdentity(host);
+    if (browserWindowId(host, window) !== config.w2WindowId) throw new Error("W2 is not the active Marionette window");
+    const windows = browserWindows();
+    if (windows.length !== 2) throw new Error("refusing to close W1 unless exactly two browser windows exist");
+    const first = windows.find(target => browserWindowId(host, target) === config.w1WindowId);
+    if (!first || first === window || first.closed) throw new Error("refusing to close unexpected W1 identity");
+    const firstHostWindowId = host.windowIdForTests(first);
+    const secondHostWindowId = host.windowIdForTests(window);
+    const before = observe(host, "before-w1-close");
+    if (!firstHostWindowId || !secondHostWindowId || host.windowIdsForTests.length !== 2) throw new Error("host did not admit exactly W1 and W2");
+    const revisionBeforeClose = host.diagnostics.stateRevision;
+    const markerBeforeClose = markerFor(window);
+    first.close();
+    await waitFor(() => first.closed && browserWindows().length === 1 &&
+      !host.windowIdsForTests.includes(firstHostWindowId) && host.windowIdsForTests.includes(secondHostWindowId) &&
+      host.windowLifecycleDiagnosticsForTests.pendingDetaches === 0 &&
+      host.windowLifecycleDiagnosticsForTests.tracked === 1 &&
+      host.runningScopeDiagnosticsForTests.pendingTasks === 0,
+      "W1 close detach while W2 remains");
+    if (window.closed || browserWindows()[0] !== window) throw new Error("closing W1 did not preserve W2");
+    const reopened = await openExisting();
+    assertHostIdentity(reopened);
+    const after = observe(reopened, "after-w1-close");
+    const hostInstancePreserved = reopened === host && reopened[hostIdentityKey] === config.hostIdentity;
+    const sameEpoch = before.hostEpoch !== null && before.hostEpoch === after.hostEpoch;
+    const sameGeneration = before.generation !== null && before.generation === after.generation;
+    const sameRevision = reopened.diagnostics.stateRevision === revisionBeforeClose;
+    const w2MarkerPreserved = markerFor(window) === markerBeforeClose;
+    const w1ResourceDetached = after.lifecycle.tracked === 1 && after.lifecycle.pendingDetaches === 0 &&
+      after.lifecycle.cleanupFailures === 0 && after.resources.pendingTasks === 0 &&
+      after.resources.resources <= before.resources.resources &&
+      after.windowIds.length === 1 && after.windowIds[0] === secondHostWindowId;
+    observations = [before, after];
+    details = {
+      w1Closed: first.closed,
+      w1AbsentFromWindowManager: !browserWindows().some(target => browserWindowId(reopened, target) === config.w1WindowId),
+      w2Alive: !window.closed,
+      w1HostWindowId: firstHostWindowId,
+      w2HostWindowId: secondHostWindowId,
+      hostInstancePreserved,
+      sameEpoch,
+      sameGeneration,
+      sameRevision,
+      w2MarkerPreserved,
+      w1ResourceDetached,
+    };
+  } else {
+    host = await openExisting();
+    assertHostIdentity(host);
+    if (browserWindowId(host, window) !== config.w2WindowId || window.closed) throw new Error("continuity action is not running from W2");
+    const before = observe(host, "before-" + config.action);
+    let outcome = null;
+    if (config.action === "update-v2") {
+      outcome = await host.update("window-continuity-" + config.runNonce + "-update-v2", host.diagnostics.stateRevision, "v2");
+      if (outcome.status !== "succeeded") throw new Error("W2 update v2 did not succeed");
+      await waitFor(() => activeWindowAdmitted(host, window) && host.diagnostics.selectedVersion === "v2" && host.diagnostics.selectedHealth === "verified", "W2 v2 update publication");
+    } else if (config.action === "disable") {
+      outcome = await host.disable("window-continuity-" + config.runNonce + "-disable", host.diagnostics.stateRevision);
+      if (outcome.status !== "succeeded") throw new Error("W2 disable did not succeed");
+      await waitFor(() => markerFor(window) === null && host.runningScopeDiagnosticsForTests.pendingTasks === 0 && host.runningScopeDiagnosticsForTests.resources === 0, "W2 disable cleanup");
+    } else if (config.action === "enable-v2") {
+      outcome = await host.enable("window-continuity-" + config.runNonce + "-enable-v2", host.diagnostics.stateRevision);
+      if (outcome.status !== "succeeded") throw new Error("W2 enable v2 did not succeed");
+      await waitFor(() => activeWindowAdmitted(host, window) && host.diagnostics.selectedVersion === "v2" && host.diagnostics.selectedHealth === "verified", "W2 fresh v2 generation");
+    } else if (config.action === "shutdown") {
+      const hostInstancePreserved = host[hostIdentityKey] === config.hostIdentity;
+      const report = await host.shutdown();
+      delete host[hostIdentityKey];
+      await waitFor(() => host.windowIdsForTests.length === 0 && !host.windowLifecycleDiagnosticsForTests.observers &&
+        host.windowLifecycleDiagnosticsForTests.tracked === 0 && host.windowLifecycleDiagnosticsForTests.pendingDetaches === 0 &&
+        host.runningScopeDiagnosticsForTests.pendingTasks === 0 && host.runningScopeDiagnosticsForTests.resources === 0,
+        "host shutdown to drain W2 resources and tasks");
+      const after = observe(host, "after-host-shutdown");
+      observations = [before, after];
+      details = {
+        hostInstancePreserved,
+        shutdownErrors: report.errors,
+        timedOut: report.timedOut,
+        w2StillOpen: !window.closed,
+        finalWindowIds: host.windowIdsForTests,
+        finalLifecycle: host.windowLifecycleDiagnosticsForTests,
+        finalResources: host.runningScopeDiagnosticsForTests,
+      };
+      return { schemaVersion: 1, kind: "first-window-continuity", runNonce: config.runNonce, launchId: config.launchId, buildId, action: config.action, observations, details };
+    } else {
+      throw new Error("unsupported first-window continuity action " + config.action);
+    }
+    const after = observe(host, "after-" + config.action);
+    observations = [before, after];
+    details = {
+      hostInstancePreserved: host[hostIdentityKey] === config.hostIdentity,
+      outcome: outcome ? summarizeOutcome(outcome) : null,
+      windowMarker: markerFor(window),
+      hostWindowId: host.windowIdForTests(window),
+    };
+  }
+  return { schemaVersion: 1, kind: "first-window-continuity", runNonce: config.runNonce, launchId: config.launchId, buildId, action: config.action, observations, details };
+};
+run().then(complete, error => complete({ error: String(error) }));
+`;
+}
+
+async function executeFirstWindowContinuityAction(
+  client: MarionetteClient,
+  config: Record<string, unknown>,
+  expected: {
+    runNonce: string;
+    launchId: number;
+    buildId: string;
+    action: FirstWindowContinuityAction;
+  },
+): Promise<FirstWindowContinuityActionResult> {
+  await client.setContext("chrome");
+  await client.send("WebDriver:SetTimeouts", {
+    script: MARKER_TIMEOUT_MS + 30_000,
+  });
+  const raw: unknown = await client.sendWithTimeout(
+    "WebDriver:ExecuteAsyncScript",
+    {
+      script: firstWindowContinuityScript(),
+      args: [config],
+    },
+    MARKER_TIMEOUT_MS + 30_000,
+  );
+  const value = isRecord(raw) && "value" in raw ? raw.value : raw;
+  if (isRecord(value) && typeof value.error === "string") {
+    throw new Error(
+      `first-window continuity driver failed (${expected.action}): ${value.error}`,
+    );
+  }
+  return parseFirstWindowContinuityResult(value, expected);
+}
+
+async function marionetteWindowHandles(
+  client: MarionetteClient,
+): Promise<string[]> {
+  await client.setContext("content");
+  let result: unknown;
+  try {
+    result = await client.send("WebDriver:GetWindowHandles", {});
+  } finally {
+    await client.setContext("chrome");
+  }
+  const value = isRecord(result) && "value" in result ? result.value : result;
+  if (
+    !Array.isArray(value) ||
+    !value.every((item: unknown) => typeof item === "string")
+  ) {
+    throw new Error("Marionette returned invalid browser window handles");
+  }
+  return value;
+}
+
+async function marionetteCurrentWindowHandle(
+  client: MarionetteClient,
+): Promise<string> {
+  await client.setContext("content");
+  let result: unknown;
+  try {
+    result = await client.send("WebDriver:GetWindowHandle", {});
+  } finally {
+    await client.setContext("chrome");
+  }
+  const value = isRecord(result) && "value" in result ? result.value : result;
+  if (typeof value !== "string") {
+    throw new Error("Marionette returned invalid current window handle");
+  }
+  return value;
+}
+
+async function switchMarionetteWindow(
+  client: MarionetteClient,
+  handle: string,
+): Promise<void> {
+  await client.setContext("content");
+  try {
+    await client.send("WebDriver:SwitchToWindow", { handle });
+  } finally {
+    await client.setContext("chrome");
+  }
+}
+
 async function executeDriver(
   client: MarionetteClient,
   config: Record<string, unknown>,
@@ -1156,6 +1680,540 @@ async function launchStep(options: {
     };
   } finally {
     if (!killAttempted) await killBrowser(launch);
+  }
+}
+
+function continuityObservation(
+  result: FirstWindowContinuityActionResult,
+  label: string,
+): FirstWindowContinuityObservation {
+  const observation = result.observations.find((item) => item.label === label);
+  if (!observation) {
+    throw new Error(`missing first-window continuity observation: ${label}`);
+  }
+  return observation;
+}
+
+function continuityWindow(
+  observation: FirstWindowContinuityObservation,
+  windowId: string,
+) {
+  const target = observation.windows.find((item) => item.windowId === windowId);
+  if (!target) throw new Error(`missing continuity window ${windowId}`);
+  return target;
+}
+
+async function waitForMarionetteWindowHandles(
+  client: MarionetteClient,
+  expectedCount: number,
+  requiredHandles: readonly string[],
+): Promise<string[]> {
+  const deadline = Date.now() + MARKER_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const handles = await marionetteWindowHandles(client);
+    if (handles.length > expectedCount) {
+      throw new Error(`unexpected browser window count: ${handles.length}`);
+    }
+    if (
+      handles.length === expectedCount &&
+      requiredHandles.every((handle) => handles.includes(handle))
+    ) return handles;
+    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+  }
+  throw new Error(`timed out waiting for ${expectedCount} Marionette windows`);
+}
+
+async function verifyContinuityBrowserIdentity(
+  launch: BrowserLaunch,
+): Promise<{ pid: number; startTimeTicks: string }> {
+  await refreshOwnership(launch.ownership);
+  const current = await readProcessIdentity(launch.root.pid, true);
+  if (!current) {
+    throw new Error("owned browser root disappeared during continuity");
+  }
+  assertOwnedBrowserRoot(
+    launch.root,
+    current,
+    launch.ownership.executable,
+    launch.ownership.profilePath,
+  );
+  return { pid: current.pid, startTimeTicks: current.startTimeTicks };
+}
+
+async function runFirstWindowContinuityScenario(options: {
+  trace: ProcessRecoveryTrace;
+  runNonce: string;
+  runDirectory: string;
+  profilePath: string;
+  root: string;
+  port: number;
+  expectedBuildId: string;
+  launchId: number;
+}): Promise<void> {
+  const evidenceDirectory = join(
+    options.runDirectory,
+    `continuity-${options.launchId}`,
+  );
+  await Deno.mkdir(evidenceDirectory, { recursive: true, mode: 0o700 });
+  const driverResults: FirstWindowContinuityActionResult[] = [];
+  const actionEvidence: Array<Record<string, unknown>> = [];
+  const scenario: Record<string, unknown> = {
+    name: "first-window-continuity",
+    kind: "first-window-continuity",
+    crashBoundary: false,
+    root: options.root,
+    profilePath: options.profilePath,
+    evidenceDirectory,
+    launchId: options.launchId,
+    browserProcess: null,
+    driverResults,
+    actionEvidence,
+    processCleanup: null,
+    failure: null,
+  };
+  options.trace.scenarios.push(scenario);
+  await recordTrace(join(options.runDirectory, "trace.json"), options.trace);
+
+  let launch: BrowserLaunch | null = null;
+  let cleanupStarted = false;
+  try {
+    launch = await launchBrowser(
+      options.profilePath,
+      options.port,
+      options.launchId,
+      options.runDirectory,
+      options.expectedBuildId,
+    );
+    const browserIdentity = {
+      pid: launch.root.pid,
+      startTimeTicks: launch.root.startTimeTicks,
+    };
+    scenario.browserProcess = browserIdentity;
+    scenario.buildId = launch.buildId;
+    scenario.marionettePort = launch.port;
+    scenario.windowControlHistory = [];
+    await recordTrace(join(options.runDirectory, "trace.json"), options.trace);
+
+    const baseConfig: Record<string, unknown> = {
+      runNonce: options.runNonce,
+      launchId: options.launchId,
+      buildId: launch.buildId,
+      root: options.root,
+      hostIdentity: `${options.runNonce}:${options.launchId}`,
+      timeoutMs: MARKER_TIMEOUT_MS,
+    };
+    const runAction = async (
+      action: FirstWindowContinuityAction,
+      extra: Record<string, unknown> = {},
+    ): Promise<FirstWindowContinuityActionResult> => {
+      const result = await executeFirstWindowContinuityAction(
+        launch!.client,
+        { ...baseConfig, ...extra, action },
+        {
+          runNonce: options.runNonce,
+          launchId: options.launchId,
+          buildId: launch!.buildId,
+          action,
+        },
+      );
+      const path = join(evidenceDirectory, `action-${action}.json`);
+      await Deno.writeTextFile(
+        path,
+        `${JSON.stringify(result, null, 2)}\n`,
+        { create: true, mode: 0o600 },
+      );
+      driverResults.push(result);
+      actionEvidence.push({ action, path, observations: result.observations });
+      await recordTrace(
+        join(options.runDirectory, "trace.json"),
+        options.trace,
+      );
+      return result;
+    };
+
+    const initialHandles = await marionetteWindowHandles(launch.client);
+    addAssertion(
+      options.trace,
+      "first-window-continuity-one-initial-window",
+      initialHandles.length === 1,
+      `initialHandles=${JSON.stringify(initialHandles)}`,
+    );
+    const w1Handle = initialHandles[0];
+    if (!w1Handle) throw new Error("initial Marionette window handle missing");
+    const initialCurrent = await marionetteCurrentWindowHandle(launch.client);
+    addAssertion(
+      options.trace,
+      "first-window-continuity-starts-in-w1",
+      initialCurrent === w1Handle,
+      `current=${initialCurrent} w1=${w1Handle}`,
+    );
+
+    const setup = await runAction("setup-w1");
+    const setupObservation = setup.observations[0];
+    const w1WindowId = setup.details.w1WindowId;
+    const w1HostWindowId = setup.details.w1HostWindowId;
+    if (
+      typeof w1WindowId !== "string" ||
+      typeof w1HostWindowId !== "string" || !setupObservation
+    ) {
+      throw new Error("W1 setup result lacks window identity or observation");
+    }
+    const w1State = continuityWindow(setupObservation, w1WindowId);
+    addAssertion(
+      options.trace,
+      "first-window-continuity-w1-normal-and-admitted",
+      setup.details.normalWindow === true &&
+        w1State.windowType === "navigator:browser" && !w1State.private &&
+        w1State.delayedStartupFinished &&
+        w1State.hostWindowId === w1HostWindowId &&
+        w1State.marker ===
+          `${setupObservation.hostEpoch}:${setupObservation.generation}` &&
+        setupObservation.hostEpoch !== null &&
+        setupObservation.generation !== null &&
+        setupObservation.stateRevision >= 4,
+      `outer=${w1WindowId} host=${w1HostWindowId} marker=${
+        String(w1State.marker)
+      } revision=${setupObservation.stateRevision}`,
+    );
+    const setupOutcomes = setup.details;
+    addAssertion(
+      options.trace,
+      "first-window-continuity-install-enable-v1",
+      isRecord(setupOutcomes.install) &&
+        setupOutcomes.install.status === "succeeded" &&
+        isRecord(setupOutcomes.enable) &&
+        setupOutcomes.enable.status === "succeeded" &&
+        setupObservation.desiredEnabled &&
+        setupObservation.selectedVersion === "v1" &&
+        setupObservation.selectedHealth === "verified",
+      JSON.stringify(setupOutcomes),
+    );
+
+    const openSecond = await runAction("open-w2", { w1WindowId });
+    const w2WindowId = openSecond.details.w2WindowId;
+    if (
+      typeof w2WindowId !== "string" || w2WindowId === w1WindowId
+    ) {
+      throw new Error("W2 open result lacks distinct identity");
+    }
+    const handlesWithW2 = await waitForMarionetteWindowHandles(
+      launch.client,
+      2,
+      [w1Handle],
+    );
+    const w2Handle = handlesWithW2.find((handle) => handle !== w1Handle);
+    if (!w2Handle) throw new Error("Marionette did not expose W2 handle");
+    const currentBeforeSwitch = await marionetteCurrentWindowHandle(
+      launch.client,
+    );
+    if (currentBeforeSwitch !== w1Handle) {
+      throw new Error("Marionette unexpectedly left W1 before W2 switch");
+    }
+    await switchMarionetteWindow(launch.client, w2Handle);
+    const currentAfterSwitch = await marionetteCurrentWindowHandle(
+      launch.client,
+    );
+    const switchRecord = {
+      before: currentBeforeSwitch,
+      target: w2Handle,
+      after: currentAfterSwitch,
+    };
+    (scenario.windowControlHistory as unknown[]).push({
+      operation: "switch-to-w2-before-close",
+      handles: handlesWithW2,
+      ...switchRecord,
+    });
+    addAssertion(
+      options.trace,
+      "first-window-continuity-switched-to-w2-before-closing-w1",
+      currentAfterSwitch === w2Handle && currentAfterSwitch !== w1Handle,
+      JSON.stringify(switchRecord),
+    );
+
+    const awaitSecond = await runAction("await-w2", {
+      w1WindowId,
+      w2WindowId,
+    });
+    const twoWindowObservation = awaitSecond.observations[0];
+    const w2HostWindowId = awaitSecond.details.w2HostWindowId;
+    if (!twoWindowObservation || typeof w2HostWindowId !== "string") {
+      throw new Error("W2 admission result lacks host observation");
+    }
+    const w2State = continuityWindow(twoWindowObservation, w2WindowId);
+    const w1AdmittedState = continuityWindow(
+      twoWindowObservation,
+      w1WindowId,
+    );
+    addAssertion(
+      options.trace,
+      "first-window-continuity-w2-delayed-startup-and-admission",
+      awaitSecond.details.hostInstancePreserved === true &&
+        w2State.hostWindowId === w2HostWindowId &&
+        w2State.delayedStartupFinished && w2State.marker !== null &&
+        w1AdmittedState.hostWindowId === w1HostWindowId &&
+        w1AdmittedState.marker === w2State.marker &&
+        twoWindowObservation.windowIds.length === 2 &&
+        twoWindowObservation.lifecycle.tracked === 2 &&
+        twoWindowObservation.lifecycle.pendingStartup === 0 &&
+        twoWindowObservation.lifecycle.admissionTasks === 0,
+      `w1=${w1AdmittedState.marker} w2=${w2State.marker} tracked=${twoWindowObservation.lifecycle.tracked}`,
+    );
+
+    const currentForClose = await marionetteCurrentWindowHandle(launch.client);
+    addAssertion(
+      options.trace,
+      "first-window-continuity-close-issued-from-w2",
+      currentForClose === w2Handle,
+      `current=${currentForClose} w2=${w2Handle}`,
+    );
+    const closeFirst = await runAction("close-w1", {
+      w1WindowId,
+      w2WindowId,
+      w1Handle,
+      w2Handle,
+    });
+    const handlesAfterClose = await waitForMarionetteWindowHandles(
+      launch.client,
+      1,
+      [w2Handle],
+    );
+    const currentAfterClose = await marionetteCurrentWindowHandle(
+      launch.client,
+    );
+    (scenario.windowControlHistory as unknown[]).push({
+      operation: "close-w1-from-w2",
+      handlesAfter: handlesAfterClose,
+      currentAfter: currentAfterClose,
+    });
+    addAssertion(
+      options.trace,
+      "first-window-continuity-w1-gone-w2-remains-control-window",
+      handlesAfterClose.length === 1 && handlesAfterClose[0] === w2Handle &&
+        currentAfterClose === w2Handle,
+      `handles=${
+        JSON.stringify(handlesAfterClose)
+      } current=${currentAfterClose}`,
+    );
+    const closeDetails = closeFirst.details;
+    const closeBefore = continuityObservation(closeFirst, "before-w1-close");
+    const closeAfter = continuityObservation(closeFirst, "after-w1-close");
+    const identityAfterClose = await verifyContinuityBrowserIdentity(launch);
+    scenario.browserIdentityAfterW1Close = identityAfterClose;
+    addAssertion(
+      options.trace,
+      "first-window-continuity-browser-pid-start-time-stable",
+      identityAfterClose.pid === browserIdentity.pid &&
+        identityAfterClose.startTimeTicks === browserIdentity.startTimeTicks,
+      `before=${JSON.stringify(browserIdentity)} after=${
+        JSON.stringify(identityAfterClose)
+      }`,
+    );
+    addAssertion(
+      options.trace,
+      "first-window-continuity-host-epoch-generation-revision-stable-after-w1-close",
+      closeDetails.hostInstancePreserved === true &&
+        closeDetails.sameEpoch === true &&
+        closeDetails.sameGeneration === true &&
+        closeDetails.sameRevision === true &&
+        closeDetails.w2MarkerPreserved === true &&
+        closeBefore.hostEpoch === closeAfter.hostEpoch &&
+        closeBefore.generation === closeAfter.generation &&
+        closeBefore.stateRevision === closeAfter.stateRevision,
+      `epoch=${String(closeBefore.hostEpoch)} generation=${
+        String(closeBefore.generation)
+      } revision=${closeBefore.stateRevision}`,
+    );
+    addAssertion(
+      options.trace,
+      "first-window-continuity-w1-detached-resources-and-tasks",
+      closeDetails.w1Closed === true &&
+        closeDetails.w1AbsentFromWindowManager === true &&
+        closeDetails.w2Alive === true &&
+        closeDetails.w1ResourceDetached === true &&
+        closeAfter.windows.length === 1 &&
+        closeAfter.windows[0]?.windowId === w2WindowId &&
+        closeAfter.resources.pendingTasks === 0 &&
+        closeAfter.lifecycle.tracked === 1 &&
+        closeAfter.lifecycle.pendingDetaches === 0 &&
+        closeAfter.lifecycle.cleanupFailures === 0 &&
+        setupObservation.windowIds.length === 1 &&
+        setupObservation.resources.resources === 1 &&
+        setupObservation.resources.childScopes === 1 &&
+        closeAfter.windowIds.length === 1 &&
+        closeAfter.windowIds[0] === w2HostWindowId &&
+        closeAfter.resources.resources ===
+          setupObservation.resources.resources &&
+        closeAfter.resources.childScopes ===
+          setupObservation.resources.childScopes,
+      `resources=${setupObservation.resources.resources}->${closeBefore.resources.resources}->${closeAfter.resources.resources} childScopes=${setupObservation.resources.childScopes}->${closeBefore.resources.childScopes}->${closeAfter.resources.childScopes} windows=${closeAfter.lifecycle.tracked} tasks=${closeAfter.resources.pendingTasks}`,
+    );
+
+    const update = await runAction("update-v2", {
+      w1WindowId,
+      w2WindowId,
+    });
+    const updateBefore = continuityObservation(update, "before-update-v2");
+    const updateAfter = continuityObservation(update, "after-update-v2");
+    addAssertion(
+      options.trace,
+      "first-window-continuity-update-v2-from-w2",
+      isRecord(update.details.outcome) &&
+        update.details.outcome.status === "succeeded" &&
+        updateAfter.desiredEnabled && updateAfter.selectedVersion === "v2" &&
+        updateAfter.selectedHealth === "verified" &&
+        updateAfter.hostEpoch === closeAfter.hostEpoch &&
+        updateAfter.generation !== null && closeAfter.generation !== null &&
+        updateAfter.generation > closeAfter.generation &&
+        updateAfter.windowIds.length === 1 &&
+        updateAfter.windowIds[0] === w2HostWindowId &&
+        continuityWindow(updateAfter, w2WindowId).marker !== null,
+      `revision=${updateBefore.stateRevision}->${updateAfter.stateRevision} generation=${
+        String(updateAfter.generation)
+      } version=${String(updateAfter.selectedVersion)}`,
+    );
+
+    const disabled = await runAction("disable", {
+      w1WindowId,
+      w2WindowId,
+    });
+    const disabledAfter = continuityObservation(disabled, "after-disable");
+    addAssertion(
+      options.trace,
+      "first-window-continuity-disable-drains-w2-generation",
+      isRecord(disabled.details.outcome) &&
+        disabled.details.outcome.status === "succeeded" &&
+        !disabledAfter.desiredEnabled &&
+        disabledAfter.selectedVersion === "v2" &&
+        continuityWindow(disabledAfter, w2WindowId).marker === null &&
+        continuityWindow(disabledAfter, w2WindowId).hostWindowId ===
+          w2HostWindowId &&
+        continuityWindow(disabledAfter, w2WindowId).delayedStartupFinished &&
+        disabledAfter.resources.resources === 0 &&
+        disabledAfter.resources.pendingTasks === 0 &&
+        disabledAfter.lifecycle.tracked === 1 &&
+        disabledAfter.windowIds.length === 0,
+      `revision=${disabledAfter.stateRevision} resources=${disabledAfter.resources.resources} pendingTasks=${disabledAfter.resources.pendingTasks}`,
+    );
+
+    const enabled = await runAction("enable-v2", {
+      w1WindowId,
+      w2WindowId,
+    });
+    const enabledAfter = continuityObservation(enabled, "after-enable-v2");
+    addAssertion(
+      options.trace,
+      "first-window-continuity-enable-fresh-v2-generation-from-w2",
+      isRecord(enabled.details.outcome) &&
+        enabled.details.outcome.status === "succeeded" &&
+        enabledAfter.desiredEnabled && enabledAfter.selectedVersion === "v2" &&
+        enabledAfter.selectedHealth === "verified" &&
+        enabledAfter.hostEpoch === closeAfter.hostEpoch &&
+        enabledAfter.generation !== null && updateAfter.generation !== null &&
+        enabledAfter.generation > updateAfter.generation &&
+        continuityWindow(enabledAfter, w2WindowId).marker ===
+          `${enabledAfter.hostEpoch}:${enabledAfter.generation}` &&
+        enabledAfter.windowIds.length === 1 &&
+        enabledAfter.windowIds[0] === w2HostWindowId &&
+        enabledAfter.lifecycle.tracked === 1 &&
+        enabledAfter.resources.pendingTasks === 0,
+      `revision=${enabledAfter.stateRevision} generation=${
+        String(enabledAfter.generation)
+      } version=${String(enabledAfter.selectedVersion)}`,
+    );
+
+    const shutdown = await runAction("shutdown", {
+      w1WindowId,
+      w2WindowId,
+    });
+    const shutdownAfter = continuityObservation(
+      shutdown,
+      "after-host-shutdown",
+    );
+    const finalLifecycle = shutdown.details.finalLifecycle;
+    const finalResources = shutdown.details.finalResources;
+    addAssertion(
+      options.trace,
+      "first-window-continuity-host-shutdown-drains-window-resources-and-tasks",
+      Array.isArray(shutdown.details.shutdownErrors) &&
+        shutdown.details.shutdownErrors.length === 0 &&
+        shutdown.details.timedOut === false &&
+        shutdown.details.w2StillOpen === true &&
+        Array.isArray(shutdown.details.finalWindowIds) &&
+        shutdown.details.finalWindowIds.length === 0 &&
+        isRecord(finalLifecycle) && finalLifecycle.tracked === 0 &&
+        finalLifecycle.pendingDetaches === 0 &&
+        finalLifecycle.cleanupFailures === 0 &&
+        isRecord(finalResources) && finalResources.resources === 0 &&
+        finalResources.pendingTasks === 0 &&
+        shutdownAfter.lifecycle.observers === false &&
+        shutdownAfter.lifecycle.tracked === 0 &&
+        shutdownAfter.resources.pendingTasks === 0 &&
+        continuityWindow(shutdownAfter, w2WindowId).marker === null,
+      `errors=${JSON.stringify(shutdown.details.shutdownErrors)} timedOut=${
+        String(shutdown.details.timedOut)
+      } lifecycle=${JSON.stringify(finalLifecycle)} resources=${
+        JSON.stringify(finalResources)
+      }`,
+    );
+
+    cleanupStarted = true;
+    let process: Awaited<ReturnType<typeof killBrowser>>;
+    try {
+      process = await killBrowser(launch);
+    } catch (error) {
+      scenario.cleanupFailure = error instanceof Error
+        ? error.message
+        : String(error);
+      throw error;
+    }
+    const journal = await captureDiskJournal(
+      options.root,
+      options.runDirectory,
+      options.launchId,
+      null,
+    );
+    const rootAfterKill = await readProcessIdentity(launch.root.pid, true);
+    scenario.processCleanup = {
+      ...process,
+      rootIdentityGone: rootAfterKill === null,
+      diskJournal: journal,
+      killedProcessCount: process.processes.length,
+    };
+    const exit = process.exit as Deno.CommandStatus;
+    addAssertion(
+      options.trace,
+      "first-window-continuity-owned-sigkill-cleanup",
+      exit.signal === "SIGKILL" && process.portClosed &&
+        rootAfterKill === null && process.processes.length > 0,
+      `signal=${
+        String(exit.signal)
+      } portClosed=${process.portClosed} rootGone=${
+        rootAfterKill === null
+      } killed=${process.processes.length}`,
+    );
+    scenario.status = "passed";
+    await recordTrace(join(options.runDirectory, "trace.json"), options.trace);
+  } catch (error) {
+    scenario.failure = error instanceof Error ? error.message : String(error);
+    throw error;
+  } finally {
+    if (launch && !cleanupStarted) {
+      cleanupStarted = true;
+      try {
+        const process = await killBrowser(launch);
+        const rootAfterKill = await readProcessIdentity(launch.root.pid, true);
+        scenario.processCleanup = {
+          ...process,
+          rootIdentityGone: rootAfterKill === null,
+          killedProcessCount: process.processes.length,
+        };
+      } catch (error) {
+        scenario.cleanupFailure = error instanceof Error
+          ? error.message
+          : String(error);
+      }
+    }
+    await recordTrace(join(options.runDirectory, "trace.json"), options.trace);
   }
 }
 
@@ -1521,6 +2579,30 @@ async function runProcessRecoveryMatrix(): Promise<void> {
           "failed_quarantined",
       `evaluationCount=${String(exhausted.final.evaluationCount)} blocked=${
         String(exhaustedJournal.blockedReason)
+      }`,
+    );
+    const continuityRoot = rootFor();
+    await runFirstWindowContinuityScenario({
+      trace,
+      runNonce,
+      runDirectory,
+      profilePath,
+      root: continuityRoot,
+      port,
+      expectedBuildId: trace.runtimeExpectedBuildId,
+      launchId: ++launchCounter,
+    });
+    addAssertion(
+      trace,
+      "first-window-continuity-is-ninth-distinct-scenario",
+      trace.scenarios.length === 9 &&
+        trace.scenarios.filter((scenario) =>
+            scenario.kind === "first-window-continuity"
+          ).length === 1,
+      `scenarios=${trace.scenarios.length} continuity=${
+        trace.scenarios.filter((scenario) =>
+          scenario.kind === "first-window-continuity"
+        ).length
       }`,
     );
     succeeded = true;
