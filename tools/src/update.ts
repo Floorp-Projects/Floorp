@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
-import { runCommandChecked, exists } from "./utils.ts";
+import { exists, runCommandChecked } from "./utils.ts";
 import { PROJECT_ROOT } from "./defines.ts";
 
 export function writeVersion(geckoDir: string): void {
@@ -38,14 +38,23 @@ export function generateUuidV7(): string {
   return res.stdout.trim();
 }
 
-export function generateUpdateXml(metaPath: string, outputPath: string): void {
+export function generateUpdateXml(
+  metaPath: string,
+  outputPath: string,
+  patchUrl =
+    "http://github.com/nyanrus/noraneko/releases/download/alpha/noraneko-win-x86_64-full.mar",
+): void {
   const meta = JSON.parse(Deno.readTextFileSync(metaPath));
-  const patchUrl =
-    "http://github.com/nyanrus/noraneko/releases/download/alpha/noraneko-win-x86_64-full.mar";
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <updates>
-  <update type="minor" displayVersion="${meta["version_display"]}" appVersion="${meta["version"]}" platformVersion="${meta["version"]}" buildID="${meta["buildid"]}" appVersion2="${meta["noraneko_version"]}">
-    <patch type="complete" URL="${patchUrl}" size="${meta["mar_size"]}" hashFunction="sha512" hashValue="${meta["mar_shasum"]}"/>
+  <update type="minor" displayVersion="${
+    meta["version_display"]
+  }" appVersion="${meta["version"]}" platformVersion="${
+    meta["version"]
+  }" buildID="${meta["buildid"]}" appVersion2="${meta["noraneko_version"]}">
+    <patch type="complete" URL="${patchUrl}" size="${
+    meta["mar_size"]
+  }" hashFunction="sha512" hashValue="${meta["mar_shasum"]}"/>
   </update>
 </updates>
 `;

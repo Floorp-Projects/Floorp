@@ -177,8 +177,11 @@ repeat product evidence on Windows x64, Linux x64/ARM, Mac Intel/ARM. Keep Mac
 universal bytes bound to both native executions. Use separate real MAR, DEB,
 Portable and stub evidence. No such native execution is claimed by this change.
 
-The future publisher must perform
+The GitHub Actions publishers perform
 `bundle -> final QA -> manual approval ->
-fresh evidence revalidation -> publish`,
-authenticate exact digests and retain the existing gates. The current manual
-publication/approval flow is unchanged.
+fresh evidence revalidation -> publish`.
+The reusable QA workflow checks the same-run signed bundle and its installer
+artifact IDs. The protected publish jobs revalidate that bundle before making
+the release public. Windows remains in shadow mode for stable QA and is required
+for Windows-only Alpha. Required reviewers for the installer environments are
+configured in repository settings.

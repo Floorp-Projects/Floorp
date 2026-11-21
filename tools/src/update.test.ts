@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals, assert } from "@std/assert";
-import { generateUpdateXml, writeBuildid2, readBuildid2 } from "./update.ts";
+import { assert, assertEquals } from "@std/assert";
+import { generateUpdateXml, readBuildid2, writeBuildid2 } from "./update.ts";
 import * as path from "@std/path";
 
 Deno.test("generateUpdateXml produces valid XML with correct metadata", () => {
@@ -19,9 +19,15 @@ Deno.test("generateUpdateXml produces valid XML with correct metadata", () => {
     const outputPath = path.join(tmpDir, "update.xml");
     Deno.writeTextFileSync(metaPath, JSON.stringify(meta));
 
-    generateUpdateXml(metaPath, outputPath);
+    const patchUrl =
+      "https://github.com/Floorp-Projects/Floorp/releases/download/alpha/floorp-windows-x86_64-full.mar";
+    generateUpdateXml(metaPath, outputPath, patchUrl);
 
     const xml = Deno.readTextFileSync(outputPath);
+    assert(
+      xml.includes(`URL="${patchUrl}"`),
+      "should point to the published MAR",
+    );
     assert(
       xml.includes('displayVersion="11.0.0-beta.1"'),
       "should contain displayVersion",
