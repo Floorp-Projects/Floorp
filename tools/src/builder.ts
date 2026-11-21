@@ -71,15 +71,16 @@ export function runInParallel(commands: CommandTuple[]): void {
 export async function run(mode = "dev", buildid2: string): Promise<void> {
   await Promise.resolve();
   const buildMode = mode.trim().toLowerCase();
+  const usePackagedAssets = buildMode === "production" || buildMode === "stage";
   logger.info(`Building features with mode=${buildMode}`);
 
   if (
     buildMode !== "dev" &&
     buildMode !== "test" &&
-    buildMode !== "production"
+    !usePackagedAssets
   ) {
     throw new Error(
-      `Unsupported build mode: ${mode}. Allowed: dev, test, production`,
+      `Unsupported build mode: ${mode}. Allowed: dev, test, stage, production`,
     );
   }
 
@@ -123,7 +124,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
 
   const prodCommands: CommandTuple[] = [
     [
-      [deno, "task", "build", "--env.MODE=production"],
+      [deno, "task", "build", `--env.MODE=${buildMode}`],
       path.join(PROJECT_ROOT, "bridge/startup"),
     ],
     [
@@ -263,7 +264,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     runInParallel(prodCommands);
   }
 
-  if (buildMode === "production") {
+  if (usePackagedAssets) {
     const mounts: Array<[string, string]> = [
       ["content", "bridge/loader-features/_dist"],
       ["startup", "bridge/startup/_dist"],
