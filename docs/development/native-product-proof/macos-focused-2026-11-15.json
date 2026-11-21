@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "scope": "Focused private macOS candidate checks only; not full-suite coverage or release certification",
+  "floorp_source_base": "984509d2053be7bae9027133bda7259cd706b208",
+  "runtime_source_base": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+  "source_dirty": true,
+  "product_identity": {
+    "Name": "Floorp",
+    "Version": "12.21.1@159.0.1",
+    "BuildID": "20261113193604",
+    "ID": "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+  },
+  "configuration": {
+    "os": "mac",
+    "processor": "aarch64",
+    "debug": true,
+    "opt": false,
+    "tests_enabled": true
+  },
+  "engine_hashes": {
+    "XUL": {
+      "product_sha256": "1ed8e4455c60906c7aaedb4b51440e5d565e682a20c32fc42a9ef5a7de0b10b8",
+      "objdir_sha256": "9d813dfc84d529b5ab93b89ce75f28b9a7bf2bc874bdce42b0ce5a0227085de5"
+    }
+  },
+  "product_binary_sha256": "6e27fa074d208b25bbdf3de50ba8f32cc3e93972ea387a63b3a7776161b0bbca",
+  "product_delta": {
+    "omni_sha256": "a44928915d7235e8b9d0f6e88d5da07295f850764bd75b54ce2a768a1196c41a",
+    "changed_entries": [
+      "chrome/noraneko/nora-content/assets/js/index35.js",
+      "chrome/noraneko/nora-content/assets/js/index35.js.map"
+    ]
+  },
+  "candidate_patch_sha256": "ed5fa8136f85b70fa8b9d1d815080eb2e52cbf268a63bb5d17e735fd9f0257a1",
+  "cases": [
+    {
+      "test": "browser/components/sessionstore/test/browser_588426.js",
+      "kind": "unchanged-upstream",
+      "finished_utc": "2026-11-15T08:59:45.973345+00:00",
+      "test_end_status": "PASS",
+      "native_exit": 1,
+      "suite_end_count": 1,
+      "unexpected_status_count": 1,
+      "shutdown_window_failure_count": 1,
+      "verdict": "FAIL",
+      "evidence": {
+        "raw_jsonl": "parallel-p1-v1/restore-visibility-candidate/001/p1.jsonl",
+        "raw_sha256": "b03ee4f8e30d55e5b0a26261e4e1f82b92b8b55ff466c8530ebfb43071dc5926",
+        "worker_jsonl": "parallel-p1-v1/restore-visibility-candidate/worker.jsonl",
+        "worker_sha256": "e5dc89674b1c05a5772155568d7b624a5c2a5a8324887fa22a92e8ae514e12eb"
+      }
+    },
+    {
+      "test": "browser/components/sessionstore/test/browser_595601-restore_hidden.js",
+      "kind": "unchanged-upstream",
+      "finished_utc": "2026-11-15T09:08:30.494819+00:00",
+      "test_end_status": "PASS",
+      "native_exit": 1,
+      "suite_end_count": 1,
+      "unexpected_status_count": 2,
+      "shutdown_window_failure_count": 2,
+      "verdict": "FAIL",
+      "evidence": {
+        "raw_jsonl": "parallel-p1-v1/restore-visibility-candidate/002/p1.jsonl",
+        "raw_sha256": "ec595bfc93fa907d49dd4da66428859441e0321c68b16577518bc0577db96c8b",
+        "worker_jsonl": "parallel-p1-v1/restore-visibility-candidate/worker.jsonl",
+        "worker_sha256": "e5dc89674b1c05a5772155568d7b624a5c2a5a8324887fa22a92e8ae514e12eb"
+      }
+    },
+    {
+      "test": "browser/components/sessionstore/test/browser_floorp_workspace_visibility_roundtrip.js",
+      "kind": "floorp-diagnostic",
+      "finished_utc": "2026-11-15T09:15:09.055817+00:00",
+      "test_end_status": "PASS",
+      "native_exit": 1,
+      "suite_end_count": 1,
+      "unexpected_status_count": 1,
+      "shutdown_window_failure_count": 1,
+      "verdict": "FAIL",
+      "evidence": {
+        "raw_jsonl": "parallel-p1-v1/restore-visibility-roundtrip/001/p1.jsonl",
+        "raw_sha256": "50b1df154058c8e5331fcc0d49a0c14ab0c305125b873e22786cc9b9c4bcd39b",
+        "worker_jsonl": "parallel-p1-v1/restore-visibility-roundtrip/worker.jsonl",
+        "worker_sha256": "8da22d8cf3b71b340fe9be38e2fc2c62af6f9c0be1181cb9406a63548219902d"
+      }
+    }
+  ],
+  "limitations": [
+    "Raw evidence is retained locally, not public; hashes identify bytes but cannot independently validate unavailable logs.",
+    "Base commits are not a reproducible source tree: private candidate includes uncommitted prerequisite fixes.",
+    "Product and objdir engine hashes differ; equivalence is not established by this report.",
+    "Unpatched-product shutdown comparison remains unverified.",
+    "The added diagnostic does not robustly await navigation completion and is not published as a finished regression test.",
+    "No clean full-suite verdict, required CI gate or release equivalence is asserted."
+  ]
+}

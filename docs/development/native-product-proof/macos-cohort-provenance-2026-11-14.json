@@ -1,0 +1,1146 @@
+{
+  "schema_version": 1,
+  "scope": "Historical first-pass cohort plus unobserved/recovery continuation; case/test_end outcomes, not clean-suite verdicts",
+  "summary": {
+    "p0-browser": {
+      "PASS": 147,
+      "FAIL": 34,
+      "TIMEOUT": 17,
+      "SKIP": 5
+    },
+    "p1-browser": {
+      "PASS": 167,
+      "SKIP": 18,
+      "TIMEOUT": 28,
+      "FAIL": 11
+    },
+    "p1-xpcshell": {
+      "PASS": 11,
+      "FAIL": 1
+    },
+    "p1-marionette": {
+      "PASS": 52,
+      "ERROR": 16,
+      "FAIL": 6,
+      "SKIP": 6
+    },
+    "p2-xpcshell": {
+      "PASS": 6
+    },
+    "p2-browser": {
+      "PASS": 1
+    }
+  },
+  "rows": 526,
+  "selection_patterns": {
+    "p0-browser": [
+      "p0-chunked-v2/*.jsonl",
+      "p0-unobserved-v2/*.jsonl"
+    ],
+    "p1-browser": [
+      "p1-full.jsonl",
+      "p1-unobserved-v2/*.jsonl",
+      "parallel-p1-v*/p1.jsonl",
+      "parallel-p1-v*/recovery/*/p1.jsonl",
+      "parallel-p1-v*/recovery-late-v1/*/p1.jsonl"
+    ],
+    "p1-xpcshell": [
+      "xpcshell-product-resources-v3/p1-sessionstore-unit.jsonl"
+    ],
+    "p1-marionette": [
+      "parallel-marionette-v1/marionette.jsonl"
+    ],
+    "p2-xpcshell": [
+      "xpcshell-product-resources-v3/p2-contextualidentity-unit.jsonl"
+    ],
+    "p2-browser": [
+      "supplemental-fast-v2/p2-contextualidentity-browser.jsonl"
+    ]
+  },
+  "method": "Normalize fixed runtime prefixes; restrict browser entries to pinned original manifests; keep final timestamped test_end per suite/test identity, with source/line tie-break. Keep observation count and status history. No candidate or diagnostic reruns are selected.",
+  "registered_browser_manifests": [
+    {
+      "suite": "p0-browser",
+      "path": "browser/components/tabbrowser/test/browser/tabs/browser.toml",
+      "sha256": "3ee96812987ac950d1afab34902be22fcbb47e45c2530b499701261a7288ddac",
+      "registered": 203
+    },
+    {
+      "suite": "p1-browser",
+      "path": "browser/components/sessionstore/test/browser.toml",
+      "sha256": "5d0d39a05d13d1050038a407ae51cf97b4fca4557ea28894f7fd1c7bee477635",
+      "registered": 132
+    },
+    {
+      "suite": "p1-browser",
+      "path": "browser/components/sessionstore/test/browser_oldformat.toml",
+      "sha256": "6ac04c92ee348bd20db927c734d60dd16ec4f9983901530ec6e0223605007d0c",
+      "registered": 91
+    },
+    {
+      "suite": "p1-browser",
+      "path": "browser/components/sessionstore/test/browser_startup_telemetry.toml",
+      "sha256": "6abc485c8bb108e6e52caabea75ab71ccde36c2fb23ee78eaee43b828f7221a2",
+      "registered": 1
+    },
+    {
+      "suite": "p2-browser",
+      "path": "toolkit/components/contextualidentity/tests/browser/browser.toml",
+      "sha256": "20b4615538a7fb66c146daca55e611933dd332e70c66cb50c39535a2b52f516e",
+      "registered": 1
+    }
+  ],
+  "excluded_non_manifest_events": [
+    {
+      "suite": "p1-browser",
+      "test": "automation.py",
+      "source": "parallel-p1-v1/recovery/003/p1.jsonl",
+      "line": 548,
+      "status": "TIMEOUT"
+    }
+  ],
+  "sources": [
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-001.jsonl",
+      "sha256": "84c07950c6aa40083841675b5f8925c12d5d2910d87e9bad853baad751f18fbb",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-002.jsonl",
+      "sha256": "c841146a2b407190283414dadb06d1f14938ffb35754406f6f4f56dbc1849e28",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-003.jsonl",
+      "sha256": "675ae9166404ad4d47085526344a869285d81e16eb0119d7584b2e6aa06bc1c7",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-004.jsonl",
+      "sha256": "140a071f995c2dfe92a56ee305c1669b0fc85a3c54ca5d328c4ce8ee82bf42af",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-005.jsonl",
+      "sha256": "1408363aab113819bd1e50dc37bcf71f384b1ca68cd6d370914a0a0f51cef0a0",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-006.jsonl",
+      "sha256": "8f44c29a34e4e1d3a66ea10f658a7df67d34f9b1f38b9a2262f42344908f32ce",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-007.jsonl",
+      "sha256": "25bf4a7d7c9d5438345e84eb2a202640cbe99d147266031d6bb71414f6e443d3",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-008.jsonl",
+      "sha256": "0863d82917aa7de553756d95b1f51b1b165511d4370d597dca8d8d70703a0e2f",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-009.jsonl",
+      "sha256": "983c9d2e607ecb1ffdf70e7533b06bf69c3b1f72ff6e39d85f200fed35b3a38c",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-010.jsonl",
+      "sha256": "6caa83250e813a894511f6d1be180881dc5899d4f8295781173343758e507ec0",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-011.jsonl",
+      "sha256": "049d64a83d6b92278a8796bb8e08245d856b88641da54859c829b29d8d543c63",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-012.jsonl",
+      "sha256": "4bd38e0fe83cb1b8e17531f0a828d5d5bf3ec120043bde907de6b6464a0aa5f6",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-013.jsonl",
+      "sha256": "8eb4a351a26bafb51224dff2eb03359d5201beb89f6838426877b3278d6fbb53",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-014.jsonl",
+      "sha256": "04bcb7fba63767c4bac8d998d08dae68092c7df95e1ae654a948b15287d19da2",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-015.jsonl",
+      "sha256": "25b4bb7bf16cf99f2a36d5f8f3d9aa9ec57ed2afd68dd38ae92555864c6408b3",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-016.jsonl",
+      "sha256": "703c5844238116f37b315c4ae2d111e06d738cf17f09648cce02a715613849de",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-017.jsonl",
+      "sha256": "33edbd0a2cd334b50c7d09dda4dba32952baef93b6753c2b973cbc22f7f3c27e",
+      "test_end_events": 7
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-018.jsonl",
+      "sha256": "90e30fcbf9d596a88ca82be45ba6638d1732d801547f8c1dcbb1c307383b6c3c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-019.jsonl",
+      "sha256": "990b0a20572c5764500f8f15ce31fb70a4c93a1085dfd4e7e4665195c8e73ea1",
+      "test_end_events": 10
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-020.jsonl",
+      "sha256": "2315fcdba8247dd47b216545409b7bbf191cb6242e9899adc5975f3110e90176",
+      "test_end_events": 11
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-chunked-v2/p0-tabs-chunk-021.jsonl",
+      "sha256": "778b62eddb6281791ee831ceb77d19f14a05b837d5480ce9325546bb8afbd624",
+      "test_end_events": 3
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-001.jsonl",
+      "sha256": "d96e08f1280ebd2427cc310f5436fee09f4f1806a19edd0a9bcfd94f57794156",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-002.jsonl",
+      "sha256": "844e5b66b994d43e1ad95482d716f5721c7cdf6e05286c9dd9368e8884580873",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-003.jsonl",
+      "sha256": "72d5686eea0f92b9ae3fd8f0c433155c681b293dffb856812fea881df062e088",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-004.jsonl",
+      "sha256": "5b609c79cf86c9074f74174a0c99bb1c58627e3c022a7c981564ef1f3641bfa8",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-005.jsonl",
+      "sha256": "0be1a8f73d4632d8cff1a4e16137eedc7ff896eefb0320e235f21ad8d867b508",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-006.jsonl",
+      "sha256": "f453159dbf8a006d1a8fbf80c73c1ece44dc5531a70bc7833fbe62dd9d69c364",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-007.jsonl",
+      "sha256": "6321f048f09f32f59ab513bcf7a4848a4be8ddc7dc4194d68caca01f516d9928",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-008.jsonl",
+      "sha256": "784ca826eaee448f2050ebffd29521c4bce299e7770db994f38e37a6809d8169",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-009.jsonl",
+      "sha256": "e14f8022acbfcd9d8b17eb9b92449a77ac0af821e239d531ab43c21fe2e436f9",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-010.jsonl",
+      "sha256": "59afca23588463df23b76c7f04a461a784c060749f3b1f2d22209780aae6f6c3",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-011.jsonl",
+      "sha256": "1880e6843ab9b57f66d131582c83ee2225a56490709c0fa6233497479faa9cc0",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-012.jsonl",
+      "sha256": "f42dc9c901327b6e38ee65053e7e5aba2216a24c4cd54959907359773543ead5",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-013.jsonl",
+      "sha256": "1ac2973c5fa2a0b06c0cf6712f55aecdecd9de6c3d2b7b13d37f41bd18691837",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-014.jsonl",
+      "sha256": "3f999af2f039b4ddfcf3e8682571c7718e5974137a4b1dfe3ac647bb9bd5ecb0",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-015.jsonl",
+      "sha256": "59ab38a56eec2e4c76f53dea8b70e49530a7f6663e76ade2a2fa4c7dada5ba37",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-016.jsonl",
+      "sha256": "8480007a878d42abc64b32e3e522d55016a2f504c5a95ae87c57cda97ac0e85c",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-017.jsonl",
+      "sha256": "1518ada34250135f3d607a1288fc1a7fa1d992ae1c0e60a806480c3648d43dca",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-018.jsonl",
+      "sha256": "f9637a7502bfeb8eff37f2cce6753f321ab7fb85337f3d410e86fea3fab7ecc2",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-019.jsonl",
+      "sha256": "bad6e661101a2f0d31d4b4461a7e91d425ba717742fc538960be55b494dfd887",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-020.jsonl",
+      "sha256": "1803db4de378152b59325f20e1dc3b337407c7df5e0f9c9a3cfb9d9257149d27",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-021.jsonl",
+      "sha256": "ef109e4e43747b1c9125e91f74eb221fe3fa526e03f61f009bc72d8e00ab5817",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p0-browser",
+      "path": "p0-unobserved-v2/p0-unobserved-022.jsonl",
+      "sha256": "adcd17abe401e2fc3e55da97c21c526e40c65c2e01b632ce92d34660bd6f0745",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-full.jsonl",
+      "sha256": "b6df8c5c019361033fb08e6aaab91bddd41d41f24064e8386643573ac79dfccb",
+      "test_end_events": 100
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-001.jsonl",
+      "sha256": "5dde33b82feac23d400edfa135d02d3cffdd792ff8e960cdd1b5bc9f40559820",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-002.jsonl",
+      "sha256": "fd122600ce12f9e9c200f753267c56653ed5e585946e2010a09725f00a1c183c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-003.jsonl",
+      "sha256": "b2785e6e2ee6778b1a47c2f021dea2a5bcaa9f17bdeca8d216471fcabe5dfe69",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-004.jsonl",
+      "sha256": "9b870301a92e27b14a368bff7e1433f2c08c8464723150cfbf69f41031fbdc52",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-005.jsonl",
+      "sha256": "4a4d8bcbd331c805fb64dbbb645abebe357fbf7de2c73d9c148d1b821fa89f07",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-006.jsonl",
+      "sha256": "c24e0e03fe9e6cd934b03f8bacc31e17789a2b491364a67861293998f2fc9135",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-007.jsonl",
+      "sha256": "145ac4b4c2200a1f5ac55dfb70880d4da67634a4610c9184a44a7e4fbcdc4475",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-008.jsonl",
+      "sha256": "eb8dcab292edb6e46833d64d71f96387de32a6da4da1e836a26b70d8a4ef71b0",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-009.jsonl",
+      "sha256": "88d0f777c572e9fc942dce548aa4b2ebf3c243a6e85e8712847e17335f89862f",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-010.jsonl",
+      "sha256": "a25d88a02981d84ceb705cd2fd9fab2f2dee84cfa618ac1ae38192b0818a6d8a",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-011.jsonl",
+      "sha256": "c4e3908ed124dcfaeedb4cccfd73348ff272bc8e108dfe675d35e09305f8b0fb",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-012.jsonl",
+      "sha256": "1405a1386a89d9602d2c06a4506203baa7cbf072506b867edaf8c437b60b4d18",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-013.jsonl",
+      "sha256": "8572fb7b613cc3749a75ee7632f84ffe7c88fe9f5b3b6c6dfdaffa1331a57124",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-014.jsonl",
+      "sha256": "3f77c570a09a97ca709978762e73b66988ea4d4f7c227232b0703459c2b24994",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-015.jsonl",
+      "sha256": "19f5a553f97389e5a6484120a767c4f6ef0f8c8c1a412c2b2d0de33c855e09aa",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-016.jsonl",
+      "sha256": "2e5e87d45184f5d85cdfff632a6e53ab62a410f660217d40bfe8aba8b04f5856",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-017.jsonl",
+      "sha256": "68eed6c904af558242310c31d346c8a90b150c33254833d875c63030179cee6c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-018.jsonl",
+      "sha256": "917e36f564f3811b9abd99fa9af5d9839ca8d3d2c55df8891abe72179758cceb",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-019.jsonl",
+      "sha256": "09045ea384010ab54ca81b56cf4b3fb19056611dfe655c5e3b17039da3d7313a",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-020.jsonl",
+      "sha256": "817ee9c2a1eb34ceab92541069bba4e4a8c158586dae4036e4b2e9afa0ee4d07",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-021.jsonl",
+      "sha256": "e10dbe1d0c1fd3a6256bbb9488a841b6b09e2a5fb50c7d27ad27538b4fa4a023",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-022.jsonl",
+      "sha256": "ca0e534e0de3278ba499d0d635b13a2bc10d502f47299fade71bd7714e08db10",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-023.jsonl",
+      "sha256": "dffd99056d9846f2850908894ebee1f8be761c640405871eeec516173cc4e820",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-024.jsonl",
+      "sha256": "1137209c2d1041d9b4e4f6aa516ee41d0768c29a002a4ea91c77893b6de2f57f",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-025.jsonl",
+      "sha256": "2ca9db1afee7347446a5e54fe1b0a6249dd19c19a770a92b2eae2d81870ea256",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-026.jsonl",
+      "sha256": "7059861f1e0cdeaa9643f814f2ca30370d25bd668cd7a6b0fdcaacd883bf1ea9",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-027.jsonl",
+      "sha256": "ca7315b4aff06aa75d531e684b473c7db22283db24632185f9f800399702a8aa",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-028.jsonl",
+      "sha256": "0904fea093ffe04420784463e33ed145125d45c93de2d486300f42f97ce01baf",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-029.jsonl",
+      "sha256": "cbec353f072cbe9a56540e0e67dbd767f164d28745e34eae11af56b9837ed8fc",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-030.jsonl",
+      "sha256": "f23a70b7830af77412499073f4d3dbe92255e85e761b7312b30cd4fe1d182e4e",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-031.jsonl",
+      "sha256": "45df3a648f7f85bde4be51baf4bfbbdf031ee73fb8539a95659d0372f50354d5",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-032.jsonl",
+      "sha256": "ff2231babf42f07705746e2289d20f23d6b0c848e4e16edcc17f2133e14108c1",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-033.jsonl",
+      "sha256": "859580f091a1bb5147bdcdf0acdea6fe02ee9745fe70fd6bbbbfd26adbeb88ed",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-034.jsonl",
+      "sha256": "6691d121d29077f3c2008dc01358f9c6a98043ffcc5d3a0e31141fe371be1afb",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-035.jsonl",
+      "sha256": "dd4185fe9e5ca1753e2279b1781dd9e6c3b7c57fb2184ff23b0fee6b753fae10",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-036.jsonl",
+      "sha256": "742379079d6c48e1ebb5fbf2f009dc331bf65d774ece9013d86bb171b3b6e4b3",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-037.jsonl",
+      "sha256": "82eb644a978465ebcd9b17b0ea01c5185ef9e35b551eb85d41fae57fd786bfdf",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-038.jsonl",
+      "sha256": "d2454efa83006015a256d94f590db2cec4d0828d51f65c0aa5004e7a8aebbef1",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-039.jsonl",
+      "sha256": "9fdcf0ae4a5555a8b39d021f4ec2722d273d0e767788d9c52bd122eaeeed9d7a",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-040.jsonl",
+      "sha256": "c7a73b3602684ae64ad53f379a3fd7c47e973d106f96446a6308d193f061d30c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-041.jsonl",
+      "sha256": "ce27f3efa1dd8c92205cf681f5cf12b60c3284de32b66caa6dd46ef2aa842b60",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-042.jsonl",
+      "sha256": "2ce05efbbdd7b862d3dff2b6befc46cb9b616d4a68964378bc699b368736c9a5",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-043.jsonl",
+      "sha256": "aecfb248dd1f830f4f10ae359c00c205eff405f33b1d67d684f7aff789e8ee4e",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-044.jsonl",
+      "sha256": "f8a62be28c95db7ddf9cb243e5389903dfb85ef53dc83a898cd9937a948997d6",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-045.jsonl",
+      "sha256": "df7a7c9d206d20652c439ba378ba929e96fe603750e67f88a3eb5e5a798bb436",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-046.jsonl",
+      "sha256": "e0393daba727f05b8e7997c9caa32a68f3894b615774ed54de82dc7e5bda1c22",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-047.jsonl",
+      "sha256": "1962692c995dbd202e356745ddbd83c5ea7ab187f6c8686e441c75e58540ad77",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-048.jsonl",
+      "sha256": "b7fefe9fd5d4deb21a9fe5474e39e8e401c356b9583322d4af00da042520359f",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-049.jsonl",
+      "sha256": "7663d9a65b4b50c744e129d7b987d5552555d4f8c8d327a72dbe548e0d99fccc",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-050.jsonl",
+      "sha256": "eaa293e12dd0c84bde9298a040c66dfb8c4a14778830de8e3c9ebcfe1caa569c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-051.jsonl",
+      "sha256": "a922c29fbfb5c7e1d640f5e2fed89ad73ed82b4aeab8656013109c23a2883483",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-052.jsonl",
+      "sha256": "1a1eee85e2899b2bd29f635c91ceb9dc50fbf191aa9ac9893d07b16069c74b7d",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-053.jsonl",
+      "sha256": "edabe830138a301b05b34e279b93734561010ca397d274a224bdcfe117025d7d",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-054.jsonl",
+      "sha256": "8a1d97a972569d85c2eda5f6f688a51fd927301155cd68899db890bfc0210a07",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-055.jsonl",
+      "sha256": "03f2c515f0465afd74478d7f235ba3ed2871bcbaf50fbf8c5a2fda3be47b6e90",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-056.jsonl",
+      "sha256": "d19b393fa0a171ad371cb65e08e8927d6d0825b1a874c016b87cc30f8df79e2a",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-057.jsonl",
+      "sha256": "0e6f8e93273c8d33fd3b1bd9a47a0e4204daa35370f1f875cdeb5c95ce10ab80",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-058.jsonl",
+      "sha256": "25486a2b45b27adbbdee0e1a143dc67537fe01bf1c2db55cca4c8372053273bb",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-059.jsonl",
+      "sha256": "86c3e0ba9022bc600da98d53c475dfdccbe48f7da423c53b16f9d1ffe055c832",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-060.jsonl",
+      "sha256": "017caedd0c4e842ebb7766005bf645ffdd09f6875df95c9a2e9a84be3a07f523",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-061.jsonl",
+      "sha256": "536aa5ed9f8060573164d0a13f87f5b01397be9c08b1957c0951cb511a1e860c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-062.jsonl",
+      "sha256": "681d75cd0cb49d0f402695b834d4daf97973b61f55e9746f279940b52042c5a0",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-063.jsonl",
+      "sha256": "2baed217625b9b28366263fe47090b999c0642220f0305bbdfa4de9283d6bbd2",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-064.jsonl",
+      "sha256": "ba0afc3a88be44fec3f86c14156ff9183a636015fec1bdb2d187d01a1de6efd4",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-065.jsonl",
+      "sha256": "e3c5e39341c2c93b2b018ad778da3f747f9f5fe48ec03f63fbb09bd278eed214",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-066.jsonl",
+      "sha256": "457db7ebae1327184ef48f2ba5d834388b286ccb875092f94bb86b444baca3bc",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-067.jsonl",
+      "sha256": "0cb15467e4bf02bdfe38d8b0fc86fbcac2918555135087a10ff941b21751c906",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-068.jsonl",
+      "sha256": "5470ad075ae6f72a05f071ec4c093d5e0642854cade611ae0250c58d867b9314",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-069.jsonl",
+      "sha256": "2011cd9b50ca95bf5a8a5638d5840ff99585fe36cd8704d1c1ecfff4837c1841",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-070.jsonl",
+      "sha256": "e1e238d3e412d14b1b892271f750e0ded5d906707c9ec31fdf44bb0c55982989",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-071.jsonl",
+      "sha256": "09298551d1db668d8dc8da56bfa19c901bd8bd28551f503bdb4f38b7e627721c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-072.jsonl",
+      "sha256": "652a13f71195acd9220410119c26b2f651d4332e7182d7f777f8cd13a328d799",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-073.jsonl",
+      "sha256": "c4f57eda010da0b73182ec26696a5ba52e289ea8672427b740b96200278b4370",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-074.jsonl",
+      "sha256": "ad66b328ce69c9949957edb97d917841f8163cd961f79a59f823f3bf6ef56004",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-075.jsonl",
+      "sha256": "d0a238952e8f60c483d82e65ba1597422330f2d8719172beb96a992c159a282a",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-076.jsonl",
+      "sha256": "4cf194a697018baa24c99f86f7f47eee62c8d2feb7b606e51e8a6678d80340b9",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-077.jsonl",
+      "sha256": "7b79866a3e47cd7ee39ee0a9453ab2aa42d1bdad2344d316e0a2d5e2cef2c9a2",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-078.jsonl",
+      "sha256": "50fa0c43d12e87c0a1050bca8fff0ae8d5b5adacf79c97715818fbe5a7a20339",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-079.jsonl",
+      "sha256": "0cb390482f0eabe420ee0767ad797b74d6beeeef08e4edac99ff7fa9b2d19c37",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-080.jsonl",
+      "sha256": "9bdd8c3614693ce80b27e45f3900558439874d5f71db7401117390d47a61ac7d",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-081.jsonl",
+      "sha256": "76131a9aa0ef69066df9771e7ada795deee0d4fdc81e19bb0088a7c7a48c85c0",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-082.jsonl",
+      "sha256": "5f699267130b48d84a8d9cdb579a42793fb2fe7b583b5f19091fb1e779ea8399",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-083.jsonl",
+      "sha256": "17343f674dd5de1947a9c1489686f467bcf54b25e2f5e36e77980ea5cb2a5233",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-084.jsonl",
+      "sha256": "fa65a9bac0e2c2a40bd7420a3867768743398f4fd1e8ce887ec8050988b8a095",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-085.jsonl",
+      "sha256": "8b45e6e207b9fa68eb69539c3f6bd108b1ffe448984005674906ada13c91b021",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-086.jsonl",
+      "sha256": "62b23f42e083bf78a4b2c8caee964e398ef23875fc86174fa4c7ef0f0ce84de2",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-087.jsonl",
+      "sha256": "2172f4da5c304c8d9aeaee23b7d0fa917de65e0fe431dd78549a6fb36d7358e1",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-088.jsonl",
+      "sha256": "f6f87fb9174a5759ad809f4f919b310951cc5aca19882a6a2faebdfbcd460a40",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-089.jsonl",
+      "sha256": "62f4af5d2d31196a96d3512b3452ee92975fbb97f248c8bfb8f9255cfd3b38e8",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-090.jsonl",
+      "sha256": "6c686e6d8919ee46e60e26b3eeb48b3ad46dcc3a81e97e0ee396e8cd8009316a",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-091.jsonl",
+      "sha256": "46dfb501c59bc76b0020ecf8e1d96d234b553fa938ac99e862fc63f41c7e6867",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-092.jsonl",
+      "sha256": "00ff421cf8555d7bbbd84d8c354d6ae584df5dbdfce62b5a79ac689611f8265b",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-093.jsonl",
+      "sha256": "b9bd3a5d2b92a27158e8dca32f56d2a8382174262f8397eccde45c8479f7cd0f",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-094.jsonl",
+      "sha256": "0d551836bf78de484e2dfbf9b5a39492083b275f360b0b0c6ef40da47550cfdc",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "p1-unobserved-v2/p1-unobserved-095.jsonl",
+      "sha256": "6394d43c202af42068bdf2aa241ed8a98fd707ad0b51c66424c75588ce8ae356",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v1/p1.jsonl",
+      "sha256": "1b955aa8d7f4c3b9a040f7d7daf84d64ebff7f8e4d86be24108c9e99041c7656",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v1/recovery/001/p1.jsonl",
+      "sha256": "c38885f15833e16d67287a5981c6f7151d6e3fb9cd587e84318749459506b4ce",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v1/recovery/002/p1.jsonl",
+      "sha256": "577647327c498ab00e08dad241df0d57aa76f1052f2b6ba5338d199e9ba204b6",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v1/recovery/003/p1.jsonl",
+      "sha256": "e5cc043aee04ffde012d00a60b06558a736e6296b6eb45739f1ec928e028b199",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/p1.jsonl",
+      "sha256": "5d5f571c0b9aac8391be5ae82b61a5a156d91cb42e1c55bd13e834125c82ed89",
+      "test_end_events": 3
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/001/p1.jsonl",
+      "sha256": "29e5c65a011451f291783cb93b7118d4612e40933f6055d756768071a53b0ff6",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/002/p1.jsonl",
+      "sha256": "bfda2a8092e1d0e1610db93a5a4f289b71d7c3f5fa33067afd787950ea83cb0d",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/003/p1.jsonl",
+      "sha256": "c32b27f4af950c8a0c207408affb9e985b0b23b66130a890b21048c263bd3c4f",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/004/p1.jsonl",
+      "sha256": "6f239167e54f885e1610c5afc88e0833fa67d935a8145ed645f804593596bb58",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/005/p1.jsonl",
+      "sha256": "223df9eb2e5728e512963b537c4bfadb22500f3189e31d673d73a99f0a86cea4",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/006/p1.jsonl",
+      "sha256": "0620a3114dfa55a7bb595574d0cbfd52feb6e3f2ec0d0c84c2b9afbcf1a318df",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/007/p1.jsonl",
+      "sha256": "039541c91194a2b0e945a5b5cf2b749f823646e040922ad3997fa527fa191b64",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery/008/p1.jsonl",
+      "sha256": "cc5e9e9f0cbb56e17e1624f0f8fc6b3fe549a6f1ebbf8d81f7949b8d464982b6",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery-late-v1/001/p1.jsonl",
+      "sha256": "83fe182f22d1652ebe4184ec6d14ce8d864849d1223419431f24b897b448af21",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery-late-v1/002/p1.jsonl",
+      "sha256": "2e68120d8ad12ab66021175c622980d1cf51f91462138732eaabb6fbc1b33b49",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery-late-v1/003/p1.jsonl",
+      "sha256": "4f7c7b53cd16e175e63dcf90fa89e8979676403b7c0fe88a45cab1dc9a8b46ef",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery-late-v1/004/p1.jsonl",
+      "sha256": "872764f354993af61c9d5673d6fd5538b2906ee73860cddffd63933b2722b6af",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery-late-v1/005/p1.jsonl",
+      "sha256": "b59e6b88ff06a42b7cca2af610acbc12155d02c30cb9f9dfcc3804be4980acef",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery-late-v1/006/p1.jsonl",
+      "sha256": "92e8f39e262fa5387c6184a2ed56b0df834e1b9380eca4a047ca16d8fb59a8c4",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v2/recovery-late-v1/007/p1.jsonl",
+      "sha256": "3411172f3b9c6e6f67648131739f2ca56d560a7a769e45ad79d9f9c79b41f8bf",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/p1.jsonl",
+      "sha256": "f56f7498602438af29640bffac993645e289b8003e1bed34118e7f5a64be41df",
+      "test_end_events": 3
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/001/p1.jsonl",
+      "sha256": "c0751bef62e13ddfa21c8d5ecc87d6b2a51daa45b5efbf1b770f2d962c9b66f1",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/002/p1.jsonl",
+      "sha256": "730073de274086d0b0b8fe9662f976f9a68654f2d1d1c5040325eb27438747d3",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/003/p1.jsonl",
+      "sha256": "1536d85441eab3ccf82334873e4e1c3a5beea0f266b0f5a43814ac84eda26b5c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/004/p1.jsonl",
+      "sha256": "818069224fa0142eb48932212f6dbcd1498740bcd11d166996898f1e87dd2075",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/005/p1.jsonl",
+      "sha256": "d2e0b43016b429d466ca80cab3f979bb049fc5b25d937186134b45ac58f99f1c",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/006/p1.jsonl",
+      "sha256": "a65babfc7ab173bd7483dbaffede7c974ca50300b66041e69ed640671a48251d",
+      "test_end_events": 2
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/007/p1.jsonl",
+      "sha256": "4daf2919d0439fc5fc0fe73c816e5d4587d18529fe9c173cf01a4917e5425ade",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-browser",
+      "path": "parallel-p1-v3/recovery/008/p1.jsonl",
+      "sha256": "4fea860ae3b431cb036f0d769a9733e74c8ab5d7428d9fd007618d3ba484b980",
+      "test_end_events": 1
+    },
+    {
+      "suite": "p1-xpcshell",
+      "path": "xpcshell-product-resources-v3/p1-sessionstore-unit.jsonl",
+      "sha256": "11a50d53df0f89b76de1a262085a1ac99d30547778e4a5d387a2b9c7bacb003e",
+      "test_end_events": 12
+    },
+    {
+      "suite": "p1-marionette",
+      "path": "parallel-marionette-v1/marionette.jsonl",
+      "sha256": "1d42d9c6f55db2eb095b7c49701d1febe3b85d4e13a7158b87cfface3cb62a2b",
+      "test_end_events": 80
+    },
+    {
+      "suite": "p2-xpcshell",
+      "path": "xpcshell-product-resources-v3/p2-contextualidentity-unit.jsonl",
+      "sha256": "6afa816181d9483ee849c1bd8f8db218742d4e62655673c3cbc426dc21768b08",
+      "test_end_events": 6
+    },
+    {
+      "suite": "p2-browser",
+      "path": "supplemental-fast-v2/p2-contextualidentity-browser.jsonl",
+      "sha256": "031bbde8e3ddfdecfcd6b0595077e5dc577de6d7b41c7b416e893d9d045fcdda",
+      "test_end_events": 1
+    }
+  ],
+  "limitations": [
+    "Historical multi-phase product/build evidence, not one identical current source/build cohort.",
+    "Browser rows match all 203 P0 and 224 P1 manifest files; SKIP is observed but not executed.",
+    "Marionette rows are 80 native test_end identifiers: executed test methods and file-level skip entries; not 80 manifest files or 80 executed methods.",
+    "Native suite exits, shutdown errors and unassigned harness errors are not folded into individual case statuses. PASS rows do not certify a clean suite.",
+    "Excluded automation.py harness TIMEOUT remains a harness failure, not a registered 225th P1 case.",
+    "P2 browser has a behavioral PASS but known shutdown failure.",
+    "Raw logs remain private; source hashes/relative paths allow comparison for evidence holders, not independent public verification.",
+    "Historical stale coverage-ledger.json is not used; candidate/recheck/diagnostic subdirectories are excluded."
+  ]
+}
