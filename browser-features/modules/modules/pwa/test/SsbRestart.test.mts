@@ -215,6 +215,14 @@ function testInvalidDataAndCrossOrigin(): void {
     "https://example.test/app/",
     "non-web URLs never replay",
   );
+  assertEquals(
+    restartUrl(
+      "https://example.test/app/",
+      "blob:https://example.test/dead-object-url",
+    ),
+    "https://example.test/app/",
+    "same-origin blob URLs cannot survive a restart",
+  );
 }
 
 export async function runAllTests(): Promise<void> {

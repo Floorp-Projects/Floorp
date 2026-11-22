@@ -21,6 +21,7 @@ export function restartUrl(startUrl: string, previousUrl: string): string {
     const previous = new URL(previousUrl);
     if (
       (start.protocol === "https:" || start.protocol === "http:") &&
+      (previous.protocol === "https:" || previous.protocol === "http:") &&
       previous.origin === start.origin
     ) return previous.href;
   } catch {
