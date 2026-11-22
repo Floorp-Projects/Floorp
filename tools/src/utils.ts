@@ -222,6 +222,7 @@ export const ProcessUtils = {
     cmd: string[],
     cb: (stream: "stdout" | "stderr", line: string) => void,
     environment: Record<string, string> = Deno.env.toObject(),
+    onSpawn?: (child: Deno.ChildProcess) => Promise<void>,
   ): Promise<number> {
     const child = new Deno.Command(cmd[0], {
       args: cmd.slice(1),
@@ -230,6 +231,8 @@ export const ProcessUtils = {
       stderr: "piped",
       env: environment,
     }).spawn();
+
+    await onSpawn?.(child);
 
     const readStream = async (
       stream: ReadableStream<Uint8Array> | null,

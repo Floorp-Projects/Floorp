@@ -784,6 +784,9 @@ export function loadBookmarkURI(
     if (openInNewTab && win.gBrowser.addTab) {
       const userContextId = getBookmarkWorkspaceUserContextId(win);
       if (userContextId === null) {
+        console.error(
+          "[Workspaces] Bookmark blocked: default container is pending",
+        );
         // A pending default is handled here: allowing the original bookmark
         // command to continue could open the site through another handler.
         mouseEvent.preventDefault?.();

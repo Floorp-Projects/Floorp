@@ -1,45 +1,337 @@
+# SPDX-License-Identifier: MPL-2.0
+#
+# Update the vendored upstream Lepton (browser-features/skin/lepton/) from a
+# black7375/Firefox-UI-Fix release and propose it as a pull request from
+# bot/update-lepton. This workflow never pushes to main.
+#
+# - The release is the input tag, or the latest release when the input is
+#   empty (scheduled runs). The tag, its commit and the zip hashes are
+#   recorded in browser-features/skin/lepton/UPSTREAM.json.
+# - The zips are checked against the SHA-256 digests GitHub publishes for the
+#   release assets. They are still untrusted (upstream publishes the
+#   digests): every entry name must match [A-Za-z0-9_+-][A-Za-z0-9._+-]* per
+#   segment (no .git, dotfiles, control characters) and must not be a Windows
+#   device name (CON, nul.svg, ...), end in a dot or differ from another
+#   path only in case; symlinks, special files
+#   and unknown top-level entries fail the run, and after `git add` the index
+#   may hold only regular files at the vendored paths. Deno gets read and
+#   write access only to the paths each command needs. The token is not on
+#   disk or in the environment while release files are handled: checkout
+#   keeps no credentials, only the download and pull-request steps get
+#   GH_TOKEN, gh runs outside the checkout, and the one token-holding git
+#   command (push) disables fsmonitor and hooks.
+# - Nothing is pushed when the vendored files already match the release, when
+#   bot/update-lepton already holds the same vendored files, or (scheduled
+#   runs and manual runs with an empty tag) when a bot PR for the same tag
+#   was closed without merging. To propose a closed release again, run this
+#   workflow with that tag.
+#
+# Requires the repository setting "Allow GitHub Actions to create and approve
+# pull requests". Pushes and PRs made with GITHUB_TOKEN do not trigger other
+# workflows, so after a push this workflow dispatches colocated_runner_test.yml
+# on the bot branch (the smoke and Native Runtime required checks). The
+# review-gate check runs only on pull_request events: a maintainer closes and
+# reopens the PR to start it, then reviewers post receipts as usual. Never push
+# to bot/update-lepton; it is force-pushed on the next update.
+
 name: "12 🧰 (u) Update Lepton"
 
 on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Upstream release tag, e.g. v8.7.6 (empty: latest release)"
+        required: false
+        default: ""
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: update-lepton
+  cancel-in-progress: false
 
 jobs:
   update-lepton:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    env:
+      UPSTREAM_REPOSITORY: black7375/Firefox-UI-Fix
+      BOT_BRANCH: bot/update-lepton
+      BASE_BRANCH: main
+      TAG_INPUT: ${{ inputs.tag }}
+      GIT_CONFIG_NOSYSTEM: "1"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Floorp
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           ref: main
+          fetch-depth: 1
+          persist-credentials: false
 
-      - name: Update Lepton Photon
-        run: |
-          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Photon-Style.zip -L -o Lepton-Photon-Style.zip
-          mkdir ~/Lepton-Photon-Style
-          unzip -o Lepton-Photon-Style.zip -d ~/Lepton-Photon-Style
-          cp -r ~/Lepton-Photon-Style/user.js ./browser-features/skin/lepton/userjs/photon.js
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
 
-      - name: Update Lepton Proton
+      - name: Resolve and download the upstream release
+        id: release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton-Proton-Style.zip  -L -o Lepton-Proton-Style.zip
-          mkdir ~/Lepton-Proton-Style
-          unzip -o Lepton-Proton-Style.zip -d ~/Lepton-Proton-Style
-          cp -r ~/Lepton-Proton-Style/user.js ./browser-features/skin/lepton/userjs/protonfix.js
+          set -euo pipefail
+          WORK="$RUNNER_TEMP/lepton"
+          echo "WORK=$WORK" >> "$GITHUB_ENV"
+          mkdir -p "$WORK/zips" "$WORK/extracted"
+          tag="${TAG_INPUT:-}"
+          if [ -z "$tag" ]; then
+            tag="$(gh api "repos/$UPSTREAM_REPOSITORY/releases/latest" --jq .tag_name)"
+          fi
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::unexpected Lepton tag: $tag"
+            exit 1
+          fi
+          gh api "repos/$UPSTREAM_REPOSITORY/releases/tags/$tag" > "$WORK/release.json"
+          ref="$(gh api "repos/$UPSTREAM_REPOSITORY/git/ref/tags/$tag")"
+          commit="$(jq -r .object.sha <<< "$ref")"
+          if [ "$(jq -r .object.type <<< "$ref")" = "tag" ]; then
+            commit="$(gh api "repos/$UPSTREAM_REPOSITORY/git/tags/$commit" --jq .object.sha)"
+          fi
+          if ! [[ "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::could not resolve the commit of $tag: $commit"
+            exit 1
+          fi
+          gh release download "$tag" --repo "$UPSTREAM_REPOSITORY" \
+            --dir "$WORK/zips" \
+            --pattern Lepton.zip \
+            --pattern Lepton-Photon-Style.zip \
+            --pattern Lepton-Proton-Style.zip
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "Lepton $tag = $UPSTREAM_REPOSITORY@$commit"
 
-      - name: Update Lepton Original
+      - name: Verify and extract the release zips
+        shell: bash
         run: |
-          curl -s https://github.com/black7375/Firefox-UI-Fix/releases/latest/download/Lepton.zip -L -o Lepton.zip
-          mkdir ~/Lepton
-          unzip -o Lepton.zip -d ~/Lepton
-          cp -r ~/Lepton/chrome/css/* ./browser-features/skin/lepton/css/
-          cp -r ~/Lepton/chrome/icons/* ./browser-features/skin/lepton/icons/
-          cp -r ~/Lepton/user.js ./browser-features/skin/lepton/userjs/lepton.js
+          set -euo pipefail
+          deno run --allow-read="$WORK" tools/src/lepton_vendor.ts verify-assets \
+            --release-json "$WORK/release.json" --zips-dir "$WORK/zips"
+          # One path segment: ASCII letters, digits, . _ + -, no leading dot
+          # (no .git, dotfiles, "..", control characters, spaces, backticks).
+          # winbad (matched case-insensitively): a Windows device name with or
+          # without an extension, or a segment ending in a dot; Windows cannot
+          # check those out. lepton_vendor.ts applies the same rules
+          # (assertSafeName) and also refuses names differing only in case.
+          seg='[A-Za-z0-9_+-][A-Za-z0-9._+-]*'
+          winbad='(^|/)(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|/|$)|\.(/|$)'
+          # grep reads a saved listing, never a pipe: with `unzip | grep -q`
+          # under pipefail, grep quits at the first match, unzip dies of
+          # SIGPIPE and the pipeline reads as "no match", so a bad entry
+          # would pass. found() treats a grep error (status > 1) as fatal.
+          found() {
+            local rc=0
+            grep "$@" > /dev/null || rc=$?
+            if [ "$rc" -gt 1 ]; then
+              echo "::error::grep failed with status $rc"
+              exit 1
+            fi
+            return "$rc"
+          }
+          for zip in Lepton Lepton-Photon-Style Lepton-Proton-Style; do
+            list="$WORK/$zip.entries"
+            unzip -Z1 "$WORK/zips/$zip.zip" > "$list"
+            if found -Ev "^$seg(/$seg)*/?\$" "$list"; then
+              echo "::error::$zip.zip has unsafe entry names"
+              exit 1
+            fi
+            if found -Ei "$winbad" "$list"; then
+              echo "::error::$zip.zip has entry names Windows cannot check out"
+              exit 1
+            fi
+            unzip -q "$WORK/zips/$zip.zip" -d "$WORK/extracted/$zip"
+          done
+          # unzip restores symlinks; following one could copy a runner file
+          # into the repository. lepton_vendor.ts refuses them too.
+          unsafe="$(find "$WORK/extracted" ! -type f ! -type d)"
+          if [ -n "$unsafe" ]; then
+            echo "::error::release zips contain symlinks or special files:"
+            echo "$unsafe"
+            exit 1
+          fi
+          # Names as extracted (a newline in a zip entry name splits the
+          # listing above, so check the real paths too).
+          bad=0
+          while IFS= read -r -d '' file; do
+            rel="${file#"$WORK/extracted/"}"
+            if ! [[ "$rel" =~ ^$seg(/$seg)*$ ]] || [[ "${rel,,}" =~ $winbad ]]; then
+              printf '::error::unsafe name in the release: %q\n' "$rel"
+              bad=1
+            fi
+          done < <(find "$WORK/extracted" -mindepth 1 -print0)
+          [ "$bad" = 0 ]
 
-      - name: commit changes
+      - name: Update the vendored files
+        shell: bash
+        env:
+          COMMIT: ${{ steps.release.outputs.commit }}
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add .
-          git commit -m "🧰 (u) Update Lepton Themes" || echo "no change to commit"
-          git push
+          set -euo pipefail
+          # Read: the downloaded release and browser-features/skin. Write:
+          # only the vendored dir, jar.mn and the PR body. No net/env/run.
+          deno run --allow-read="$WORK,browser-features/skin" \
+            --allow-write="browser-features/skin/lepton,browser-features/skin/jar.mn,$WORK/pr-body.md" \
+            tools/src/lepton_vendor.ts apply \
+            --release-json "$WORK/release.json" \
+            --commit "$COMMIT" \
+            --zips-dir "$WORK/zips" \
+            --extracted-dir "$WORK/extracted" \
+            --summary "$WORK/pr-body.md"
+          deno run --allow-read=browser-features/skin/lepton \
+            tools/src/lepton_vendor.ts verify
+
+      - name: Commit the update
+        id: commit
+        shell: bash
+        # No token in this step: it runs git in a tree that holds files from
+        # the release (already checked by name, type and hash).
+        run: |
+          set -euo pipefail
+          g() { git -c core.fsmonitor= -c core.hooksPath=/dev/null "$@"; }
+          paths=(browser-features/skin/lepton browser-features/skin/jar.mn)
+          if [ -z "$(g status --porcelain -- "${paths[@]}")" ]; then
+            echo "Vendored Lepton already matches $TAG; nothing to propose."
+            echo "changed=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          g switch -q -c "$BOT_BRANCH"
+          g add -A -- "${paths[@]}"
+
+          # The index may hold only regular files at the expected paths: no
+          # gitlink (160000), symlink (120000) or anything outside the
+          # vendored files, UPSTREAM.json and jar.mn.
+          seg='[A-Za-z0-9_+-][A-Za-z0-9._+-]*'
+          winbad='(^|/)(con|prn|aux|nul|com[0-9]|lpt[0-9])(\.|/|$)|\.(/|$)'
+          allowed="^browser-features/skin/(jar\.mn|lepton/(LEPTON|UPSTREAM\.json|userjs/(lepton|photon|protonfix)\.js|(css|icons)/$seg))\$"
+          bad=0
+          while IFS= read -r -d '' staged; do
+            if ! [[ "$staged" =~ $allowed ]] || [[ "${staged,,}" =~ $winbad ]]; then
+              printf '::error::unexpected staged path: %q\n' "$staged"
+              bad=1
+            fi
+          done < <(g diff --cached --name-only --no-renames -z)
+          if [ "$bad" != 0 ]; then
+            echo "::error::If upstream added a vendored path, review it, then add it to the allowed pattern above" \
+              "(.github/workflows/update_lepton.yml) and SINGLE_FILES /" \
+              "SHARED_DIRS in tools/src/lepton_vendor.ts, after review."
+          fi
+          while IFS= read -r -d '' entry; do
+            mode="${entry%% *}"
+            if [ "$mode" != 100644 ] && [ "$mode" != 100755 ]; then
+              printf '::error::staged entry is not a regular file: %q\n' "$entry"
+              bad=1
+            fi
+          done < <(g ls-files -s -z -- browser-features/skin)
+          # Paths that differ only in case break Windows and macOS checkouts
+          # (lepton_vendor.ts refuses them in the release too).
+          dups="$(g ls-files -z -- browser-features/skin |
+            LC_ALL=C tr '[:upper:]' '[:lower:]' | LC_ALL=C sort -z |
+            uniq -dz | tr '\0' '\n')"
+          if [ -n "$dups" ]; then
+            echo "::error::staged paths differ only in case:"
+            printf '%s\n' "$dups"
+            bad=1
+          fi
+          [ "$bad" = 0 ]
+
+          g -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "chore(lepton): update vendored Lepton to $TAG" \
+            -m "Updated by .github/workflows/update_lepton.yml."
+
+          # The repository is public, so the fetch needs no credentials.
+          remote_sha=""
+          if g fetch -q --depth=1 origin "refs/heads/$BOT_BRANCH" 2> /dev/null; then
+            remote_sha="$(g rev-parse FETCH_HEAD)"
+          fi
+          push=1
+          if [ -n "$remote_sha" ] && g diff --quiet "$remote_sha" HEAD -- "${paths[@]}"; then
+            echo "$BOT_BRANCH already holds this update; not pushing."
+            push=0
+          fi
+          {
+            echo "changed=1"
+            echo "push=$push"
+            echo "remote_sha=$remote_sha"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the pull request
+        if: steps.commit.outputs.changed == '1'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUSH: ${{ steps.commit.outputs.push }}
+          REMOTE_SHA: ${{ steps.commit.outputs.remote_sha }}
+        run: |
+          set -euo pipefail
+          # Nothing here runs git status or reads repository-controlled git
+          # config with the token: gh runs outside the checkout with explicit
+          # --repo/--head, and the push disables fsmonitor and hooks.
+          cd "$RUNNER_TEMP"
+          title="chore(lepton): update vendored Lepton to $TAG"
+
+          # Bot PRs from this repository only (a fork can use the same
+          # branch name).
+          own_prs() {
+            gh pr list --repo "$GITHUB_REPOSITORY" --head "$BOT_BRANCH" \
+              --base "$BASE_BRANCH" --state "$1" --limit 100 \
+              --json number,title,isCrossRepository,mergedAt \
+              --jq '[.[] | select(.isCrossRepository | not)]'
+          }
+          pr="$(own_prs open | jq -r '.[0].number // empty')"
+          if [ -z "$pr" ] && [ -z "${TAG_INPUT:-}" ]; then
+            closed="$(own_prs closed | jq -r --arg title "$title" \
+              '[.[] | select(.mergedAt == null and .title == $title)][0].number // empty')"
+            if [ -n "$closed" ]; then
+              echo "Bot PR #$closed for $TAG was closed without merging; skipping."
+              echo "Run this workflow with tag=$TAG to propose it again."
+              exit 0
+            fi
+          fi
+
+          dispatch_ci=""
+          if [ "$PUSH" = 1 ]; then
+            # The token is used for this one command only and never written
+            # to .git/config.
+            auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            echo "::add-mask::$auth"
+            git -C "$GITHUB_WORKSPACE" \
+              -c core.fsmonitor= -c core.hooksPath=/dev/null \
+              -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+              push -q --no-verify \
+              --force-with-lease="refs/heads/$BOT_BRANCH:$REMOTE_SHA" \
+              origin "HEAD:refs/heads/$BOT_BRANCH"
+            dispatch_ci=1
+          fi
+
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --repo "$GITHUB_REPOSITORY" \
+              --title "$title" --body-file "$WORK/pr-body.md"
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --base "$BASE_BRANCH" \
+              --head "$BOT_BRANCH" --title "$title" --body-file "$WORK/pr-body.md"
+            dispatch_ci=1
+          fi
+
+          # GITHUB_TOKEN pushes and PRs do not trigger workflows; dispatch the
+          # smoke / Native Runtime checks on the bot branch head.
+          if [ -n "$dispatch_ci" ]; then
+            gh workflow run colocated_runner_test.yml --repo "$GITHUB_REPOSITORY" \
+              --ref "$BOT_BRANCH"
+          fi

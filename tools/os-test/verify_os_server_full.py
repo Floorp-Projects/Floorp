@@ -1,4 +1,3 @@
-import argparse
 import base64
 import concurrent.futures
 import http.server
@@ -6,18 +5,30 @@ import json
 import os
 import re
 import shutil
-import socketserver
 import sys
 import tempfile
 import threading
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from pathlib import Path
 from dataclasses import dataclass
 
-BASE_URL = os.environ.get("FLOORP_OS_BASE_URL", "http://127.0.0.1:58261")
+from os_test_client import (
+    DEFAULT_BASE_URL,
+    REQUEST_ERROR,
+    OsTestClient,
+    OsTestClientError,
+    OsTestConfigError,
+    RedactedArgumentParser,
+    create_os_test_client,
+    reconcile_os_test_client_args,
+    resolve_base_url,
+    resolve_token_file,
+)
+
+# Ambient env is read only inside main(), never at module import or --help.
+BASE_URL = DEFAULT_BASE_URL
+_CLIENT: OsTestClient | None = None
 FINGERPRINT_COMMENT_RE = re.compile(r"<!--fp:([a-z0-9]{8}(?:[a-z0-9]{8})?)-->")
 
 
@@ -177,53 +188,34 @@ def make_request(
     retries=1,
     retry_interval=0.2,
 ):
-    url = f"{BASE_URL}{path}"
-    req = urllib.request.Request(url, method=method)
+    """Request through the shared authenticated client.
 
-    json_data = None
-    if data is not None:
-        json_data = json.dumps(data).encode("utf-8")
-        req.add_header("Content-Type", "application/json")
-        req.add_header("Content-Length", str(len(json_data)))
+    Deterministic API responses (including 401 authentication failures) are
+    returned once and never retried; only transport/redirect/origin failures
+    retry. The client error text is bounded and carries no URL or secret.
+    """
+    client = _CLIENT
+    if client is None:
+        return None, None
 
     attempts = max(1, retries + 1)
-    last_status = None
-    last_body = None
     for attempt in range(attempts):
         try:
-            with urllib.request.urlopen(
-                req,
-                data=json_data if data is not None else None,
+            return client.request(
+                path,
+                method=method,
+                data=data,
+                stream=stream,
                 timeout=timeout,
-            ) as response:
-                status = response.status
-                if stream:
-                    return status, "<stream>"
-                body = response.read().decode("utf-8")
-                try:
-                    json_body = json.loads(body)
-                    return status, json_body
-                except json.JSONDecodeError:
-                    return status, body
-        except urllib.error.HTTPError as e:
-            # HTTP-level failure is a deterministic API response; do not retry.
-            return e.code, e.read().decode("utf-8")
-        except urllib.error.URLError as e:
-            last_status, last_body = None, None
+            )
+        except OsTestClientError:
             if attempt < attempts - 1:
                 time.sleep(retry_interval)
                 continue
-            print(f"Failed to connect to {url}: {e.reason}")
-            return last_status, last_body
-        except Exception as e:  # noqa: BLE001
-            last_status, last_body = None, None
-            if attempt < attempts - 1:
-                time.sleep(retry_interval)
-                continue
-            print(f"Unexpected error for {url}: {e}")
-            return last_status, last_body
+            print(f"Failed to connect to OS API target: {REQUEST_ERROR}")
+            return None, None
 
-    return last_status, last_body
+    return None, None
 
 
 def _short(val):
@@ -1259,13 +1251,27 @@ def test_scraper(upload_file_path: str, test_page_url: str):
 
 
 def main(argv: list[str] | None = None) -> int:
-    global BASE_URL
+    global BASE_URL, _CLIENT
 
-    parser = argparse.ArgumentParser(description="Verify Floorp OS server APIs")
+    args_list = list(sys.argv[1:] if argv is None else argv)
+    try:
+        target_args = reconcile_os_test_client_args([], args_list)
+    except OsTestConfigError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+
+    parser = RedactedArgumentParser(description="Verify Floorp OS server APIs")
     parser.add_argument(
         "--base-url",
-        default=BASE_URL,
-        help="OS server base URL (default: %(default)s)",
+        default=None,
+        help="OS server base URL (default: FLOORP_OS_BASE_URL or "
+        + DEFAULT_BASE_URL
+        + ")",
+    )
+    parser.add_argument(
+        "--token-file",
+        default=None,
+        help="Explicit OS-Server bearer token file (default: FLOORP_OS_TOKEN_FILE)",
     )
     parser.add_argument("--quick", action="store_true", help="Run a quicker subset")
     parser.add_argument(
@@ -1305,9 +1311,28 @@ def main(argv: list[str] | None = None) -> int:
         default=2,
         help="Loops per worker in parallel stability test",
     )
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(target_args.verifier_args)
+    except OsTestConfigError as error:
+        print(str(error), file=sys.stderr)
+        return 2
 
-    BASE_URL = args.base_url
+    # Ambient env is read only after --help has exited, never at module import.
+    base_url = resolve_base_url(
+        target_args.base_url_flag,
+        os.environ.get("FLOORP_OS_BASE_URL"),
+    )
+    try:
+        token_file = resolve_token_file(
+            target_args.token_file_flag,
+            os.environ.get("FLOORP_OS_TOKEN_FILE"),
+        )
+        # Validated authenticated target precedes token-file IO and any fixture.
+        _CLIENT = create_os_test_client(base_url, token_file)
+    except OsTestConfigError as error:
+        print(str(error), file=sys.stderr)
+        return 2
+    BASE_URL = _CLIENT.base_url
     clear_results()
 
     print(f"Verifying Floorp OS Server API at {BASE_URL}")

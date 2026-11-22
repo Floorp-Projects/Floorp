@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="deno test" tests="60" failures="0" errors="0" time="0.429">
+    <testsuite name="./tools/src/smoke_runner.test.ts" tests="12" disabled="0" errors="0" failures="0">
+        <testcase name="resolveMode returns &apos;all&apos; when value is undefined" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="8" col="6">
+        </testcase>
+        <testcase name="resolveMode returns &apos;all&apos; for empty string" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="12" col="6">
+        </testcase>
+        <testcase name="resolveMode accepts &apos;all&apos;" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="16" col="6">
+        </testcase>
+        <testcase name="resolveMode accepts &apos;unit&apos;" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="20" col="6">
+        </testcase>
+        <testcase name="resolveMode accepts &apos;runtime&apos;" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="24" col="6">
+        </testcase>
+        <testcase name="resolveMode is case-insensitive" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="28" col="6">
+        </testcase>
+        <testcase name="resolveMode maps &apos;browser&apos; to &apos;runtime&apos; for backward compatibility" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="34" col="6">
+        </testcase>
+        <testcase name="resolveMode throws on invalid value" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="39" col="6">
+        </testcase>
+        <testcase name="createSmokeSteps(&apos;unit&apos;) returns only unit steps" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="49" col="6">
+        </testcase>
+        <testcase name="createSmokeSteps(&apos;runtime&apos;) returns only runtime steps" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="63" col="6">
+        </testcase>
+        <testcase name="createSmokeSteps(&apos;all&apos;) returns both unit and runtime steps" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="73" col="6">
+        </testcase>
+        <testcase name="createSmokeSteps steps have non-empty name and args" classname="./tools/src/smoke_runner.test.ts" time="0.000" line="80" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./tools/src/utils.test.ts" tests="7" disabled="0" errors="0" failures="0">
+        <testcase name="resolveFromRoot returns absolute path under PROJECT_ROOT" classname="./tools/src/utils.test.ts" time="0.000" line="13" col="6">
+        </testcase>
+        <testcase name="resolveFromRoot with nested path" classname="./tools/src/utils.test.ts" time="0.000" line="19" col="6">
+        </testcase>
+        <testcase name="platform returns a valid value" classname="./tools/src/utils.test.ts" time="0.000" line="25" col="6">
+        </testcase>
+        <testcase name="arch returns a valid value" classname="./tools/src/utils.test.ts" time="0.000" line="33" col="6">
+        </testcase>
+        <testcase name="exists returns true for existing file" classname="./tools/src/utils.test.ts" time="0.000" line="41" col="6">
+        </testcase>
+        <testcase name="exists returns false for non-existing file" classname="./tools/src/utils.test.ts" time="0.000" line="49" col="6">
+        </testcase>
+        <testcase name="PROJECT_ROOT is a valid directory" classname="./tools/src/utils.test.ts" time="0.000" line="57" col="6">
+        </testcase>
+    </testsuite>
+    <testsuite name="./tools/src/colocated_test_runner.test.ts" tests="41" disabled="0" errors="0" failures="0">
+        <testcase name="browser detection uses the abort-bounded TCP reachability helper" classname="./tools/src/colocated_test_runner.test.ts" time="0.003" line="36" col="6">
+        </testcase>
+        <testcase name="isTestFile detects supported test patterns" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="70" col="6">
+        </testcase>
+        <testcase name="isTestFile ignores non-test and excluded paths" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="81" col="6">
+        </testcase>
+        <testcase name="detectLayer resolves known layer roots" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="92" col="6">
+        </testcase>
+        <testcase name="detectLayer returns null for unknown paths" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="112" col="6">
+        </testcase>
+        <testcase name="parseLayer accepts aliases and rejects invalid values" classname="./tools/src/colocated_test_runner.test.ts" time="0.001" line="117" col="6">
+        </testcase>
+        <testcase name="escapeRegExp escapes regex control characters" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="132" col="6">
+        </testcase>
+        <testcase name="normalizeBrowserResultPath maps known aliases and prefixes" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="141" col="6">
+        </testcase>
+        <testcase name="isResultMatchTarget matches normalized browser paths" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="164" col="6">
+        </testcase>
+        <testcase name="parseOptions applies default timeout values" classname="./tools/src/colocated_test_runner.test.ts" time="0.001" line="188" col="6">
+        </testcase>
+        <testcase name="parseOptions accepts explicit timeout and startup values" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="200" col="6">
+        </testcase>
+        <testcase name="parseOptions rejects unknown options" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="216" col="6">
+        </testcase>
+        <testcase name="parseOptions rejects invalid timeout values" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="224" col="6">
+        </testcase>
+        <testcase name="parseOptions rejects --near with positional path" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="244" col="6">
+        </testcase>
+        <testcase name="parseOptions supports help mode" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="252" col="6">
+        </testcase>
+        <testcase name="browser test control is versioned, expiring, and cleared by owner" classname="./tools/src/colocated_test_runner.test.ts" time="0.005" line="259" col="6">
+        </testcase>
+        <testcase name="host cleanup removes its control file even when prefs cleanup fails" classname="./tools/src/colocated_test_runner.test.ts" time="0.001" line="315" col="6">
+        </testcase>
+        <testcase name="Windows snapshot parsers accept singleton and array JSON shapes" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="372" col="6">
+        </testcase>
+        <testcase name="Windows snapshot parsers fail closed on blank, null, and missing fields" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="407" col="6">
+        </testcase>
+        <testcase name="Windows preflight rejects the exact test executable only" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="438" col="6">
+        </testcase>
+        <testcase name="Windows Deno capture requires path, opaque creation date, and task marker" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="476" col="6">
+        </testcase>
+        <testcase name="Windows listener ownership accepts dual-stack rows for one verified root" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="496" col="6">
+        </testcase>
+        <testcase name="Windows listener ownership rejects multiple owners and content roots" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="533" col="6">
+        </testcase>
+        <testcase name="Windows listener ownership accepts only a previously captured reparented root" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="646" col="6">
+        </testcase>
+        <testcase name="Windows readiness preserves the verified launcher ancestor of the listener root" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="697" col="6">
+        </testcase>
+        <testcase name="Windows readiness owns an exact-path sibling currently descended from verified Deno" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="760" col="6">
+        </testcase>
+        <testcase name="Windows readiness blocks a present previously-owned identity mismatch" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="803" col="6">
+        </testcase>
+        <testcase name="Windows ownership expands exact-path children by ancestry and -parentPid" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="866" col="6">
+        </testcase>
+        <testcase name="Windows ownership treats a second root outside the listener tree as ambiguous" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="896" col="6">
+        </testcase>
+        <testcase name="Windows ownership never grants a new child through a stale -parentPid" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="941" col="6">
+        </testcase>
+        <testcase name="Windows teardown always cleans verified survivors after diagnostic root taskkill" classname="./tools/src/colocated_test_runner.test.ts" time="0.001" line="1023" col="6">
+        </testcase>
+        <testcase name="Windows teardown records but never kills an unlinked exact-path process" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1080" col="6">
+        </testcase>
+        <testcase name="Windows teardown disables Deno tree kill when a sibling is ambiguous" classname="./tools/src/colocated_test_runner.test.ts" time="0.001" line="1117" col="6">
+        </testcase>
+        <testcase name="Windows teardown revalidates Floorp identity immediately before taskkill" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1185" col="6">
+        </testcase>
+        <testcase name="Windows teardown revalidates the captured Deno command line before taskkill" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1247" col="6">
+        </testcase>
+        <testcase name="Windows teardown fails when the captured port remains reachable" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1283" col="6">
+        </testcase>
+        <testcase name="Windows teardown detects an IPv6 listener even when IPv4 connect fails" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1305" col="6">
+        </testcase>
+        <testcase name="Windows teardown fails closed when the final listener query fails" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1333" col="6">
+        </testcase>
+        <testcase name="Windows root-only fallback uses the spawned child control" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1355" col="6">
+        </testcase>
+        <testcase name="Windows verified teardown failure invokes root-only child fallback and stays failed" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1370" col="6">
+        </testcase>
+        <testcase name="Windows verified teardown combines root-only fallback failure" classname="./tools/src/colocated_test_runner.test.ts" time="0.000" line="1406" col="6">
+        </testcase>
+    </testsuite>
+</testsuites>

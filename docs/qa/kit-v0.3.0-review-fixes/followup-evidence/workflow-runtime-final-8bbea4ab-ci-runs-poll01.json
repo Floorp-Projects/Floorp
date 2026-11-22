@@ -1,0 +1,26 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "workflow_runs": [
+        {
+          "id": 37954821322,
+          "name": "QA3 Runtime contracts (shadow)",
+          "status": "completed",
+          "conclusion": "success",
+          "run_number": 5,
+          "jobs_url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/37954821322/jobs",
+          "logs_url": "https://api.github.com/repos/Floorp-Projects/Floorp-Runtime/actions/runs/37954821322/logs",
+          "workflow_id": 379271832
+        }
+      ]
+    },
+    "isError": false
+  }
+}

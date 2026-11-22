@@ -1,0 +1,30 @@
+{
+  "check": "kit-all",
+  "revision": "after-boundary-tests-2",
+  "startedAt": "2026-10-09T12:45:27.596122+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tools/qa/tests",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "cwd": "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0",
+  "exitCode": 0,
+  "timedOut": false,
+  "seconds": 2.473,
+  "log": "qa307-kit-all-after-boundary-tests-2.log",
+  "logSha256": "cad3ce6eea3e2e53d0068ee1fd9ec0c89b1710e99b28f345822273543c297c35",
+  "networkRequired": false,
+  "browserRequired": false,
+  "outerSoftASBytes": 2147483648,
+  "outerHardASBytes": 34359738368,
+  "workerPhysicalMemoryMaxBytes": 17179869184,
+  "outerSoftFSIZEBytes": 33554432,
+  "outerHardFSIZEBytes": 68719476736
+}
