@@ -1,4 +1,4 @@
-// v8.7.5 Lepton-Photon-Style
+// v8.7.6 Lepton-Photon-Style
 // ** Theme Default Options ****************************************************
 // userchrome.css usercontent.css activate
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
