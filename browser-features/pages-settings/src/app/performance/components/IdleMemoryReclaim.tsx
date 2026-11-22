@@ -49,6 +49,43 @@ const ControlledNumberInput = forwardRef<
   return <input {...props} ref={ref} />;
 });
 
+// Convert a draft back to a number with the same locale rules as the
+// formatter: localized digits, then the localized decimal separator.
+const DIGIT_ZEROES = [
+  0x0030, // ASCII
+  0x0660, // Arabic-Indic
+  0x06f0, // Extended Arabic-Indic
+  0x0966, // Devanagari
+  0x0e50, // Thai
+  0xff10, // Fullwidth
+];
+function parseLocalizedNumber(
+  text: string,
+  formatter: Intl.NumberFormat,
+): number {
+  const parts = formatter.formatToParts(1111.5);
+  const group = parts.find((part) => part.type === "group")?.value;
+  const decimals = new Set([
+    parts.find((part) => part.type === "decimal")?.value ?? ".",
+    ".",
+    ",",
+    "٫", // U+066B Arabic decimal separator
+  ]);
+  let normalized = "";
+  for (const char of text.trim().normalize("NFKC")) {
+    const code = char.codePointAt(0)!;
+    const zero = DIGIT_ZEROES.find((z) => code >= z && code <= z + 9);
+    if (zero !== undefined) {
+      normalized += String(code - zero);
+    } else if (decimals.has(char)) {
+      normalized += ".";
+    } else if (char !== group) {
+      normalized += char;
+    }
+  }
+  return Number(normalized);
+}
+
 /**
  * Number input that keeps the raw text while typing, so a half-typed or
  * cleared field does not immediately write a clamped value to the pref.
@@ -72,8 +109,14 @@ function NumberField({
     [locale, formatOptions],
   );
   const [text, setText] = useState(() => formatter.format(value));
-  const [compositionValue, setCompositionValue] = useState<string | null>(null);
   const composing = useRef(false);
+  // Ark's controlled-value watcher reformats and rewrites the DOM value on any
+  // change, which drops a separately typed decimal separator and races IME
+  // composition. Feed it only the committed value and let React own the draft.
+  const committed = useMemo(
+    () => formatter.format(value),
+    [formatter, value],
+  );
 
   useEffect(() => {
     setText(formatter.format(value));
@@ -106,29 +149,27 @@ function NumberField({
         // Without formatOptions, Ark accepts localized digits but then parses
         // them with parseFloat, which can erase or truncate the draft.
         formatOptions={formatOptions}
-        // Ark also formats and writes the input when its controlled value changes.
-        // Keep that value stable while the IME owns the native composition range.
-        value={compositionValue ?? text}
+        value={committed}
         disabled={disabled}
         colorPalette="purple"
         onValueChange={({ value }) => {
           if (!composing.current) setText(value);
         }}
-        onValueCommit={({ valueAsNumber }) =>
-          commit(text.trim() === "" ? 0 : valueAsNumber)}
+        onValueCommit={() =>
+          commit(
+            text.trim() === "" ? 0 : parseLocalizedNumber(text, formatter),
+          )}
       >
         <NumberInput.Input asChild>
           <ControlledNumberInput
             value={text}
             onChange={(event) => setText(event.currentTarget.value)}
-            onCompositionStart={(event) => {
+            onCompositionStart={() => {
               composing.current = true;
-              setCompositionValue(event.currentTarget.value);
             }}
             onCompositionEnd={(event) => {
               composing.current = false;
               setText(event.currentTarget.value);
-              setCompositionValue(null);
             }}
           />
         </NumberInput.Input>

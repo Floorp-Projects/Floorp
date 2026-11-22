@@ -617,6 +617,62 @@ export async function runPageTests() {
     });
   }
   tests.push({
+    name: "Memory seconds keep a separately typed decimal separator",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 300,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      const setNativeValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert(setNativeValue, "Native value setter missing");
+      const type = async (value: string, data: string) => {
+        setNativeValue.call(target, value);
+        target.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            data,
+            inputType: "insertText",
+          }),
+        );
+        // Let the controlled-value watcher and deferred DOM write run.
+        await pause(80);
+      };
+      const originalLocale = i18n.language;
+      try {
+        await i18n.changeLanguage("de");
+        await pause(80);
+        await until(() => !target.disabled, "Localized field ready");
+        target.focus();
+        await type("123", "3");
+        await type("123,", ",");
+        assertEquals(target.value, "123,", "Decimal separator was dropped");
+        await type("123,5", "5");
+        assertEquals(target.value, "123,5", "Separator draft was reformatted");
+        target.blur();
+        await until(
+          () => valueAt(MEMORY, "idleThresholdSec") === 124,
+          "Localized decimal did not commit",
+        );
+      } finally {
+        target.blur();
+        await i18n.changeLanguage(originalLocale);
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
     name: "Memory seconds retain composition drafts until commit or cancel",
     fn: async () => {
       prefs.set(
