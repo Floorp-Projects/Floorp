@@ -7,13 +7,15 @@ export type DurableBoundary =
   | "fallback_attempt_marked"
   | "disabled_update_prepared"
   | "disable_prepared"
-  | "enable_prepared";
+  | "enable_prepared"
+  | "initial_default";
 
 export type SetupKind =
   | "enabled_update"
   | "disabled_update"
   | "disable"
-  | "enable";
+  | "enable"
+  | "hub_menu_initial_default";
 
 export type RuntimeLockArchitecture = "aarch64" | "x86_64";
 

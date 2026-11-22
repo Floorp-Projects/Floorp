@@ -2,6 +2,16 @@
 
 import { M0_FIXTURES } from "./M0Fixtures.sys.mts";
 import { HUB_FIXTURES } from "./HubFixtures.sys.mts";
+import { HUB_PANEL_MENU_FIXTURES } from "./HubPanelMenuFixtures.sys.mts";
+import {
+  type AppMenuGenerationLease,
+  type AppMenuHostClaim,
+  type AppMenuRegistry,
+  type AppMenuRemovalReason,
+  getSharedAppMenuRegistry,
+  HUB_PANEL_MENU_FEATURE_ID,
+} from "./AppMenuRegistry.sys.mts";
+export { HUB_PANEL_MENU_FEATURE_ID } from "./AppMenuRegistry.sys.mts";
 import { getSharedHubRegistry, type HubRegistry } from "./HubRegistry.sys.mts";
 import { isHubIdentifier } from "./HubPageDescriptorValidation.ts";
 import {
@@ -29,8 +39,16 @@ import {
 
 const M0_FEATURE_ID = "experimental-local-sample";
 const HOST_BUILD_ID = "m0-schema-2";
-const HOST_CAPABILITIES = new Set(["window-marker", "hub-pages"]);
+const HOST_CAPABILITIES = new Set([
+  "window-marker",
+  "hub-pages",
+  "app-menu",
+]);
 const ROOT = PathUtils.join(PathUtils.profileDir, "floorp-hotfix-m0");
+const HUB_PANEL_MENU_ROOT = PathUtils.join(
+  PathUtils.profileDir,
+  "floorp-feature-hub-panel-menu",
+);
 const TEST_ROOT = PathUtils.join(
   PathUtils.profileDir,
   "floorp-hotfix-m0-tests",
@@ -145,7 +163,9 @@ export interface M0FeatureHostTestOptions {
   afterDurableWriteForTests?: M0DurableWriteObserverForTests;
   excludeWindowsForTests?: boolean;
   hubRegistryForTests?: HubRegistry;
+  appMenuRegistryForTests?: AppMenuRegistry;
   hubPublicationTimeoutMsForTests?: number;
+  appMenuPublicationTimeoutMsForTests?: number;
 }
 
 const owners = new Map<string, M0FeatureHost>();
@@ -593,7 +613,8 @@ async function digest(source: string): Promise<string> {
 function snapshotFeatureDefinition(input: unknown): FeatureDefinition {
   if (
     typeof input !== "object" || input === null ||
-    !hasExactKeys(input, ["featureId", "fixtures"])
+    (!hasExactKeys(input, ["featureId", "fixtures"]) &&
+      !hasExactKeys(input, ["featureId", "fixtures", "initialState"]))
   ) throw new Error("invalid feature definition");
   const value = input as Partial<FeatureDefinition>;
   if (
@@ -646,6 +667,8 @@ function snapshotFeatureDefinition(input: unknown): FeatureDefinition {
         typeof capability === "string" &&
         HOST_CAPABILITIES.has(capability)
       ) || new Set(capabilities).size !== capabilities.length ||
+      (capabilities.includes("app-menu") &&
+        value.featureId !== HUB_PANEL_MENU_FEATURE_ID) ||
       (value.featureId !== M0_FEATURE_ID &&
         capabilities.includes("window-marker"))
     ) throw new Error("invalid feature compatibility metadata");
@@ -662,15 +685,34 @@ function snapshotFeatureDefinition(input: unknown): FeatureDefinition {
       compatibility: immutableCompatibility,
     });
   }
+  let initialState: FeatureDefinition["initialState"];
+  if ("initialState" in value) {
+    const candidate = value.initialState;
+    if (
+      typeof candidate !== "object" || candidate === null ||
+      !hasExactKeys(candidate, ["version", "enabled"]) ||
+      typeof candidate.version !== "string" ||
+      !Object.hasOwn(fixtures, candidate.version) ||
+      typeof candidate.enabled !== "boolean"
+    ) throw new Error("invalid feature initial state");
+    initialState = Object.freeze({
+      version: candidate.version,
+      enabled: candidate.enabled,
+    });
+  }
   return Object.freeze({
     featureId: value.featureId,
     fixtures: Object.freeze(fixtures),
+    ...(initialState ? { initialState } : {}),
   });
 }
 
 function featureDefinitionFingerprint(definition: FeatureDefinition): string {
   return JSON.stringify({
     featureId: definition.featureId,
+    initialState: definition.initialState
+      ? [definition.initialState.version, definition.initialState.enabled]
+      : null,
     fixtures: Object.keys(definition.fixtures).sort().map((version) => {
       const fixture = definition.fixtures[version];
       return [
@@ -693,6 +735,14 @@ const M0_FEATURE_DEFINITION = snapshotFeatureDefinition({
 });
 const M0_DEFINITION_FINGERPRINT = featureDefinitionFingerprint(
   M0_FEATURE_DEFINITION,
+);
+const HUB_PANEL_MENU_DEFINITION = snapshotFeatureDefinition({
+  featureId: HUB_PANEL_MENU_FEATURE_ID,
+  fixtures: HUB_PANEL_MENU_FIXTURES,
+  initialState: { version: "hub-menu-v1", enabled: true },
+});
+const HUB_PANEL_MENU_DEFINITION_FINGERPRINT = featureDefinitionFingerprint(
+  HUB_PANEL_MENU_DEFINITION,
 );
 
 function isFixtureCompatible(
@@ -877,6 +927,17 @@ export class M0FeatureHost {
   readonly #afterDurableWriteForTests: M0DurableWriteObserverForTests | null;
   readonly #hubRegistry: HubRegistry;
   readonly #hubPublicationTimeoutMs: number;
+  readonly #appMenuRegistry: AppMenuRegistry;
+  readonly #appMenuPublicationTimeoutMs: number;
+  #appMenuClaim: AppMenuHostClaim | null = null;
+  readonly #appMenuGenerationLeases = new WeakMap<
+    M0ModuleHost,
+    AppMenuGenerationLease
+  >();
+  readonly #appMenuRemovalReasons = new WeakMap<
+    M0ModuleHost,
+    AppMenuRemovalReason
+  >();
   readonly #hubGenerationLeases = new WeakMap<
     M0ModuleHost,
     HubGenerationLease
@@ -914,6 +975,11 @@ export class M0FeatureHost {
     this.#hubPublicationTimeoutMs =
       testOptions?.hubPublicationTimeoutMsForTests ??
         2_000;
+    this.#appMenuRegistry = testOptions?.appMenuRegistryForTests ??
+      getSharedAppMenuRegistry();
+    this.#appMenuPublicationTimeoutMs =
+      testOptions?.appMenuPublicationTimeoutMsForTests ??
+        this.#hubPublicationTimeoutMs;
     this.#store = new PackageStore(root, definition);
     this.#recordPath = PathUtils.join(root, "state.json");
   }
@@ -935,6 +1001,39 @@ export class M0FeatureHost {
       testOptions,
       M0_FEATURE_DEFINITION,
       "m0",
+    );
+  }
+
+  static async openHubPanelMenu(
+    experimentalOptIn: boolean,
+  ): Promise<M0FeatureHost> {
+    return await this.#openWithDefinition(
+      HUB_PANEL_MENU_ROOT,
+      experimentalOptIn,
+      false,
+      false,
+      undefined,
+      undefined,
+      HUB_PANEL_MENU_DEFINITION,
+      "m0",
+    );
+  }
+
+  static async openHubPanelMenuForTests(
+    root: string,
+    reopenTestRoot: boolean,
+    initialWriteFaultForTests?: WriteFaultPlan,
+    testOptions?: M0FeatureHostTestOptions,
+  ): Promise<M0FeatureHost> {
+    return await this.#openWithDefinition(
+      root,
+      true,
+      true,
+      reopenTestRoot,
+      initialWriteFaultForTests,
+      testOptions,
+      HUB_PANEL_MENU_DEFINITION,
+      "feature",
     );
   }
 
@@ -976,14 +1075,17 @@ export class M0FeatureHost {
       ? /^m0-[0-9a-f-]+$/
       : /^feature-[0-9a-f-]+$/;
     const mode = Services.prefs.getStringPref("nora.startup.mode", "");
+    const approvedBuiltIn =
+      (root === ROOT && definitionFingerprint === M0_DEFINITION_FINGERPRINT) ||
+      (root === HUB_PANEL_MENU_ROOT &&
+        definitionFingerprint === HUB_PANEL_MENU_DEFINITION_FINGERPRINT);
     if (
       (mode !== "dev" && mode !== "test") ||
       !experimentalOptIn ||
       (testRoot
         ? PathUtils.parent(root) !== TEST_ROOT ||
           !testRootPattern.test(PathUtils.filename(root))
-        : root !== ROOT ||
-          definitionFingerprint !== M0_DEFINITION_FINGERPRINT)
+        : !approvedBuiltIn)
     ) throw new Error("M0 host is dev/test opt-in only");
     const opening = openingHosts.get(root);
     if (opening) {
@@ -992,7 +1094,8 @@ export class M0FeatureHost {
       }
       if (
         testOptions?.afterDurableWriteForTests ||
-        testOptions?.hubRegistryForTests
+        testOptions?.hubRegistryForTests ||
+        testOptions?.appMenuRegistryForTests
       ) {
         throw new Error("M0 test observer must be installed before open");
       }
@@ -1005,7 +1108,8 @@ export class M0FeatureHost {
       }
       if (
         testOptions?.afterDurableWriteForTests ||
-        testOptions?.hubRegistryForTests
+        testOptions?.hubRegistryForTests ||
+        testOptions?.appMenuRegistryForTests
       ) {
         throw new Error("M0 test observer must be installed before open");
       }
@@ -1054,6 +1158,18 @@ export class M0FeatureHost {
               selectedHealthBuild: null,
             });
           }
+        } else if (definition.initialState) {
+          const initialFixture = await host.#store.ensure(
+            definition.initialState.version,
+          );
+          await host.#write({
+            ...host.#record,
+            desiredEnabled: definition.initialState.enabled,
+            selectedVersion: initialFixture.version,
+            selectedDigest: initialFixture.digest,
+            selectedHealth: "unverified",
+            selectedHealthBuild: null,
+          });
         }
         await host.#recover();
         return host;
@@ -1604,6 +1720,8 @@ export class M0FeatureHost {
       this.#running = null;
       this.#hubClaim?.release();
       this.#hubClaim = null;
+      this.#appMenuClaim?.release();
+      this.#appMenuClaim = null;
       this.#windows.clear();
       this.#markerKeys.clear();
       this.#windowEntries.clear();
@@ -2017,6 +2135,12 @@ export class M0FeatureHost {
   ): Promise<Outcome> {
     this.#assertOperationCurrent(operationEpoch);
     let committedInThisActivation = false;
+    let terminalOutcome: Outcome | null = null;
+    let activationCompleted = false;
+    let activationFailure: Error | null = null;
+    const assertNoActivationFailure = (): void => {
+      if (activationFailure) throw activationFailure;
+    };
     const committedOutcome = this.#record.lastOutcome;
     const recoveryPending = this.#record.pending;
     const committedFallbackRecovery =
@@ -2069,7 +2193,13 @@ export class M0FeatureHost {
       this.#hubGenerationLeases.has(old);
     if (old) {
       this.#activeToken = null;
-      const stopped = await old.stop("replacement");
+      let stopped: DisposeReport;
+      this.#appMenuRemovalReasons.set(old, "replacement");
+      try {
+        stopped = await old.stop("replacement");
+      } finally {
+        this.#appMenuRemovalReasons.delete(old);
+      }
       this.#assertOperationCurrent(operationEpoch);
       if (stopped.errors.length || stopped.timedOut) {
         if (this.#running === old) this.#running = null;
@@ -2138,6 +2268,58 @@ export class M0FeatureHost {
     this.#running = runtime;
     try {
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      if (this.#definition.featureId === HUB_PANEL_MENU_FEATURE_ID) {
+        if (!verifiedFixture.compatibility.capabilities.includes("app-menu")) {
+          throw new Error("HUB menu fixture lacks app-menu capability");
+        }
+        if (!this.#appMenuClaim) {
+          this.#appMenuClaim = this.#appMenuRegistry.claimHost(
+            this.#definition.featureId,
+            this.#epoch,
+          );
+        }
+        const onMenuFailure = (
+          owner: { featureId: string; hostEpoch: string; generation: number },
+          connectionId: string,
+          error: Error,
+        ): void => {
+          if (this.#running !== runtime || this.#activeToken !== token) return;
+          if (!activationCompleted) {
+            activationFailure ??= error;
+            return;
+          }
+          if (this.#publishedToken === token) {
+            void this.#quarantineActiveGeneration(
+              runtime,
+              token,
+              `app-menu-render-failure:${connectionId}:${owner.generation}:${error.message}`,
+            );
+          }
+        };
+        const isMenuOwnerCurrent = (): boolean =>
+          !this.#closed && this.#running === runtime &&
+          this.#activeToken === token && this.#publishedToken === token;
+        const menuLease = this.#appMenuRegistry.beginGeneration(
+          {
+            featureId: this.#definition.featureId,
+            hostEpoch: this.#epoch,
+            generation,
+          },
+          onMenuFailure,
+          isMenuOwnerCurrent,
+        );
+        this.#appMenuGenerationLeases.set(runtime, menuLease);
+        runtime.scope.register(() => {
+          const reason = this.#appMenuRemovalReasons.get(runtime) ?? "remove";
+          const errors = this.#appMenuRegistry.revoke(menuLease, reason);
+          if (errors.length) {
+            throw new AggregateError(
+              errors,
+              "app-menu generation cleanup failed",
+            );
+          }
+        });
+      }
       let hubW0: readonly HubLiveDocument[] = [];
       if (
         verifiedFixture.compatibility.capabilities.includes("hub-pages") ||
@@ -2148,11 +2330,13 @@ export class M0FeatureHost {
       this.#evaluations += 1;
       m0PayloadEvaluations += 1;
       await runtime.start();
+      assertNoActivationFailure();
       const candidateHubLease = this.#hubGenerationLeases.get(runtime);
       if (candidateHubLease) {
         this.#hubRegistry.sealGeneration(candidateHubLease);
       }
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      assertNoActivationFailure();
       for (const entry of windows) {
         const attached = await this.#attachWindowEntry(
           entry,
@@ -2167,11 +2351,26 @@ export class M0FeatureHost {
       }
       await this.#awaitWindowCleanups(runtime, token);
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      assertNoActivationFailure();
+      const appMenuLease = this.#appMenuGenerationLeases.get(runtime);
+      if (appMenuLease) {
+        await this.#withHubPublication((signal) =>
+          this.#appMenuRegistry.stageAndWait(
+            appMenuLease,
+            windows.map((entry) => entry.window),
+            signal,
+            this.#appMenuPublicationTimeoutMs,
+          )
+        );
+        this.#assertGenerationCurrent(operationEpoch, runtime, token);
+        assertNoActivationFailure();
+      }
       pending = { ...pending, phase: "CANDIDATE_READY" };
       await this.#write({ ...this.#record, pending });
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
       await this.#awaitWindowCleanups(runtime, token);
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      assertNoActivationFailure();
       const build = {
         hostBuildId: HOST_BUILD_ID,
         runtimeBuildId: Services.appinfo.appBuildID,
@@ -2214,8 +2413,10 @@ export class M0FeatureHost {
       }
       committedInThisActivation = true;
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      assertNoActivationFailure();
       await this.#awaitWindowCleanups(runtime, token);
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      assertNoActivationFailure();
       const hubLease = this.#hubGenerationLeases.get(runtime);
       if (hubLease) {
         await this.#withHubPublication((signal) =>
@@ -2240,17 +2441,35 @@ export class M0FeatureHost {
         );
       }
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      assertNoActivationFailure();
+      if (appMenuLease) {
+        await this.#withHubPublication((signal) =>
+          this.#appMenuRegistry.publishAndWait(
+            appMenuLease,
+            windows.map((entry) => entry.window),
+            signal,
+            this.#appMenuPublicationTimeoutMs,
+          )
+        );
+        this.#assertGenerationCurrent(operationEpoch, runtime, token);
+        assertNoActivationFailure();
+        this.#appMenuRegistry.prepareEnable(appMenuLease);
+      }
       let outcome: Outcome;
+      this.#publishedToken = token;
+      for (const entry of windows) this.#publishWindowMarker(entry, token);
+      if (appMenuLease) this.#appMenuRegistry.enable(appMenuLease);
       try {
-        this.#publishedToken = token;
-        for (const entry of windows) this.#publishWindowMarker(entry, token);
         outcome = await this.#terminal(
           txId,
           request,
           terminalStatus,
           committed,
         );
-      } catch {
+        terminalOutcome = outcome;
+        assertNoActivationFailure();
+      } catch (error) {
+        if (terminalOutcome) throw error;
         return await this.#finalizationStorageFailure(
           txId,
           request,
@@ -2260,7 +2479,9 @@ export class M0FeatureHost {
       }
       await this.#awaitWindowCleanups(runtime, token);
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      assertNoActivationFailure();
       this.#openWindowAdmissions(runtime, token);
+      activationCompleted = true;
       return outcome;
     } catch (error) {
       const ownedGeneration = this.#running === runtime &&
@@ -2274,6 +2495,19 @@ export class M0FeatureHost {
         this.#windows.clear();
         this.#markerKeys.clear();
         if (this.#publishedToken === token) this.#publishedToken = null;
+      }
+      if (terminalOutcome) {
+        try {
+          await this.#write({
+            ...this.#record,
+            blockedReason: `post-terminal:${
+              error instanceof Error ? error.message : String(error)
+            }`.slice(0, 128),
+          });
+        } catch {
+          this.#volatileBlocked = true;
+        }
+        return terminalOutcome;
       }
       if (error instanceof StorageFailure) {
         this.#volatileBlocked = true;
@@ -2681,6 +2915,17 @@ export class M0FeatureHost {
     const entry = this.#windowEntries.get(window) ?? null;
     const wasAttached = entry !== null &&
       this.#windows.get(entry.id) === window;
+    const runtimeForMenu = this.#running;
+    const menuLease = runtimeForMenu
+      ? this.#appMenuGenerationLeases.get(runtimeForMenu) ?? null
+      : null;
+    if (this.#definition.featureId === HUB_PANEL_MENU_FEATURE_ID) {
+      try {
+        this.#appMenuRegistry.closeWindow(menuLease, window);
+      } catch (error) {
+        console.error("[FeatureHost]", error);
+      }
+    }
     if (this.#testOnlyWindow === window) this.#testOnlyWindow = null;
     this.#forgetWindow(window);
     if (!entry || !wasAttached) return;
@@ -2765,6 +3010,11 @@ export class M0FeatureHost {
     this.#signalWindowClosed(window);
     const entry = this.#windowEntries.get(window);
     if (!entry) return;
+    const runtime = this.#running;
+    const menuLease = runtime
+      ? this.#appMenuGenerationLeases.get(runtime)
+      : null;
+    if (menuLease) this.#appMenuRegistry.forgetWindow(menuLease, window);
     this.#windowEntries.delete(window);
     this.#windows.delete(entry.id);
     for (const key of this.#markerKeys) {
@@ -2855,6 +3105,19 @@ export class M0FeatureHost {
           documents,
           signal,
           this.#hubPublicationTimeoutMs,
+        );
+        if (
+          signal.aborted ||
+          !this.#isCurrentWindowAttachment(entry, runtime, token, initial)
+        ) return false;
+      }
+      const menuLease = this.#appMenuGenerationLeases.get(runtime);
+      if (menuLease && this.#publishedToken === token && signal) {
+        await this.#appMenuRegistry.admitWindow(
+          menuLease,
+          entry.window,
+          signal,
+          this.#appMenuPublicationTimeoutMs,
         );
         if (
           signal.aborted ||
@@ -2973,6 +3236,10 @@ export class M0FeatureHost {
     const generation = this.#generation;
     this.#revocationEpoch += 1;
     this.#abortHubWaits(new Error("active generation quarantined"));
+    const menuLease = this.#appMenuGenerationLeases.get(runtime);
+    const menuCleanupErrors = menuLease
+      ? this.#appMenuRegistry.revoke(menuLease)
+      : [];
     this.#admissionsOpen = false;
     this.#activeToken = null;
     this.#publishedToken = null;
@@ -2982,7 +3249,8 @@ export class M0FeatureHost {
     this.#running = null;
     this.#windows.clear();
     this.#markerKeys.clear();
-    const durableReason = stopped.errors.length || stopped.timedOut
+    const durableReason = stopped.errors.length || stopped.timedOut ||
+        menuCleanupErrors.length
       ? `${reason}:cleanup-failure`
       : reason;
     try {
@@ -3060,6 +3328,18 @@ export class M0FeatureHost {
       throw new Error("invalid broker request");
     }
     const request = value as Record<string, unknown>;
+    if (request.type === "app-menu.register") {
+      if (
+        this.#definition.featureId !== HUB_PANEL_MENU_FEATURE_ID ||
+        !candidateCapabilities.includes("app-menu") ||
+        Object.keys(request).length !== 2 ||
+        !Object.hasOwn(request, "descriptor")
+      ) throw new Error("app-menu capability denied");
+      const lease = this.#appMenuGenerationLeases.get(runtime);
+      if (!lease) throw new Error("app-menu generation missing");
+      this.#appMenuRegistry.stageDescriptor(lease, request.descriptor);
+      return JSON.stringify({ ok: true });
+    }
     if (request.type === "hub.register") {
       if (
         !candidateCapabilities.includes("hub-pages") ||
