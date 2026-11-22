@@ -417,6 +417,36 @@ export async function runAllTests(): Promise<void> {
         }),
     },
     {
+      name: "uninstall removes legacy launcher and icons together",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const legacy = paths(root, true);
+          Services.env.set("XDG_DATA_HOME", "");
+          await support.install(manifest);
+          Services.env.set(
+            "XDG_DATA_HOME",
+            PathUtils.join(root, "data 日本語"),
+          );
+          assert(
+            await IOUtils.exists(legacy.desktop),
+            "Legacy canonical launcher exists before uninstall",
+          );
+          await support.uninstall(manifest);
+          assert(
+            !await IOUtils.exists(legacy.desktop),
+            "Legacy canonical launcher is removed",
+          );
+          assert(
+            !await IOUtils.exists(legacy.svg),
+            "Legacy SVG icon is removed with it",
+          );
+          assert(
+            !await IOUtils.exists(legacy.png),
+            "Legacy PNG icon is removed with it",
+          );
+        }),
+    },
+    {
       name:
         "XDG migration removes only a launcher owned by this app and profile",
       fn: () =>

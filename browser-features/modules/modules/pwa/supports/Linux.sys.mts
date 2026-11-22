@@ -431,6 +431,9 @@ export class LinuxSupport {
       this.buildExecCommand(ssb),
       this.buildExecCommand(ssb, true),
     ];
+    // Canonical filenames are removed by the dedicated canonical/legacy paths,
+    // which keep their icons together; deleting them here would orphan icons.
+    const canonical = new Set([current.desktopPath, legacy.desktopPath]);
     // Users may rename a launcher to match an older Gecko window class. Its
     // filename is no longer predictable, but the app ID and exact command still
     // identify this installation and profile. Never recurse or follow links.
@@ -440,7 +443,7 @@ export class LinuxSupport {
           ignoreAbsent: true,
         })
       ) {
-        if (!path.endsWith(".desktop")) continue;
+        if (!path.endsWith(".desktop") || canonical.has(path)) continue;
         let owned = false;
         try {
           const file = new this.nsIFile(path);
@@ -469,11 +472,13 @@ export class LinuxSupport {
       await LinuxSupport.requireOwnedLauncher(ssb, paths);
     } catch (error) {
       // An executable move or another profile may make ownership unverifiable.
-      // Allow the caller to remove its store entry without touching any files.
+      // Verified renamed launchers are still ours, so remove them, but leave
+      // icons and foreign files alone.
       console.warn(
         "[LinuxSupport] Preserving launcher files whose ownership cannot be verified",
         error,
       );
+      await LinuxSupport.removeRenamedLaunchers(ssb);
       return;
     }
 
