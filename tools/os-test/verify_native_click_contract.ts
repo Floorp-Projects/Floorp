@@ -15,6 +15,10 @@
  */
 
 import { parseArgs } from "@std/cli/parse-args";
+import {
+  resolveOsTestBaseUrl,
+  validateAuthenticatedBaseUrl,
+} from "../src/os_test_client.ts";
 
 type Service = "tabs" | "scraper";
 type JsonRecord = Record<string, unknown>;
@@ -240,9 +244,12 @@ function dispatched(response: ResponseData): void {
 export async function main(argv = Deno.args): Promise<number> {
   const args = parseArgs(argv, {
     string: ["base-url", "token-env", "service"],
-    default: { "base-url": "http://127.0.0.1:58261", service: "all" },
+    default: { service: "all" },
   });
-  const baseUrl = String(args["base-url"]).replace(/\/$/, "");
+  const baseUrl = resolveOsTestBaseUrl(
+    args["base-url"],
+    Deno.env.get("FLOORP_OS_BASE_URL"),
+  );
   const services: Service[] = args.service === "all"
     ? ["tabs", "scraper"]
     : args.service === "tabs" || args.service === "scraper"
@@ -255,6 +262,8 @@ export async function main(argv = Deno.args): Promise<number> {
     !tokenName || token,
     "The requested token environment variable is empty",
   );
+  if (token) validateAuthenticatedBaseUrl(baseUrl);
+  const origin = baseUrl.replace(/\/$/, "");
 
   const request = async (
     path: string,
@@ -263,11 +272,12 @@ export async function main(argv = Deno.args): Promise<number> {
   ): Promise<ResponseData> => {
     const headers = new Headers({ "content-type": "application/json" });
     if (token) headers.set("authorization", `Bearer ${token}`);
-    const response = await fetch(`${baseUrl}${path}`, {
+    const response = await fetch(`${origin}${path}`, {
       method,
       headers,
       body: data === undefined ? undefined : JSON.stringify(data),
       signal: AbortSignal.timeout(15_000),
+      redirect: token ? "error" : undefined,
     });
     return { status: response.status, body: record(await response.json()) };
   };

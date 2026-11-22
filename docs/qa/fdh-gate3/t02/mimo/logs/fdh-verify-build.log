@@ -1,0 +1,4 @@
+[fdh] deno task feles-build build --phase after-mach
+Task feles-build deno run -A tools/feles-build.ts 'build' '--phase' 'after-mach'
+[32m[injector] SUCCESS: XHTML injection complete.[0m
+VBUILD_EXIT=0

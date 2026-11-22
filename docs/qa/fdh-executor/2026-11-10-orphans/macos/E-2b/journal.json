@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "jobId": "test-20261110t145412z-417162",
+  "taskId": "e2e-e2b-mwat9d0y",
+  "worktree": "/Users/user/fdh-posix-e2e",
+  "kind": "test",
+  "step": {
+    "cwd": "/Users/user/fdh-posix-e2e",
+    "displayCommand": "deno task test:host",
+    "commands": [
+      {
+        "argv": [
+          "deno",
+          "task",
+          "test:host"
+        ],
+        "displayCommand": "deno task test:host",
+        "assertionName": "host-test-exit-code",
+        "expected": "exit code 0"
+      }
+    ]
+  },
+  "intent": null,
+  "inputs": {
+    "baseCommit": "c9110a990d97ca43c7cc69b960d897a1819554d8",
+    "head": "c9110a990d97ca43c7cc69b960d897a1819554d8",
+    "guardEnv": {},
+    "worktreeState": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+  },
+  "executionDigest": "dc73e7b5342d695964fe1c00108c7376c7b17afda13df3622426f9f10deb42e4",
+  "state": "succeeded",
+  "epoch": 3,
+  "lease": null,
+  "leaseTtlMs": 3000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "executor-7412-af68af",
+      "scheduledAt": "2026-11-10T14:54:12.471Z",
+      "startedAt": "2026-11-10T14:54:12.531Z",
+      "endedAt": "2026-11-10T14:54:15.995Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": {
+        "pid": 7414,
+        "startTime": "Tue Nov 10 23:54:12 2026",
+        "commandLine": "/Users/user/.local/fdh-tools/deno task test:host"
+      },
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T14:54:12.531Z"
+    },
+    {
+      "attempt": 2,
+      "epoch": 2,
+      "holder": null,
+      "scheduledAt": "2026-11-10T14:54:15.995Z",
+      "startedAt": null,
+      "endedAt": "2026-11-10T14:54:19.539Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": null,
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T14:54:15.995Z"
+    },
+    {
+      "attempt": 3,
+      "epoch": 3,
+      "holder": "executor-7449-2ce3e5",
+      "scheduledAt": "2026-11-10T14:54:19.540Z",
+      "startedAt": "2026-11-10T14:54:19.605Z",
+      "endedAt": "2026-11-10T14:54:25.672Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": "_dist/fdh/jobs/e2e-e2b-mwat9d0y/test-20261110t145412z-417162-3-0.log",
+      "process": {
+        "pid": 7451,
+        "startTime": "Tue Nov 10 23:54:19 2026",
+        "commandLine": "/Users/user/.local/fdh-tools/deno task test:host"
+      },
+      "notes": "attempt 2 lost"
+    }
+  ],
+  "checkpoint": 1,
+  "commandResults": [
+    {
+      "index": 0,
+      "epoch": 3,
+      "exitCode": 0,
+      "startedAt": "2026-11-10T14:54:19.606Z",
+      "endedAt": "2026-11-10T14:54:25.672Z",
+      "logRef": "_dist/fdh/jobs/e2e-e2b-mwat9d0y/test-20261110t145412z-417162-3-0.log"
+    }
+  ],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T14:54:12.471Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T14:54:12.471Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T14:54:12.531Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T14:54:25.673Z",
+      "reason": "attempt 3 exited 0"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T14:54:15.995Z",
+      "kind": "lease-expired",
+      "epoch": 1,
+      "note": "holder executor-7412-af68af lost"
+    },
+    {
+      "at": "2026-11-10T14:54:16.274Z",
+      "kind": "lost-step-stopped",
+      "epoch": 1,
+      "note": "stopped 0 process(es) of the step tree rooted at pid 7414"
+    },
+    {
+      "at": "2026-11-10T14:54:19.539Z",
+      "kind": "lease-expired",
+      "epoch": 2,
+      "note": "executor for attempt 2 never started"
+    }
+  ],
+  "createdAt": "2026-11-10T14:54:12.471Z",
+  "updatedAt": "2026-11-10T14:54:25.673Z"
+}

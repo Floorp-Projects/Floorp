@@ -1,0 +1,25 @@
+{
+  "check": "kit-original114",
+  "revision": "after-fix-1",
+  "startedAt": "2026-10-09T12:39:08.820315+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tools/qa/tests",
+    "-p",
+    "test_[cde]*.py",
+    "-v"
+  ],
+  "cwd": "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0",
+  "exitCode": 0,
+  "timedOut": false,
+  "seconds": 0.726,
+  "log": "qa307-kit-original114-after-fix-1.log",
+  "logSha256": "0f0efa66127d57df1fff8c071e0dee7cdbffd3e83d381e71bef16dc2b05bd2c7",
+  "networkRequired": false,
+  "browserRequired": false
+}

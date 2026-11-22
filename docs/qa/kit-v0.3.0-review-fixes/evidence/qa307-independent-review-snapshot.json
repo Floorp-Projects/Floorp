@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-09T12:52:45.734474+00:00",
+  "purpose": "QA307 read-only independent review of four approved code repairs",
+  "originalInput": {
+    "sourceCommit": "87311566a225936fbe7948db142bce3f1d3379d8",
+    "zipSha256": "a4af60380399050f82465864734391227ab34024d26bdf16c31559e2824a8d50"
+  },
+  "kitRoot": "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0",
+  "kitChangedPayloadPaths": [
+    "MANIFEST.sha256",
+    "README.md",
+    "REVIEW_FIXES.md",
+    "qa/schemas/result.schema.json",
+    "tools/qa/agent.py",
+    "tools/qa/core.py",
+    "tools/qa/tests/test_core.py",
+    "tools/qa/tests/test_review_regressions.py",
+    "validation/review-fixes.json"
+  ],
+  "kitImportantInputs": {
+    "tools/qa/agent.py": {
+      "bytes": 16297,
+      "sha256": "90fc2e506263ed2004496411caaf8c0bccc960a9a46004df8382d8af9c3b695b"
+    },
+    "tools/qa/core.py": {
+      "bytes": 23827,
+      "sha256": "28767090836801f51e18cfef59434a9ae0cedc44c15cfc21f0da7160d43d3bdc"
+    },
+    "tools/qa/tests/test_core.py": {
+      "bytes": 19005,
+      "sha256": "5bb6a9a510108b1c13eb4588278c98bc9e9139a34fd7758e1ea4bcad8985f790"
+    },
+    "tools/qa/tests/test_review_regressions.py": {
+      "bytes": 9500,
+      "sha256": "31a77bad47938f862f981ca5f530c382d5e3bd8682a78a697bd4c7a881842910"
+    },
+    "qa/schemas/result.schema.json": {
+      "bytes": 1772,
+      "sha256": "c2df35c7f2eb93103328264468fdee7e669aa69b0b69d1ba387f92989571c4d4"
+    },
+    "REVIEW_FIXES.md": {
+      "bytes": 4408,
+      "sha256": "2daa4c72b4d3754725e9f8b94e9db2c5cc05b101c093663dc73ec2f82c0f1938"
+    },
+    "README.md": {
+      "bytes": 5235,
+      "sha256": "e7aeb2fbd6931474cfd276d5e67b6a9abdecae18d9ffa737e7f0aaea4d620f91"
+    },
+    "validation/review-fixes.json": {
+      "bytes": 2557,
+      "sha256": "644cedb4ecdae34d599b021ae5929d1d0328fcba7b2a32a00cfcb5df1a320be8"
+    },
+    "MANIFEST.sha256": {
+      "bytes": 5442,
+      "sha256": "3da20d1bb5fba099be31311974f73466d6d4b0b568353f3b824089d273e96feb"
+    }
+  },
+  "kitManifest": {
+    "entryCount": 59,
+    "verifiedAgainstReadableFiles": true
+  },
+  "originalDesignDocumentsUnchanged": true,
+  "runtime": {
+    "root": "/workspace/qa-review-v030/repos/Floorp-Runtime",
+    "head": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+    "branch": "codex/qa3-native-proof-contracts",
+    "status": "M .github/workflows/scripts/qa3_mozlog.py\n M .github/workflows/scripts/test_qa3_mozlog.py",
+    "changedInputs": {
+      ".github/workflows/scripts/qa3_mozlog.py": {
+        "bytes": 7436,
+        "sha256": "bea848caac52c0d1025b2ef586c145a2fb89ede65b77767764eac724eddb4e1c"
+      },
+      ".github/workflows/scripts/test_qa3_mozlog.py": {
+        "bytes": 8811,
+        "sha256": "1ed4356fa3734058825499d49f537ad6ed25fa4f0f53d0b10ee01a79765d0ec8"
+      }
+    }
+  },
+  "supportingEvidence": {
+    "qa307-independent-reader-fixtures.py": {
+      "bytes": 5964,
+      "sha256": "93932459cd5e378e40841cf26ea558340e8eec3d927b042ff44c60d04ff1bbdc"
+    },
+    "qa307-independent-reader-results.json": {
+      "bytes": 3741,
+      "sha256": "796b6cb3a267e0cfa6cdf7b558167c3ade637a87fd6c9aec9da8c9e840914eb9"
+    },
+    "qa307-kit-regressions-first-failure.log": {
+      "bytes": 15362,
+      "sha256": "c73f54275a68a43a9094ff057987fe95a8842594da58c372ab3f6eaf212a1995"
+    },
+    "qa307-runtime-regressions-first-failure.log": {
+      "bytes": 2962,
+      "sha256": "3bfa04461cbad89f11bf4e9c0db1571fd34bdb8980fb3acc87d345d9e2543e6f"
+    },
+    "qa307-kit-original114-after-fix-1.log": {
+      "bytes": 10965,
+      "sha256": "0f0efa66127d57df1fff8c071e0dee7cdbffd3e83d381e71bef16dc2b05bd2c7"
+    },
+    "qa307-kit-all-after-boundary-tests-2.log": {
+      "bytes": 13249,
+      "sha256": "cad3ce6eea3e2e53d0068ee1fd9ec0c89b1710e99b28f345822273543c297c35"
+    },
+    "qa307-runtime-all-corrected-outer-both-limits-3.log": {
+      "bytes": 40603,
+      "sha256": "4ad5b8c832b460caf9adeaf2fa594977287b42fe995e34477d2b08978c500a4b"
+    },
+    "qa307-runtime-all-after-fix-1.log": {
+      "bytes": 44043,
+      "sha256": "f81e97ee9164048f07a17ee8a99f5e1ce2ebb93eee6bed7477c8d22d53806123"
+    },
+    "qa307-runtime-all-corrected-outer-limit-2.log": {
+      "bytes": 44043,
+      "sha256": "9c773b0668a0da5bacc7caad5ce02a3f220e2960c74db8a49821842527576ba2"
+    },
+    "qa307-runtime-limit-diagnostic.json": {
+      "bytes": 291,
+      "sha256": "c61327483217f36b7e37c0bf6fef8b76a0a6663cbeb2c2c276afde37c6ebb353"
+    },
+    "qa307-runtime-fsize-diagnostic.json": {
+      "bytes": 281,
+      "sha256": "caed41f2912d27b048bf163808f4fc77e142900e2823ea0313cce0f96ee70760"
+    },
+    "qa307-runtime-mach-lint.log": {
+      "bytes": 47,
+      "sha256": "7aa466628f1bc3598effbc56c45c51728ee61db623429f343982a8ec0ff5c011"
+    },
+    "qa307-runtime-mach-lint-all-modified.log": {
+      "bytes": 2149,
+      "sha256": "2545272d7b9c6c4f67c7b45c30b47bec4f6fab6eb82ed2516f73a9cce9d3a3fe"
+    },
+    "qa307-independent-boundaries.json": {
+      "bytes": 4810,
+      "sha256": "56d0bd185eb1a8249c8773b3b56c0d3f23d92e34a6129380be2a133686886acc"
+    },
+    "qa307-archive-validation.json": {
+      "bytes": 1200,
+      "sha256": "b720bfe0c920eeb8814523476bda2708f1399a1807563f97974a15548e67f03d"
+    }
+  },
+  "observedSuiteSummaries": {
+    "qa307-kit-original114-after-fix-1.log": {
+      "count": 114,
+      "unittestSeconds": 0.535,
+      "ok": true,
+      "skippedMarkers": 0
+    },
+    "qa307-kit-all-after-boundary-tests-2.log": {
+      "count": 130,
+      "unittestSeconds": 2.292,
+      "ok": true,
+      "skippedMarkers": 0
+    },
+    "qa307-runtime-all-corrected-outer-both-limits-3.log": {
+      "count": 162,
+      "unittestSeconds": 7.346,
+      "ok": true,
+      "skippedMarkers": 0
+    }
+  },
+  "independentReaderCaseCount": 6,
+  "reviewerSourceEdits": false,
+  "nativeOrBrowserExecuted": false,
+  "networkOrModelCalled": false,
+  "approvedRepairDraftDecision": "GO",
+  "nativeQualification": "UNVERIFIED",
+  "publicationAuthorized": false,
+  "remainingConditions": [
+    "external supervisor and worker isolation",
+    "source-cohort normative and qualification contracts",
+    "cold native harness and all native product targets",
+    "all-modified mach lint blocked by sparse pnpm-lock.yaml"
+  ]
+}

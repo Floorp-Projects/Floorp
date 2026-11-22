@@ -1,3 +1,9 @@
+import { launchDevPorts } from "./dev_port_offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): dev URLs of this
+ * launch resolve to the ports actually served. */
+const launchDevPort = launchDevPorts();
+
 interface FirefoxWindow extends Window {
   gBrowser: {
     selectedTab: unknown;
@@ -156,9 +162,9 @@ let warningI18nHandlersBound = false;
 let localeObserverBound = false;
 let i18nUtilsInstance:
   | {
-      getPrimaryBrowserLocaleMapped(): string;
-      addLocaleChangeListener(callback: (locale: string) => void): void;
-    }
+    getPrimaryBrowserLocaleMapped(): string;
+    addLocaleChangeListener(callback: (locale: string) => void): void;
+  }
   | null
   | undefined;
 
@@ -220,7 +226,11 @@ function openFloorpHub(): void {
   if (import.meta.env.MODE === "dev") {
     logFloorpHub("Opening Floorp Hub in development mode.");
     // Use globalThis in environments where `window` may not be defined.
-    (globalThis as unknown as Window).location.href = "http://localhost:5183/";
+    (globalThis as unknown as Window).location.href = launchDevPort
+      .httpOrigin(
+        "settings",
+        "/",
+      );
     return;
   }
 
@@ -385,13 +395,12 @@ function logI18nextDiagnostics(instance: I18NextLike | null): void {
   try {
     const instObj = instance as unknown as Record<string, unknown>;
     const langs = (instObj["languages"] as string[] | undefined) ?? null;
-    const opts =
-      (instObj["options"] as Record<string, unknown> | undefined) ?? null;
+    const opts = (instObj["options"] as Record<string, unknown> | undefined) ??
+      null;
     const existsFn = instObj["exists"] as ((k: string) => boolean) | undefined;
-    const hasMessage =
-      typeof existsFn === "function"
-        ? existsFn("floorpHubWarning.message")
-        : null;
+    const hasMessage = typeof existsFn === "function"
+      ? existsFn("floorpHubWarning.message")
+      : null;
 
     logFloorpHub("i18next diagnostics:", {
       isInitialized: instance.isInitialized,
@@ -456,12 +465,16 @@ function injectFloorpHubWarningStyles(): void {
       color: #0b2540;
     }
 
-    #${FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"} .floorp-hub-warning__message {
+    #${
+    FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"
+  } .floorp-hub-warning__message {
       font-size: 1em;
       line-height: 1.4;
     }
 
-    #${FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"} .floorp-hub-warning__button {
+    #${
+    FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"
+  } .floorp-hub-warning__button {
       background-color: #4da3ff;
       border: 1px solid #2b8cff;
       border-radius: 4px;
@@ -470,7 +483,9 @@ function injectFloorpHubWarningStyles(): void {
       color: #ffffff;
     }
 
-    #${FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"} .floorp-hub-warning__button:hover {
+    #${
+    FLOORP_START_WARNING_IDS?.container ?? "floorp-start-warning"
+  } .floorp-hub-warning__button:hover {
       background-color: #3390ff;
     }
 
@@ -498,8 +513,7 @@ function injectFloorpHubWarningStyles(): void {
     }
   `;
 
-  const parent =
-    doc.head ??
+  const parent = doc.head ??
     (doc.querySelector("head") as HTMLElement | null) ??
     doc.documentElement;
   parent?.appendChild(style);
@@ -783,8 +797,11 @@ function createFloorpStartWarning(): void {
   button.setAttribute("label", defaultStartWarningTexts.buttonLabel);
   button.addEventListener("click", () => {
     if (import.meta.env.MODE === "dev") {
-      (globalThis as unknown as Window).location.href =
-        "http://localhost:5183/#/features/design";
+      (globalThis as unknown as Window).location.href = launchDevPort
+        .httpOrigin(
+          "settings",
+          "/#/features/design",
+        );
       return;
     }
     const win = Services.wm.getMostRecentWindow(
@@ -794,8 +811,8 @@ function createFloorpStartWarning(): void {
       "about:hub#/features/design",
       {
         relatedToCurrent: true,
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getSystemPrincipal(),
+        triggeringPrincipal: Services.scriptSecurityManager
+          .getSystemPrincipal(),
       },
     );
   });
@@ -1043,7 +1060,11 @@ function initHideNewTabPage(): void {
   try {
     Services.obs.addObserver(hideNewTabPage, "home-pane-loaded");
   } catch (error) {
-    console.error("[Floorp Hub]", "Failed to add home-pane-loaded observer", error);
+    console.error(
+      "[Floorp Hub]",
+      "Failed to add home-pane-loaded observer",
+      error,
+    );
   }
 }
 

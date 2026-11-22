@@ -1,0 +1,50 @@
+{
+  "reviewedCommit": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "files": [
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-qa3_native_io.py",
+      "bytes": 38690,
+      "sha256": "8bbea4abfc5d8cf1a3b70a275287c7fe6725b96fa17afb4c74ef51814b7d142e"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-test_qa3_native_io.py",
+      "bytes": 45454,
+      "sha256": "0dae5c088abd51a84338a62c977a7a43e5765dfb1fd8a0647090b10fcab625a6"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-committed-candidate.patch",
+      "bytes": 23771,
+      "sha256": "6dfb2aa6a44833b46145f39c302ef81dca3d08f0a923f07f255669446e146f11"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-snapshot.json",
+      "bytes": 25791,
+      "sha256": "24afa5efee9a99455d2a5f47f87dab426f2a01d0d2d226e332e82d7ee09de3c2"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-committed-preservation.json",
+      "bytes": 1813,
+      "sha256": "8c478acb89c7d951258ebb0225b66f1271ac3eda23af2e958a589597ff6c230d"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-protocol-fixture.py",
+      "bytes": 12266,
+      "sha256": "4336267f0a0b366cd826da90f8d8978da3d9b9841260660accef226e49a780bf"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-protocol-results.json",
+      "bytes": 26845,
+      "sha256": "272a72845160c964b28f0fda8f4629e552eb14edd2ccf1e953d4e6855e39518a"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-protocol.log",
+      "bytes": 26845,
+      "sha256": "272a72845160c964b28f0fda8f4629e552eb14edd2ccf1e953d4e6855e39518a"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/workflow-runtime-final-8bbea4ab-report.md",
+      "bytes": 11946,
+      "sha256": "e00df8bb0f9978c0f8424d4dabc32c356a58c3d913760d76b8008006e53b55a1"
+    }
+  ]
+}

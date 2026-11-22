@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/mach",
+    "lint",
+    "--linter",
+    "ruff",
+    "--linter",
+    "shellcheck",
+    ".github/workflows/scripts/qa3_build_profile.py",
+    ".github/workflows/scripts/setup-floorp.sh",
+    ".github/workflows/scripts/test_qa3_build_profile.py"
+  ],
+  "exit": 1,
+  "credentialsInherited": false,
+  "packageDownloadsDisabled": true,
+  "nativeBuildExecuted": false
+}

@@ -1,0 +1,68 @@
+{
+  "taskId": "gate4-d-merged2",
+  "worktree": "/private/tmp/fdh-gate4/evidence",
+  "baseCommit": "e77bbd4d8c9af51951d49c7d1025afed7db86f65",
+  "portOffset": 480,
+  "createdAt": "2026-11-08T06:45:48.948Z",
+  "status": "running",
+  "events": [
+    {
+      "timestamp": "2026-11-08T06:45:48.948Z",
+      "command": "task start",
+      "note": "created task state for gate4-d-merged2",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T06:45:49.030Z",
+      "command": "quota claim",
+      "note": "{\"taskId\":\"gate4-d-merged2\",\"activeAgent\":\"agent-a\",\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":1,\"updatedAt\":\"2026-11-08T06:45:49.029Z\"}",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T06:45:49.253Z",
+      "command": "quota stop",
+      "note": "{\"taskId\":\"gate4-d-merged2\",\"activeAgent\":null,\"stopped\":true,\"stopReason\":\"quota\",\"approvalPending\":[],\"events\":2,\"updatedAt\":\"2026-11-08T06:45:49.252Z\"}",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T06:45:49.403Z",
+      "command": "quota pending",
+      "note": "{\"taskId\":\"gate4-d-merged2\",\"activeAgent\":null,\"stopped\":true,\"stopReason\":\"quota\",\"approvalPending\":[{\"op\":\"push\",\"note\":\"\",\"at\":\"2026-11-08T06:45:49.402Z\"}],\"events\":3,\"updatedAt\":\"2026-11-08T06:45:49.402Z\"}",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T06:45:49.491Z",
+      "command": "task resume",
+      "note": "{\"restored\":[\"state-file\",\"worktree\",\"base-commit\",\"port-offset\"],\"stale\":[]}",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T06:45:49.566Z",
+      "command": "quota approve",
+      "note": "{\"taskId\":\"gate4-d-merged2\",\"activeAgent\":null,\"stopped\":true,\"stopReason\":\"quota\",\"approvalPending\":[],\"events\":4,\"updatedAt\":\"2026-11-08T06:45:49.566Z\"}",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T06:45:49.640Z",
+      "command": "quota resume",
+      "note": "{\"taskId\":\"gate4-d-merged2\",\"activeAgent\":\"agent-b\",\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":5,\"updatedAt\":\"2026-11-08T06:45:49.639Z\"}",
+      "exitCode": 0
+    },
+    {
+      "timestamp": "2026-11-08T06:45:49.717Z",
+      "command": "quota release",
+      "note": "{\"taskId\":\"gate4-d-merged2\",\"activeAgent\":null,\"stopped\":false,\"stopReason\":null,\"approvalPending\":[],\"events\":6,\"updatedAt\":\"2026-11-08T06:45:49.716Z\"}",
+      "exitCode": 0
+    }
+  ],
+  "operations": [],
+  "assertions": [],
+  "cleanup": {
+    "result": "not-required",
+    "notes": "No dev server was started by this task; nothing to tear down."
+  },
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "The fdh local loop records verification; it does not reproduce a defect."
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "case": "none",
+  "error": {
+    "type": "OSError",
+    "errno": 5,
+    "message": "[Errno 5] independent parent reader setup failure after missing birth"
+  },
+  "durationSeconds": 12.032,
+  "faults": [
+    "parent initial snapshot",
+    "parent reader initialization"
+  ],
+  "supervisorAliveAfterParentReturned": true,
+  "commandAliveAfterParentReturned": true,
+  "processReceiptExistsBeforeFixtureCleanup": false,
+  "parentControlWriterStillOpen": false,
+  "sourceSHA256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "nativeOrBrowserExecuted": false,
+  "fixtureRegularFileLimitBytes": 8388608,
+  "fixtureCleanup": [
+    {
+      "supervisor": 57293,
+      "reaped": true
+    },
+    {
+      "command": 57294,
+      "absentAfterCleanup": true
+    }
+  ],
+  "callerSubreaperRestored": true
+}

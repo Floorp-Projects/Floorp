@@ -1,0 +1,16 @@
+{
+  "candidateReviewed": "03",
+  "sourceFiles": {
+    "tools/qa3/source.py": "5cb0803d54c47197e0597cd93de436c60cb2f667340f5bcff55e6f0326b30d32",
+    "tools/qa3/test_source.py": "a8e50bc710b7a2fce37269df43326d2683d4997d9a40772f5f286f6a7a9dde51",
+    "tools/qa3/README.md": "91a09ecc0eaaa9136dfca829fcb44554b53b58ba4776e3430f93e3e5e7d424a6"
+  },
+  "sourceAndTestsUnchangedDuringIndependentRuns": true,
+  "READMEReflowOnly": true,
+  "initialREADMEHash": "c602857927aa6e401b9c647428506f9b568e0ca0e5d747f56fafe5b8bee73ec0",
+  "currentREADMEHash": "91a09ecc0eaaa9136dfca829fcb44554b53b58ba4776e3430f93e3e5e7d424a6",
+  "currentHead": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+  "initialCandidatePatchSHA256": "30fa4bf57c9c557c6dced39abcfd7854a35b22eb79b9a4c4881da746690edcd4",
+  "completeCurrentDiffNotUsedAsReviewedPin": true,
+  "metadataFirstErrorRetained": "floorp-independent-input-end-02-first-error.json"
+}

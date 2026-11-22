@@ -95,21 +95,23 @@ export const tabSwitcherCommand: PaletteCommand = {
     defaultValue: "Switch to a different tab in the current window",
   }),
   category: "switcher",
-  keywords: [
-    "switch tab",
-    "tab",
-    "change tab",
-    "go to tab",
-    ...getEnglishStepCommandKeywords(
-      "commandPalette.tabSwitcher",
-      "commandPalette.tabSwitcherDescription",
-    ),
-    ...getSegmentedKeywordsFromI18nKeys(
-      "commandPalette.tabSwitcher",
-      "commandPalette.tabSwitcherDescription",
-    ),
-    ...getJapaneseReadings("floorp-tab-switcher"),
-  ],
+  get keywords() {
+    return [
+      "switch tab",
+      "tab",
+      "change tab",
+      "go to tab",
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.tabSwitcher",
+        "commandPalette.tabSwitcherDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.tabSwitcher",
+        "commandPalette.tabSwitcherDescription",
+      ),
+      ...getJapaneseReadings("floorp-tab-switcher"),
+    ];
+  },
   steps: [
     {
       id: "tab",

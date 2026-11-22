@@ -293,7 +293,9 @@ export class FirefoxSidebarOverlayController {
       );
     });
     this.listen(window, "resize", () => this.scheduleGeometry());
-    this.listen(window, "blur", () => {
+    // Switching focus between the sidebar and a tab can blur the chrome window.
+    this.listen(window, "deactivate", (event) => {
+      if (event.target !== window) return;
       this.hovered = false;
       if (this.openTimer !== undefined) clearTimeout(this.openTimer);
       this.openTimer = undefined;
@@ -362,7 +364,6 @@ export class FirefoxSidebarOverlayController {
         attributeFilter: [
           "hidden",
           "sidebar-launcher-expanded",
-          "sidebar-ongoing-animations",
         ],
       });
     }

@@ -3,6 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import {
+  HUB_DEV_PAGES,
+  HUB_DEV_PAGES_PLUS_PROFILE,
+} from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
+
 export class NRI18nChild extends JSWindowActorChild {
   actorCreated() {
     try {
@@ -11,11 +21,10 @@ export class NRI18nChild extends JSWindowActorChild {
 
       // Allow dev server and chrome/about privileged pages
       if (
-        window.location.port === "5179" ||
-        window.location.port === "5183" ||
-        window.location.port === "5186" ||
-        window.location.port === "5188" ||
-        window.location.port === "5187" ||
+        launchDevPort.isTrustedPort(
+          window.location.port,
+          HUB_DEV_PAGES_PLUS_PROFILE,
+        ) ||
         window.location.href.startsWith("chrome://") ||
         window.location.href.startsWith("about:")
       ) {
@@ -39,7 +48,7 @@ export class NRI18nChild extends JSWindowActorChild {
                     Promise.resolve(result).then(resolve, (err: unknown) => {
                       try {
                         if (err && typeof err === "object") {
-                                const msg = (err as any).message ?? String(err);
+                          const msg = (err as any).message ?? String(err);
                           reject(String(msg));
                         } else {
                           reject(
