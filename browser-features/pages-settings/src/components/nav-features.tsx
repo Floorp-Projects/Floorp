@@ -1,4 +1,3 @@
-import type { LucideIcon } from "lucide-react";
 import { ExternalLink } from "lucide-react";
 import {
   SidebarGroup,
@@ -7,54 +6,152 @@ import {
   useSidebar,
 } from "@/components/common/sidebar.tsx";
 import { Link, useLocation } from "react-router-dom";
-import type * as React from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import styles from "./common/sidebar.module.css";
+import type {
+  ExternalItemProps,
+  InternalItemFocusState,
+  InternalItemProps,
+  NavFeaturesProps,
+  NavigationFocusRemoval,
+  NavigationFocusScopeContextValue,
+  NavigationFocusScopeProps,
+} from "./nav-features.types.ts";
 
-// Discriminated union for feature items
-type BaseFeature = {
-  title: string;
-  url: string;
-  icon: LucideIcon;
-};
+export type { Feature } from "./nav-features.types.ts";
 
-type ExternalFeature = BaseFeature & {
-  isExternal: true;
-  onClick: (e: React.MouseEvent) => void;
-};
+const NavigationFocusScopeContext = createContext<
+  NavigationFocusScopeContextValue | null
+>(null);
 
-type InternalFeature = BaseFeature & {
-  isExternal?: false;
-  onClick?: never;
-};
+export function NavigationFocusScope({
+  children,
+}: NavigationFocusScopeProps) {
+  const scopeRef = useRef<HTMLDivElement | null>(null);
+  const pendingRemoval = useRef<NavigationFocusRemoval | null>(null);
+  const recordFocusedRemoval = useCallback(
+    (focusKey: string, node: HTMLElement) => {
+      if (node.ownerDocument.activeElement === node) {
+        pendingRemoval.current = { focusKey, node };
+      }
+    },
+    [],
+  );
+  const context = useMemo(() => ({ recordFocusedRemoval }), [
+    recordFocusedRemoval,
+  ]);
 
-export type Feature = InternalFeature | ExternalFeature;
+  useLayoutEffect(() => {
+    const removal = pendingRemoval.current;
+    pendingRemoval.current = null;
+    const scope = scopeRef.current;
+    if (!removal || !scope) return;
+
+    const document = removal.node.ownerDocument;
+    const activeElement = document.activeElement;
+    if (
+      activeElement !== null && activeElement !== removal.node &&
+      activeElement !== document.body &&
+      activeElement !== document.documentElement
+    ) return;
+
+    for (
+      const candidate of scope.querySelectorAll<HTMLElement>(
+        "[data-sidebar-focus-key]",
+      )
+    ) {
+      if (
+        candidate.getAttribute("data-sidebar-focus-key") === removal.focusKey
+      ) {
+        candidate.focus({ preventScroll: true });
+        return;
+      }
+    }
+
+    scope.querySelector<HTMLElement>("[data-sidebar-home-fallback]")?.focus({
+      preventScroll: true,
+    });
+  });
+
+  return (
+    <NavigationFocusScopeContext.Provider value={context}>
+      <div ref={scopeRef}>{children}</div>
+    </NavigationFocusScopeContext.Provider>
+  );
+}
 
 // Internal item renderer without SidebarMenuItem wrapper
-function InternalItem({
-  feature,
-  isActive,
-}: {
-  feature: InternalFeature;
-  isActive: boolean;
-}) {
+function InternalItem({ feature, isActive }: InternalItemProps) {
   const { setOpen } = useSidebar();
+  const focusScope = useContext(NavigationFocusScopeContext);
+  const focusState = useRef<InternalItemFocusState>({
+    node: null,
+    hadFocus: false,
+  });
+  const setItemRef = useCallback((node: HTMLElement | null) => {
+    const state = focusState.current;
+    if (!node) {
+      const outgoing = state.node;
+      state.hadFocus = outgoing?.ownerDocument.activeElement === outgoing;
+      if (state.hadFocus && outgoing && feature.focusKey) {
+        focusScope?.recordFocusedRemoval(feature.focusKey, outgoing);
+      }
+      state.node = null;
+      return;
+    }
+    state.node = node;
+    if (state.hadFocus) {
+      state.hadFocus = false;
+      node.focus({ preventScroll: true });
+    }
+  }, [feature.focusKey, focusScope]);
+
   return (
     <div>
-      <Link
-        to={feature.url}
-        onClick={() => setOpen(false)}
-        className={styles.link}
-        aria-current={isActive ? "page" : undefined}
-      >
-        <feature.icon className="size-4" />
-        <span>{feature.title}</span>
-      </Link>
+      {feature.disabled
+        ? (
+          <div
+            ref={setItemRef}
+            data-sidebar-focus-key={feature.focusKey}
+            className={`${styles.link} ${styles.disabled}`}
+            aria-current={isActive ? "page" : undefined}
+            aria-disabled="true"
+            tabIndex={-1}
+          >
+            <feature.icon className="size-4" />
+            <span>{feature.title}</span>
+          </div>
+        )
+        : (
+          <Link
+            ref={setItemRef}
+            data-sidebar-focus-key={feature.focusKey}
+            data-sidebar-home-fallback={feature.focusKey === undefined &&
+                feature.url === "/overview/home"
+              ? ""
+              : undefined}
+            to={feature.url}
+            onClick={() => setOpen(false)}
+            className={styles.link}
+            aria-current={isActive ? "page" : undefined}
+          >
+            <feature.icon className="size-4" />
+            <span>{feature.title}</span>
+          </Link>
+        )}
     </div>
   );
 }
 
 // External item renderer without SidebarMenuItem wrapper
-function ExternalItem({ feature }: { feature: ExternalFeature }) {
+function ExternalItem({ feature }: ExternalItemProps) {
   const { setOpen } = useSidebar();
   return (
     <div>
@@ -77,10 +174,7 @@ function ExternalItem({ feature }: { feature: ExternalFeature }) {
 export function NavFeatures({
   title,
   features,
-}: {
-  title: string;
-  features: Feature[];
-}) {
+}: NavFeaturesProps) {
   const location = useLocation();
   const currentRoute = location.pathname;
 
@@ -89,20 +183,27 @@ export function NavFeatures({
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
         {features.map((feature) => {
+          if (feature.isExternal === true) {
+            return (
+              <ExternalItem
+                key={feature.title}
+                feature={feature}
+              />
+            );
+          }
+
           const featurePath = feature.url.startsWith("#")
             ? feature.url.slice(1)
             : feature.url;
-          const isActive = featurePath === "/"
+          const isActive = feature.exactMatch
+            ? currentRoute === featurePath
+            : featurePath === "/"
             ? currentRoute === "/"
             : currentRoute.startsWith(featurePath);
 
-          if (feature.isExternal === true) {
-            return <ExternalItem key={feature.title} feature={feature} />;
-          }
-
           return (
             <InternalItem
-              key={feature.title}
+              key={feature.reactKey ?? feature.title}
               feature={feature}
               isActive={isActive}
             />

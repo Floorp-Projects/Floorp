@@ -5,6 +5,7 @@
 const { ActorManagerParent } = ChromeUtils.importESModule(
   "resource://gre/modules/ActorManagerParent.sys.mjs",
 );
+import { initializeHubPageDiscovery } from "./feature-host/HubPageDiscovery.sys.mts";
 
 function localPathToResourceURI(path: string) {
   const re = new RegExp(/\.\.\/([a-zA-Z0-9-_/]+)\.sys\.mts/);
@@ -109,6 +110,29 @@ const JS_WINDOW_ACTORS: {
       // Ordinary HTTP pages must not instantiate this privileged bridge.
       // The packaged settings chrome route and its about:hub alias remain
       // available for production.
+      "chrome://noraneko-settings/*",
+      "about:hub*",
+    ],
+    ...DEVELOPMENT_WEB_ACTOR_OPTIONS,
+  },
+  NRFeatureHub: {
+    parent: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRFeatureHubParent.sys.mts",
+      ),
+    },
+    child: {
+      esModuleURI: localPathToResourceURI(
+        "../actors/NRFeatureHubChild.sys.mts",
+      ),
+      events: {
+        DOMDocElementInserted: {},
+        DOMContentLoaded: {},
+        pageshow: {},
+      },
+    },
+    matches: [
+      ...DEVELOPMENT_LOOPBACK_MATCHES,
       "chrome://noraneko-settings/*",
       "about:hub*",
     ],
@@ -559,4 +583,5 @@ const JS_WINDOW_ACTORS: {
   },
 };
 
+initializeHubPageDiscovery();
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);

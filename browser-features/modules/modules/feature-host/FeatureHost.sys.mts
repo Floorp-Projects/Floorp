@@ -3,6 +3,12 @@
 import { M0_FIXTURES } from "./M0Fixtures.sys.mts";
 import { HUB_FIXTURES } from "./HubFixtures.sys.mts";
 import { getSharedHubRegistry, type HubRegistry } from "./HubRegistry.sys.mts";
+import {
+  getFeatureWindowIdentity,
+  isCandidateFeatureWindow,
+  isEligibleFeatureWindow,
+} from "./WindowIdentity.sys.mts";
+export { isEligibleM0MainWindowForTests } from "./WindowIdentity.sys.mts";
 import type {
   HubGenerationLease,
   HubHostClaim,
@@ -23,9 +29,6 @@ const ROOT = PathUtils.join(PathUtils.profileDir, "floorp-hotfix-m0");
 const TEST_ROOT = PathUtils.join(
   PathUtils.profileDir,
   "floorp-hotfix-m0-tests",
-);
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 );
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
@@ -148,16 +151,6 @@ export function m0PayloadEvaluationsForTests(): number {
   return m0PayloadEvaluations;
 }
 
-export function isEligibleM0MainWindowForTests(
-  windowType: string | null,
-  toolbarVisible: boolean,
-  isPrivate: boolean,
-  isWebPanel: boolean,
-): boolean {
-  return windowType === "navigator:browser" && toolbarVisible && !isPrivate &&
-    !isWebPanel;
-}
-
 export function hasUnfinishedM0FinalizationForTests(
   pendingTxId: string | null,
   terminalTxId: string | null,
@@ -175,34 +168,12 @@ function detachedOutcome(outcome: Outcome): Outcome {
   return JSON.parse(JSON.stringify(outcome)) as Outcome;
 }
 
-function isM0WebPanelWindow(window: Window): boolean {
-  if (
-    (window as Window & { floorpWebPanelWindow?: boolean }).floorpWebPanelWindow
-  ) {
-    return true;
-  }
-  try {
-    return new URL(window.location.href).searchParams.has("floorpWebPanelId");
-  } catch {
-    return true;
-  }
-}
-
 function isM0WindowCandidate(window: Window): boolean {
-  if (window.closed) return false;
-  const documentElement = window.document.documentElement;
-  return isEligibleM0MainWindowForTests(
-    documentElement?.getAttribute("windowtype") ?? null,
-    true,
-    PrivateBrowsingUtils.isWindowPrivate(window),
-    isM0WebPanelWindow(window),
-  );
+  return isCandidateFeatureWindow(window);
 }
 
 function isEligibleM0Window(window: Window): boolean {
-  return isM0WindowCandidate(window) && (window as Window & {
-        toolbar?: { visible?: boolean };
-      }).toolbar?.visible === true;
+  return isEligibleFeatureWindow(window);
 }
 
 function isM0DelayedStartupFinished(window: Window): boolean {
@@ -2375,7 +2346,7 @@ export class M0FeatureHost {
     const existing = this.#windowEntries.get(window);
     if (existing) return existing;
     const entry = {
-      id: Services.uuid.generateUUID().toString(),
+      id: getFeatureWindowIdentity(window),
       window,
     };
     this.#windowEntries.set(window, entry);

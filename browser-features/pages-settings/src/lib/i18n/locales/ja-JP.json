@@ -21,6 +21,23 @@
         "overview": "概要",
         "features": "機能"
     },
+    "featureHub": {
+        "navigation": "機能ページ",
+        "unavailableTitle": "機能ページを利用できません",
+        "unavailableBody": "この機能ページは利用できなくなりました。",
+        "safeUnavailable": "機能の内容を利用できません。"
+    },
+    "hotfixHub": {
+        "sample": {
+            "title": "ホットフィックスのサンプル（{{version}}）",
+            "navigation": "ホットフィックスのサンプル",
+            "body": "{{version}} の機能ホットフィックスが有効です。"
+        },
+        "staged": {
+            "title": "ステージ済みホットフィックス",
+            "body": "このステージ済みホットフィックスは公開されないはずです。"
+        }
+    },
     "pages": {
         "home": "ホーム",
         "tabAndAppearance": "タブと外観",

@@ -10,13 +10,16 @@ import {
 import type {
   HubClientConnection,
   HubClientDiscoveryAdapter,
+  HubGenerationLease,
+  HubHostClaim,
   HubLiveDocument,
 } from "./HubRegistryTypes.ts";
 
 type RegistryModule = typeof import("./HubRegistry.sys.mts");
-const { HubRegistry, parseHubPageDescriptor } = ChromeUtils.importESModule(
-  "resource://noraneko/modules/feature-host/HubRegistry.sys.mjs",
-) as RegistryModule;
+const { HubRegistry, HubRegistryError, parseHubPageDescriptor } = ChromeUtils
+  .importESModule(
+    "resource://noraneko/modules/feature-host/HubRegistry.sys.mjs",
+  ) as RegistryModule;
 
 function assert(condition: boolean, message = "assertion failed"): void {
   harnessAssert(condition, message);
@@ -34,6 +37,21 @@ function errorMessage(error: unknown): string {
   return typeof error === "object" && error !== null && "message" in error
     ? String(error.message)
     : String(error);
+}
+
+function assertDescriptorErrorCode(
+  json: string,
+  featureId: string,
+  expectedCode: string,
+): void {
+  try {
+    parseHubPageDescriptor(json, featureId);
+  } catch (error) {
+    if (!(error instanceof HubRegistryError)) throw error;
+    assertEquals(error.code, expectedCode);
+    return;
+  }
+  assert(false, `expected descriptor error: ${expectedCode}`);
 }
 
 async function rejectionOf(promise: Promise<unknown>): Promise<unknown> {
@@ -175,6 +193,68 @@ function acknowledgeCurrentSnapshot(
   };
 }
 
+function testConfigurationSettersAreIdempotentAndLockedAfterUse(): void {
+  const adapter: HubClientDiscoveryAdapter = {
+    discoverLiveHubDocuments: () => [],
+  };
+  const incompatibleAdapter: HubClientDiscoveryAdapter = {
+    discoverLiveHubDocuments: () => [],
+  };
+  const registry = new HubRegistry({
+    epoch: "registry-config-lock",
+    discovery: adapter,
+    reservedRoutes: ["/reserved/one", "/reserved/two"],
+  });
+  const claim = registry.claimHost("config-lock", "host-config-lock");
+  const connection = new FakeConnection("config-lock");
+  const expectConfigurationError = (
+    action: () => void,
+    code: string,
+  ): void => {
+    try {
+      action();
+    } catch (error) {
+      if (!(error instanceof HubRegistryError)) throw error;
+      assertEquals(error.code, code);
+      return;
+    }
+    assert(false, `expected HUB configuration error: ${code}`);
+  };
+
+  try {
+    registry.registerClient(connection);
+    registry.setDiscoveryAdapter(adapter);
+    registry.setReservedRoutes([
+      "/reserved/two",
+      "/reserved/one",
+      "/reserved/one",
+    ]);
+    assert(registry.isUsingDiscoveryAdapterForTests(adapter));
+    expectConfigurationError(
+      () => registry.setDiscoveryAdapter(incompatibleAdapter),
+      "HUB discovery must be configured before use",
+    );
+    expectConfigurationError(
+      () => registry.setReservedRoutes(["/reserved/changed"]),
+      "HUB routes must be configured before use",
+    );
+  } finally {
+    registry.removeClient(connection);
+    claim.release();
+  }
+
+  assertEquals(registry.diagnosticsForTests.clients, 0);
+  assertEquals(registry.diagnosticsForTests.claims, 0);
+  expectConfigurationError(
+    () => registry.setDiscoveryAdapter(incompatibleAdapter),
+    "HUB discovery must be configured before use",
+  );
+  expectConfigurationError(
+    () => registry.setReservedRoutes(["/reserved/changed"]),
+    "HUB routes must be configured before use",
+  );
+}
+
 function testStrictDescriptorContract(): void {
   const valid = parseHubPageDescriptor(
     descriptor("experimental-local-sample"),
@@ -264,96 +344,140 @@ function testStrictDescriptorContract(): void {
     }
     assert(rejected, `invalid descriptor accepted: ${candidate}`);
   }
+  assertDescriptorErrorCode(
+    "{",
+    "experimental-local-sample",
+    "invalid hub descriptor JSON",
+  );
+  assertDescriptorErrorCode(
+    descriptor("experimental-local-sample"),
+    "Invalid",
+    "invalid feature ID",
+  );
+  assertDescriptorErrorCode(
+    " ".repeat(2_049),
+    "experimental-local-sample",
+    "hub descriptor too large",
+  );
+  assertDescriptorErrorCode(
+    JSON.stringify({
+      ...JSON.parse(descriptor("experimental-local-sample")),
+      route: "/extensions/experimental-local-sample/not-the-local-id",
+    }),
+    "experimental-local-sample",
+    "non-canonical hub route",
+  );
   const registry = new HubRegistry({
     reservedRoutes: ["/extensions/experimental-local-sample/reserved"],
   });
-  const claim = registry.claimHost(
-    "experimental-local-sample",
-    "host-reserved",
-  );
-  const lease = registry.beginGeneration({
-    featureId: claim.featureId,
-    hostEpoch: claim.hostEpoch,
-    generation: 1,
-  });
-  let reservedRejected = false;
+  const claims: Array<{ release(): void }> = [];
+  const leases: Array<{ dispose(): void }> = [];
   try {
-    lease.registerDescriptor(descriptor(claim.featureId, "reserved"));
-  } catch {
-    reservedRejected = true;
-  }
-  assert(reservedRejected, "reserved built-in routes are rejected");
-  lease.dispose();
-  claim.release();
-  const limitedClaim = registry.claimHost("registry-limit", "host-limit");
-  const limitedLease = registry.beginGeneration({
-    featureId: limitedClaim.featureId,
-    hostEpoch: limitedClaim.hostEpoch,
-    generation: 1,
-  });
-  for (let index = 0; index < 16; index += 1) {
-    limitedLease.registerDescriptor(
-      descriptor(limitedClaim.featureId, `page-${index}`),
+    const claim = registry.claimHost(
+      "experimental-local-sample",
+      "host-reserved",
     );
+    claims.push(claim);
+    const lease = registry.beginGeneration({
+      featureId: claim.featureId,
+      hostEpoch: claim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(lease);
+    let reservedRejected = false;
+    try {
+      lease.registerDescriptor(descriptor(claim.featureId, "reserved"));
+    } catch {
+      reservedRejected = true;
+    }
+    assert(reservedRejected, "reserved built-in routes are rejected");
+    lease.dispose();
+    claim.release();
+    const limitedClaim = registry.claimHost("registry-limit", "host-limit");
+    claims.push(limitedClaim);
+    const limitedLease = registry.beginGeneration({
+      featureId: limitedClaim.featureId,
+      hostEpoch: limitedClaim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(limitedLease);
+    for (let index = 0; index < 16; index += 1) {
+      limitedLease.registerDescriptor(
+        descriptor(limitedClaim.featureId, `page-${index}`),
+      );
+    }
+    let limitRejected = false;
+    try {
+      limitedLease.registerDescriptor(
+        descriptor(limitedClaim.featureId, "page-overflow"),
+      );
+    } catch {
+      limitRejected = true;
+    }
+    assert(limitRejected, "per-owner page count is bounded");
+    limitedLease.dispose();
+    limitedClaim.release();
+  } finally {
+    for (const lease of leases) lease.dispose();
+    for (const claim of claims) claim.release();
   }
-  let limitRejected = false;
-  try {
-    limitedLease.registerDescriptor(
-      descriptor(limitedClaim.featureId, "page-overflow"),
-    );
-  } catch {
-    limitRejected = true;
-  }
-  assert(limitRejected, "per-owner page count is bounded");
-  limitedLease.dispose();
-  limitedClaim.release();
 }
 
 async function testStagingDetachmentAndStaleCleanup(): Promise<void> {
   const registry = new HubRegistry({ epoch: "registry-stage" });
   const featureId = "registry-stage";
-  const claim = registry.claimHost(featureId, "host-stage");
-  const first = registry.beginGeneration({
-    featureId,
-    hostEpoch: claim.hostEpoch,
-    generation: 1,
-  });
-  first.registerDescriptor(descriptor(featureId));
-  let duplicateRejected = false;
+  const claims: Array<{ release(): void }> = [];
+  const leases: Array<{ dispose(): void }> = [];
   try {
+    const claim = registry.claimHost(featureId, "host-stage");
+    claims.push(claim);
+    const first = registry.beginGeneration({
+      featureId,
+      hostEpoch: claim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(first);
     first.registerDescriptor(descriptor(featureId));
-  } catch {
-    duplicateRejected = true;
+    let duplicateRejected = false;
+    try {
+      first.registerDescriptor(descriptor(featureId));
+    } catch {
+      duplicateRejected = true;
+    }
+    assert(
+      duplicateRejected,
+      "duplicate local IDs are rejected within an owner generation",
+    );
+    assertEquals(registry.getSnapshotForTests().entries.length, 0);
+    registry.sealGeneration(first);
+    await registry.publishGeneration(first, [], new AbortController().signal);
+    const detached = registry.getSnapshotForTests();
+    (detached.entries[0].view.params as Record<string, string>).version =
+      "mutated";
+    (detached.entries as unknown[]).pop();
+    assertEquals(
+      registry.getSnapshotForTests().entries[0].view.params?.version,
+      "hub-v1",
+    );
+    const second = registry.beginGeneration({
+      featureId,
+      hostEpoch: claim.hostEpoch,
+      generation: 2,
+    });
+    leases.push(second);
+    second.registerDescriptor(descriptor(featureId));
+    registry.sealGeneration(second);
+    await registry.publishGeneration(second, [], new AbortController().signal);
+    first.dispose();
+    assertEquals(registry.getSnapshotForTests().entries[0].ownerGeneration, 2);
+    first.dispose();
+    second.dispose();
+    assertEquals(registry.getSnapshotForTests().entries.length, 0);
+    claim.release();
+  } finally {
+    for (const lease of leases) lease.dispose();
+    for (const claim of claims) claim.release();
   }
-  assert(
-    duplicateRejected,
-    "duplicate local IDs are rejected within an owner generation",
-  );
-  assertEquals(registry.getSnapshotForTests().entries.length, 0);
-  registry.sealGeneration(first);
-  await registry.publishGeneration(first, [], new AbortController().signal);
-  const detached = registry.getSnapshotForTests();
-  (detached.entries[0].view.params as Record<string, string>).version =
-    "mutated";
-  (detached.entries as unknown[]).pop();
-  assertEquals(
-    registry.getSnapshotForTests().entries[0].view.params?.version,
-    "hub-v1",
-  );
-  const second = registry.beginGeneration({
-    featureId,
-    hostEpoch: claim.hostEpoch,
-    generation: 2,
-  });
-  second.registerDescriptor(descriptor(featureId));
-  registry.sealGeneration(second);
-  await registry.publishGeneration(second, [], new AbortController().signal);
-  first.dispose();
-  assertEquals(registry.getSnapshotForTests().entries[0].ownerGeneration, 2);
-  first.dispose();
-  second.dispose();
-  assertEquals(registry.getSnapshotForTests().entries.length, 0);
-  claim.release();
 }
 
 async function testMonotonicGenerationsAndHostEpochIdentity(): Promise<void> {
@@ -437,111 +561,123 @@ async function testMonotonicGenerationsAndHostEpochIdentity(): Promise<void> {
 }
 
 async function testParentVisibleW0AndNeverConnectedTimeout(): Promise<void> {
-  const connection = new FakeConnection("never-connect");
-  const discovery = new FakeDiscovery([new FakeDocument(connection)]);
-  const registry = new HubRegistry({ epoch: "registry-w0", discovery });
-  const w0 = registry.captureW0(["window-1"]);
-  const newcomer = new FakeConnection("late-client", "window-1");
-  discovery.documents.push(new FakeDocument(newcomer));
-  assertEquals(w0.length, 1);
-  assertEquals(discovery.queriedWindows.join(","), "window-1");
-  const claim = registry.claimHost("registry-w0", "host-w0");
-  const lease = registry.beginGeneration({
-    featureId: claim.featureId,
-    hostEpoch: claim.hostEpoch,
-    generation: 1,
-  });
-  lease.registerDescriptor(descriptor(claim.featureId));
-  registry.sealGeneration(lease);
-  let timedOut = false;
+  const claims: Array<{ release(): void }> = [];
+  const leases: Array<{ dispose(): void }> = [];
   try {
-    await registry.publishGeneration(
-      lease,
-      w0,
-      new AbortController().signal,
-      20,
+    const connection = new FakeConnection("never-connect");
+    const discovery = new FakeDiscovery([new FakeDocument(connection)]);
+    const registry = new HubRegistry({ epoch: "registry-w0", discovery });
+    const w0 = registry.captureW0(["window-1"]);
+    const newcomer = new FakeConnection("late-client", "window-1");
+    discovery.documents.push(new FakeDocument(newcomer));
+    assertEquals(w0.length, 1);
+    assertEquals(discovery.queriedWindows.join(","), "window-1");
+    const claim = registry.claimHost("registry-w0", "host-w0");
+    claims.push(claim);
+    const lease = registry.beginGeneration({
+      featureId: claim.featureId,
+      hostEpoch: claim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(lease);
+    lease.registerDescriptor(descriptor(claim.featureId));
+    registry.sealGeneration(lease);
+    let timedOut = false;
+    try {
+      await registry.publishGeneration(
+        lease,
+        w0,
+        new AbortController().signal,
+        20,
+      );
+    } catch (error) {
+      timedOut =
+        errorMessage(error) === "publication acknowledgement timed out";
+    }
+    assert(
+      timedOut,
+      "a live parent-visible document that never connects must block readiness",
     );
-  } catch (error) {
-    timedOut = errorMessage(error) === "publication acknowledgement timed out";
-  }
-  assert(
-    timedOut,
-    "a live parent-visible document that never connects must block readiness",
-  );
-  assertEquals(
-    connection.isClosed(),
-    false,
-    "live disconnected client remains required until timeout",
-  );
-  assertEquals(connection.messages.length, 2);
-  assertEquals(
-    newcomer.messages.length,
-    0,
-    "new clients do not join captured W0",
-  );
-  assertEquals(registry.diagnosticsForTests.pendingAcknowledgements, 0);
-  lease.dispose();
-  claim.release();
-
-  const outside = new FakeDocument(new FakeConnection("outside", "window-2"));
-  const outsideRegistry = new HubRegistry({
-    discovery: { discoverLiveHubDocuments: () => [outside] },
-  });
-  let outsideRejected = false;
-  try {
-    outsideRegistry.captureW0(["window-1"]);
-  } catch {
-    outsideRejected = true;
-  }
-  assert(
-    outsideRejected,
-    "documents outside the captured window set are rejected",
-  );
-
-  const missingClientRegistry = new HubRegistry({
-    discovery: {
-      discoverLiveHubDocuments: () => [{
-        documentId: "missing-client",
-        windowId: "window-1",
-        isLive: () => true,
-        ensureParentClient: () => null,
-        onParentClientAvailable: () => () => {},
-        onClosed: () => () => {},
-      }],
-    },
-  });
-  const missingClientW0 = missingClientRegistry.captureW0(["window-1"]);
-  const missingClientClaim = missingClientRegistry.claimHost(
-    "registry-missing",
-    "host-missing",
-  );
-  const missingClientLease = missingClientRegistry.beginGeneration({
-    featureId: missingClientClaim.featureId,
-    hostEpoch: missingClientClaim.hostEpoch,
-    generation: 1,
-  });
-  missingClientLease.registerDescriptor(
-    descriptor(missingClientClaim.featureId),
-  );
-  missingClientRegistry.sealGeneration(missingClientLease);
-  let missingClientTimedOut = false;
-  try {
-    await missingClientRegistry.publishGeneration(
-      missingClientLease,
-      missingClientW0,
-      new AbortController().signal,
-      20,
+    assertEquals(
+      connection.isClosed(),
+      false,
+      "live disconnected client remains required until timeout",
     );
-  } catch (error) {
-    missingClientTimedOut = errorMessage(error) ===
-      "publication acknowledgement timed out";
+    assertEquals(connection.messages.length, 2);
+    assertEquals(
+      newcomer.messages.length,
+      0,
+      "new clients do not join captured W0",
+    );
+    assertEquals(registry.diagnosticsForTests.pendingAcknowledgements, 0);
+    lease.dispose();
+    claim.release();
+
+    const outside = new FakeDocument(new FakeConnection("outside", "window-2"));
+    const outsideRegistry = new HubRegistry({
+      discovery: { discoverLiveHubDocuments: () => [outside] },
+    });
+    let outsideRejected = false;
+    try {
+      outsideRegistry.captureW0(["window-1"]);
+    } catch {
+      outsideRejected = true;
+    }
+    assert(
+      outsideRejected,
+      "documents outside the captured window set are rejected",
+    );
+
+    const missingClientRegistry = new HubRegistry({
+      discovery: {
+        discoverLiveHubDocuments: () => [{
+          documentId: "missing-client",
+          windowId: "window-1",
+          isLive: () => true,
+          ensureParentClient: () => null,
+          onParentClientAvailable: () => () => {},
+          onClosed: () => () => {},
+        }],
+      },
+    });
+    const missingClientW0 = missingClientRegistry.captureW0(["window-1"]);
+    const missingClientClaim = missingClientRegistry.claimHost(
+      "registry-missing",
+      "host-missing",
+    );
+    claims.push(missingClientClaim);
+    const missingClientLease = missingClientRegistry.beginGeneration({
+      featureId: missingClientClaim.featureId,
+      hostEpoch: missingClientClaim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(missingClientLease);
+    missingClientLease.registerDescriptor(
+      descriptor(missingClientClaim.featureId),
+    );
+    missingClientRegistry.sealGeneration(missingClientLease);
+    let missingClientTimedOut = false;
+    try {
+      await missingClientRegistry.publishGeneration(
+        missingClientLease,
+        missingClientW0,
+        new AbortController().signal,
+        20,
+      );
+    } catch (error) {
+      missingClientTimedOut = errorMessage(error) ===
+        "publication acknowledgement timed out";
+    }
+    assert(
+      missingClientTimedOut,
+      "a live document without a parent client blocks readiness",
+    );
+    missingClientLease.dispose();
+    missingClientClaim.release();
+  } finally {
+    for (const lease of leases) lease.dispose();
+    for (const claim of claims) claim.release();
   }
-  assert(
-    missingClientTimedOut,
-    "a live document without a parent client blocks readiness",
-  );
-  missingClientLease.dispose();
-  missingClientClaim.release();
 }
 
 async function testBroadcastsAllClientsButGatesOnlyCapturedW0(): Promise<void> {
@@ -559,227 +695,269 @@ async function testBroadcastsAllClientsButGatesOnlyCapturedW0(): Promise<void> {
   registry.registerClient(outsideConnection);
   assertEquals(w0.length, 1);
 
-  const claim = registry.claimHost("registry-broadcast", "host-broadcast");
-  const lease = registry.beginGeneration({
-    featureId: claim.featureId,
-    hostEpoch: claim.hostEpoch,
-    generation: 1,
-  });
-  lease.registerDescriptor(descriptor(claim.featureId));
-  registry.sealGeneration(lease);
-  const snapshot = await registry.publishGeneration(
-    lease,
-    w0,
-    new AbortController().signal,
-    20,
-  );
+  let claim: HubHostClaim | null = null;
+  let lease: HubGenerationLease | null = null;
+  try {
+    claim = registry.claimHost("registry-broadcast", "host-broadcast");
+    lease = registry.beginGeneration({
+      featureId: claim.featureId,
+      hostEpoch: claim.hostEpoch,
+      generation: 1,
+    });
+    lease.registerDescriptor(descriptor(claim.featureId));
+    registry.sealGeneration(lease);
+    const snapshot = await registry.publishGeneration(
+      lease,
+      w0,
+      new AbortController().signal,
+      20,
+    );
 
-  assertEquals(snapshot.hubRevision, 1);
-  for (const connection of [w0Connection, lateConnection, outsideConnection]) {
-    const delivered = JSON.parse(connection.messages.at(-1) ?? "null") as {
-      snapshot: { hubRevision: number; entries: readonly unknown[] };
-    };
-    assertEquals(delivered.snapshot.hubRevision, 1);
-    assertEquals(delivered.snapshot.entries.length, 1);
+    assertEquals(snapshot.hubRevision, 1);
+    for (
+      const connection of [w0Connection, lateConnection, outsideConnection]
+    ) {
+      const delivered = JSON.parse(connection.messages.at(-1) ?? "null") as {
+        snapshot: { hubRevision: number; entries: readonly unknown[] };
+      };
+      assertEquals(delivered.snapshot.hubRevision, 1);
+      assertEquals(delivered.snapshot.entries.length, 1);
+    }
+    assertEquals(
+      registry.diagnosticsForTests.pendingAcknowledgements,
+      0,
+      "non-W0 clients do not participate in the publication gate",
+    );
+  } finally {
+    lease?.dispose();
+    claim?.release();
+    w0Connection.close();
+    lateConnection.close();
+    outsideConnection.close();
   }
-  assertEquals(
-    registry.diagnosticsForTests.pendingAcknowledgements,
-    0,
-    "non-W0 clients do not participate in the publication gate",
-  );
-  lease.dispose();
-  claim.release();
-  w0Connection.close();
-  lateConnection.close();
-  outsideConnection.close();
   assertEquals(registry.diagnosticsForTests.clients, 0);
 }
 
 async function testStaleAcknowledgementsAndClosedClient(): Promise<void> {
-  const connection = new FakeConnection("ack");
-  const registry = new HubRegistry({
-    epoch: "registry-ack",
-    discovery: new FakeDiscovery([new FakeDocument(connection)]),
-  });
-  const w0 = registry.captureW0(["window-1"]);
-  const claim = registry.claimHost("registry-ack", "host-ack");
-  const lease = registry.beginGeneration({
-    featureId: claim.featureId,
-    hostEpoch: claim.hostEpoch,
-    generation: 1,
-  });
-  lease.registerDescriptor(descriptor(claim.featureId));
-  registry.sealGeneration(lease);
-  connection.onSend = () => {
-    assert(
-      !registry.acknowledge(
-        connection,
-        JSON.stringify({
-          type: "snapshot-ack",
-          epoch: "wrong",
-          hubRevision: 1,
-        }),
-      ),
+  const claims: Array<{ release(): void }> = [];
+  const leases: Array<{ dispose(): void }> = [];
+  try {
+    const connection = new FakeConnection("ack");
+    const registry = new HubRegistry({
+      epoch: "registry-ack",
+      discovery: new FakeDiscovery([new FakeDocument(connection)]),
+    });
+    const w0 = registry.captureW0(["window-1"]);
+    const claim = registry.claimHost("registry-ack", "host-ack");
+    claims.push(claim);
+    const lease = registry.beginGeneration({
+      featureId: claim.featureId,
+      hostEpoch: claim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(lease);
+    lease.registerDescriptor(descriptor(claim.featureId));
+    registry.sealGeneration(lease);
+    connection.onSend = () => {
+      assert(
+        !registry.acknowledge(
+          connection,
+          JSON.stringify({
+            type: "snapshot-ack",
+            epoch: "wrong",
+            hubRevision: 1,
+          }),
+        ),
+      );
+      assert(
+        !registry.acknowledge(
+          connection,
+          JSON.stringify({
+            type: "snapshot-ack",
+            epoch: "registry-ack",
+            hubRevision: 999,
+          }),
+        ),
+      );
+      assert(
+        !registry.acknowledge(
+          new FakeConnection("foreign"),
+          ackJson(connection),
+        ),
+      );
+      assert(registry.acknowledge(connection, ackJson(connection)));
+    };
+    await registry.publishGeneration(
+      lease,
+      w0,
+      new AbortController().signal,
+      100,
     );
-    assert(
-      !registry.acknowledge(
-        connection,
-        JSON.stringify({
-          type: "snapshot-ack",
-          epoch: "registry-ack",
-          hubRevision: 999,
-        }),
-      ),
-    );
-    assert(
-      !registry.acknowledge(new FakeConnection("foreign"), ackJson(connection)),
-    );
-    assert(registry.acknowledge(connection, ackJson(connection)));
-  };
-  await registry.publishGeneration(
-    lease,
-    w0,
-    new AbortController().signal,
-    100,
-  );
-  lease.dispose();
-  claim.release();
+    lease.dispose();
+    claim.release();
 
-  const closing = new FakeConnection("closing");
-  const closingDocument = new FakeDocument(closing);
-  const closeRegistry = new HubRegistry({
-    epoch: "registry-close",
-    discovery: new FakeDiscovery([closingDocument]),
-  });
-  const closeW0 = closeRegistry.captureW0(["window-1"]);
-  const closeClaim = closeRegistry.claimHost("registry-close", "host-close");
-  const closeLease = closeRegistry.beginGeneration({
-    featureId: closeClaim.featureId,
-    hostEpoch: closeClaim.hostEpoch,
-    generation: 1,
-  });
-  closeLease.registerDescriptor(descriptor(closeClaim.featureId));
-  closeRegistry.sealGeneration(closeLease);
-  closing.onSend = () => {
-    closingDocument.closeDocument();
-    closing.close();
-  };
-  await closeRegistry.publishGeneration(
-    closeLease,
-    closeW0,
-    new AbortController().signal,
-    100,
-  );
-  closeLease.dispose();
-  closeClaim.release();
+    const closing = new FakeConnection("closing");
+    const closingDocument = new FakeDocument(closing);
+    const closeRegistry = new HubRegistry({
+      epoch: "registry-close",
+      discovery: new FakeDiscovery([closingDocument]),
+    });
+    const closeW0 = closeRegistry.captureW0(["window-1"]);
+    const closeClaim = closeRegistry.claimHost("registry-close", "host-close");
+    claims.push(closeClaim);
+    const closeLease = closeRegistry.beginGeneration({
+      featureId: closeClaim.featureId,
+      hostEpoch: closeClaim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(closeLease);
+    closeLease.registerDescriptor(descriptor(closeClaim.featureId));
+    closeRegistry.sealGeneration(closeLease);
+    closing.onSend = () => {
+      closingDocument.closeDocument();
+      closing.close();
+    };
+    await closeRegistry.publishGeneration(
+      closeLease,
+      closeW0,
+      new AbortController().signal,
+      100,
+    );
+    closeLease.dispose();
+    closeClaim.release();
 
-  const alreadyClosedConnection = new FakeConnection("already-closed");
-  const alreadyClosedDocument = new FakeDocument(alreadyClosedConnection);
-  const alreadyClosedRegistry = new HubRegistry({
-    epoch: "registry-already-closed",
-    discovery: new FakeDiscovery([alreadyClosedDocument]),
-  });
-  const alreadyClosedW0 = alreadyClosedRegistry.captureW0(["window-1"]);
-  alreadyClosedDocument.closeDocument();
-  const alreadyClosedClaim = alreadyClosedRegistry.claimHost(
-    "registry-already-closed",
-    "host-already-closed",
-  );
-  const alreadyClosedLease = alreadyClosedRegistry.beginGeneration({
-    featureId: alreadyClosedClaim.featureId,
-    hostEpoch: alreadyClosedClaim.hostEpoch,
-    generation: 1,
-  });
-  alreadyClosedLease.registerDescriptor(
-    descriptor(alreadyClosedClaim.featureId),
-  );
-  alreadyClosedRegistry.sealGeneration(alreadyClosedLease);
-  await alreadyClosedRegistry.publishGeneration(
-    alreadyClosedLease,
-    alreadyClosedW0,
-    new AbortController().signal,
-    100,
-  );
-  assertEquals(
-    alreadyClosedRegistry.diagnosticsForTests.clients,
-    0,
-    "a closed W0 document releases its parent connection",
-  );
-  alreadyClosedLease.dispose();
-  alreadyClosedClaim.release();
+    const alreadyClosedConnection = new FakeConnection("already-closed");
+    const alreadyClosedDocument = new FakeDocument(alreadyClosedConnection);
+    const alreadyClosedRegistry = new HubRegistry({
+      epoch: "registry-already-closed",
+      discovery: new FakeDiscovery([alreadyClosedDocument]),
+    });
+    const alreadyClosedW0 = alreadyClosedRegistry.captureW0(["window-1"]);
+    alreadyClosedDocument.closeDocument();
+    const alreadyClosedClaim = alreadyClosedRegistry.claimHost(
+      "registry-already-closed",
+      "host-already-closed",
+    );
+    claims.push(alreadyClosedClaim);
+    const alreadyClosedLease = alreadyClosedRegistry.beginGeneration({
+      featureId: alreadyClosedClaim.featureId,
+      hostEpoch: alreadyClosedClaim.hostEpoch,
+      generation: 1,
+    });
+    leases.push(alreadyClosedLease);
+    alreadyClosedLease.registerDescriptor(
+      descriptor(alreadyClosedClaim.featureId),
+    );
+    alreadyClosedRegistry.sealGeneration(alreadyClosedLease);
+    await alreadyClosedRegistry.publishGeneration(
+      alreadyClosedLease,
+      alreadyClosedW0,
+      new AbortController().signal,
+      100,
+    );
+    assertEquals(
+      alreadyClosedRegistry.diagnosticsForTests.clients,
+      0,
+      "a closed W0 document releases its parent connection",
+    );
+    alreadyClosedLease.dispose();
+    alreadyClosedClaim.release();
+  } finally {
+    for (const lease of leases) lease.dispose();
+    for (const claim of claims) claim.release();
+  }
 }
 
 async function testDisconnectedLiveDocumentWaitsForResync(): Promise<void> {
-  const firstConnection = new FakeConnection("disconnect");
-  const document = new FakeDocument(firstConnection);
-  const registry = new HubRegistry({
-    epoch: "registry-resync",
-    discovery: new FakeDiscovery([document]),
-  });
-  const w0 = registry.captureW0(["window-1"]);
-  const claim = registry.claimHost("registry-resync", "host-resync");
-  const lease = registry.beginGeneration({
-    featureId: claim.featureId,
-    hostEpoch: claim.hostEpoch,
-    generation: 1,
-  });
-  lease.registerDescriptor(descriptor(claim.featureId));
-  registry.sealGeneration(lease);
-  firstConnection.onSend = () => firstConnection.close();
-  const publication = registry.publishGeneration(
-    lease,
-    w0,
-    new AbortController().signal,
-    200,
-  );
-  assertEquals(firstConnection.isClosed(), true);
-  assertEquals(document.isLive(), true);
-  assertEquals(registry.diagnosticsForTests.pendingAcknowledgements, 1);
-  const resync = new FakeConnection("resync");
-  resync.onSend = () => registry.acknowledge(resync, ackJson(resync));
-  document.replaceConnection(resync);
-  await publication;
-  assertEquals(registry.diagnosticsForTests.pendingAcknowledgements, 0);
-  lease.dispose();
-  claim.release();
+  let claim: ReturnType<InstanceType<typeof HubRegistry>["claimHost"]> | null =
+    null;
+  let lease:
+    | ReturnType<InstanceType<typeof HubRegistry>["beginGeneration"]>
+    | null = null;
+  try {
+    const firstConnection = new FakeConnection("disconnect");
+    const document = new FakeDocument(firstConnection);
+    const registry = new HubRegistry({
+      epoch: "registry-resync",
+      discovery: new FakeDiscovery([document]),
+    });
+    const w0 = registry.captureW0(["window-1"]);
+    claim = registry.claimHost("registry-resync", "host-resync");
+    lease = registry.beginGeneration({
+      featureId: claim.featureId,
+      hostEpoch: claim.hostEpoch,
+      generation: 1,
+    });
+    lease.registerDescriptor(descriptor(claim.featureId));
+    registry.sealGeneration(lease);
+    firstConnection.onSend = () => firstConnection.close();
+    const publication = registry.publishGeneration(
+      lease,
+      w0,
+      new AbortController().signal,
+      200,
+    );
+    assertEquals(firstConnection.isClosed(), true);
+    assertEquals(document.isLive(), true);
+    assertEquals(registry.diagnosticsForTests.pendingAcknowledgements, 1);
+    const resync = new FakeConnection("resync");
+    resync.onSend = () => registry.acknowledge(resync, ackJson(resync));
+    document.replaceConnection(resync);
+    await publication;
+    assertEquals(registry.diagnosticsForTests.pendingAcknowledgements, 0);
+  } finally {
+    lease?.dispose();
+    claim?.release();
+  }
 }
 
 async function testLatestFullSnapshotSatisfiesMultipleFeatures(): Promise<
   void
 > {
-  const connection = new FakeConnection("multi");
-  const discovery = new FakeDiscovery([new FakeDocument(connection)]);
-  const registry = new HubRegistry({ epoch: "registry-multi", discovery });
-  const w0 = registry.captureW0(["window-1"]);
-  const claimA = registry.claimHost("feature-a", "host-a");
-  const claimB = registry.claimHost("feature-b", "host-b");
-  const leaseA = registry.beginGeneration({
-    featureId: "feature-a",
-    hostEpoch: "host-a",
-    generation: 1,
-  });
-  const leaseB = registry.beginGeneration({
-    featureId: "feature-b",
-    hostEpoch: "host-b",
-    generation: 1,
-  });
-  leaseA.registerDescriptor(descriptor("feature-a"));
-  leaseB.registerDescriptor(descriptor("feature-b"));
-  registry.sealGeneration(leaseA);
-  registry.sealGeneration(leaseB);
-  const signal = new AbortController().signal;
-  const first = registry.publishGeneration(leaseA, w0, signal, 200);
-  const second = registry.publishGeneration(leaseB, w0, signal, 200);
-  assertEquals(
-    JSON.parse(connection.messages.at(-1) ?? "null").snapshot.entries.length,
-    2,
-  );
-  assert(registry.acknowledge(connection, ackJson(connection)));
-  await Promise.all([first, second]);
-  leaseA.dispose();
-  leaseB.dispose();
-  claimA.release();
-  claimB.release();
+  const claims: Array<{ release(): void }> = [];
+  const leases: Array<{ dispose(): void }> = [];
+  try {
+    const connection = new FakeConnection("multi");
+    const discovery = new FakeDiscovery([new FakeDocument(connection)]);
+    const registry = new HubRegistry({ epoch: "registry-multi", discovery });
+    const w0 = registry.captureW0(["window-1"]);
+    const claimA = registry.claimHost("feature-a", "host-a");
+    claims.push(claimA);
+    const claimB = registry.claimHost("feature-b", "host-b");
+    claims.push(claimB);
+    const leaseA = registry.beginGeneration({
+      featureId: "feature-a",
+      hostEpoch: "host-a",
+      generation: 1,
+    });
+    leases.push(leaseA);
+    const leaseB = registry.beginGeneration({
+      featureId: "feature-b",
+      hostEpoch: "host-b",
+      generation: 1,
+    });
+    leases.push(leaseB);
+    leaseA.registerDescriptor(descriptor("feature-a"));
+    leaseB.registerDescriptor(descriptor("feature-b"));
+    registry.sealGeneration(leaseA);
+    registry.sealGeneration(leaseB);
+    const signal = new AbortController().signal;
+    const first = registry.publishGeneration(leaseA, w0, signal, 200);
+    const second = registry.publishGeneration(leaseB, w0, signal, 200);
+    assertEquals(
+      JSON.parse(connection.messages.at(-1) ?? "null").snapshot.entries.length,
+      2,
+    );
+    assert(registry.acknowledge(connection, ackJson(connection)));
+    await Promise.all([first, second]);
+    leaseA.dispose();
+    leaseB.dispose();
+    claimA.release();
+    claimB.release();
+  } finally {
+    for (const lease of leases) lease.dispose();
+    for (const claim of claims) claim.release();
+  }
 }
 
 async function testRemovalWaitsRequireAbsenceAndCurrentClaim(): Promise<void> {
@@ -1058,6 +1236,11 @@ async function testAbortAfterAckBeforeWaitContinuationIsRejected(): Promise<
 
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
+    {
+      name:
+        "HUB discovery and reserved-route configuration is idempotent and locked after use",
+      fn: testConfigurationSettersAreIdempotentAndLockedAfterUse,
+    },
     {
       name: "HUB descriptor JSON rejects unsafe and non-canonical data",
       fn: testStrictDescriptorContract,

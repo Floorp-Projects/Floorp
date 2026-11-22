@@ -13,11 +13,15 @@ import type {
   HubSnapshotAcknowledgement,
   HubSnapshotEntry,
 } from "./HubRegistryTypes.ts";
+import {
+  HubDescriptorValidationError,
+  isHubIdentifier,
+  parseHubPageDescriptor as parseValidatedHubPageDescriptor,
+} from "./HubPageDescriptorValidation.ts";
 
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
-const MAX_DESCRIPTOR_BYTES = 2_048;
 const MAX_SNAPSHOT_BYTES = 131_072;
 const MAX_ENTRIES = 32;
 const MAX_ENTRIES_PER_OWNER = 16;
@@ -27,13 +31,6 @@ const hostClaims = new Map<
   string,
   { registry: HubRegistry; hostEpoch: string; claim: HubHostClaim }
 >();
-
-export class HubRegistryError extends Error {
-  constructor(readonly code: string) {
-    super(code);
-    this.name = "HubRegistryError";
-  }
-}
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null &&
@@ -49,115 +46,28 @@ function hasExactKeys(
   return keys.every((key) =>
     !forbiddenKeys.has(key) &&
     (required.includes(key) || optional.includes(key))
-  ) &&
-    required.every((key) => Object.hasOwn(value, key));
+  ) && required.every((key) => Object.hasOwn(value, key));
 }
 
-function isIdentifier(value: unknown): value is string {
-  return typeof value === "string" && value.length <= 48 &&
-    /^[a-z][a-z0-9-]*$/.test(value);
-}
-
-function isLocalizationKey(value: unknown): value is string {
-  return typeof value === "string" && value.length <= 128 &&
-    /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/.test(value);
-}
-
-function validateParams(value: unknown): HubPageDescriptor["view"]["params"] {
-  if (value === undefined) return undefined;
-  if (!isObject(value) || Object.keys(value).length > 8) {
-    throw new HubRegistryError("invalid hub params");
+export class HubRegistryError extends Error {
+  constructor(readonly code: string) {
+    super(code);
+    this.name = "HubRegistryError";
   }
-  const params: Record<string, string | number | boolean> = {};
-  for (const [key, item] of Object.entries(value)) {
-    if (forbiddenKeys.has(key) || !/^[A-Za-z][A-Za-z0-9_]{0,31}$/.test(key)) {
-      throw new HubRegistryError("invalid hub param key");
-    }
-    if (typeof item === "string" && item.length <= 128) params[key] = item;
-    else if (typeof item === "boolean") params[key] = item;
-    else if (
-      typeof item === "number" && Number.isFinite(item) &&
-      Math.abs(item) <= 1_000_000_000
-    ) {
-      params[key] = item;
-    } else throw new HubRegistryError("invalid hub param value");
-  }
-  return Object.freeze(params);
 }
 
 export function parseHubPageDescriptor(
   json: string,
   featureId: string,
 ): HubPageDescriptor {
-  if (new TextEncoder().encode(json).byteLength > MAX_DESCRIPTOR_BYTES) {
-    throw new HubRegistryError("hub descriptor too large");
-  }
-  if (!isIdentifier(featureId)) {
-    throw new HubRegistryError("invalid feature ID");
-  }
-  let value: unknown;
   try {
-    value = JSON.parse(json);
-  } catch {
-    throw new HubRegistryError("invalid hub descriptor JSON");
+    return parseValidatedHubPageDescriptor(json, featureId);
+  } catch (error) {
+    if (error instanceof HubDescriptorValidationError) {
+      throw new HubRegistryError(error.code);
+    }
+    throw error;
   }
-  if (
-    !isObject(value) ||
-    !hasExactKeys(value, ["localId", "route", "titleKey", "view"], [
-      "navigation",
-    ])
-  ) throw new HubRegistryError("invalid hub descriptor schema");
-  const localId = value.localId;
-  const route = value.route;
-  if (!isIdentifier(localId)) {
-    throw new HubRegistryError("invalid hub local ID");
-  }
-  if (route !== `/extensions/${featureId}/${localId}`) {
-    throw new HubRegistryError("non-canonical hub route");
-  }
-  if (!isLocalizationKey(value.titleKey)) {
-    throw new HubRegistryError("invalid hub title key");
-  }
-  let navigation: HubPageDescriptor["navigation"];
-  if (value.navigation !== undefined) {
-    if (
-      !isObject(value.navigation) ||
-      !hasExactKeys(value.navigation, ["labelKey"], ["order"]) ||
-      !isLocalizationKey(value.navigation.labelKey) ||
-      (value.navigation.order !== undefined &&
-        (!Number.isSafeInteger(value.navigation.order) ||
-          (value.navigation.order as number) < -1_000 ||
-          (value.navigation.order as number) > 1_000))
-    ) throw new HubRegistryError("invalid hub navigation");
-    navigation = {
-      labelKey: value.navigation.labelKey,
-      ...(value.navigation.order === undefined
-        ? {}
-        : { order: value.navigation.order as number }),
-    };
-  }
-  const view = value.view;
-  if (
-    !isObject(view) ||
-    !hasExactKeys(view, ["kind", "titleKey", "bodyKey"], ["params"]) ||
-    view.kind !== "message" || !isLocalizationKey(view.titleKey) ||
-    !isLocalizationKey(view.bodyKey)
-  ) throw new HubRegistryError("invalid hub message view");
-  const descriptor: HubPageDescriptor = {
-    localId,
-    route,
-    titleKey: value.titleKey,
-    ...(navigation ? { navigation } : {}),
-    view: {
-      kind: "message",
-      titleKey: view.titleKey,
-      bodyKey: view.bodyKey,
-      ...(view.params === undefined
-        ? {}
-        : { params: validateParams(view.params) }),
-    },
-  };
-  return JSON.parse(JSON.stringify(descriptor)) as HubPageDescriptor;
 }
 
 function parseAcknowledgement(json: string): HubSnapshotAcknowledgement | null {
@@ -242,6 +152,7 @@ export class HubRegistry {
   readonly #waiters = new Set<AckWaiter>();
   #revision = 0;
   #pendingPublicationTimers = 0;
+  #configurationLocked = false;
 
   constructor(options: HubRegistryOptions = {}) {
     this.#epoch = options.epoch ?? Services.uuid.generateUUID().toString();
@@ -253,8 +164,10 @@ export class HubRegistry {
   }
 
   setDiscoveryAdapter(adapter: HubClientDiscoveryAdapter): void {
+    if (this.#discovery === adapter) return;
     if (
-      this.#claims.size || this.#clients.size || this.#waiters.size ||
+      this.#configurationLocked || this.#claims.size || this.#clients.size ||
+      this.#waiters.size ||
       this.#leases.size || this.#published.size || this.#activeOwners.size
     ) {
       throw new HubRegistryError("HUB discovery must be configured before use");
@@ -262,14 +175,26 @@ export class HubRegistry {
     this.#discovery = adapter;
   }
 
+  isUsingDiscoveryAdapterForTests(
+    adapter: HubClientDiscoveryAdapter,
+  ): boolean {
+    return this.#discovery === adapter;
+  }
+
   setReservedRoutes(routes: readonly string[]): void {
+    const nextRoutes = new Set(routes);
     if (
-      this.#claims.size || this.#clients.size || this.#waiters.size ||
+      nextRoutes.size === this.#reservedRoutes.size &&
+      [...nextRoutes].every((route) => this.#reservedRoutes.has(route))
+    ) return;
+    if (
+      this.#configurationLocked || this.#claims.size || this.#clients.size ||
+      this.#waiters.size ||
       this.#leases.size || this.#published.size || this.#activeOwners.size
     ) {
       throw new HubRegistryError("HUB routes must be configured before use");
     }
-    this.#reservedRoutes = new Set(routes);
+    this.#reservedRoutes = nextRoutes;
   }
 
   getSnapshotForTests(): HubSnapshot {
@@ -296,12 +221,13 @@ export class HubRegistry {
   }
 
   claimHost(featureId: string, hostEpoch: string): HubHostClaim {
-    if (!isIdentifier(featureId) || !hostEpoch || hostEpoch.length > 128) {
+    if (!isHubIdentifier(featureId) || !hostEpoch || hostEpoch.length > 128) {
       throw new HubRegistryError("invalid hub host claim");
     }
     if (hostClaims.has(featureId)) {
       throw new HubRegistryError("feature owner already claimed");
     }
+    this.#configurationLocked = true;
     const claim: HubHostClaim = Object.freeze({
       featureId,
       hostEpoch,
@@ -358,6 +284,7 @@ export class HubRegistry {
       windows.size !== windowIds.length ||
       [...windows].some((windowId) => !windowId || windowId.length > 128)
     ) throw new HubRegistryError("invalid W0 window set");
+    this.#configurationLocked = true;
     const documents = this.#discovery.discoverLiveHubDocuments([...windowIds]);
     for (const document of documents) {
       if (
@@ -387,6 +314,7 @@ export class HubRegistry {
       !connection.windowId ||
       connection.clientId.length > 128 || connection.connectionId.length > 128
     ) throw new HubRegistryError("invalid HUB client identity");
+    this.#configurationLocked = true;
     const previous = this.#clients.get(connection.connectionId);
     if (previous && previous !== connection) this.removeClient(previous);
     this.#clients.set(connection.connectionId, connection);
@@ -1011,22 +939,27 @@ export class HubRegistry {
   }
 }
 
-let sharedRegistry: HubRegistry | null = null;
+const sharedRegistryKey = Symbol.for("floorp.featureHub.sharedRegistry");
+type RegistryGlobal = typeof globalThis & { [key: symbol]: unknown };
+const registryGlobal = globalThis as RegistryGlobal;
 
 export function getSharedHubRegistry(): HubRegistry {
-  sharedRegistry ??= new HubRegistry();
-  return sharedRegistry;
+  let registry = registryGlobal[sharedRegistryKey] as HubRegistry | undefined;
+  if (!registry) {
+    registry = new HubRegistry();
+    Object.defineProperty(registryGlobal, sharedRegistryKey, {
+      value: registry,
+    });
+  }
+  return registry;
 }
 
 export function configureSharedHubClientDiscovery(
   adapter: HubClientDiscoveryAdapter,
   reservedRoutes: readonly string[] = [],
 ): HubRegistry {
-  if (sharedRegistry) {
-    sharedRegistry.setDiscoveryAdapter(adapter);
-    sharedRegistry.setReservedRoutes(reservedRoutes);
-  } else {
-    sharedRegistry = new HubRegistry({ discovery: adapter, reservedRoutes });
-  }
-  return sharedRegistry;
+  const registry = getSharedHubRegistry();
+  registry.setDiscoveryAdapter(adapter);
+  registry.setReservedRoutes(reservedRoutes);
+  return registry;
 }
