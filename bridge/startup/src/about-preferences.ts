@@ -4,6 +4,8 @@ import { launchDevPorts } from "./dev_port_offset.ts";
  * launch resolve to the ports actually served. */
 const launchDevPort = launchDevPorts();
 
+import { bindDocumentLifetime } from "./document-lifetime.ts";
+
 interface FirefoxWindow extends Window {
   gBrowser: {
     selectedTab: unknown;
@@ -66,6 +68,7 @@ type FloorpHubWarningTexts = {
 type I18NextLike = {
   isInitialized: boolean;
   on(event: string, callback: () => void): void;
+  off(event: string, callback: () => void): void;
   t(key: string, options?: Record<string, unknown>): string | string[];
 };
 
@@ -164,6 +167,7 @@ let i18nUtilsInstance:
   | {
     getPrimaryBrowserLocaleMapped(): string;
     addLocaleChangeListener(callback: (locale: string) => void): void;
+    removeLocaleChangeListener(callback: (locale: string) => void): void;
   }
   | null
   | undefined;
@@ -192,34 +196,45 @@ function ensureI18NInitialized(): void {
 let globalI18nInitializedObserverBound = false;
 function bindGlobalI18nInitializedObserver(): void {
   if (globalI18nInitializedObserverBound) return;
-  try {
-    Services.obs.addObserver((...args: Array<unknown>) => {
+  const observer = (...args: Array<unknown>): void => {
+    try {
+      const topic = args[1] as string | undefined;
+      if (topic !== "noraneko-i18n-initialized") return;
+      logFloorpHub(
+        "Received noraneko-i18n-initialized; applying translations.",
+      );
+      applyFloorpHubWarningTexts();
+      applyFloorpStartWarningTexts();
+    } catch (e) {
+      // Prevent observer exceptions from bubbling and stopping other observers
+      // Log with a clear prefix to make debugging easier in runtime logs.
       try {
-        const topic = args[1] as string | undefined;
-        if (topic !== "noraneko-i18n-initialized") return;
-        logFloorpHub(
-          "Received noraneko-i18n-initialized; applying translations.",
+        console.error(
+          "Floorp Hub: error in noraneko-i18n-initialized observer",
+          e,
         );
-        applyFloorpHubWarningTexts();
-        applyFloorpStartWarningTexts();
-      } catch (e) {
-        // Prevent observer exceptions from bubbling and stopping other observers
-        // Log with a clear prefix to make debugging easier in runtime logs.
-        try {
-          console.error(
-            "Floorp Hub: error in noraneko-i18n-initialized observer",
-            e,
-          );
-        } catch {
-          // swallow any errors thrown while attempting to log
-        }
+      } catch {
+        // swallow any errors thrown while attempting to log
       }
-    }, "noraneko-i18n-initialized");
-    globalI18nInitializedObserverBound = true;
-    logFloorpHub("Bound global i18n initialized observer.");
-  } catch {
-    // best-effort; ignore if Services not available
-  }
+    }
+  };
+  bindDocumentLifetime(
+    doc,
+    () => {},
+    () => {
+      Services.obs.addObserver(observer, "noraneko-i18n-initialized");
+      globalI18nInitializedObserverBound = true;
+      logFloorpHub("Bound global i18n initialized observer.");
+      return () =>
+        Services.obs.removeObserver(observer, "noraneko-i18n-initialized");
+    },
+    () => {
+      globalI18nInitializedObserverBound = false;
+    },
+    () => {
+      /* Best effort, as before, if the observer service is unavailable. */
+    },
+  );
 }
 
 function openFloorpHub(): void {
@@ -533,14 +548,33 @@ function bindI18nHandlersForWarning(): void {
 
   try {
     // Prefer event binding if available
-    if (typeof instance.on === "function") {
-      instance.on("initialized", () => applyFloorpHubWarningTexts());
-      instance.on("languageChanged", () => applyFloorpHubWarningTexts());
-      warningI18nHandlersBound = true;
-      logFloorpHub("Bound i18next event handlers for warning banner.");
-      // If already initialized, apply immediately
-      if ((instance as I18NextLike).isInitialized) {
-        logFloorpHub("i18next is already initialized; applying texts now.");
+    if (
+      typeof instance.on === "function" && typeof instance.off === "function"
+    ) {
+      const updateTexts = () => applyFloorpHubWarningTexts();
+      bindDocumentLifetime(doc, () => {}, () => {
+        instance.on("initialized", updateTexts);
+        try {
+          instance.on("languageChanged", updateTexts);
+        } catch (error) {
+          instance.off("initialized", updateTexts);
+          throw error;
+        }
+        warningI18nHandlersBound = true;
+        return () => {
+          try {
+            instance.off("initialized", updateTexts);
+          } finally {
+            instance.off("languageChanged", updateTexts);
+          }
+        };
+      }, () => {
+        warningI18nHandlersBound = false;
+      }, (error) => {
+        console.error("Floorp Hub:", "Failed i18n handler lifecycle", error);
+      });
+      // Keep the existing immediate update and live language-change behavior.
+      if (warningI18nHandlersBound && instance.isInitialized) {
         applyFloorpHubWarningTexts();
       }
     } else {
@@ -569,6 +603,13 @@ function bindI18nHandlersForWarning(): void {
           logFloorpHub("Stopped polling for i18next initialization (timeout).");
         }
       }, 200);
+      bindDocumentLifetime(
+        doc,
+        () => {},
+        () => () => clearInterval(interval),
+        () => {},
+        () => {},
+      );
     }
   } catch (error) {
     console.error("Floorp Hub:", "Failed to bind i18n handlers", error);
@@ -587,18 +628,22 @@ function bindLocaleObserverForWarning(): void {
     return;
   }
 
-  try {
-    utils.addLocaleChangeListener(() => {
-      logFloorpHub(
-        "Locale change detected via I18nUtils; updating warning texts.",
-      );
-      applyFloorpHubWarningTexts();
-    });
+  const onLocaleChange = () => {
+    logFloorpHub(
+      "Locale change detected via I18nUtils; updating warning texts.",
+    );
+    applyFloorpHubWarningTexts();
+  };
+  bindDocumentLifetime(doc, () => {}, () => {
+    // The API deliberately calls onLocaleChange immediately; preserve that.
+    utils.addLocaleChangeListener(onLocaleChange);
     localeObserverBound = true;
-    logFloorpHub("Bound locale change observer for warning banner.");
-  } catch (error) {
-    console.error("Floorp Hub:", "Failed to bind locale observer", error);
-  }
+    return () => utils.removeLocaleChangeListener(onLocaleChange);
+  }, () => {
+    localeObserverBound = false;
+  }, (error) => {
+    console.error("Floorp Hub:", "Failed locale observer lifecycle", error);
+  });
 }
 
 function applyFloorpHubWarningTexts(): void {
@@ -863,6 +908,7 @@ function applyFloorpStartWarningTexts(): void {
 function getI18nUtils(): {
   getPrimaryBrowserLocaleMapped(): string;
   addLocaleChangeListener(callback: (locale: string) => void): void;
+  removeLocaleChangeListener(callback: (locale: string) => void): void;
   // Optional translation provider APIs added to I18nUtils
   getTranslationProvider?: () => {
     t?: (key: string, opts?: Record<string, unknown>) => string | string[];
@@ -886,6 +932,7 @@ function getI18nUtils(): {
       I18nUtils: {
         getPrimaryBrowserLocaleMapped(): string;
         addLocaleChangeListener(callback: (locale: string) => void): void;
+        removeLocaleChangeListener(callback: (locale: string) => void): void;
       };
     };
     i18nUtilsInstance = module.I18nUtils;
@@ -1045,27 +1092,29 @@ function startFloorpStartObserver(): void {
 }
 
 function initHideNewTabPage(): void {
-  const run = (): void => {
-    hideNewTabPage();
-    startFloorpStartObserver();
-  };
-
-  if (doc.readyState === "loading") {
-    doc.addEventListener("DOMContentLoaded", run, { once: true });
-  } else {
-    run();
-  }
-
-  // Legacy UI relies on this notification; harmless under the redesign.
-  try {
-    Services.obs.addObserver(hideNewTabPage, "home-pane-loaded");
-  } catch (error) {
-    console.error(
-      "[Floorp Hub]",
-      "Failed to add home-pane-loaded observer",
-      error,
-    );
-  }
+  bindDocumentLifetime(
+    doc,
+    () => {
+      hideNewTabPage();
+      startFloorpStartObserver();
+    },
+    () => {
+      // Observer service holds this callback strongly; release it on unload.
+      Services.obs.addObserver(hideNewTabPage, "home-pane-loaded");
+      return () =>
+        Services.obs.removeObserver(hideNewTabPage, "home-pane-loaded");
+    },
+    () => {
+      floorpStartObserver?.disconnect();
+      floorpStartObserver = null;
+    },
+    (error) =>
+      console.error(
+        "[Floorp Hub]",
+        "Home-pane observer lifecycle failed",
+        error,
+      ),
+  );
 }
 
 let floorpIPProtectionDisclosure:
