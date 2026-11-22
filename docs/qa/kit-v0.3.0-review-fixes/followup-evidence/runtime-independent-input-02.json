@@ -1,0 +1,15 @@
+{
+  "observedAtUtc": "2026-10-09T15:46:26.843350+00:00",
+  "HEAD": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "status": "",
+  "filesSHA256": {
+    ".github/workflows/scripts/qa3_native_io.py": "8bbea4abfc5d8cf1a3b70a275287c7fe6725b96fa17afb4c74ef51814b7d142e",
+    ".github/workflows/scripts/test_qa3_native_io.py": "0dae5c088abd51a84338a62c977a7a43e5765dfb1fd8a0647090b10fcab625a6",
+    ".github/workflows/scripts/qa3_build_profile.py": "e7f84f39d36355074e15e3d192249cd5adde954110fc5f820b2bda6c47dbc00a",
+    ".github/workflows/scripts/setup-floorp.sh": "9bf55ac325397d76d3d162e681ba2bc47facc8b2ab61e68c2646e2d1b95f651c",
+    ".github/workflows/scripts/qa3_mozlog.py": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+    ".github/workflows/scripts/test_qa3_build_profile.py": "5b8452881d0107ea3f19643e1d36d380fd718753b9b9e51e440dc5642ded9c96",
+    ".github/workflows/scripts/test_qa3_mozlog.py": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063"
+  },
+  "scope": "readonly independent native I/O regression review; no build/browser/CI operation"
+}
