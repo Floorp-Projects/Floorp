@@ -8,7 +8,11 @@ export type HistoryList = HTMLElement & {
   emptyState: Element | null;
 };
 export type HistoryPanel = LitElement & {
-  controller: { searchQuery: string; sortOption: string };
+  controller: {
+    searchQuery: string;
+    searchResults: unknown[] | null;
+    sortOption: string;
+  };
   lists: NodeListOf<HistoryList>;
 };
 export type BookmarksPanel = LitElement & {
