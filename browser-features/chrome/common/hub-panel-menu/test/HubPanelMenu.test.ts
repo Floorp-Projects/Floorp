@@ -95,6 +95,11 @@ function testOwnedViewUsesItsExactElementAndSettingsSlot(): void {
       "legacy menu class is preserved",
     );
     assertEquals(
+      view.node.getAttribute("tabindex"),
+      "-1",
+      "owned HUB button is programmatically focusable",
+    );
+    assertEquals(
       view.node.getAttribute("label"),
       HUB_MENU_LABEL_FALLBACK,
       "missing translation uses the default label",
@@ -153,7 +158,6 @@ function testFocusClaimRestoresOnlyWithoutUserMovement(): void {
       buttonId: "stage2-owned-focus-old",
       focusContext,
     }).view;
-    oldView.node.setAttribute("tabindex", "0");
     assert(
       oldView.node.isConnected && oldView.node.getClientRects().length > 0,
       "old view fixture is connected and visible",
@@ -185,7 +189,6 @@ function testFocusClaimRestoresOnlyWithoutUserMovement(): void {
       enabled: false,
       focusContext,
     }).view;
-    replacement.node.setAttribute("tabindex", "0");
     assert(
       document.activeElement === settings,
       "disabled replacement does not consume the claim",
@@ -202,7 +205,6 @@ function testFocusClaimRestoresOnlyWithoutUserMovement(): void {
       buttonId: "stage2-owned-focus-after-movement",
       focusContext,
     }).view;
-    movedView.node.setAttribute("tabindex", "0");
     assert(
       document.activeElement === fixture.settings,
       "moving away and back cancels restoration",

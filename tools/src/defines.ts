@@ -38,12 +38,32 @@ export const PROJECT_ROOT = path.resolve(
   "..",
 );
 
+export function resolveTestProfilePath(profileOverride?: string): string {
+  if (profileOverride === undefined) {
+    return path.join(PROJECT_ROOT, "_dist", "profile", "test");
+  }
+  if (!path.isAbsolute(profileOverride)) {
+    throw new Error("FLOORP_TEST_PROFILE_DIR must be absolute");
+  }
+  return path.normalize(profileOverride);
+}
+
+function readTestProfileOverride(): string | undefined {
+  const envPermission = Deno.permissions.querySync({
+    name: "env",
+    variable: "FLOORP_TEST_PROFILE_DIR",
+  });
+  return envPermission.state === "granted"
+    ? Deno.env.get("FLOORP_TEST_PROFILE_DIR")
+    : undefined;
+}
+
 export const PATHS = {
   root: PROJECT_ROOT,
   bin_root: path.join(PROJECT_ROOT, "_dist", "bin"),
   noraneko_out: path.join(PROJECT_ROOT, "_dist", "noraneko"),
   buildid2: path.join(PROJECT_ROOT, "_dist", "buildid2"),
-  profile_test: path.join(PROJECT_ROOT, "_dist", "profile", "test"),
+  profile_test: resolveTestProfilePath(readTestProfileOverride()),
   loader_features: path.join(PROJECT_ROOT, "bridge/loader-features"),
   features_chrome: path.join(PROJECT_ROOT, "browser-features/chrome"),
   i18n: path.join(PROJECT_ROOT, "i18n"),
@@ -52,33 +72,31 @@ export const PATHS = {
   mozbuild_output: path.join(PROJECT_ROOT, "obj-artifact-build-output/dist"),
 } as const;
 
-export const BIN_DIR =
-  PLATFORM !== "darwin"
-    ? path.join(PATHS.bin_root, BRANDING.base_name)
-    : path.join(
-        PATHS.bin_root,
-        BRANDING.base_name,
-        `${BRANDING.display_name}.app`,
-        "Contents",
-        "Resources",
-      );
+export const BIN_DIR = PLATFORM !== "darwin"
+  ? path.join(PATHS.bin_root, BRANDING.base_name)
+  : path.join(
+    PATHS.bin_root,
+    BRANDING.base_name,
+    `${BRANDING.display_name}.app`,
+    "Contents",
+    "Resources",
+  );
 
 export const BIN_ROOT_DIR = PATHS.bin_root;
 export const BIN_PATH = path.join(BIN_DIR, BRANDING.base_name);
 
 export const PROD_BIN_DIR = "../obj-artifact-build-output/dist/bin";
 
-export const BIN_PATH_EXE =
-  PLATFORM !== "darwin"
-    ? BIN_PATH + (PLATFORM === "windows" ? ".exe" : "-bin")
-    : path.join(
-        PATHS.bin_root,
-        BRANDING.base_name,
-        `${BRANDING.display_name}.app`,
-        "Contents",
-        "MacOS",
-        BRANDING.base_name,
-      );
+export const BIN_PATH_EXE = PLATFORM !== "darwin"
+  ? BIN_PATH + (PLATFORM === "windows" ? ".exe" : "-bin")
+  : path.join(
+    PATHS.bin_root,
+    BRANDING.base_name,
+    `${BRANDING.display_name}.app`,
+    "Contents",
+    "MacOS",
+    BRANDING.base_name,
+  );
 
 export const BIN_VERSION = path.join(BIN_DIR, "nora.version.txt");
 
@@ -89,23 +107,23 @@ export const DEV_SERVER = {
 
 export type BinArchive =
   | {
-      filename: string;
-      format: "zip";
-      platform: "windows";
-      architecture: "x86_64";
-    }
+    filename: string;
+    format: "zip";
+    platform: "windows";
+    architecture: "x86_64";
+  }
   | {
-      filename: string;
-      format: "tar.xz";
-      platform: "linux";
-      architecture: "x86_64" | "aarch64";
-    }
+    filename: string;
+    format: "tar.xz";
+    platform: "linux";
+    architecture: "x86_64" | "aarch64";
+  }
   | {
-      filename: string;
-      format: "dmg";
-      platform: "darwin";
-      architecture: "universal";
-    };
+    filename: string;
+    format: "dmg";
+    platform: "darwin";
+    architecture: "universal";
+  };
 
 export function getBinArchive(): BinArchive {
   if (PLATFORM === "windows") {

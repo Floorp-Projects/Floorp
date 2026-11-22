@@ -281,6 +281,7 @@ export function mountOwnedHubPanelMenuView(
           const element = (
             <xul:toolbarbutton
               id={options.buttonId}
+              tabindex="-1"
               class="subviewbutton"
               label={title()}
             />
