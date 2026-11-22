@@ -10,6 +10,12 @@ import type {
 } from "../common/defines.ts";
 import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
 import type { NotesStorageFunctions } from "../common/notes-storage-types.ts";
+import { HUB_DEV_PAGES } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
 
 type SettingsPageParentFunctions =
   & NRSettingsParentFunctions
@@ -33,10 +39,7 @@ export class NRSettingsChild extends JSWindowActorChild {
       !document ||
       !window ||
       !(
-        document.location.port === "5183" ||
-        document.location.port === "5186" ||
-        document.location.port === "5187" ||
-        document.location.port === "5188" ||
+        launchDevPort.isTrustedPort(document.location.port, HUB_DEV_PAGES) ||
         document.location.href.startsWith("chrome://noraneko-settings/") ||
         document.location.href.split(/[?#]/)[0] === "about:hub"
       )
@@ -122,8 +125,10 @@ export class NRSettingsChild extends JSWindowActorChild {
     >(
       {
         getNotesSnapshot: () => this.sendQuery("getNotesSnapshot"),
-        readNotesSyncState: (snapshot) => this.sendQuery("readNotesSyncState", { snapshot }),
-        writeNotesPref: (value, context, baseValue) => this.sendQuery("writeNotesPref", { value, context, baseValue }),
+        readNotesSyncState: (snapshot) =>
+          this.sendQuery("readNotesSyncState", { snapshot }),
+        writeNotesPref: (value, context, baseValue) =>
+          this.sendQuery("writeNotesPref", { value, context, baseValue }),
         getContextMenuCatalog: (): Promise<ContextMenuCatalogSnapshot> => {
           return this.NRSGetContextMenuCatalog();
         },

@@ -1,0 +1,47 @@
+{
+  "ruff": {
+    "command": [
+      "/workspace/qa-review-v030/tooling/python-lint/bin/ruff",
+      "check",
+      "--no-cache",
+      "--config",
+      "pyproject.toml",
+      ".github/workflows/scripts/qa3_build_profile.py",
+      ".github/workflows/scripts/test_qa3_build_profile.py"
+    ],
+    "exit": 0
+  },
+  "format": {
+    "command": [
+      "/workspace/qa-review-v030/tooling/python-lint/bin/ruff",
+      "format",
+      "--check",
+      "--no-cache",
+      "--config",
+      "pyproject.toml",
+      ".github/workflows/scripts/qa3_build_profile.py",
+      ".github/workflows/scripts/test_qa3_build_profile.py"
+    ],
+    "exit": 0
+  },
+  "bash": {
+    "command": [
+      "bash",
+      "-n",
+      ".github/workflows/scripts/setup-floorp.sh"
+    ],
+    "exit": 0
+  },
+  "diff": {
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "--",
+      ".github/workflows/scripts/qa3_build_profile.py",
+      ".github/workflows/scripts/test_qa3_build_profile.py",
+      ".github/workflows/scripts/setup-floorp.sh"
+    ],
+    "exit": 128
+  }
+}

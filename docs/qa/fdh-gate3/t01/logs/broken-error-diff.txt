@@ -1,0 +1,12 @@
+diff --git a/browser-features/chrome/common/panel-sidebar/data/static-panels.ts b/browser-features/chrome/common/panel-sidebar/data/static-panels.ts
+index 21d0a74a9701..84c310e28b70 100644
+--- a/browser-features/chrome/common/panel-sidebar/data/static-panels.ts
++++ b/browser-features/chrome/common/panel-sidebar/data/static-panels.ts
+@@ -7,6 +7,7 @@ import { launchDevPorts } from "#modules/common/dev-port-offset.ts";
+ 
+ /** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+ const launchDevPort = launchDevPorts();
++const qa3Broken = ;
+ function svgToDataUrl(svgContent: string): string {
+   const svgBytes = new TextEncoder().encode(svgContent);
+   let binString = "";

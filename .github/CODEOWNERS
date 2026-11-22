@@ -1,0 +1,11 @@
+# Protect workflow definitions, local actions, and the ownership rules.
+/.github/CODEOWNERS @Ryosuke-Asano
+/.github/workflows/ @Ryosuke-Asano
+/.github/actions/ @Ryosuke-Asano
+
+# FDH receipt validation, trusted runner, and evidence commands.
+/tools/fdh.ts @Ryosuke-Asano
+/tools/src/fdh_review.ts @Ryosuke-Asano
+/tools/src/fdh_receipt_permissions.cjs @Ryosuke-Asano
+/tools/src/fdh_trusted_review*.ts @Ryosuke-Asano
+/tools/src/fdh_evidence*.ts @Ryosuke-Asano
