@@ -139,20 +139,21 @@ function NumberField({
   // Zag derives steps from the controlled value, which is pinned to the saved
   // pref — stepping would restart from it and ignore the visible draft. Step
   // from the parsed draft instead so repeated and post-edit steps accumulate.
-  const onStepKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
-    event.preventDefault();
-    if (composing.current) return;
+  const stepBy = (amount: number) => {
     const parsed = text.trim() === "" ? 0 : parseLocalizedNumber(text, formatter);
     const base = Number.isFinite(parsed) ? parsed : value;
-    const next = Math.max(
-      min,
-      Math.round(base + (event.key === "ArrowUp" ? 1 : -1)),
-    );
+    const next = Math.max(min, Math.round(base + amount));
     setText(formatter.format(next));
     if (next !== value) {
       onCommit(next);
     }
+  };
+  const onStepKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    event.preventDefault();
+    if (composing.current) return;
+    const step = event.shiftKey ? 10 : 1;
+    stepBy(step * (event.key === "ArrowUp" ? 1 : -1));
   };
 
   return (
@@ -193,7 +194,20 @@ function NumberField({
             }}
           />
         </NumberInput.Input>
-        <NumberInput.Control />
+        <NumberInput.Control>
+          <NumberInput.IncrementTrigger
+            onClick={(event) => {
+              event.preventDefault();
+              stepBy(1);
+            }}
+          />
+          <NumberInput.DecrementTrigger
+            onClick={(event) => {
+              event.preventDefault();
+              stepBy(-1);
+            }}
+          />
+        </NumberInput.Control>
       </NumberInput.Root>
     </div>
   );

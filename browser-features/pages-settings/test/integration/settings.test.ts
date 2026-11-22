@@ -705,11 +705,18 @@ export async function runPageTests() {
         );
         await pause(80);
       };
-      const step = async (key: string) => {
+      const step = async (key: string, shiftKey = false) => {
         target.dispatchEvent(
-          new KeyboardEvent("keydown", { bubbles: true, key }),
+          new KeyboardEvent("keydown", { bubbles: true, key, shiftKey }),
         );
         await pause(80);
+      };
+      const trigger = (part: string) => {
+        const control = target.parentElement?.querySelector(
+          `[data-part="${part}"]`,
+        );
+        assert(control, `Stepper ${part} missing`);
+        control.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       };
       try {
         target.focus();
@@ -732,6 +739,19 @@ export async function runPageTests() {
         await step("ArrowDown");
         await step("ArrowDown");
         assertEquals(target.value, "122", "Down steps did not accumulate");
+        await step("ArrowUp", true);
+        assertEquals(target.value, "132", "Shift step was not 10 units");
+        trigger("increment-trigger");
+        await pause(80);
+        assertEquals(target.value, "133", "Plus button ignored the draft");
+        trigger("decrement-trigger");
+        await pause(80);
+        assertEquals(target.value, "132", "Minus button ignored the draft");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          132,
+          "Button step not saved",
+        );
       } finally {
         target.blur();
         await pause(80);
