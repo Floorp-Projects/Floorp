@@ -432,12 +432,12 @@ export class MouseGestureController {
       return;
     }
 
-    // The controller may have missed the physical right-button mouseup while
-    // the active browser window was replacing or closing a tab. A later move
-    // with no secondary-button bit proves the stored trail is stale.
+    // A plain move without the secondary-button bit clears a stale trail.
+    // macOS can deliver the final secondary drag without that bit before mouseup.
     if (
       this.isGestureActive &&
       !this.isWheelGestureFired &&
+      event.button !== 2 &&
       !this.isSecondaryButtonPhysicallyDown(event)
     ) {
       this.resetInteractionState();
