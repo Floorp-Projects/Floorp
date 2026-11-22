@@ -776,6 +776,45 @@ export async function runPageTests() {
         );
         await step("ArrowUp");
         assertEquals(target.value, "61", "Focus lost after button press");
+        target.dispatchEvent(
+          new CompositionEvent("compositionstart", { bubbles: true, data: "" }),
+        );
+        const composingArrow = new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "ArrowUp",
+        });
+        target.dispatchEvent(composingArrow);
+        await pause(80);
+        assertEquals(target.value, "61", "Composition arrow stepped the value");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          61,
+          "Composition arrow committed a step",
+        );
+        target.dispatchEvent(
+          new CompositionEvent("compositionend", { bubbles: true, data: "" }),
+        );
+        const nativeComposing = new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "ArrowUp",
+          isComposing: true,
+        });
+        target.dispatchEvent(nativeComposing);
+        await pause(80);
+        assertEquals(
+          nativeComposing.defaultPrevented,
+          false,
+          "isComposing arrow was suppressed",
+        );
+        assertEquals(target.value, "61", "isComposing arrow stepped the value");
+        await step("ArrowUp");
+        assertEquals(
+          target.value,
+          "62",
+          "Step did not resume after composition",
+        );
       } finally {
         target.blur();
         await pause(80);

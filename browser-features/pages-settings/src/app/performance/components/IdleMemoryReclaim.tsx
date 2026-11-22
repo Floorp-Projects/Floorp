@@ -159,8 +159,11 @@ function NumberField({
   };
   const onStepKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    // During IME composition, arrows navigate the candidate list; do not
+    // suppress the event. nativeEvent.isComposing covers keydowns that fire
+    // before React delivers compositionstart.
+    if (composing.current || event.nativeEvent.isComposing) return;
     event.preventDefault();
-    if (composing.current) return;
     const step = event.shiftKey ? 10 : 1;
     stepBy(step * (event.key === "ArrowUp" ? 1 : -1));
   };
