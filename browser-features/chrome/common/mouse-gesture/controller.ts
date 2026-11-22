@@ -33,6 +33,7 @@ export class MouseGestureController {
   private isWheelGestureSuppressionActive = false;
   private wheelGestureSuppressionTimeoutId: number | null = null;
   private mouseTrail: { x: number; y: number }[] = [];
+  private maxDistanceFromStartSquared = 0;
   private display: GestureDisplay;
   private eventListenersAttached = false;
   private pressedButtons = new Set<number>();
@@ -190,19 +191,8 @@ export class MouseGestureController {
     return config.contextMenu?.minDistance ?? 10;
   }
 
-  /**
-   * Calculate total movement distance from start to end of trail.
-   */
-  private getTotalMovement(): number {
-    if (this.mouseTrail.length < 2) return 0;
-
-    const startPoint = this.mouseTrail[0];
-    const lastPoint = this.mouseTrail[this.mouseTrail.length - 1];
-
-    const dx = lastPoint.x - startPoint.x;
-    const dy = lastPoint.y - startPoint.y;
-
-    return Math.sqrt(dx * dx + dy * dy);
+  private hasReachedActivationDistance(distance: number): boolean {
+    return this.maxDistanceFromStartSquared >= distance * distance;
   }
 
   private clearPreventionTimeout(): void {
@@ -274,6 +264,7 @@ export class MouseGestureController {
     this.isRockerGestureFired = false;
     this.clearWheelGestureState();
     this.mouseTrail = [];
+    this.maxDistanceFromStartSquared = 0;
     this.display.hide();
     this.pressedButtons.clear();
   }
@@ -470,6 +461,13 @@ export class MouseGestureController {
       }
     }
 
+    const start = this.mouseTrail[0];
+    const dx = point.x - start.x;
+    const dy = point.y - start.y;
+    this.maxDistanceFromStartSquared = Math.max(
+      this.maxDistanceFromStartSquared,
+      dx * dx + dy * dy,
+    );
     this.mouseTrail.push(point);
 
     // Keep the trail size bounded to avoid excessive redraw/recognition cost
@@ -483,10 +481,9 @@ export class MouseGestureController {
     this.display.updateTrail(this.mouseTrail);
 
     // Perform real-time recognition for instant feedback
-    const totalMovement = this.getTotalMovement();
     const activationDistance = this.getActivationDistance();
 
-    if (totalMovement >= activationDistance) {
+    if (this.hasReachedActivationDistance(activationDistance)) {
       const { recognizer, shapeDb } = this.getRecognizerAndShapeDb();
       const minScore = this.getMinScore();
       const result = recognize(
@@ -578,10 +575,9 @@ export class MouseGestureController {
     const preventionTimeout = config.contextMenu.preventionTimeout;
 
     // Check if we moved enough to be considered a gesture
-    const totalMovement = this.getTotalMovement();
     const activationDistance = this.getActivationDistance();
 
-    if (totalMovement < activationDistance) {
+    if (!this.hasReachedActivationDistance(activationDistance)) {
       // Not enough movement - allow context menu
       this.isContextMenuPrevented = false;
       this.resetGestureState();
@@ -725,7 +721,7 @@ export class MouseGestureController {
     if (
       event.button === 2 && this.isGestureActive &&
       !this.isWheelGestureFired && !this.isRockerGestureFired &&
-      this.getTotalMovement() < this.getActivationDistance()
+      !this.hasReachedActivationDistance(this.getActivationDistance())
     ) {
       // A page may cancel this menu and continue the held-button interaction
       // with a drag or rocker. Only the real release/interruption ends it.
