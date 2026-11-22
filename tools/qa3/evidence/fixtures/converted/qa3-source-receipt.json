@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "qa3-receipt",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-evidence-converter",
+      "kind": "agent",
+      "grantedBy": "authenticated-dsh-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:qa3-source-shadow-9f8d8753be7d",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "task-owner",
+        "label": "QA3 source shadow shadow at 9f8d8753be7d"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:qa3-source-shadow-42384157436",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "job-owner",
+        "label": "workflow run 42384157436 attempt 1"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:42384157436",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:42384157436:1",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:qa3-source-shadow-42384157436",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "session-owner",
+        "context": "GitHub Actions source-shadow job"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:floorp-9f8d8753be7d",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "workspace-owner",
+        "path": "Floorp worktree pinned by sourceHead"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:publication-42384157436",
+        "issuer": "host-authorization",
+        "owner": "UNVERIFIED",
+        "ownerRole": "approver",
+        "label": "publication authorization (publicationAuthorized=false)",
+        "decision": "pending"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:qa3-source-shadow-9f8d8753be7d",
+        "type": "task-has-job",
+        "to": "scheduler:job:qa3-source-shadow-42384157436"
+      },
+      {
+        "from": "scheduler:job:qa3-source-shadow-42384157436",
+        "type": "job-has-run",
+        "to": "executor:run:42384157436"
+      },
+      {
+        "from": "executor:run:42384157436",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:42384157436:1"
+      },
+      {
+        "from": "executor:run:42384157436",
+        "type": "run-uses-session",
+        "to": "host:session:qa3-source-shadow-42384157436"
+      },
+      {
+        "from": "executor:run:42384157436",
+        "type": "run-in-workspace",
+        "to": "host:workspace:floorp-9f8d8753be7d"
+      },
+      {
+        "from": "host-authorization:approval:publication-42384157436",
+        "type": "approval-for-job",
+        "to": "scheduler:job:qa3-source-shadow-42384157436"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": null,
+      "reason": "sourceVerdict=PASS"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "Linux",
+      "arch": "x86_64"
+    },
+    "build": {
+      "commit": "9f8d8753be7d6cf16392af9eb9d165827e209828",
+      "repository": "Floorp-Projects/Floorp",
+      "workflowRun": "42384157436"
+    },
+    "packageDigest": null,
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "9f8d8753be7d6cf16392af9eb9d165827e209828",
+        "pin": "floorp@9f8d8753be7d6cf16392af9eb9d165827e209828"
+      },
+      "python": {
+        "version": "3.12.3"
+      },
+      "deno": {
+        "version": "deno 2.9.7 (stable, release, x86_64-unknown-linux-gnu)"
+      },
+      "node": {
+        "version": "v22.23.4"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:42384157436",
+      "attempt": 1,
+      "startedAt": null,
+      "endedAt": null,
+      "result": "passed",
+      "exitCode": 0,
+      "logRef": "workflow run 42384157436",
+      "notes": "The source receipt records no wall-clock start/end for the workflow attempt; startedAt/endedAt stay null."
+    }
+  ],
+  "operations": [
+    {
+      "input": "tools/qa3/source-plan.json (sha256 d1c85a232596c8b7...)",
+      "target": "fixed host source plan",
+      "order": 1,
+      "observation": "validated 109 planned cases; executedCases=109"
+    },
+    {
+      "input": "group deno-host (60 cases, exitCode 0)",
+      "target": "source-plan group execution",
+      "order": 2,
+      "observation": "verdict PASS"
+    },
+    {
+      "input": "group node-intake (28 cases, exitCode 0)",
+      "target": "source-plan group execution",
+      "order": 3,
+      "observation": "verdict PASS"
+    },
+    {
+      "input": "group python-provenance (21 cases, exitCode 0)",
+      "target": "source-plan group execution",
+      "order": 4,
+      "observation": "verdict PASS"
+    },
+    {
+      "input": "tools/qa3/coverage.json (sha256 2882510ea1f7b32b...)",
+      "target": "receipt coverage block",
+      "order": 5,
+      "observation": "publicationAuthorized=False; productVerdict=UNVERIFIED"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "source-head-pin",
+      "expected": "9f8d8753be7d6cf16392af9eb9d165827e209828",
+      "actual": "9f8d8753be7d6cf16392af9eb9d165827e209828",
+      "passed": true
+    },
+    {
+      "name": "working-tree-clean",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "name": "planned-equals-executed-cases",
+      "expected": "109",
+      "actual": "109",
+      "passed": true
+    },
+    {
+      "name": "shadow-stage-does-not-authorize-publication",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    },
+    {
+      "name": "product-verdict-stays-unverified-in-shadow",
+      "expected": "UNVERIFIED",
+      "actual": "UNVERIFIED",
+      "passed": true
+    },
+    {
+      "name": "step:deno-host",
+      "expected": "PASS",
+      "actual": "PASS",
+      "passed": true
+    },
+    {
+      "name": "step:node-intake",
+      "expected": "PASS",
+      "actual": "PASS",
+      "passed": true
+    },
+    {
+      "name": "step:python-provenance",
+      "expected": "PASS",
+      "actual": "PASS",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "Linux x86_64 disposable CI host running the fixed source plan",
+    "network": "unknown",
+    "matchesTarget": false,
+    "deviations": [
+      "host unit tests only: no product artifact, native launch or GUI executes",
+      "productVerdict and runtimeQualification remain UNVERIFIED"
+    ],
+    "notes": "The Deno host subset runs without network/run/environment permission; the receipt does not record the network posture of the Node intake and Python provenance groups."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "tools/qa3/source-plan.json",
+        "sha256": "d1c85a232596c8b7557f6e2b91a75237602ccfa30d6e68860013e4d1f5533436"
+      },
+      {
+        "path": "tools/qa3/coverage.json",
+        "sha256": "2882510ea1f7b32b151d9c588facbf490c1a08bebbf27a0c462c3c6d70428d16"
+      },
+      {
+        "path": "deno.lock",
+        "sha256": "1eb6c7fa6538a850e216736323edb3eedee85754cb0500e1f171ab945af62d4e"
+      },
+      {
+        "path": "deno.json",
+        "sha256": "30532939e69cdbe0ca712a0b4e5b16f651ff1e83c28de6230ef9c737061ecfda"
+      },
+      {
+        "path": "tools/qa3/deno-host-imports.json",
+        "sha256": "00c231a67b038651c81890a01ee06eb711f76279a4ad1d217a2506deefade16b"
+      },
+      {
+        "path": "tools/qa3/deno-host.lock",
+        "sha256": "c89a55ae88d52eb3f98411307137838e10fb2795b71be6521eb4e5774caae391"
+      },
+      {
+        "path": "tools/qa3/source.py",
+        "sha256": "b55e65f689ca4c544103a63ae04aebb37f92590f012ea1d4b5d0edd171e9b159"
+      },
+      {
+        "path": "tools/src/colocated_test_runner.test.ts",
+        "sha256": "5e5794a5b1490e8d6429313f115d27989e7ca168fa8c73918b9f87c8ae200d1b"
+      },
+      {
+        "path": "tools/src/smoke_runner.test.ts",
+        "sha256": "755f669c8bbb4c82009aa06da2150e47c8b30831e1e9a7425b376710f3f2d74d"
+      },
+      {
+        "path": "tools/src/utils.test.ts",
+        "sha256": "cc23073ba1988b511e3baea303b16590b4e661c01a877544480fc9a3bf75e24d"
+      },
+      {
+        "path": "tools/test-final-package-qa-source.mjs",
+        "sha256": "470731996f09d9cb43cfafa58750c09d21d27658d3ca3e91c5b1d4e9b8baa884"
+      },
+      {
+        "path": "tools/test_validate_runtime_packaging_provenance.py",
+        "sha256": "a4d05f61daadbef7892ecd518d7dcbd3f23298a66d5e5127b039572c9bfaa690"
+      },
+      {
+        "path": "tools/test_validate_runtime_source_provenance.py",
+        "sha256": "7622dd04c6fc17945443358ccf5ac6792687c03354657200e5954231777e7efe"
+      }
+    ],
+    "unchangedDuringRun": true,
+    "deviations": [],
+    "notes": "Plan, coverage, Deno config/lock/import-map, runner and test-file digests are the ones the receipt itself records; sourceHead equals expectedSourceHead."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "unknown",
+    "notes": "The receipt records no teardown step; the disposable CI host is discarded after the run."
+  },
+  "limitations": [
+    "Shadow source receipt: productVerdict/runtimeQualification stay UNVERIFIED and publicationAuthorized=false; no shipped package is qualified here.",
+    "Source unit tests do not execute the final product; every coverage artifact keeps verdict UNVERIFIED.",
+    "DSH toolchain pin is UNVERIFIED in the source receipt; only the Python/Deno/Node versions and the Floorp source commit are pinned.",
+    "No wall-clock attempt timestamps are recorded by the receipt, so attempts carry null startedAt/endedAt.",
+    "No visual (look-and-feel) judgment was performed for this record; visualJudge is null.",
+    "Task/Job/Session/Workspace ownership is UNVERIFIED: the receipt names no owner, so owners are marked UNVERIFIED.",
+    "No defect reproduction target is in scope; the receipt reports source-contract outcomes only."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "No defect reproduction target: the receipt reports source contract test outcomes for one fixed plan."
+  }
+}

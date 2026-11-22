@@ -1,0 +1,321 @@
+contracts	Set up job	﻿2026-10-09T15:10:36.1545001Z Current runner version: '2.337.0'
+contracts	Set up job	2026-10-09T15:10:36.1567253Z ##[group]Runner Image Provisioner
+contracts	Set up job	2026-10-09T15:10:36.1567857Z Hosted Compute Agent
+contracts	Set up job	2026-10-09T15:10:36.1568322Z Version: 20261002.596
+contracts	Set up job	2026-10-09T15:10:36.1568738Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+contracts	Set up job	2026-10-09T15:10:36.1569197Z Build Date: 2026-10-02T22:28:27Z
+contracts	Set up job	2026-10-09T15:10:36.1569739Z Worker ID: {34ec34bf-5e5b-4b16-a596-2b07c15da2e4}
+contracts	Set up job	2026-10-09T15:10:36.1570243Z Region: southcentralus
+contracts	Set up job	2026-10-09T15:10:36.1570654Z Cloud: Azure
+contracts	Set up job	2026-10-09T15:10:36.1571042Z ##[endgroup]
+contracts	Set up job	2026-10-09T15:10:36.1571884Z ##[group]Operating System
+contracts	Set up job	2026-10-09T15:10:36.1572382Z Ubuntu
+contracts	Set up job	2026-10-09T15:10:36.1572727Z 24.04.5
+contracts	Set up job	2026-10-09T15:10:36.1573316Z LTS
+contracts	Set up job	2026-10-09T15:10:36.1573674Z ##[endgroup]
+contracts	Set up job	2026-10-09T15:10:36.1574040Z ##[group]Runner Image
+contracts	Set up job	2026-10-09T15:10:36.1574516Z Image: ubuntu-24.04
+contracts	Set up job	2026-10-09T15:10:36.1574898Z Version: 20261004.327.1
+contracts	Set up job	2026-10-09T15:10:36.1575556Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+contracts	Set up job	2026-10-09T15:10:36.1576783Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+contracts	Set up job	2026-10-09T15:10:36.1577484Z ##[endgroup]
+contracts	Set up job	2026-10-09T15:10:36.1578217Z ##[group]GITHUB_TOKEN Permissions
+contracts	Set up job	2026-10-09T15:10:36.1579629Z Contents: read
+contracts	Set up job	2026-10-09T15:10:36.1580000Z Metadata: read
+contracts	Set up job	2026-10-09T15:10:36.1580418Z ##[endgroup]
+contracts	Set up job	2026-10-09T15:10:36.1581933Z Secret source: Actions
+contracts	Set up job	2026-10-09T15:10:36.1582520Z Cache mode: write
+contracts	Set up job	2026-10-09T15:10:36.1583177Z Prepare workflow directory
+contracts	Set up job	2026-10-09T15:10:36.1820376Z Prepare all required actions
+contracts	Set up job	2026-10-09T15:10:36.1854148Z Getting action download info
+contracts	Set up job	2026-10-09T15:10:36.4436720Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+contracts	Set up job	2026-10-09T15:10:36.7386674Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+contracts	Set up job	2026-10-09T15:10:37.2756983Z Complete job name: contracts
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-10-09T15:10:37.3495122Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3495744Z with:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3496017Z   persist-credentials: false
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3496335Z   sparse-checkout: .github
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3496657Z   repository: Floorp-Projects/Floorp-Runtime
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3498979Z   token: ***
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3499241Z   ssh-strict: true
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3499526Z   ssh-user: git
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3499791Z   clean: true
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3500073Z   sparse-checkout-cone-mode: true
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3500402Z   fetch-depth: 1
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3500845Z   fetch-tags: false
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3501201Z   show-progress: true
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3501479Z   lfs: false
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3501906Z   submodules: false
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3502365Z   set-safe-directory: true
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.3503158Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4244494Z Syncing repository: Floorp-Projects/Floorp-Runtime
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4246532Z ##[group]Getting Git version info
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4247455Z Working directory is '/home/runner/work/Floorp-Runtime/Floorp-Runtime'
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4248509Z [command]/usr/bin/git version
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4325812Z git version 2.55.0
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4341362Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4354693Z Temporarily overriding HOME='/home/runner/work/_temp/30fb147d-b2b7-40d8-bfa2-e18963d3831c' before making global git config changes
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4356248Z Adding repository directory to the temporary git global config as a safe directory
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4359450Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Floorp-Runtime/Floorp-Runtime
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4821611Z Deleting the contents of '/home/runner/work/Floorp-Runtime/Floorp-Runtime'
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4825209Z ##[group]Initializing the repository
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.4829250Z [command]/usr/bin/git init /home/runner/work/Floorp-Runtime/Floorp-Runtime
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5721632Z hint: Using 'master' as the name for the initial branch. This default branch name
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5723147Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5723869Z hint: to use in all of your new repositories, which will suppress this warning,
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5724351Z hint: call:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5724611Z hint:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5724987Z hint: 	git config --global init.defaultBranch <name>
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5725383Z hint:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5725746Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5726322Z hint: 'development'. The just-created branch can be renamed via this command:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5726809Z hint:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5727068Z hint: 	git branch -m <name>
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5727352Z hint:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5727743Z hint: Disable this message with "git config set advice.defaultBranchName false"
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5728425Z Initialized empty Git repository in /home/runner/work/Floorp-Runtime/Floorp-Runtime/.git/
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.5738340Z [command]/usr/bin/git remote add origin https://github.com/Floorp-Projects/Floorp-Runtime
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6216497Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6217555Z ##[group]Disabling automatic garbage collection
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6219704Z [command]/usr/bin/git config --local gc.auto 0
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6525461Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6526366Z ##[group]Setting up auth
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6531331Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6564518Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6835584Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.6868595Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.7050535Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.7080895Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.7262634Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.7320615Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.7322037Z ##[group]Fetching the repository
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:37.7329916Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --filter=blob:none --depth=1 origin +0caeb02c0b1fe94f85d1d8271188064bd00256f6:refs/remotes/pull/83/merge
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7523086Z From https://github.com/Floorp-Projects/Floorp-Runtime
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7523873Z  * [new ref]           0caeb02c0b1fe94f85d1d8271188064bd00256f6 -> pull/83/merge
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7525890Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7526408Z ##[group]Determining the checkout info
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7527952Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7528298Z ##[group]Setting up sparse checkout
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7532627Z [command]/usr/bin/git sparse-checkout set .github
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7720623Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7721214Z ##[group]Checking out the ref
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:39.7724914Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/83/merge
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1644204Z Updating files:   0% (1/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1653706Z Updating files:   1% (4/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1673519Z Updating files:   2% (8/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1673871Z Updating files:   3% (12/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1676377Z Updating files:   4% (16/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1686856Z Updating files:   5% (20/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1687240Z Updating files:   6% (24/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1713341Z Updating files:   7% (27/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1713660Z Updating files:   8% (31/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1714420Z Updating files:   9% (35/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1714679Z Updating files:  10% (39/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1729112Z Updating files:  11% (43/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1729439Z Updating files:  12% (47/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1738574Z Updating files:  13% (50/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1739866Z Updating files:  14% (54/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1744037Z Updating files:  15% (58/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1747585Z Updating files:  16% (62/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1750199Z Updating files:  17% (66/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1752615Z Updating files:  18% (70/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1760876Z Updating files:  19% (73/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1787218Z Updating files:  20% (77/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1789351Z Updating files:  21% (81/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1797101Z Updating files:  22% (85/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1801604Z Updating files:  23% (89/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1804954Z Updating files:  24% (93/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1806332Z Updating files:  25% (96/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1814734Z Updating files:  26% (100/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1818406Z Updating files:  27% (104/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1820868Z Updating files:  28% (108/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1822512Z Updating files:  29% (112/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1840154Z Updating files:  30% (116/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1853016Z Updating files:  31% (120/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1857426Z Updating files:  32% (123/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1858722Z Updating files:  33% (127/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1864151Z Updating files:  34% (131/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1866856Z Updating files:  35% (135/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1868997Z Updating files:  36% (139/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1870916Z Updating files:  37% (143/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1873895Z Updating files:  38% (146/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1879704Z Updating files:  39% (150/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1881818Z Updating files:  40% (154/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1883965Z Updating files:  41% (158/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1885936Z Updating files:  42% (162/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1887090Z Updating files:  43% (166/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1887971Z Updating files:  44% (169/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1889347Z Updating files:  45% (173/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1937184Z Updating files:  46% (177/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1949357Z Updating files:  47% (181/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1951705Z Updating files:  48% (185/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1952974Z Updating files:  49% (189/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1956703Z Updating files:  50% (192/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1959515Z Updating files:  51% (196/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1961494Z Updating files:  52% (200/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1967025Z Updating files:  53% (204/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.1969775Z Updating files:  54% (208/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2008000Z Updating files:  55% (212/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2012997Z Updating files:  56% (216/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2014647Z Updating files:  57% (219/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2018158Z Updating files:  58% (223/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2019993Z Updating files:  59% (227/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2021433Z Updating files:  60% (231/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2023283Z Updating files:  61% (235/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2024187Z Updating files:  62% (239/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2025390Z Updating files:  63% (242/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2027250Z Updating files:  64% (246/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2028579Z Updating files:  65% (250/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2030019Z Updating files:  66% (254/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2031596Z Updating files:  67% (258/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2033550Z Updating files:  68% (262/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2035516Z Updating files:  69% (265/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2037915Z Updating files:  70% (269/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2040191Z Updating files:  71% (273/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2041963Z Updating files:  72% (277/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2043283Z Updating files:  73% (281/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2044474Z Updating files:  74% (285/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2046536Z Updating files:  75% (288/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2048362Z Updating files:  76% (292/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2050735Z Updating files:  77% (296/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2052514Z Updating files:  78% (300/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2055945Z Updating files:  79% (304/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2057588Z Updating files:  80% (308/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2060276Z Updating files:  81% (312/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2062236Z Updating files:  82% (315/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2064018Z Updating files:  83% (319/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2068655Z Updating files:  84% (323/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2069892Z Updating files:  85% (327/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2075051Z Updating files:  86% (331/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2076089Z Updating files:  87% (335/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2077013Z Updating files:  88% (338/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2078646Z Updating files:  89% (342/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2084946Z Updating files:  90% (346/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2086411Z Updating files:  91% (350/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2089120Z Updating files:  92% (354/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2094007Z Updating files:  93% (358/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2099357Z Updating files:  94% (361/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2106655Z Updating files:  95% (365/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2112096Z Updating files:  96% (369/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2121401Z Updating files:  97% (373/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2123746Z Updating files:  98% (377/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2125492Z Updating files:  99% (381/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2138878Z Updating files: 100% (384/384)
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.2139116Z Updating files: 100% (384/384), done.
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4844698Z Note: switching to 'refs/remotes/pull/83/merge'.
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4844944Z 
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4845097Z You are in 'detached HEAD' state. You can look around, make experimental
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4845394Z changes and commit them, and you can discard any commits you make in this
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4845682Z state without impacting any branches by switching back to a branch.
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4845857Z 
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4845971Z If you want to create a new branch to retain commits you create, you may
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4846268Z do so (now or later) by using -c with the switch command. Example:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4846738Z 
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4846808Z   git switch -c <new-branch-name>
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4846918Z 
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4846981Z Or undo this operation with:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4847074Z 
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4847126Z   git switch -
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4847200Z 
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4847327Z Turn off this advice by setting config variable advice.detachedHead to false
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4847519Z 
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4847725Z HEAD is now at 0caeb02c Merge 91e94b73617730d54ffee3d4ea42ff3a91463c7d into c74fe1a545d275cdd710ab44701c1ee0dd6b0eae
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4921297Z ##[endgroup]
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4965126Z [command]/usr/bin/git log -1 --format=%H
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4989774Z 0caeb02c0b1fe94f85d1d8271188064bd00256f6
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4997317Z ##[group]Removing auth
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.4999921Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.5028402Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.5480743Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.5507411Z http.https://github.com/.extraheader
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.5571434Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.5574926Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.5965476Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.5997569Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+contracts	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:41.6421386Z ##[endgroup]
+contracts	Check generated profiles and source/profdata negative contracts	﻿2026-10-09T15:10:41.6581882Z ##[group]Run mkdir -p "$RUNNER_TEMP/qa3-runtime"
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6582196Z [36;1mmkdir -p "$RUNNER_TEMP/qa3-runtime"[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6582368Z [36;1mset +e[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6582552Z [36;1mpython3 -B -m unittest discover -s .github/workflows/scripts \[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6583042Z [36;1m-p 'test_qa3_*.py' -v > "$RUNNER_TEMP/qa3-runtime/contracts.log" 2>&1[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6583271Z [36;1mstatus=$?[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6583462Z [36;1mprintf '%s\n' "$status" > "$RUNNER_TEMP/qa3-runtime/contracts.exit-code"[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6583706Z [36;1mcat "$RUNNER_TEMP/qa3-runtime/contracts.log"[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6583883Z [36;1mexit "$status"[0m
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6793178Z shell: /usr/bin/bash -e {0}
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:41.6793399Z ##[endgroup]
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2757561Z test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags (test_qa3_build_profile.BuildProfileTests.test_debug_test_override_is_idempotent_and_rejects_ambiguous_flags) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2758859Z test_invalid_targets_modes_and_profile_inputs_are_rejected (test_qa3_build_profile.BuildProfileTests.test_invalid_targets_modes_and_profile_inputs_are_rejected) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2759895Z test_legacy_debug_pgo_is_not_canonical_qualification (test_qa3_build_profile.BuildProfileTests.test_legacy_debug_pgo_is_not_canonical_qualification) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2761091Z test_legacy_debug_pgo_requires_explicit_noncanonical_policy (test_qa3_build_profile.BuildProfileTests.test_legacy_debug_pgo_requires_explicit_noncanonical_policy) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2762204Z test_production_opt_and_pgo_preserve_tests_and_profile_flags (test_qa3_build_profile.BuildProfileTests.test_production_opt_and_pgo_preserve_tests_and_profile_flags) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2763388Z test_profile_use_requires_lto_profdata_and_jarlog (test_qa3_build_profile.BuildProfileTests.test_profile_use_requires_lto_profdata_and_jarlog) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2764286Z test_real_setup_argument_count_and_optional_defaults (test_qa3_build_profile.BuildProfileTests.test_real_setup_argument_count_and_optional_defaults) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2765001Z test_real_setup_generates_canonical_debug_on_all_five_targets (test_qa3_build_profile.BuildProfileTests.test_real_setup_generates_canonical_debug_on_all_five_targets) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2765704Z test_real_setup_rejects_invalid_booleans_and_incomplete_modes (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_booleans_and_incomplete_modes) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2766372Z test_real_setup_rejects_invalid_inputs_before_side_effects (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_invalid_inputs_before_side_effects) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2767048Z test_real_setup_rejects_wrong_generated_config_before_bootstrap (test_qa3_build_profile.BuildProfileTests.test_real_setup_rejects_wrong_generated_config_before_bootstrap) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2767728Z test_wrong_target_debug_tests_and_profiling_are_rejected (test_qa3_build_profile.BuildProfileTests.test_wrong_target_debug_tests_and_profiling_are_rejected) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2768383Z test_actual_git_ingestion_and_runtime_head_are_verified (test_qa3_source_cohort.SourceCohortTests.test_actual_git_ingestion_and_runtime_head_are_verified) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2769022Z test_baseline_is_required_and_inventory_cannot_be_forged (test_qa3_source_cohort.SourceCohortTests.test_baseline_is_required_and_inventory_cannot_be_forged) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2769744Z test_cohort_rejects_upstream_runtime_patch_order_transform_and_tree_changes (test_qa3_source_cohort.SourceCohortTests.test_cohort_rejects_upstream_runtime_patch_order_transform_and_tree_changes) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2770520Z test_empty_diagnostic_delta_cannot_accept_a_different_final_baseline (test_qa3_source_cohort.SourceCohortTests.test_empty_diagnostic_delta_cannot_accept_a_different_final_baseline) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2771239Z test_exact_subject_rejects_wrong_config_target_attempt_and_final_bytes (test_qa3_source_cohort.SourceCohortTests.test_exact_subject_rejects_wrong_config_target_attempt_and_final_bytes) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2772254Z test_external_dangling_and_excluded_source_symlinks_are_rejected (test_qa3_source_cohort.SourceCohortTests.test_external_dangling_and_excluded_source_symlinks_are_rejected) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2773230Z test_linux_arm_and_legacy_debug_pgo_are_not_invented_canonical_profiles (test_qa3_source_cohort.SourceCohortTests.test_linux_arm_and_legacy_debug_pgo_are_not_invented_canonical_profiles) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2773923Z test_only_exact_applied_diagnostic_delta_is_accepted (test_qa3_source_cohort.SourceCohortTests.test_only_exact_applied_diagnostic_delta_is_accepted) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2774613Z test_patch_inventory_rejects_missing_extra_changed_and_duplicate_material (test_qa3_source_cohort.SourceCohortTests.test_patch_inventory_rejects_missing_extra_changed_and_duplicate_material) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2775353Z test_pgo_profile_binds_actual_bytes_workload_binary_run_and_attempt (test_qa3_source_cohort.SourceCohortTests.test_pgo_profile_binds_actual_bytes_workload_binary_run_and_attempt) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2776106Z test_pgo_profile_rejects_other_cohort_target_toolchain_and_missing_fields (test_qa3_source_cohort.SourceCohortTests.test_pgo_profile_rejects_other_cohort_target_toolchain_and_missing_fields) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2776835Z test_preflight_rejects_untracked_and_ignored_runtime_recipe_inputs (test_qa3_source_cohort.SourceCohortTests.test_preflight_rejects_untracked_and_ignored_runtime_recipe_inputs) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2777413Z test_symlink_target_changes_are_detected (test_qa3_source_cohort.SourceCohortTests.test_symlink_target_changes_are_detected) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2777971Z test_untracked_ignored_files_and_modes_are_not_silently_excluded (test_qa3_source_cohort.SourceCohortTests.test_untracked_ignored_files_and_modes_are_not_silently_excluded) ... ok
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2778314Z 
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2778411Z ----------------------------------------------------------------------
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2778622Z Ran 26 tests in 2.532s
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2778705Z 
+contracts	Check generated profiles and source/profdata negative contracts	2026-10-09T15:10:44.2778752Z OK
+contracts	Record policy preflight without issuing native qualification	﻿2026-10-09T15:10:44.2818634Z ##[group]Run python3 -B .github/workflows/scripts/qa3_source_cohort.py --expected-runtime "$QA3_RUNTIME_HEAD" --output "$RUNNER_TEMP/qa3-runtime/preflight.json"
+contracts	Record policy preflight without issuing native qualification	2026-10-09T15:10:44.2819289Z [36;1mpython3 -B .github/workflows/scripts/qa3_source_cohort.py --expected-runtime "$QA3_RUNTIME_HEAD" --output "$RUNNER_TEMP/qa3-runtime/preflight.json"[0m
+contracts	Record policy preflight without issuing native qualification	2026-10-09T15:10:44.2870660Z shell: /usr/bin/bash -e {0}
+contracts	Record policy preflight without issuing native qualification	2026-10-09T15:10:44.2870811Z env:
+contracts	Record policy preflight without issuing native qualification	2026-10-09T15:10:44.2870965Z   QA3_RUNTIME_HEAD: 0caeb02c0b1fe94f85d1d8271188064bd00256f6
+contracts	Record policy preflight without issuing native qualification	2026-10-09T15:10:44.2871169Z ##[endgroup]
+contracts	Preserve shadow preflight	﻿2026-10-09T15:10:44.8765895Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8766142Z with:
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8766265Z   name: qa3-runtime-37949737610-1
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8766440Z   path: /home/runner/work/_temp/qa3-runtime
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8766600Z   if-no-files-found: error
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8766734Z   retention-days: 14
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8766859Z   compression-level: 6
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8766987Z   overwrite: false
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8767106Z   include-hidden-files: false
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.8767246Z ##[endgroup]
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.9898277Z (node:2596) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.9898880Z (Use `node --trace-deprecation ...` to show where the warning was created)
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.9989271Z With the provided path, there will be 3 files uploaded
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.9994074Z Artifact name is valid!
+contracts	Preserve shadow preflight	2026-10-09T15:10:44.9994514Z Root directory input is valid!
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.3249348Z Beginning upload of artifact content to blob storage
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.3394241Z (node:2596) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.5020356Z Uploaded bytes 3479
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.5468730Z Finished uploading artifact content to blob storage!
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.5469390Z SHA256 digest of uploaded artifact zip is 0d8debed1ec48b18f59e83e24311f7ecac47d0cc0edfd75955e7a4f8262e17e7
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.5469990Z Finalizing artifact upload
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.7902115Z Artifact qa3-runtime-37949737610-1.zip successfully finalized. Artifact ID 11625071859
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.7902708Z Artifact qa3-runtime-37949737610-1 has been successfully uploaded! Final size is 3479 bytes. Artifact ID is 11625071859
+contracts	Preserve shadow preflight	2026-10-09T15:10:45.7908118Z Artifact download URL: https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/37949737610/artifacts/11625071859
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-10-09T15:10:45.8058263Z Post job cleanup.
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.8601784Z [command]/usr/bin/git version
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.8634871Z git version 2.55.0
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.8660549Z Temporarily overriding HOME='/home/runner/work/_temp/e8ea644e-72dd-4a34-bd4d-f375c8197aee' before making global git config changes
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.8661365Z Adding repository directory to the temporary git global config as a safe directory
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.8664951Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Floorp-Runtime/Floorp-Runtime
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.8703392Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.8735550Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.9223037Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.9255517Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.9679753Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+contracts	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-10-09T15:10:45.9713192Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+contracts	Complete job	﻿2026-10-09T15:10:46.0305132Z Cleaning up orphan processes
+contracts	Complete job	2026-10-09T15:10:46.0526925Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,12 @@
+[marionette] Connecting to port 2828
+[marionette] Connected (protocol v3)
+[marionette] Session: b3e5df5f-329f-40f5-b3b4-3091dd717075
+Connected to browser.
+  Title: Floorp Hub
+  URL: chrome://browser/content/browser.xhtml
+  Tabs: 9
+  Active tab: Floorp Hub
+[marionette] Connecting to port 2828
+[marionette] Connected (protocol v3)
+[marionette] Session: 3b37033c-3349-4a0a-b641-5af29cbe04c6
+QA4-A-AGENT1 @ http://localhost:5183/#/overview/home

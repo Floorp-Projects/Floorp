@@ -2,7 +2,9 @@
 
 import * as path from "@std/path";
 import { BIN_PATH_EXE, PATHS, PROJECT_ROOT } from "./defines.ts";
+import { recordDevProcess } from "./dev_processes.ts";
 import { ProcessUtils } from "./utils.ts";
+import { devPort } from "#libs/shared/dev-ports/defines.ts";
 
 export const MARIONETTE_STATE_FILE = path.join(
   PROJECT_ROOT,
@@ -32,11 +34,15 @@ function printFirefoxLog(line: string) {
 }
 
 export interface BrowserLaunchOptions {
+  /** Record the child for checkout-scoped dev-tool stop. */
+  recordProcess?: boolean;
   binaryPath?: string;
   noRemote?: boolean;
   port?: number;
   marionette?: boolean;
   profilePath?: string;
+  /** Linux development QA can own the native process session independently. */
+  ownLinuxSession?: boolean;
   /** Explicit initial page, avoiding a profile's default about: page in dev. */
   initialUrl?: string;
 }
@@ -553,23 +559,29 @@ export async function startIsolatedBrowserPair(
 }
 
 export async function run(
-  portOrOptions: number | BrowserLaunchOptions = 5180,
+  portOrOptions: number | BrowserLaunchOptions = devPort("browserRemote"),
 ): Promise<void> {
   const options: BrowserLaunchOptions = typeof portOrOptions === "number"
     ? { port: portOrOptions, marionette: true }
     : portOrOptions;
-  const port = options.port ?? 5180;
+  const port = options.port ?? devPort("browserRemote");
   const marionette = options.marionette ?? true;
   const cmd = browserCommand({ ...options, port, marionette });
   const environment = Deno.env.toObject();
   if (marionette) {
     environment.MOZ_REMOTE_ALLOW_SYSTEM_ACCESS = "1";
   }
+  if (options.ownLinuxSession && Deno.build.os !== "linux") {
+    throw new Error("Independent native session is supported only on Linux");
+  }
+  const launchCmd = options.ownLinuxSession
+    ? ["setsid", "--wait", ...cmd]
+    : cmd;
 
   console.log("[launcher] Launching browser with command: " + cmd.join(" "));
 
-  await ProcessUtils.runCommandWithLogging(
-    cmd,
+  const nativeExitCode = await ProcessUtils.runCommandWithLogging(
+    launchCmd,
     (_stream: "stdout" | "stderr", line: string) => {
       const m = line.match(/Marionette\tINFO\tListening on port (\d+)/);
       if (m) {
@@ -582,7 +594,21 @@ export async function run(
       printFirefoxLog(line.trim());
     },
     environment,
+    options.recordProcess
+      ? async (child) => {
+        await recordDevProcess(child.pid);
+      }
+      : undefined,
   );
+
+  console.log(`[launcher@native-exit] ${
+    encodeURIComponent(JSON.stringify({
+      command: cmd,
+      launchCommand: launchCmd,
+      ownLinuxSession: options.ownLinuxSession ?? false,
+      exitCode: nativeExitCode,
+    }))
+  }`);
 
   try {
     Deno.removeSync(MARIONETTE_STATE_FILE);

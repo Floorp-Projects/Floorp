@@ -1,0 +1,166 @@
+test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) ... 
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=0) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=1) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=2) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=3) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=4) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=5) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=6) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=7) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=8) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=9) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=10) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=11) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=12) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=13) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=14) ... FAIL
+  test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=15) ... FAIL
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=4)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=6)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=7)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=8)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=9)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=10)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=11)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=12)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=13)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=14)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+======================================================================
+FAIL: test_private_envelope_rejects_false_errors_extra_keys_and_bad_results (test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_rejects_false_errors_extra_keys_and_bad_results) (i=15)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 1017, in test_private_envelope_rejects_false_errors_extra_keys_and_bad_results
+    with self.subTest(i=i), self.assertRaises(Exception):
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Exception not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.374s
+
+FAILED (failures=16)

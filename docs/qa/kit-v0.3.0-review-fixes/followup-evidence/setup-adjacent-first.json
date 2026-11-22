@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-m",
+    "unittest",
+    "-v",
+    "test_qa3_source_cohort"
+  ],
+  "exit": 0,
+  "nativeExecuted": false,
+  "credentialsInherited": false
+}

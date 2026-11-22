@@ -1,0 +1,160 @@
+{
+  "report": {
+    "path": "native-io-implementation-report.md",
+    "sha256": "c804a9606ed90cb2a0d3f26924ca70811993e9f824a52bf56ed7d178445c23f3",
+    "bytes": 8469
+  },
+  "missingLocalLinks": [],
+  "items": [
+    {
+      "path": "native-io-all-after-fix-final.json",
+      "sha256": "37dd43761f757f7d36290c3b97524b2a44e472f3b86b9fe66e93e29d0415b542",
+      "bytes": 856
+    },
+    {
+      "path": "native-io-all-after-fix-final.log",
+      "sha256": "b80760d7b9e1a81943333c9b933c0c3252dd1a91bf238b01a27d73970aaf661d",
+      "bytes": 5477
+    },
+    {
+      "path": "native-io-all-after-timeout-fixture-correction.json",
+      "sha256": "cbb289000aff4b07ceb15e59ed2b1c78ba67214cd5c501d98cb062d920471ac6",
+      "bytes": 856
+    },
+    {
+      "path": "native-io-all-after-timeout-fixture-correction.log",
+      "sha256": "3fbfd4eb85da0f4b9b0071bf23d1dc4185b003ccc975a2ce53c1d8f9e1de25f3",
+      "bytes": 4850
+    },
+    {
+      "path": "native-io-all-frozen-grace-fix.json",
+      "sha256": "8fed5039a5966b0f9422c02af770945560ff59fd572b4fc2c7846eb8707be14e",
+      "bytes": 856
+    },
+    {
+      "path": "native-io-all-frozen-grace-fix.log",
+      "sha256": "2fdb6381387f6cc0b721623e4b024b67e6b00ec4782f207913251ad144596881",
+      "bytes": 4990
+    },
+    {
+      "path": "native-io-cleanup-signal-original-red.json",
+      "sha256": "217477d60512c9369d8e25f2577f199bfffe824ddc4ec28fd4c0638e0c8721ad",
+      "bytes": 867
+    },
+    {
+      "path": "native-io-cleanup-signal-original-red.log",
+      "sha256": "33e7c03cec0f2d1ae87e0136db5564fcc2b64141b72f315b8f2ac7287676b874",
+      "bytes": 1097
+    },
+    {
+      "path": "native-io-fix.patch",
+      "sha256": "a66fd61bfd775ef7823a0361f79f6702d2ba3290d2c8545033b3292c3ffea923",
+      "bytes": 43918
+    },
+    {
+      "path": "native-io-focused-after-fix-1.json",
+      "sha256": "a61af8ea1d402fd25187a93bdd3197b37b98918c60bf4dbb1695cc7d27ede274",
+      "bytes": 679
+    },
+    {
+      "path": "native-io-focused-after-fix-1.log",
+      "sha256": "be07897d5d6a7526917beaa2da0e66da89ffc07f7c32c93064bd8275e5cf85b7",
+      "bytes": 1527
+    },
+    {
+      "path": "native-io-focused-after-fix-2.json",
+      "sha256": "067603cb2ff8119d19e1059b6799d6480a00e75c9f697d985707777a5d5b0063",
+      "bytes": 805
+    },
+    {
+      "path": "native-io-focused-after-fix-2.log",
+      "sha256": "0c2114531090c25c56ddf44c1ae511ee4d5720e8ecb67b885ec949936fe70534",
+      "bytes": 2146
+    },
+    {
+      "path": "native-io-frozen-snapshot.json",
+      "sha256": "d65cd61bdfa1881566388f322ecd22e888445b31f8281dc996dc5421ac95977a",
+      "bytes": 1307
+    },
+    {
+      "path": "native-io-full-first-failure-diagnostic-clarification.json",
+      "sha256": "003b055b269f1000647efd92b898056923d177df72dc6658e4b21f8eff0b77b7",
+      "bytes": 511
+    },
+    {
+      "path": "native-io-full-first-failure-diagnostic.json",
+      "sha256": "05227c5263d173990616a4fdcf05895f4673804d1834b7f6fbd7421befdd1eee",
+      "bytes": 664
+    },
+    {
+      "path": "native-io-implementation-report.md",
+      "sha256": "c804a9606ed90cb2a0d3f26924ca70811993e9f824a52bf56ed7d178445c23f3",
+      "bytes": 8469
+    },
+    {
+      "path": "native-io-late-adoption-original-red.json",
+      "sha256": "ff42dd29ca1f2724c9aca42b50311b952749edec7c6fc1ad90c9e731de8f721d",
+      "bytes": 872
+    },
+    {
+      "path": "native-io-late-adoption-original-red.log",
+      "sha256": "ca0d4e0eb036b32b0b8794556516baf6c3fbeed47deb02f444fd6cf8cd94cbd5",
+      "bytes": 893
+    },
+    {
+      "path": "native-io-mach-all-modified-retry.log",
+      "sha256": "2545272d7b9c6c4f67c7b45c30b47bec4f6fab6eb82ed2516f73a9cce9d3a3fe",
+      "bytes": 2149
+    },
+    {
+      "path": "native-io-mach-targeted-frozen.log",
+      "sha256": "7aa466628f1bc3598effbc56c45c51728ee61db623429f343982a8ec0ff5c011",
+      "bytes": 47
+    },
+    {
+      "path": "native-io-mach-targeted.log",
+      "sha256": "7aa466628f1bc3598effbc56c45c51728ee61db623429f343982a8ec0ff5c011",
+      "bytes": 47
+    },
+    {
+      "path": "native-io-original.py",
+      "sha256": "d1d5e86dc8ae63977248847e1bd3192b5267966ec8011aa2390fd486f2e7bd86",
+      "bytes": 23274
+    },
+    {
+      "path": "native-io-pipe-close-original-red.json",
+      "sha256": "b8ac5ee1cbf3c95ff2d78668801b346c5c4bc07e594977880b381a0718441478",
+      "bytes": 937
+    },
+    {
+      "path": "native-io-pipe-close-original-red.log",
+      "sha256": "bfcbfbec573e9ddce9fb6d8100238ed3dbd85ac2c0ee1d892c8ee999c81bcf42",
+      "bytes": 1324
+    },
+    {
+      "path": "native-io-regressions-first-failure.json",
+      "sha256": "eb63e40bb56098904e3f2b96b9236a8c6b0a4c98121d580a6cb4a1677e45b94b",
+      "bytes": 678
+    },
+    {
+      "path": "native-io-regressions-first-failure.log",
+      "sha256": "3d935febe940d966d80c62df99e0d4378800f3cbc765e8498cbffbfe51feb54d",
+      "bytes": 9862
+    },
+    {
+      "path": "native-io-run-tests.py",
+      "sha256": "8657651ac1f1e2987eb57533d787300db5f054b503948199de9632f9d7eb850a",
+      "bytes": 6496
+    },
+    {
+      "path": "native-io-subreaper-state-original-red.json",
+      "sha256": "9cd1c127c85c9ba68c06fafe9594e93abb41cf8bc9d30d87b1cf51c3f947de3a",
+      "bytes": 850
+    },
+    {
+      "path": "native-io-subreaper-state-original-red.log",
+      "sha256": "4b1eadc7d150e9c0a3f6588a8874db2928563d18d562408cce1bb90515b5af3c",
+      "bytes": 779
+    }
+  ]
+}
