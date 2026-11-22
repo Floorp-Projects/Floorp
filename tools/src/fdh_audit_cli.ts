@@ -29,6 +29,7 @@ Operator (database commands use FDH_AUDIT_HMAC_KEY):
   serve <db> <checkpoint.json>              Listen on loopback for the TLS reverse proxy
   verify <db> [<checkpoint.json>]           Verify the ledger and print its head
   trace <db> <trace-uuid> [<checkpoint.json>] Verify the ledger and print one correlated trace
+  rotate <db> <head-checkpoint.json>        Start new write budgets on a stopped, verified ledger
   backup <db> <new-backup-db>                Save an online snapshot and print its checkpoint`;
 
 function required(name: string): string {
@@ -92,11 +93,16 @@ async function serve(
     readerSecret: required("FDH_AUDIT_READER_CLIENT_SECRET"),
   });
   const port = Number(Deno.env.get("FDH_AUDIT_PORT") ?? "18884");
-  const max = Number(Deno.env.get("FDH_AUDIT_MAX_ENTRIES") ?? "100000");
+  const maxEntries = Deno.env.get("FDH_AUDIT_MAX_ENTRIES");
+  const maxDenials = Deno.env.get("FDH_AUDIT_MAX_DENIALS");
   if (!Number.isInteger(port) || port < 1024 || port > 65535) {
     throw new Error("Invalid audit port");
   }
-  using store = new AuditStore(db, key, max, anchor);
+  using store = new AuditStore(db, key, {
+    anchor,
+    maxEntries: maxEntries === undefined ? undefined : Number(maxEntries),
+    maxDenials: maxDenials === undefined ? undefined : Number(maxDenials),
+  });
   const server = Deno.serve({
     hostname: "127.0.0.1",
     port,
@@ -117,7 +123,8 @@ export async function runAuditCli(args: readonly string[]): Promise<void> {
     args.slice(1).some((arg) => arg.length === 0 || arg.startsWith("--")) ||
     !(
       (action === "append" || action === "init") && args.length === 2 ||
-      (action === "serve" || action === "backup") && args.length === 3 ||
+      (action === "serve" || action === "backup" || action === "rotate") &&
+        args.length === 3 ||
       action === "verify" && (args.length === 2 || args.length === 3) ||
       action === "trace" && isAuditId(argument) &&
         (args.length === 3 || args.length === 4)
@@ -147,6 +154,11 @@ export async function runAuditCli(args: readonly string[]): Promise<void> {
       : undefined;
     if (action === "serve" && anchor) {
       await serve(db, key, anchor);
+      return;
+    }
+    if (action === "rotate" && anchor) {
+      using store = new AuditStore(db, key, { anchor });
+      console.log(JSON.stringify(store.rotate(anchor)));
       return;
     }
     const { head, records } = inspectAuditStore(db, key, {

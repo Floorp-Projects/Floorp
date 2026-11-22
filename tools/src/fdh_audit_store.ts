@@ -51,6 +51,20 @@ interface Row {
   mac: string;
 }
 
+interface LedgerState {
+  head: AuditCheckpoint;
+  // Committed operation rows since rotation plus every unresolved intent.
+  operationSlots: number;
+  pendingResults: number;
+  denials: number;
+}
+
+interface StoreOptions {
+  anchor?: AuditCheckpoint;
+  maxDenials?: number;
+  maxEntries?: number;
+}
+
 export class AuditStoreError extends Error {
   constructor(readonly code: "conflict" | "capacity" | "integrity") {
     super("Audit ledger " + code);
@@ -120,33 +134,71 @@ function genesis(db: DatabaseSync, key: Uint8Array): AuditCheckpoint {
   return { sequence: 0, mac: row.mac };
 }
 
+function advance(
+  state: LedgerState,
+  head: AuditCheckpoint,
+  event: AuditRecord["event"],
+): void {
+  state.head = head;
+  if ("rotation" in event) {
+    state.denials = 0;
+    state.operationSlots = state.pendingResults;
+  } else if ("denial" in event) {
+    state.denials++;
+  } else if (event.outcome.kind === "intent") {
+    state.pendingResults++;
+    state.operationSlots += 2;
+  } else if (event.outcome.kind === "result") {
+    state.pendingResults--;
+  } else {
+    state.operationSlots++;
+  }
+}
+
 function scan(
   db: DatabaseSync,
   key: Uint8Array,
-  start: AuditCheckpoint,
-  required = start,
-): AuditCheckpoint {
-  let head = start;
-  let found = start.sequence === required.sequence &&
-    sameMac(start.mac, required.mac);
+  start: LedgerState,
+  required = start.head,
+): LedgerState {
+  const state = { ...start };
+  let found = state.head.sequence === required.sequence &&
+    sameMac(state.head.mac, required.mac);
   const rows = db.prepare(
     `SELECT ${columns} FROM events WHERE sequence > ? ORDER BY sequence`,
-  ).iterate(start.sequence);
+  ).iterate(state.head.sequence);
   for (const value of rows) {
     const row = value as unknown as Row;
     if (
-      row.sequence !== head.sequence + 1 ||
-      !sameMac(row.mac, rowMac(key, head.mac, row))
+      row.sequence !== state.head.sequence + 1 ||
+      !sameMac(row.mac, rowMac(key, state.head.mac, row))
     ) {
       throw new AuditStoreError("integrity");
     }
-    head = { sequence: row.sequence, mac: row.mac };
-    if (head.sequence === required.sequence) {
-      found = sameMac(head.mac, required.mac);
+    advance(
+      state,
+      { sequence: row.sequence, mac: row.mac },
+      JSON.parse(row.payload),
+    );
+    if (row.sequence === required.sequence) {
+      found = sameMac(row.mac, required.mac);
     }
   }
   if (!found) throw new AuditStoreError("integrity");
-  return head;
+  return state;
+}
+
+function readState(
+  db: DatabaseSync,
+  key: Uint8Array,
+  anchor?: AuditCheckpoint,
+): LedgerState {
+  return scan(db, key, {
+    head: genesis(db, key),
+    operationSlots: 0,
+    pendingResults: 0,
+    denials: 0,
+  }, anchor);
 }
 
 function withReadTransaction<T>(db: DatabaseSync, read: () => T): T {
@@ -166,7 +218,7 @@ export function inspectAuditStore(
   validateKey(key);
   using db = new DatabaseSync(path, { readOnly: true });
   return withReadTransaction(db, () => {
-    const head = scan(db, key, genesis(db, key), options.anchor);
+    const { head } = readState(db, key, options.anchor);
     if (!options.traceId) return { head };
     const rows = db.prepare(
       `SELECT ${columns} FROM events WHERE trace_id = ? ORDER BY sequence`,
@@ -201,24 +253,33 @@ export async function backupAuditStore(
 export class AuditStore {
   #db: DatabaseSync;
   #key: Uint8Array;
-  #head: AuditCheckpoint;
+  #state: LedgerState;
+  #maxEntries: number;
+  #maxDenials: number;
 
   constructor(
     path: string,
     key: Uint8Array,
-    private readonly maxEntries: number,
-    anchor?: AuditCheckpoint,
+    { maxEntries = 100_000, maxDenials = 1_000, anchor }: StoreOptions = {},
   ) {
     validateKey(key);
     if (
       !Number.isSafeInteger(maxEntries) || maxEntries < 1 ||
-      maxEntries > 1_000_000
+      maxEntries > 1_000_000 ||
+      !Number.isSafeInteger(maxDenials) || maxDenials < 0 ||
+      maxDenials > 1_000_000
     ) {
       throw new Error("Invalid audit capacity");
     }
     // Require explicit initialization. A missing ledger must not silently reset.
     this.#key = key.slice();
-    this.#head = inspectAuditStore(path, this.#key, { anchor }).head;
+    this.#maxEntries = maxEntries;
+    this.#maxDenials = maxDenials;
+    using readOnly = new DatabaseSync(path, { readOnly: true });
+    this.#state = withReadTransaction(
+      readOnly,
+      () => readState(readOnly, this.#key, anchor),
+    );
     this.#db = new DatabaseSync(path);
     try {
       this.#db.exec("PRAGMA busy_timeout=5000; PRAGMA synchronous=FULL");
@@ -236,20 +297,51 @@ export class AuditStore {
     if (!/^[A-Za-z0-9_-]{1,255}$/.test(actor)) {
       throw new Error("Invalid audit actor");
     }
-    return this.#append(actor, parseAuditEvent(input));
+    const event = parseAuditEvent(input);
+    return this.#transaction((state) =>
+      this.#appendOperation(state, actor, event)
+    );
   }
 
-  deny(reason: AuditDenial, actor: string | null = null): AuditCheckpoint {
-    return this.#append(actor, { id: crypto.randomUUID(), denial: reason });
+  deny(reason: AuditDenial, actor: string | null = null): void {
+    this.#transaction((state) => {
+      if (state.denials < this.#maxDenials) {
+        this.#write(state, actor, { id: crypto.randomUUID(), denial: reason });
+      }
+    });
   }
 
-  #append(actor: string | null, event: AuditRecord["event"]): AuditCheckpoint {
+  rotate(expectedHead: AuditCheckpoint): AuditCheckpoint {
+    return this.#transaction((state) => {
+      if (
+        state.head.sequence !== expectedHead.sequence ||
+        !sameMac(state.head.mac, expectedHead.mac)
+      ) throw new AuditStoreError("integrity");
+      return this.#write(state, null, {
+        id: crypto.randomUUID(),
+        rotation: true,
+      });
+    });
+  }
+
+  #transaction<T>(write: (state: LedgerState) => T): T {
     const db = this.#db;
     db.exec("BEGIN IMMEDIATE");
     try {
-      const result = this.#insert(actor, event);
+      const previous = this.#state.head;
+      const stored = previous.sequence === 0
+        ? genesis(db, this.#key)
+        : db.prepare("SELECT mac FROM events WHERE sequence = ?")
+          .get(previous.sequence);
+      if (
+        typeof stored?.mac !== "string" || !sameMac(stored.mac, previous.mac)
+      ) {
+        throw new AuditStoreError("integrity");
+      }
+      const state = scan(db, this.#key, this.#state);
+      const result = write(state);
       db.exec("COMMIT");
-      if (result.sequence > this.#head.sequence) this.#head = result;
+      this.#state = state;
       return result;
     } catch (error) {
       try {
@@ -261,39 +353,31 @@ export class AuditStore {
     }
   }
 
-  #insert(actor: string | null, event: AuditRecord["event"]): AuditCheckpoint {
+  #appendOperation(
+    state: LedgerState,
+    actor: string,
+    event: AuditEvent,
+  ): AuditCheckpoint {
     const db = this.#db;
-    const previous = this.#head;
-    const stored = previous.sequence === 0
-      ? genesis(db, this.#key)
-      : db.prepare(`SELECT ${columns} FROM events WHERE sequence = ?`)
-        .get(previous.sequence) as unknown as Row | undefined;
-    if (!stored || !sameMac(stored.mac, previous.mac)) {
-      throw new AuditStoreError("integrity");
-    }
-    const head = scan(db, this.#key, previous);
-    const payload = JSON.stringify(event);
     const duplicate = db.prepare(`SELECT ${columns} FROM events WHERE id = ?`)
       .get(event.id) as unknown as Row | undefined;
     if (duplicate) {
-      if (duplicate.actor !== actor || duplicate.payload !== payload) {
+      if (
+        duplicate.actor !== actor || duplicate.payload !== JSON.stringify(event)
+      ) {
         throw new AuditStoreError("conflict");
       }
       return { sequence: duplicate.sequence, mac: duplicate.mac };
     }
-    if (head.sequence >= this.maxEntries) throw new AuditStoreError("capacity");
-    const intentId = "outcome" in event && event.outcome.kind === "result"
-      ? event.outcome.intentId
-      : null;
-    if (intentId !== null) {
+    if (event.outcome.kind === "result") {
+      // The intent already reserved this slot, even across restarts or rotation.
+      const { intentId } = event.outcome;
       const intent = db.prepare(`SELECT ${columns} FROM events WHERE id = ?`)
         .get(intentId) as unknown as Row | undefined;
-      if (!("outcome" in event) || !intent || intent.actor !== actor) {
+      if (!intent || intent.actor !== actor || intent.trace_id === null) {
         throw new AuditStoreError("conflict");
       }
-      const rawIntent = JSON.parse(intent.payload);
-      if ("denial" in rawIntent) throw new AuditStoreError("conflict");
-      const intentEvent = parseAuditEvent(rawIntent);
+      const intentEvent = parseAuditEvent(JSON.parse(intent.payload));
       if (
         intentEvent.outcome.kind !== "intent" ||
         intentEvent.traceId !== event.traceId ||
@@ -303,17 +387,33 @@ export class AuditStore {
       ) {
         throw new AuditStoreError("conflict");
       }
+    } else {
+      const slots = event.outcome.kind === "intent" ? 2 : 1;
+      if (state.operationSlots + slots > this.#maxEntries) {
+        throw new AuditStoreError("capacity");
+      }
     }
+    return this.#write(state, actor, event);
+  }
+
+  #write(
+    state: LedgerState,
+    actor: string | null,
+    event: AuditRecord["event"],
+  ): AuditCheckpoint {
+    const db = this.#db;
     const row: Omit<Row, "mac"> = {
-      sequence: head.sequence + 1,
+      sequence: state.head.sequence + 1,
       id: event.id,
       trace_id: "traceId" in event ? event.traceId : null,
-      intent_id: intentId,
+      intent_id: "outcome" in event && event.outcome.kind === "result"
+        ? event.outcome.intentId
+        : null,
       received_at: new Date().toISOString(),
       actor,
-      payload,
+      payload: JSON.stringify(event),
     };
-    const mac = rowMac(this.#key, head.mac, row);
+    const mac = rowMac(this.#key, state.head.mac, row);
     db.prepare(
       `INSERT INTO events (${columns}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
@@ -327,7 +427,8 @@ export class AuditStore {
         row.payload,
         mac,
       );
-    // Publish this head in memory only after the COMMIT in #append succeeds.
-    return { sequence: row.sequence, mac };
+    const head = Object.freeze({ sequence: row.sequence, mac });
+    advance(state, head, event);
+    return head;
   }
 }

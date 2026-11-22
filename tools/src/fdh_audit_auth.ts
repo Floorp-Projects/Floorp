@@ -117,10 +117,14 @@ export function createAuditAuthenticator(
     readUserProfile: () => read("/users/profile"),
     now: () => Math.floor(Date.now() / 1000),
   };
-  const resolveBinding = createSharedGoogleBrokerResolver({
-    ...policy,
-    expectedGoogleClientId: googleClientId,
-  }, io);
+  const resolveBinding = createSharedGoogleBrokerResolver(
+    {
+      ...policy,
+      expectedGoogleClientId: googleClientId,
+    },
+    io,
+    { propagateIOErrors: true },
+  );
   return async (token) => {
     let access;
     try {

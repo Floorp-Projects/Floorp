@@ -59,5 +59,8 @@ export interface AuditCheckpoint {
 export interface AuditRecord extends AuditCheckpoint {
   receivedAt: string;
   actor: string | null;
-  event: AuditEvent | { id: string; denial: AuditDenial };
+  event:
+    | AuditEvent
+    | { id: string; denial: AuditDenial }
+    | { id: string; rotation: true };
 }
