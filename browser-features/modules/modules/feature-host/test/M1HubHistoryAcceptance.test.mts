@@ -325,6 +325,7 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
         withheldAcknowledgement.hubRevision,
       ),
       true,
+      "the original connection remains bound to the withheld v2 delivery",
     );
     assertEquals(
       tab.linkedBrowser.browsingContext.currentWindowGlobal,
@@ -339,7 +340,11 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
     acknowledgementBlocked = false;
     const stillWithheld = await readHubDomProbe(tab);
     assertEquals(stillWithheld.protocol.ackBlocked, false);
-    assertEquals(stillWithheld.protocol.savedAcknowledgementAvailable, true);
+    assertEquals(
+      stillWithheld.protocol.savedAcknowledgementAvailable,
+      true,
+      "unblocking React preserves its saved acknowledgement for navigation",
+    );
     assertEquals(updateSettled, false);
 
     const historyBrowser = tab.linkedBrowser;
@@ -394,8 +399,51 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
       baseline.pendingAcknowledgements,
       "navigation releases the withheld publication acknowledgement",
     );
-    assertEquals(originalConnection.isClosed(), true);
-    assertEquals(historyBrowser.webNavigation.canGoBack, true);
+    assertEquals(
+      originalConnection.isClosed(),
+      true,
+      "navigation closes the original HUB connection",
+    );
+    const historyWaitStartedAt = Date.now();
+    const canGoBackBeforeWait = historyBrowser.webNavigation.canGoBack;
+    const historyBrowserMatchesLinkedBrowser =
+      historyBrowser === tab.linkedBrowser;
+    let canGoBackBecameTrueAfterMs: number | null = null;
+    try {
+      await waitForCondition(
+        () => {
+          const canGoBack = historyBrowser.webNavigation.canGoBack;
+          if (!canGoBackBeforeWait && canGoBack) {
+            canGoBackBecameTrueAfterMs ??= Date.now() - historyWaitStartedAt;
+          }
+          return canGoBack;
+        },
+        "remote session-history state exposes the back entry",
+      );
+    } finally {
+      let currentURI: string | null = null;
+      try {
+        currentURI = historyBrowser.currentURI?.spec ?? null;
+      } catch {
+        currentURI = null;
+      }
+      Services.console.logStringMessage(
+        `[M1HubHistoryAcceptance] ${
+          JSON.stringify({
+            canGoBackBeforeWait,
+            canGoBackBecameTrueAfterMs,
+            historyBrowserMatchesLinkedBrowser,
+            canGoBackAtWaitEnd: historyBrowser.webNavigation.canGoBack,
+            currentURI,
+          })
+        }`,
+      );
+    }
+    assertEquals(
+      historyBrowser.webNavigation.canGoBack,
+      true,
+      "the real about:blank navigation creates a back-history entry",
+    );
 
     historyBrowser.webNavigation.goBack();
     await waitForCondition(
@@ -448,16 +496,21 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
         })
       }`,
     );
-    assert(isHubVersionRendered(restoredProbe, "hub-v2"));
+    assert(
+      isHubVersionRendered(restoredProbe, "hub-v2"),
+      "back navigation renders the current hub-v2 fixture",
+    );
     const restoredAcknowledgement = acknowledgementFromProbe(restoredProbe);
     assertEquals(
       restoredAcknowledgement.requestId !== withheldAcknowledgement.requestId,
       true,
+      "the restored document acknowledges with a fresh request ID",
     );
     assertEquals(
       restoredAcknowledgement.connectionNonce !==
         withheldAcknowledgement.connectionNonce,
       true,
+      "the restored document acknowledges with a fresh connection nonce",
     );
     const restoredSnapshot = registry.getSnapshotForTests();
     const restoredOwnerEntry = restoredSnapshot.entries.find((entry) =>
@@ -474,7 +527,7 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
     if (!restoredDocument) {
       throw new Error("the restored document is absent from W0");
     }
-    assert(restoredDocument.isLive());
+    assert(restoredDocument.isLive(), "the restored W0 document is live");
     const restoredAckController = new AbortController();
     const restoredAckTimeout = setTimeout(
       () =>
@@ -521,7 +574,11 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
       restoredAcknowledgement.connectionNonce,
     );
     assertEquals(restoredConnection === originalConnection, false);
-    assertEquals(originalConnection.isClosed(), true);
+    assertEquals(
+      originalConnection.isClosed(),
+      true,
+      "history restoration does not reopen the old HUB connection",
+    );
     const staleAcknowledgement = JSON.stringify(withheldAcknowledgement);
     assertEquals(
       HubPageDiscoveryService.handleAcknowledgement(
@@ -549,7 +606,10 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
       "stale acknowledgement checks preserve the restored connection",
     );
     const afterStaleAcknowledgement = await readHubDomProbe(tab);
-    assert(isHubVersionRendered(afterStaleAcknowledgement, "hub-v2"));
+    assert(
+      isHubVersionRendered(afterStaleAcknowledgement, "hub-v2"),
+      "rejecting stale acknowledgements preserves the restored hub-v2 render",
+    );
     assertEquals(
       afterStaleAcknowledgement.protocol.lastAcknowledgement.requestId,
       restoredAcknowledgement.requestId,
