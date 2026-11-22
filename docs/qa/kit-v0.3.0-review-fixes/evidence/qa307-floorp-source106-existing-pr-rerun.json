@@ -1,0 +1,26 @@
+{
+  "check": "floorp-source106",
+  "revision": "existing-pr-rerun",
+  "startedAt": "2026-10-09T12:42:59.506163+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "tools/qa3/source.py",
+    "run",
+    "/workspace/qa-review-v030/evidence/qa307-floorp-source106-result",
+    "--expected-head",
+    "718e688fbd7ad88a776534e7778ad8e4a7f67364"
+  ],
+  "cwd": "/workspace/qa-review-v030/repos/Floorp",
+  "exitCode": 1,
+  "timedOut": false,
+  "seconds": 0.527,
+  "log": "qa307-floorp-source106-existing-pr-rerun.log",
+  "logSha256": "5798a59cf4209fbc874974ed2b37c02a36e146765643cc1295444dc92a60b5b3",
+  "networkRequired": false,
+  "browserRequired": false,
+  "outerSoftASBytes": 2147483648,
+  "outerHardASBytes": 34359738368,
+  "outerSoftFSIZEBytes": 33554432,
+  "outerHardFSIZEBytes": 68719476736
+}
