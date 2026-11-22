@@ -16,6 +16,8 @@ export interface XhtmlInjectionOptions {
   devPages?: boolean;
   isCI?: boolean;
   allowBrowserHttpLoader?: boolean;
+  /** Dev test launch port offset (FDH Gate 2 task 2-B). */
+  portOffset?: number;
 }
 
 export function buildXhtmlInjectionArgs(
@@ -27,6 +29,9 @@ export function buildXhtmlInjectionArgs(
   if (options.devPages) args.push("--dev");
   if (options.allowBrowserHttpLoader) {
     args.push("--allow-browser-http-loader");
+  }
+  if (options.portOffset && options.portOffset > 0) {
+    args.push("--port-offset", String(options.portOffset));
   }
   return args;
 }
@@ -132,13 +137,36 @@ export function createManifest(mode: string, dirPath: string) {
 }
 
 /**
+ * Overrides for `run` so the setup tests can prepare an isolated binary tree
+ * without touching the repository's `_dist/bin`. Defaults preserve the
+ * feles-build behavior.
+ */
+export interface InjectorRunOptions {
+  /** Runtime binary root; defaults to `BIN_DIR` (`_dist/bin/floorp/...`). */
+  binRootDir?: string;
+  /** Project root used to resolve mount targets; defaults to `PROJECT_ROOT`. */
+  projectRoot?: string;
+}
+
+/**
  * This creates chrome.manifest, and symlinks the dists to firefox binary dir.
  * for production, only symlinks will be created.
+ *
+ * Mount links are relative on POSIX so a copied `_dist/bin` tree resolves
+ * inside whichever worktree holds it (IMP-5). Windows keeps an absolute target
+ * because its junction fallback stores one.
+ *
  * @param mode
  * @param dirName
  */
-export function run(mode: string, dirName = "noraneko-devdir"): void {
-  const manifestPath = path.join(BIN_DIR, "chrome.manifest");
+export function run(
+  mode: string,
+  dirName = "noraneko-devdir",
+  options: InjectorRunOptions = {},
+): void {
+  const binRootDir = options.binRootDir ?? BIN_DIR;
+  const projectRoot = options.projectRoot ?? PROJECT_ROOT;
+  const manifestPath = path.join(binRootDir, "chrome.manifest");
 
   if (mode === "dev" || mode === "stage") {
     let manifest = "";
@@ -151,7 +179,7 @@ export function run(mode: string, dirName = "noraneko-devdir"): void {
     }
   }
 
-  const dirPath = path.join(BIN_DIR, dirName);
+  const dirPath = path.join(binRootDir, dirName);
   try {
     if (exists(dirPath)) {
       safeRemove(dirPath);
@@ -181,7 +209,12 @@ export function run(mode: string, dirName = "noraneko-devdir"): void {
 
   for (const [subdir, target] of mounts) {
     const linkPath = path.resolve(dirPath, subdir);
-    const targetPath = path.resolve(target);
+    const targetPath = path.resolve(projectRoot, target);
+    const linkTarget = Deno.build.os === "windows"
+      ? targetPath
+      // A symlink target resolves relative to the link's parent directory,
+      // not to the full link path (which includes the link name).
+      : path.relative(path.dirname(linkPath), targetPath);
     try {
       if (exists(linkPath)) {
         safeRemove(linkPath);
@@ -191,11 +224,11 @@ export function run(mode: string, dirName = "noraneko-devdir"): void {
     }
 
     try {
-      createSymlink(linkPath, targetPath);
+      createSymlink(linkPath, linkTarget);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       logger.warn(
-        `Failed to create symlink ${linkPath} -> ${targetPath}: ${msg}`,
+        `Failed to create symlink ${linkPath} -> ${linkTarget}: ${msg}`,
       );
     }
   }

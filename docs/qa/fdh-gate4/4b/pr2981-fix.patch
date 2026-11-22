@@ -1,0 +1,1404 @@
+diff --git a/.github/patches/floorp-runtime/common/workspace-sync.patch b/.github/patches/floorp-runtime/common/workspace-sync.patch
+index 6d48a878a749..327906cd7ca9 100644
+--- a/.github/patches/floorp-runtime/common/workspace-sync.patch
++++ b/.github/patches/floorp-runtime/common/workspace-sync.patch
+@@ -1,10 +1,14 @@
+ diff --git a/services/sync/modules/service.sys.mjs b/services/sync/modules/service.sys.mjs
+ --- a/services/sync/modules/service.sys.mjs
+ +++ b/services/sync/modules/service.sys.mjs
+-@@ -85,6 +85,10 @@ function getEngineModules() {
++@@ -85,6 +85,14 @@ function getEngineModules() {
+      result.Form = { module: "forms.sys.mjs", symbol: "FormEngine" };
+      result.History = { module: "history.sys.mjs", symbol: "HistoryEngine" };
+      result.Tab = { module: "tabs.sys.mjs", symbol: "TabEngine" };
+++    result.Prefs = {
+++      module: "resource://noraneko/modules/notes/FloorpNotesPrefsEngine.sys.mjs",
+++      symbol: "FloorpNotesPrefsEngine",
+++    };
+ +    result.FloorpWorkspaces = {
+ +      module: "resource://noraneko/modules/workspaces/FloorpWorkspacesSync.sys.mjs",
+ +      symbol: "FloorpWorkspacesEngine",
+diff --git a/browser-features/modules/actors/NRSettingsChild.sys.mts b/browser-features/modules/actors/NRSettingsChild.sys.mts
+index 81778b5800bb..f6a784aaccae 100644
+--- a/browser-features/modules/actors/NRSettingsChild.sys.mts
++++ b/browser-features/modules/actors/NRSettingsChild.sys.mts
+@@ -9,11 +9,13 @@ import type {
+   PrefSetParams,
+ } from "../common/defines.ts";
+ import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
++import type { NotesStorageFunctions } from "../common/notes-storage-types.ts";
+ 
+ type SettingsPageParentFunctions =
+   & NRSettingsParentFunctions
+   & NRSettingsAtomicPreferenceFunctions
+-  & NRContextMenuSettingsFunctions;
++  & NRContextMenuSettingsFunctions
++  & NotesStorageFunctions;
+ 
+ export class NRSettingsChild extends JSWindowActorChild {
+   private static readonly MAX_INSTALL_ATTEMPTS = 200;
+@@ -119,6 +121,9 @@ export class NRSettingsChild extends JSWindowActorChild {
+       SettingsPageParentFunctions
+     >(
+       {
++        getNotesSnapshot: () => this.sendQuery("getNotesSnapshot"),
++        readNotesSyncState: (snapshot) => this.sendQuery("readNotesSyncState", { snapshot }),
++        writeNotesPref: (value, context, baseValue) => this.sendQuery("writeNotesPref", { value, context, baseValue }),
+         getContextMenuCatalog: (): Promise<ContextMenuCatalogSnapshot> => {
+           return this.NRSGetContextMenuCatalog();
+         },
+diff --git a/browser-features/modules/actors/NRSettingsParent.sys.mts b/browser-features/modules/actors/NRSettingsParent.sys.mts
+index add589ae7467..9dae6921b1d3 100644
+--- a/browser-features/modules/actors/NRSettingsParent.sys.mts
++++ b/browser-features/modules/actors/NRSettingsParent.sys.mts
+@@ -44,6 +44,7 @@ function openExternalLinkInBrowser(
+ 
+ //TODO: make reject when the name is invalid
+ import type { ContextMenuCatalogSnapshot } from "#features-chrome/common/context-menu/types.ts";
++import type { NotesPreferenceSnapshot, NotesStorageService, NotesSyncContext } from "../common/notes-storage-types.ts";
+ 
+ interface ContextMenuCatalogServiceModule {
+   ContextMenuCatalogService: {
+@@ -56,6 +57,10 @@ const { ContextMenuCatalogService } = ChromeUtils.importESModule(
+   "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
+ ) as ContextMenuCatalogServiceModule;
+ 
++const { FloorpNotesStorage } = ChromeUtils.importESModule(
++  "resource://noraneko/modules/notes/FloorpNotesStorage.sys.mjs",
++) as { FloorpNotesStorage: NotesStorageService };
++
+ export class NRSettingsParent extends JSWindowActorParent {
+   constructor() {
+     super();
+@@ -66,6 +71,13 @@ export class NRSettingsParent extends JSWindowActorParent {
+   ): Promise<unknown> {
+     const data = message.data as Record<string, unknown> | undefined;
+     switch (message.name) {
++      case "getNotesSnapshot":
++        return FloorpNotesStorage.getSnapshot();
++      case "readNotesSyncState":
++        return FloorpNotesStorage.readSyncState(data?.snapshot as NotesPreferenceSnapshot);
++      case "writeNotesPref":
++        if (typeof data?.value !== "string") throw new TypeError("Invalid Notes value");
++        return FloorpNotesStorage.writeLocal(data.value, data.context as NotesSyncContext | undefined, data.baseValue as string | null | undefined);
+       case "getContextMenuCatalog":
+         return ContextMenuCatalogService.getSnapshot();
+       case "getContextMenuCatalogRevision":
+@@ -119,6 +131,7 @@ export class NRSettingsParent extends JSWindowActorParent {
+       case "getStringPref": {
+         const name = data && typeof data.name === "string" ? data.name : null;
+         if (!name) return null;
++        if (name === "floorp.browser.note.memos") return FloorpNotesStorage.getSnapshot().value;
+         if (Services.prefs.getPrefType(name) != Services.prefs.PREF_STRING) {
+           return null;
+         }
+@@ -177,7 +190,8 @@ export class NRSettingsParent extends JSWindowActorParent {
+             ? data.prefValue
+             : null;
+           if (!name || val === null) return null;
+-          Services.prefs.setStringPref(name, val);
++          if (name === "floorp.browser.note.memos") FloorpNotesStorage.writeLocal(val);
++          else Services.prefs.setStringPref(name, val);
+         }
+         break;
+       }
+diff --git a/browser-features/modules/common/notes-record.ts b/browser-features/modules/common/notes-record.ts
+new file mode 100644
+index 000000000000..4623b9a0672f
+--- /dev/null
++++ b/browser-features/modules/common/notes-record.ts
+@@ -0,0 +1,106 @@
++import type { Note, NoteSnapshot } from "../../pages-notes/src/lib/merge.ts";
++
++export function decodeNotes(
++  value: string,
++  allowLegacy = false,
++  makeId: () => string = () => crypto.randomUUID(),
++): Note[] {
++  const raw: unknown = JSON.parse(value);
++  if (typeof raw !== "object" || raw === null) {
++    throw new TypeError("Invalid Notes record");
++  }
++  const data = raw as Record<string, unknown>;
++  if (
++    !Array.isArray(data.titles) || !Array.isArray(data.contents) ||
++    data.titles.length !== data.contents.length
++  ) {
++    throw new TypeError("Invalid Notes arrays");
++  }
++  const length = data.titles.length;
++  const arrays = ["ids", "createdAts", "updatedAts"] as const;
++  for (const key of arrays) {
++    if (allowLegacy && data[key] === undefined) continue;
++    if (!Array.isArray(data[key]) || data[key].length !== length) {
++      throw new TypeError(`Invalid Notes ${key}`);
++    }
++  }
++  const seen = new Set<string>();
++  return data.titles.map((title, index) => {
++    const content = (data.contents as unknown[])[index];
++    // Only genuinely missing legacy arrays may receive migration defaults.
++    // Invalid entries in a received record must never create fresh identities.
++    const id = data.ids === undefined && allowLegacy
++      ? makeId()
++      : (data.ids as unknown[])[index];
++    const createdAt = data.createdAts === undefined && allowLegacy
++      ? Date.now()
++      : (data.createdAts as unknown[])[index];
++    const updatedAt = data.updatedAts === undefined && allowLegacy
++      ? createdAt
++      : (data.updatedAts as unknown[])[index];
++    if (
++      typeof title !== "string" || typeof content !== "string" ||
++      typeof id !== "string" || !id.trim() || seen.has(id) ||
++      typeof createdAt !== "number" || !Number.isSafeInteger(createdAt) ||
++      createdAt < 0 || typeof updatedAt !== "number" ||
++      !Number.isSafeInteger(updatedAt) || updatedAt < 0
++    ) {
++      throw new TypeError("Invalid Notes item");
++    }
++    seen.add(id);
++    return { id, title, content, createdAt, updatedAt };
++  });
++}
++
++export function encodeNotes(notes: Note[]): string {
++  return JSON.stringify({
++    ids: notes.map((note) => note.id),
++    titles: notes.map((note) => note.title),
++    contents: notes.map((note) => note.content),
++    createdAts: notes.map((note) => note.createdAt),
++    updatedAts: notes.map((note) => note.updatedAt),
++  });
++}
++
++export function notesBase(notes: Note[]): Record<string, NoteSnapshot> {
++  return Object.fromEntries(
++    notes.map((
++      { id, title, content, updatedAt },
++    ) => [id, { id, title, content, updatedAt }]),
++  );
++}
++
++export function decodeNotesBase(
++  value: string | null,
++): Record<string, NoteSnapshot> {
++  if (!value) return {};
++  try {
++    const raw: unknown = JSON.parse(value);
++    if (
++      typeof raw !== "object" || raw === null ||
++      !("lastSyncedSnapshots" in raw) ||
++      typeof raw.lastSyncedSnapshots !== "object" ||
++      raw.lastSyncedSnapshots === null || Array.isArray(raw.lastSyncedSnapshots)
++    ) return {};
++    const entries: [string, NoteSnapshot][] = [];
++    for (const [key, item] of Object.entries(raw.lastSyncedSnapshots)) {
++      if (
++        typeof item !== "object" || item === null || !("id" in item) ||
++        item.id !== key || !key.trim() || !("title" in item) ||
++        typeof item.title !== "string" || !("content" in item) ||
++        typeof item.content !== "string" || !("updatedAt" in item) ||
++        typeof item.updatedAt !== "number" ||
++        !Number.isSafeInteger(item.updatedAt) || item.updatedAt < 0
++      ) return {};
++      entries.push([key, {
++        id: key,
++        title: item.title,
++        content: item.content,
++        updatedAt: item.updatedAt,
++      }]);
++    }
++    return Object.fromEntries(entries);
++  } catch {
++    return {};
++  }
++}
+diff --git a/browser-features/modules/common/notes-storage-types.ts b/browser-features/modules/common/notes-storage-types.ts
+new file mode 100644
+index 000000000000..2138970f70d6
+--- /dev/null
++++ b/browser-features/modules/common/notes-storage-types.ts
+@@ -0,0 +1,51 @@
++export interface NotesPreferenceSnapshot {
++  value: string | null;
++  revision: number;
++  epoch: number;
++  origin: "local" | "external" | "sync";
++  incomingValue?: string;
++  baseValue?: string | null;
++  baseNotesValue?: string | null;
++  accountUid?: string;
++}
++
++export interface NotesSyncContext {
++  epoch: number;
++  revision: number;
++  accountUid: string | null;
++  origin: NotesPreferenceSnapshot["origin"];
++}
++
++export interface NotesSyncStateRead {
++  value: string | null;
++  context: NotesSyncContext;
++}
++
++export interface NotesStorageFunctions {
++  getNotesSnapshot(): Promise<NotesPreferenceSnapshot>;
++  readNotesSyncState(
++    snapshot: NotesPreferenceSnapshot,
++  ): Promise<NotesSyncStateRead>;
++  writeNotesPref(
++    value: string,
++    context?: NotesSyncContext,
++    baseValue?: string | null,
++  ): Promise<NotesPreferenceSnapshot>;
++}
++
++export interface NotesStorageService {
++  getSnapshot(): NotesPreferenceSnapshot;
++  readSyncState(snapshot: NotesPreferenceSnapshot): Promise<NotesSyncStateRead>;
++  writeLocal(
++    value: string,
++    context?: NotesSyncContext,
++    baseValue?: string | null,
++  ): NotesPreferenceSnapshot;
++  applyIncoming(
++    value: string,
++    apply: (merged: string) => Promise<unknown>,
++    expectedEpoch?: number,
++  ): Promise<{ result: unknown; needsUpload: boolean }>;
++  prepareUpload(): Promise<NotesSyncContext>;
++  acknowledgeUploaded(value: string, context: NotesSyncContext): Promise<void>;
++}
+diff --git a/browser-features/modules/modules/notes/FloorpNotesPrefsEngine.sys.mts b/browser-features/modules/modules/notes/FloorpNotesPrefsEngine.sys.mts
+new file mode 100644
+index 000000000000..6a13e114b9bd
+--- /dev/null
++++ b/browser-features/modules/modules/notes/FloorpNotesPrefsEngine.sys.mts
+@@ -0,0 +1,235 @@
++// SPDX-License-Identifier: MPL-2.0
++
++import type {
++  NotesStorageService,
++  NotesSyncContext,
++} from "../../common/notes-storage-types.ts";
++import { decodeNotes } from "../../common/notes-record.ts";
++
++// Use the same profile ESM instance as every Notes page and actor, independent
++// of bundler entry-point splitting.
++const { FloorpNotesStorage } = ChromeUtils.importESModule(
++  "resource://noraneko/modules/notes/FloorpNotesStorage.sys.mjs",
++) as { FloorpNotesStorage: NotesStorageService };
++const { PrefsEngine: NativePrefsEngine } = ChromeUtils.importESModule(
++  "resource://services-sync/engines/prefs.sys.mjs",
++);
++const { Utils } = ChromeUtils.importESModule(
++  "resource://services-sync/util.sys.mjs",
++);
++const NOTES_PREF = "floorp.browser.note.memos";
++const CONTROL_PREF = `services.sync.prefs.sync.${NOTES_PREF}`;
++interface NotesPrefRecord {
++  id: string;
++  value: Record<string, unknown>;
++  cleartext: unknown;
++  deleted?: boolean;
++}
++
++function enabled(): boolean {
++  return Services.prefs.getBoolPref(CONTROL_PREF, false);
++}
++function validNotes(value: unknown): value is string {
++  if (typeof value !== "string") return false;
++  try {
++    decodeNotes(value);
++    return true;
++  } catch {
++    return false;
++  }
++}
++
++class NotesPrefStore extends NativePrefsEngine.prototype._storeObj {
++  declare engine: FloorpNotesPrefsEngine;
++
++  async update(record: NotesPrefRecord): Promise<unknown> {
++    if (!await this.itemExists(record.id)) return await super.update(record);
++    const expected = FloorpNotesStorage.getSnapshot().epoch;
++    if (Object.hasOwn(record.value, CONTROL_PREF)) {
++      await super.update({
++        id: record.id,
++        value: { [CONTROL_PREF]: record.value[CONTROL_PREF] },
++      });
++    }
++    if (!enabled()) return await super.update(record);
++
++    const raw = record.value[NOTES_PREF];
++    if (!validNotes(raw)) {
++      const values = { ...record.value };
++      delete values[NOTES_PREF];
++      const result = await super.update({ id: record.id, value: values });
++      if (validNotes(FloorpNotesStorage.getSnapshot().value)) {
++        this.engine.notesChanged(record.id, expected);
++      }
++      return result;
++    }
++    let applied = false;
++    try {
++      const outcome = await FloorpNotesStorage.applyIncoming(
++        raw,
++        async (merged) => {
++          applied = true;
++          const result = await super.update({
++            id: record.id,
++            value: { ...record.value, [NOTES_PREF]: merged },
++          });
++          return result;
++        },
++        expected,
++      );
++      if (outcome.needsUpload) this.engine.notesChanged(record.id, expected);
++      return outcome.result;
++    } catch (error) {
++      this.engine.notesFailed(record.id, expected);
++      if (
++        !applied && FloorpNotesStorage.getSnapshot().epoch === expected
++      ) {
++        const values = { ...record.value };
++        delete values[NOTES_PREF];
++        try {
++          await super.update({ id: record.id, value: values });
++        } catch (fallbackError) {
++          console.error(
++            "[Floorp Notes] Failed to apply unrelated preferences.",
++            fallbackError,
++          );
++        }
++      }
++      throw error;
++    } finally {
++      this._incomingPrefs = record.value;
++    }
++  }
++}
++
++export class FloorpNotesPrefsEngine extends NativePrefsEngine {
++  private notesPending = new Map<string, number>();
++  private notesFailures = new Map<string, number>();
++  private notesUpload: {
++    context: NotesSyncContext;
++    record?: { id: string; value: string };
++  } | null = null;
++
++  notesChanged(id: string, expected: number): void {
++    if (FloorpNotesStorage.getSnapshot().epoch !== expected) return;
++    this.notesPending.set(id, expected);
++    this._tracker.modified = true;
++  }
++
++  notesFailed(id: string, expected: number): void {
++    if (FloorpNotesStorage.getSnapshot().epoch !== expected) return;
++    this.notesFailures.set(id, expected);
++    this.notesChanged(id, expected);
++  }
++
++  async _processIncoming(...args: unknown[]): Promise<unknown> {
++    try {
++      return await super._processIncoming(...args);
++    } finally {
++      const currentEpoch = FloorpNotesStorage.getSnapshot().epoch;
++      for (const [id, expected] of this.notesPending) {
++        if (expected === currentEpoch) this._modified.set(id, 0);
++      }
++      this.notesPending.clear();
++      // Native Sync drops repeatedly failing IDs after two attempts. Keep this
++      // whole prefs record backlogged until its Notes can actually be applied.
++      const failed = this.previousFailedIn;
++      let retain = false;
++      for (const [id, expected] of this.notesFailures) {
++        if (expected === currentEpoch) {
++          failed.add(id);
++          retain = true;
++        }
++      }
++      if (retain) this.previousFailedIn = failed;
++      this.notesFailures.clear();
++    }
++  }
++
++  async _reconcile(record: NotesPrefRecord): Promise<boolean> {
++    const expected = FloorpNotesStorage.getSnapshot().epoch;
++    const shouldApply = await super._reconcile(record);
++    if (
++      !shouldApply && !record.deleted && enabled() &&
++      validNotes(record.value?.[NOTES_PREF]) &&
++      await this._store.itemExists(record.id)
++    ) {
++      const localRecord = await this._createRecord(record.id);
++      if (Utils.deepEquals(record.cleartext, localRecord.cleartext)) {
++        try {
++          const outcome = await FloorpNotesStorage.applyIncoming(
++            record.value[NOTES_PREF] as string,
++            () => Promise.resolve(undefined),
++            expected,
++          );
++          if (outcome.needsUpload) this.notesChanged(record.id, expected);
++        } catch (error) {
++          this.notesFailed(record.id, expected);
++          throw error;
++        }
++      }
++    }
++    return shouldApply;
++  }
++
++  async _uploadOutgoing(): Promise<unknown> {
++    const expected = FloorpNotesStorage.getSnapshot().epoch;
++    const deferred = new Map<string, number>();
++    for (const id of this._modified.ids()) {
++      if (this.previousFailedIn.has(id)) {
++        deferred.set(id, this._modified.getModifiedTimestamp(id));
++        this._modified.delete(id);
++      }
++    }
++    try {
++      if (
++        !enabled() || this._modified.count() === 0 ||
++        !validNotes(FloorpNotesStorage.getSnapshot().value)
++      ) return await super._uploadOutgoing();
++      this.notesUpload = {
++        context: await FloorpNotesStorage.prepareUpload(),
++      };
++      return await super._uploadOutgoing();
++    } finally {
++      this.notesUpload = null;
++      if (FloorpNotesStorage.getSnapshot().epoch === expected) {
++        for (const [id, timestamp] of deferred) this._modified.set(id, timestamp);
++        if (deferred.size) this._tracker.modified = true;
++      }
++    }
++  }
++
++  async _createRecord(id: string): Promise<NotesPrefRecord> {
++    const record = await super._createRecord(id);
++    const value = record.value?.[NOTES_PREF];
++    if (this.notesUpload && !record.deleted && enabled() && validNotes(value)) {
++      this.notesUpload.record = { id: record.id, value };
++    }
++    return record;
++  }
++
++  async _onRecordsWritten(
++    successful: string[],
++    failed: string[],
++    serverTime: number,
++  ): Promise<void> {
++    await super._onRecordsWritten(successful, failed, serverTime);
++    const upload = this.notesUpload;
++    if (!upload?.record || !successful.includes(upload.record.id)) return;
++    try {
++      await FloorpNotesStorage.acknowledgeUploaded(
++        upload.record.value,
++        upload.context,
++      );
++    } catch (error) {
++      // Native Sync already removed successful IDs before invoking this hook.
++      // Keep this acknowledgement failure retryable in memory and on disk.
++      if (FloorpNotesStorage.getSnapshot().epoch === upload.context.epoch) {
++        this._modified.set(upload.record.id, 0);
++        this._tracker.modified = true;
++      }
++      throw error;
++    }
++  }
++}
++FloorpNotesPrefsEngine.prototype._storeObj = NotesPrefStore;
+diff --git a/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts b/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts
+new file mode 100644
+index 000000000000..9c105e76f19b
+--- /dev/null
++++ b/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts
+@@ -0,0 +1,343 @@
++// SPDX-License-Identifier: MPL-2.0
++
++import type {
++  NotesPreferenceSnapshot,
++  NotesSyncContext,
++  NotesSyncStateRead,
++} from "../../common/notes-storage-types.ts";
++import {
++  decodeNotes,
++  decodeNotesBase,
++  encodeNotes,
++  notesBase,
++} from "../../common/notes-record.ts";
++import { mergeNotesThreeWay } from "../../../pages-notes/src/lib/merge.ts";
++
++const NOTES_PREF = "floorp.browser.note.memos";
++const BASE_PREF = "floorp.browser.note.syncState";
++const CONTEXT_CHANGED = "floorp-notes:context-changed";
++const ACCOUNT_TOPICS = [
++  "weave:service:start-over",
++  "fxaccounts:onlogout",
++  "fxaccounts:onlogin",
++];
++let epoch = 0;
++let revision = 0;
++let accountUid: string | null | undefined;
++let accountLookup: Promise<string | null> | null = null;
++let localWrite: { baseValue?: string | null } | null = null;
++let incoming: {
++  value: string;
++  merged: string;
++  baseValue: string | null;
++  accountUid: string;
++  delivered: boolean;
++} | null = null;
++
++function readNotes(): string | null {
++  return Services.prefs.getPrefType(NOTES_PREF) === Services.prefs.PREF_STRING
++    ? Services.prefs.getStringPref(NOTES_PREF)
++    : null;
++}
++function localNotes(value: string | null) {
++  return value
++    ? decodeNotes(
++      value,
++      true,
++      () => Services.uuid.generateUUID().toString().replace(/[{}]/g, ""),
++    )
++    : [];
++}
++let currentSnapshot: NotesPreferenceSnapshot = {
++  value: readNotes(),
++  epoch,
++  revision,
++  origin: "local",
++};
++
++function assertEpoch(expected: number): void {
++  if (expected !== epoch) throw new Error("Notes account context changed");
++}
++function assertContext(context: NotesSyncContext): void {
++  assertEpoch(context.epoch);
++  if (
++    context.accountUid !== null && accountUid !== undefined &&
++    context.accountUid !== accountUid
++  ) {
++    throw new Error("Notes account identity changed");
++  }
++}
++function invalidateAccount(): void {
++  ++epoch;
++  accountUid = undefined;
++  accountLookup = null;
++  if (Services.prefs.prefHasUserValue(BASE_PREF)) {
++    Services.prefs.clearUserPref(BASE_PREF);
++  }
++  currentSnapshot = {
++    value: readNotes(),
++    epoch,
++    revision: ++revision,
++    origin: "local",
++  };
++  Services.obs.notifyObservers(Services.prefs, CONTEXT_CHANGED);
++}
++async function readAccount(expected: number): Promise<string | null> {
++  if (!accountLookup) {
++    const lookup = (async () => {
++      const { getFxAccountsSingleton } = ChromeUtils.importESModule(
++        "resource://gre/modules/FxAccounts.sys.mjs",
++      ) as {
++        getFxAccountsSingleton(): {
++          getSignedInUser(): Promise<{ uid?: string } | null>;
++        };
++      };
++      const user = await getFxAccountsSingleton().getSignedInUser();
++      assertEpoch(expected);
++      const uid = user?.uid ?? null;
++      if (accountUid !== undefined && accountUid !== uid) {
++        invalidateAccount();
++        throw new Error("Notes account identity changed");
++      }
++      accountUid = uid;
++      return uid;
++    })();
++    accountLookup = lookup;
++    lookup.finally(() => {
++      if (accountLookup === lookup) accountLookup = null;
++    }).catch(() => {});
++  }
++  return await accountLookup;
++}
++function boundBase(uid: string | null): string | null {
++  if (!uid) return null;
++  const raw = Services.prefs.getStringPref(BASE_PREF, "");
++  try {
++    const parsed: unknown = raw ? JSON.parse(raw) : null;
++    if (
++      typeof parsed === "object" && parsed !== null && "accountUid" in parsed &&
++      parsed.accountUid === uid
++    ) return raw;
++  } catch { /* An unreadable base cannot authorize deletion. */ }
++  if (raw && Services.prefs.prefHasUserValue(BASE_PREF)) {
++    Services.prefs.clearUserPref(BASE_PREF);
++  }
++  return null;
++}
++function acknowledge(value: string, uid: string): void {
++  const intended = JSON.stringify({
++    accountUid: uid,
++    lastSyncedSnapshots: notesBase(decodeNotes(value)),
++    lastSyncTime: Date.now(),
++  });
++  Services.prefs.setStringPref(BASE_PREF, intended);
++  // Locked native prefs may accept a hidden user value while retaining an old
++  // effective value. A setter return alone is not a durable acknowledgement.
++  if (Services.prefs.getStringPref(BASE_PREF, "") !== intended) {
++    throw new Error("Notes sync acknowledgement did not persist");
++  }
++}
++function syncSnapshot(
++  value: string | null,
++  source: NonNullable<typeof incoming>,
++): NotesPreferenceSnapshot {
++  return {
++    value,
++    epoch,
++    revision: ++revision,
++    origin: "sync",
++    incomingValue: source.value,
++    baseValue: source.baseValue,
++    accountUid: source.accountUid,
++  };
++}
++const observer = {
++  observe(_subject: unknown, topic: string, data: string) {
++    if (topic === "nsPref:changed" && data === NOTES_PREF) {
++      const value = readNotes();
++      if (localWrite) {
++        currentSnapshot = {
++          value,
++          epoch,
++          revision: ++revision,
++          origin: "local",
++          baseNotesValue: localWrite.baseValue,
++        };
++      } else if (incoming && value === incoming.merged) {
++        incoming.delivered = true;
++        currentSnapshot = syncSnapshot(value, incoming);
++      } else {
++        currentSnapshot = {
++          value,
++          epoch,
++          revision: ++revision,
++          origin: "external",
++        };
++      }
++    } else if (ACCOUNT_TOPICS.includes(topic)) invalidateAccount();
++    else if (topic === "profile-before-change") {
++      Services.prefs.removeObserver(NOTES_PREF, observer);
++      for (const accountTopic of ACCOUNT_TOPICS) {
++        Services.obs.removeObserver(observer, accountTopic);
++      }
++      Services.obs.removeObserver(observer, "profile-before-change");
++    }
++  },
++};
++Services.prefs.addObserver(NOTES_PREF, observer);
++for (const topic of [...ACCOUNT_TOPICS, "profile-before-change"]) {
++  Services.obs.addObserver(observer, topic);
++}
++
++export const FloorpNotesStorage = {
++  getSnapshot(): NotesPreferenceSnapshot {
++    const value = readNotes();
++    if (value) {
++      try {
++        const normalized = encodeNotes(localNotes(value));
++        if (normalized !== value) this.writeLocal(normalized);
++      } catch { /* Preserve unreadable local data for recovery. */ }
++    }
++    return { ...currentSnapshot };
++  },
++
++  writeLocal(
++    value: string,
++    context?: NotesSyncContext,
++    baseValue?: string | null,
++  ): NotesPreferenceSnapshot {
++    if (context) assertContext(context);
++    const next = decodeNotes(value);
++    const current = readNotes();
++    const merged = baseValue !== undefined && current !== baseValue
++      ? mergeNotesThreeWay(
++        next,
++        localNotes(current),
++        notesBase(localNotes(baseValue)),
++      ).merged
++      : next;
++    const previous = localWrite;
++    localWrite = { baseValue };
++    try {
++      Services.prefs.setStringPref(NOTES_PREF, encodeNotes(merged));
++    } finally {
++      localWrite = previous;
++    }
++    return { ...currentSnapshot };
++  },
++
++  async readSyncState(
++    snapshot: NotesPreferenceSnapshot,
++  ): Promise<NotesSyncStateRead> {
++    assertEpoch(snapshot.epoch);
++    let uid: string | null;
++    try {
++      uid = await readAccount(snapshot.epoch);
++    } catch (error) {
++      assertEpoch(snapshot.epoch);
++      console.warn(
++        "[Floorp Notes] Account unavailable; retaining local notes.",
++        error,
++      );
++      uid = null;
++    }
++    assertEpoch(snapshot.epoch);
++    const context: NotesSyncContext = {
++      epoch,
++      revision: snapshot.revision,
++      accountUid: uid,
++      origin: snapshot.origin,
++    };
++    if (snapshot.origin === "sync") {
++      if (!uid || snapshot.accountUid !== uid) {
++        throw new Error("Notes incoming account changed");
++      }
++      return { value: snapshot.baseValue ?? null, context };
++    }
++    if (snapshot.origin === "local" && snapshot.baseNotesValue !== undefined) {
++      return {
++        value: JSON.stringify({
++          lastSyncedSnapshots: notesBase(localNotes(snapshot.baseNotesValue)),
++          lastSyncTime: 0,
++        }),
++        context,
++      };
++    }
++    return { value: boundBase(uid), context };
++  },
++
++  async applyIncoming(
++    value: string,
++    apply: (merged: string) => Promise<unknown>,
++    expectedEpoch = epoch,
++  ): Promise<{ result: unknown; needsUpload: boolean }> {
++    assertEpoch(expectedEpoch);
++    const remote = decodeNotes(value);
++    const expected = expectedEpoch;
++    const uid = await readAccount(expected);
++    assertEpoch(expected);
++    if (!uid) throw new Error("Notes Sync requires a signed-in account");
++    const baseValue = boundBase(uid);
++    const localValue = readNotes();
++    const local = localNotes(localValue);
++    const mergedNotes =
++      mergeNotesThreeWay(local, remote, decodeNotesBase(baseValue)).merged;
++    const encoded = encodeNotes(mergedNotes);
++    const merged = localValue && encodeNotes(local) === encoded
++      ? localValue
++      : encoded;
++    const source: NonNullable<typeof incoming> = {
++      value,
++      merged,
++      baseValue,
++      accountUid: uid,
++      delivered: false,
++    };
++    incoming = source;
++    try {
++      const applying = apply(merged);
++      if (!source.delivered && readNotes() !== merged) {
++        await applying;
++        throw new Error("Notes incoming preference did not persist");
++      }
++      if (!source.delivered) {
++        currentSnapshot = syncSnapshot(readNotes(), source);
++        Services.obs.notifyObservers(Services.prefs, CONTEXT_CHANGED);
++      }
++      const result = await applying;
++      assertEpoch(expected);
++      if (accountUid !== uid) throw new Error("Notes incoming account changed");
++      acknowledge(value, uid);
++      return {
++        result,
++        needsUpload:
++          encodeNotes(localNotes(readNotes())) !== encodeNotes(remote),
++      };
++    } finally {
++      if (incoming === source) incoming = null;
++    }
++  },
++
++  async prepareUpload(): Promise<NotesSyncContext> {
++    const expected = epoch;
++    const uid = await readAccount(expected);
++    assertEpoch(expected);
++    if (!uid) throw new Error("Notes Sync requires a signed-in account");
++    return { epoch, revision, accountUid: uid, origin: "local" };
++  },
++
++  async acknowledgeUploaded(
++    value: string,
++    context: NotesSyncContext,
++  ): Promise<void> {
++    assertContext(context);
++    const uid = await readAccount(context.epoch);
++    assertEpoch(context.epoch);
++    if (!uid || uid !== context.accountUid) {
++      throw new Error("Notes upload account changed");
++    }
++    // This is the exact PrefRec payload accepted by the server, which may be
++    // older than a local edit made while the upload was in flight.
++    acknowledge(value, uid);
++  },
++};
+diff --git a/browser-features/pages-notes/src/App.tsx b/browser-features/pages-notes/src/App.tsx
+index bab70ceb4671..5208c750b353 100644
+--- a/browser-features/pages-notes/src/App.tsx
++++ b/browser-features/pages-notes/src/App.tsx
+@@ -11,7 +11,6 @@ import {
+   notesDataToNotes,
+   notesToNotesData,
+   saveNotes,
+-  saveSyncState,
+   syncStateFromNotes,
+ } from "./lib/dataManager.ts";
+ import { addPrefObserver, removePrefObserver, rpc } from "./lib/rpc/rpc.ts";
+@@ -25,6 +24,10 @@ import { AlertCircle, Download } from "lucide-react";
+ import { noteToMarkdown } from "./lib/exportMarkdown.ts";
+ import { toExportFilename } from "./lib/exportFilename.ts";
+ import { saveTextFile } from "./lib/fileSink.ts";
++import type {
++  NotesPreferenceSnapshot,
++  NotesSyncContext,
++} from "../../modules/common/notes-storage-types.ts";
+ 
+ type SaveStatusType = "idle" | "saving" | "saved" | "error";
+ 
+@@ -41,6 +44,7 @@ function App() {
+   const [exportError, setExportError] = useState(false);
+   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   const notesRef = useRef<Note[]>([]);
++  const acknowledgedValueRef = useRef<string | null>(null);
+   const selectedNoteRef = useRef<Note | null>(null);
+   const hasLoadedRef = useRef(false);
+   const isMountedRef = useRef(true);
+@@ -74,19 +78,30 @@ function App() {
+     return task;
+   }, []);
+ 
+-  const writeNotesPref = useCallback(async (notesToSave: Note[]) => {
+-    const data = notesToNotesData(notesToSave);
+-    const value = JSON.stringify(data);
+-    const ownWrites = ownWriteValuesRef.current;
+-    ownWrites.set(value, (ownWrites.get(value) ?? 0) + 1);
+-    try {
+-      await saveNotes(data);
+-    } finally {
+-      const remaining = (ownWrites.get(value) ?? 1) - 1;
+-      if (remaining === 0) ownWrites.delete(value);
+-      else ownWrites.set(value, remaining);
+-    }
+-  }, []);
++  const writeNotesPref = useCallback(
++    async (
++      notesToSave: Note[],
++      context?: NotesSyncContext,
++      baseValue = acknowledgedValueRef.current,
++    ) => {
++      const data = notesToNotesData(notesToSave);
++      const value = JSON.stringify(data);
++      const ownWrites = ownWriteValuesRef.current;
++      ownWrites.set(value, (ownWrites.get(value) ?? 0) + 1);
++      try {
++        await saveNotes(data, context, baseValue);
++        // CAS may persist changes from another window which notesRef has not
++        // observed yet. Only the submitted UI state can be our next ancestor;
++        // otherwise a later flush would treat those unseen notes as deletions.
++        acknowledgedValueRef.current = value;
++      } finally {
++        const remaining = (ownWrites.get(value) ?? 1) - 1;
++        if (remaining === 0) ownWrites.delete(value);
++        else ownWrites.set(value, remaining);
++      }
++    },
++    [],
++  );
+ 
+   // Auto-reset "saved" status after 2 seconds
+   useEffect(() => {
+@@ -108,8 +123,10 @@ function App() {
+     const loadNotes = async () => {
+       try {
+         setIsLoading(true);
+-        const notesData = await getNotes(t);
++        const snapshot = await rpc.getNotesSnapshot();
++        const notesData = await getNotes(t, snapshot.value);
+         if (disposed) return;
++        acknowledgedValueRef.current = snapshot.value;
+ 
+         const convertedNotes: Note[] = notesData.titles.map((
+           noteTitle,
+@@ -152,7 +169,7 @@ function App() {
+ 
+     const applyExternalPrefChange = async (
+       prefName: string,
+-      remoteStr: string | null,
++      snapshot: NotesPreferenceSnapshot,
+     ) => {
+       console.info(
+         `[Floorp Notes] Detected external change to pref "${prefName}", running three-way merge…`,
+@@ -160,20 +177,26 @@ function App() {
+ 
+       try {
+         // Read the externally observed preference snapshot.
+-        if (!remoteStr) return; // Empty or null — nothing to merge
++        if (!snapshot.value) return; // Empty or null — nothing to merge
+         const remoteNotes = notesDataToNotes(
+-          JSON.parse(remoteStr) as NotesData,
++          JSON.parse(snapshot.incomingValue ?? snapshot.value) as NotesData,
+         );
+ 
+         // Read the current local state after the asynchronous base lookup.
+-        const syncState = await loadSyncState();
++        const { state: syncState, context } = await loadSyncState(snapshot);
+         if (disposed) return;
+         const localNotes = notesRef.current;
+ 
++        const base = snapshot.origin === "sync" &&
++            snapshot.incomingValue === acknowledgedValueRef.current
++          ? syncStateFromNotes(
++            notesDataToNotes(JSON.parse(snapshot.incomingValue) as NotesData),
++          ).lastSyncedSnapshots
++          : syncState.lastSyncedSnapshots;
+         const result = mergeNotesThreeWay(
+           localNotes,
+           remoteNotes,
+-          syncState.lastSyncedSnapshots,
++          base,
+         );
+ 
+         // Publish before awaiting writes so later edits build on this merge.
+@@ -187,12 +210,9 @@ function App() {
+           : result.merged[0];
+         selectCurrentNote(newSelected ?? result.merged[0] ?? null);
+ 
+-        await writeNotesPref(result.merged);
++        await writeNotesPref(result.merged, context, snapshot.value);
+         if (disposed) return;
+ 
+-        // Preserve the existing external-snapshot base policy.
+-        await saveSyncState(syncStateFromNotes(remoteNotes));
+-
+         if (result.hadConflicts) {
+           console.warn(
+             `[Floorp Notes] Sync merge completed with ${result.conflictCount} conflict(s). Conflict copies created.`,
+@@ -205,26 +225,31 @@ function App() {
+       }
+     };
+ 
+-    // Capture each server-delivered value as soon as its observer fires, then
+-    // apply snapshots in notification order. Direct pref observers do not await
+-    // async callbacks, so allowing merges to overlap could let an older callback
+-    // overwrite a newer server-confirmed merge base.
++    // Capture each immutable observed snapshot before any async work.
+     let syncMergeQueue: Promise<void> = Promise.resolve();
+-    const onPrefChanged = (prefName: string) => {
++    let lastSnapshotKey = "";
++    const onPrefChanged = (
++      prefName: string,
++      snapshot: NotesPreferenceSnapshot,
++    ) => {
++      const key = `${snapshot.epoch}:${snapshot.revision}`;
++      if (key === lastSnapshotKey) return;
++      lastSnapshotKey = key;
+       const ownWriteValues = new Set(ownWriteValuesRef.current.keys());
+ 
+       syncMergeQueue = Promise.all([
+         syncMergeQueue,
+-        rpc.getStringPref(NOTES_PREF_NAME),
++        Promise.resolve(snapshot),
+       ])
+-        .then(([, remoteStr]) => {
++        .then(([, captured]) => {
+           if (
+-            disposed || (remoteStr !== null && ownWriteValues.has(remoteStr))
++            disposed ||
++            (captured.value !== null && ownWriteValues.has(captured.value))
+           ) {
+             return;
+           }
+           return enqueuePersistence(() =>
+-            applyExternalPrefChange(prefName, remoteStr)
++            applyExternalPrefChange(prefName, captured)
+           );
+         })
+         .catch((err) => {
+diff --git a/browser-features/pages-notes/src/lib/dataManager.ts b/browser-features/pages-notes/src/lib/dataManager.ts
+index df7938d909ce..eb443dfbac59 100644
+--- a/browser-features/pages-notes/src/lib/dataManager.ts
++++ b/browser-features/pages-notes/src/lib/dataManager.ts
+@@ -1,13 +1,17 @@
+ import { rpc } from "./rpc/rpc.ts";
+ import type { NoteSnapshot } from "./merge.ts";
+ import type { Note } from "../types/note.ts";
++import type {
++  NotesPreferenceSnapshot,
++  NotesSyncContext,
++} from "../../../modules/common/notes-storage-types.ts";
+ 
+ export {
+   canonicalData,
+   mergeNotesThreeWay,
+-  precedes,
+   type MergeResult,
+   type NoteSnapshot,
++  precedes,
+ } from "./merge.ts";
+ 
+ export const NOTES_PREF_NAME = "floorp.browser.note.memos";
+@@ -31,9 +35,14 @@ function getDefaultNotes(t: (key: string) => string): NotesData {
+   };
+ }
+ 
+-export async function getNotes(t: (key: string) => string): Promise<NotesData> {
++export async function getNotes(
++  t: (key: string) => string,
++  value?: string | null,
++): Promise<NotesData> {
+   try {
+-    const notesStr = await rpc.getStringPref(NOTES_PREF_NAME);
++    const notesStr = value === undefined
++      ? await rpc.getStringPref(NOTES_PREF_NAME)
++      : value;
+     if (!notesStr) {
+       return getDefaultNotes(t);
+     }
+@@ -59,9 +68,13 @@ export async function getNotes(t: (key: string) => string): Promise<NotesData> {
+   }
+ }
+ 
+-export async function saveNotes(data: NotesData): Promise<void> {
++export async function saveNotes(
++  data: NotesData,
++  context?: NotesSyncContext,
++  baseValue?: string | null,
++) {
+   try {
+-    await rpc.setStringPref(NOTES_PREF_NAME, JSON.stringify(data));
++    return await rpc.writeNotesPref(JSON.stringify(data), context, baseValue);
+   } catch (e) {
+     console.error("Failed to save note data:", e);
+     throw e;
+@@ -72,8 +85,6 @@ export async function saveNotes(data: NotesData): Promise<void> {
+ // Three-Way Merge for Sync
+ // ──────────────────────────────────────────────────────────
+ 
+-const SYNC_STATE_PREF = "floorp.browser.note.syncState";
+-
+ /** Persistent sync state used as the "base" for three-way merge. */
+ export interface SyncState {
+   /** Snapshots keyed by note ID. */
+@@ -102,10 +113,13 @@ export function syncStateFromNotes(notes: Note[]): SyncState {
+ }
+ 
+ /** Loads the last sync state from preferences. */
+-export async function loadSyncState(): Promise<SyncState> {
++export async function loadSyncState(
++  snapshot: NotesPreferenceSnapshot,
++): Promise<{ state: SyncState; context: NotesSyncContext }> {
++  const read = await rpc.readNotesSyncState(snapshot);
+   try {
+-    const raw = await rpc.getStringPref(SYNC_STATE_PREF);
+-    if (!raw) return emptySyncState();
++    const raw = read.value;
++    if (!raw) return { state: emptySyncState(), context: read.context };
+     const parsed = JSON.parse(raw) as unknown;
+     // Validate shape before trusting it
+     if (
+@@ -113,27 +127,15 @@ export async function loadSyncState(): Promise<SyncState> {
+       "lastSyncedSnapshots" in parsed && "lastSyncTime" in parsed &&
+       typeof parsed.lastSyncTime === "number"
+     ) {
+-      return parsed as SyncState;
++      return { state: parsed as SyncState, context: read.context };
+     }
+     console.warn(
+       "[Floorp Notes] Sync state pref has unexpected shape, resetting to empty.",
+     );
+-    return emptySyncState();
++    return { state: emptySyncState(), context: read.context };
+   } catch (e) {
+     console.warn("[Floorp Notes] Failed to parse sync state, resetting:", e);
+-    return emptySyncState();
+-  }
+-}
+-
+-/** Persists the sync state after a successful sync. */
+-export async function saveSyncState(state: SyncState): Promise<void> {
+-  try {
+-    await rpc.setStringPref(SYNC_STATE_PREF, JSON.stringify(state));
+-    console.debug(
+-      `[Floorp Notes] Saved sync state with ${Object.keys(state.lastSyncedSnapshots).length} snapshots`,
+-    );
+-  } catch (e) {
+-    console.error("[Floorp Notes] Failed to save sync state:", e);
++    return { state: emptySyncState(), context: read.context };
+   }
+ }
+ 
+diff --git a/browser-features/pages-notes/src/lib/rpc/rpc.ts b/browser-features/pages-notes/src/lib/rpc/rpc.ts
+index 39eb734fbcdc..3ec217411144 100644
+--- a/browser-features/pages-notes/src/lib/rpc/rpc.ts
++++ b/browser-features/pages-notes/src/lib/rpc/rpc.ts
+@@ -1,8 +1,12 @@
+-import type { NotesPrefFunctions } from "./types.ts";
++import type { NotesPrefFunctions, NotesStorageModule } from "./types.ts";
++import type { NotesPreferenceSnapshot } from "../../../../modules/common/notes-storage-types.ts";
+ import { createBirpc } from "birpc";
+ 
+ // deno-lint-ignore no-explicit-any
+ declare const Services: any;
++declare const ChromeUtils: {
++  importESModule(uri: string): unknown;
++};
+ declare global {
+   interface Window {
+     NRSettingsSend: (data: string) => void;
+@@ -13,13 +17,19 @@ declare global {
+ }
+ 
+ const isLocalhost5188 = import.meta.url?.includes("localhost:5188");
++const notesStorage = isLocalhost5188 ? null : (ChromeUtils.importESModule(
++  "resource://noraneko/modules/notes/FloorpNotesStorage.sys.mjs",
++) as NotesStorageModule).FloorpNotesStorage;
+ 
+ // ──────────────────────────────────────────────────────────
+ // Pref Observer Types
+ // ──────────────────────────────────────────────────────────
+ 
+ /** Callback invoked when an observed preference changes. */
+-export type PrefChangeCallback = (prefName: string) => void;
++export type PrefChangeCallback = (
++  prefName: string,
++  snapshot: NotesPreferenceSnapshot,
++) => void;
+ 
+ /**
+  * Internal bookkeeping object returned by direct-mode observer registration.
+@@ -34,6 +44,9 @@ export interface PrefObserverHandle {
+   _observer: {
+     observe: (subject: unknown, topic: string, data: string) => void;
+   };
++  _contextObserver?: {
++    observe: (subject: unknown, topic: string, data: string) => void;
++  };
+ }
+ 
+ // ──────────────────────────────────────────────────────────
+@@ -49,15 +62,22 @@ function addDirectPrefObserver(
+   const observer = {
+     observe(_subject: unknown, topic: string, data: string) {
+       if (topic === "nsPref:changed" && data === prefName) {
+-        callback(prefName);
++        callback(prefName, notesStorage!.getSnapshot());
+       }
+     },
+   };
+   Services.prefs.addObserver(prefName, observer);
++  const contextObserver = {
++    observe() {
++      callback(prefName, notesStorage!.getSnapshot());
++    },
++  };
++  Services.obs.addObserver(contextObserver, "floorp-notes:context-changed");
+   const handle: PrefObserverHandle = {
+     prefName,
+     callback,
+     _observer: observer,
++    _contextObserver: contextObserver,
+   };
+   observerRegistry.set(callback, handle);
+   return handle;
+@@ -67,6 +87,12 @@ function removeDirectPrefObserver(callback: PrefChangeCallback): void {
+   const handle = observerRegistry.get(callback);
+   if (handle) {
+     Services.prefs.removeObserver(handle.prefName, handle._observer);
++    if (handle._contextObserver) {
++      Services.obs.removeObserver(
++        handle._contextObserver,
++        "floorp-notes:context-changed",
++      );
++    }
+     observerRegistry.delete(callback);
+   }
+ }
+@@ -76,6 +102,11 @@ function removeDirectPrefObserver(callback: PrefChangeCallback): void {
+ // ──────────────────────────────────────────────────────────
+ 
+ const directServicesFunctions: NotesPrefFunctions = {
++  getNotesSnapshot: () => Promise.resolve(notesStorage!.getSnapshot()),
++  readNotesSyncState: (snapshot) => notesStorage!.readSyncState(snapshot),
++  writeNotesPref: (value, context, baseValue) => {
++    return Promise.resolve(notesStorage!.writeLocal(value, context, baseValue));
++  },
+   getBoolPref: (prefName) => {
+     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
+       return Promise.resolve(null);
+@@ -89,6 +120,9 @@ const directServicesFunctions: NotesPrefFunctions = {
+     return Promise.resolve(Services.prefs.getIntPref(prefName));
+   },
+   getStringPref: (prefName) => {
++    if (prefName === "floorp.browser.note.memos") {
++      return Promise.resolve(notesStorage!.getSnapshot().value);
++    }
+     if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_STRING) {
+       return Promise.resolve(null);
+     }
+@@ -103,25 +137,29 @@ const directServicesFunctions: NotesPrefFunctions = {
+     return Promise.resolve();
+   },
+   setStringPref: (prefName, value) => {
+-    Services.prefs.setStringPref(prefName, value);
++    if (prefName === "floorp.browser.note.memos") {
++      notesStorage!.writeLocal(value);
++    } else {
++      Services.prefs.setStringPref(prefName, value);
++    }
+     return Promise.resolve();
+   },
+ };
+ 
+ export const rpc = isLocalhost5188
+   ? createBirpc<NotesPrefFunctions, Record<string, never>>(
+-      {},
+-      {
+-        post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
+-        on: (callback) => {
+-          (globalThis as unknown as Window).NRSettingsRegisterReceiveCallback(
+-            callback,
+-          );
+-        },
+-        serialize: (v) => JSON.stringify(v),
+-        deserialize: (v) => JSON.parse(v),
++    {},
++    {
++      post: (data) => (globalThis as unknown as Window).NRSettingsSend(data),
++      on: (callback) => {
++        (globalThis as unknown as Window).NRSettingsRegisterReceiveCallback(
++          callback,
++        );
+       },
+-    )
++      serialize: (v) => JSON.stringify(v),
++      deserialize: (v) => JSON.parse(v),
++    },
++  )
+   : directServicesFunctions;
+ 
+ // ──────────────────────────────────────────────────────────
+@@ -149,23 +187,32 @@ export function addPrefObserver(
+ ): PrefObserverHandle | null {
+   if (isLocalhost5188) {
+     // Dev mode: poll every 2 seconds as a fallback
+-    let lastValue: string | null = null;
++    let lastSnapshot: NotesPreferenceSnapshot | null = null;
++    let reading = false;
+     // Initial read
+-    rpc
+-      .getStringPref(prefName)
++    const initialRead = rpc
++      .getNotesSnapshot()
+       .then((v) => {
+-        lastValue = v;
++        lastSnapshot = v;
+       })
+       .catch(() => {});
+     const pollId = setInterval(async () => {
++      if (reading) return;
++      reading = true;
+       try {
+-        const current = await rpc.getStringPref(prefName);
+-        if (current !== lastValue) {
+-          lastValue = current;
+-          callback(prefName);
++        await initialRead;
++        const current = await rpc.getNotesSnapshot();
++        if (
++          current.revision !== lastSnapshot?.revision ||
++          current.epoch !== lastSnapshot?.epoch
++        ) {
++          lastSnapshot = current;
++          callback(prefName, current);
+         }
+       } catch {
+         // Pref may not exist yet; ignore
++      } finally {
++        reading = false;
+       }
+     }, 2000);
+     devModePollers.set(callback, pollId);
+diff --git a/browser-features/pages-notes/src/lib/rpc/types.ts b/browser-features/pages-notes/src/lib/rpc/types.ts
+index be33100cc32e..de30fa8a739b 100644
+--- a/browser-features/pages-notes/src/lib/rpc/types.ts
++++ b/browser-features/pages-notes/src/lib/rpc/types.ts
+@@ -1,11 +1,21 @@
+ import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
++import type {
++  NotesStorageFunctions,
++  NotesStorageService,
++} from "../../../../modules/common/notes-storage-types.ts";
+ 
+-export type NotesPrefFunctions = Pick<
+-  NRSettingsParentFunctions,
+-  | "getBoolPref"
+-  | "getIntPref"
+-  | "getStringPref"
+-  | "setBoolPref"
+-  | "setIntPref"
+-  | "setStringPref"
+->;
++export type NotesPrefFunctions =
++  & Pick<
++    NRSettingsParentFunctions,
++    | "getBoolPref"
++    | "getIntPref"
++    | "getStringPref"
++    | "setBoolPref"
++    | "setIntPref"
++    | "setStringPref"
++  >
++  & NotesStorageFunctions;
++
++export interface NotesStorageModule {
++  FloorpNotesStorage: NotesStorageService;
++}
+diff --git a/tools/patches/modules-services-sync-service.sys.patch b/tools/patches/modules-services-sync-service.sys.patch
+index 4e6de5290158..8fb7087359bd 100644
+--- a/tools/patches/modules-services-sync-service.sys.patch
++++ b/tools/patches/modules-services-sync-service.sys.patch
+@@ -1,10 +1,14 @@
+ diff --git a/modules/services-sync/service.sys.mjs b/modules/services-sync/service.sys.mjs
+ --- a/modules/services-sync/service.sys.mjs
+ +++ b/modules/services-sync/service.sys.mjs
+-@@ -85,6 +85,10 @@ function getEngineModules() {
++@@ -85,6 +85,14 @@ function getEngineModules() {
+      result.Form = { module: "forms.sys.mjs", symbol: "FormEngine" };
+      result.History = { module: "history.sys.mjs", symbol: "HistoryEngine" };
+      result.Tab = { module: "tabs.sys.mjs", symbol: "TabEngine" };
+++    result.Prefs = {
+++      module: "resource://noraneko/modules/notes/FloorpNotesPrefsEngine.sys.mjs",
+++      symbol: "FloorpNotesPrefsEngine",
+++    };
+ +    result.FloorpWorkspaces = {
+ +      module: "resource://noraneko/modules/workspaces/FloorpWorkspacesSync.sys.mjs",
+ +      symbol: "FloorpWorkspacesEngine",

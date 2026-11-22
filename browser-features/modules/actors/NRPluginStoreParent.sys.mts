@@ -23,8 +23,9 @@ import {
 } from "../modules/plugin-store/Policy.sys.mts";
 
 const STARTUP_MODE = Services.prefs.getStringPref("nora.startup.mode", "");
-const ALLOW_DEVELOPMENT_PLUGIN_STORE = STARTUP_MODE === "dev" ||
-  STARTUP_MODE === "test";
+const ALLOW_DEVELOPMENT_PLUGIN_STORE =
+  (STARTUP_MODE === "dev" || STARTUP_MODE === "test") &&
+  Services.prefs.getBoolPref("nora.dev.allow_http_loader", false);
 
 // =============================================================================
 // Types

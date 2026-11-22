@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-fixtures.py", line 79, in <module>
+    assert actual['process'].returncode != 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "runtimeProofHead": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+  "syntheticOnly": true,
+  "realBrowserStarted": false,
+  "knownKitGaps": [
+    {
+      "case": "zero-assertions",
+      "kitVerdict": "PASS",
+      "pr84": {
+        "accepted": false,
+        "error": "assertion-free execution or wrong canary phase/reason/event ID"
+      },
+      "logSha256": "325a10bd090c0ff6690541dd0b6d10fd5b9f8286c9d2ded051a654791de7e679"
+    },
+    {
+      "case": "retry-warning",
+      "kitVerdict": "PASS",
+      "pr84": {
+        "accepted": false,
+        "error": "first failure or internal retry recorded"
+      },
+      "logSha256": "36162fff77e4ce4cbb6678ccf5b25a92c53a980b360010fa55851e07495c96b9"
+    },
+    {
+      "case": "failed-child-process",
+      "kitVerdict": "PASS",
+      "pr84": {
+        "accepted": false,
+        "error": "unexpected native child exit"
+      },
+      "logSha256": "88f7a6c7b14d9e1c9332ef58d808c08d607c75dc33276457263637f9d4490183"
+    },
+    {
+      "case": "unknown-action",
+      "kitVerdict": "PASS",
+      "pr84": {
+        "accepted": false,
+        "error": "unrecognized Mozilla execution event"
+      },
+      "logSha256": "dcdd515c5e8d0a246387c1361f0c136be6d97612eb91d1bb7ae591b8d203c257"
+    }
+  ],
+  "newPr84TypedChildExitGap": [
+    {
+      "case": "missing",
+      "pr84": {
+        "accepted": true,
+        "value": {
+          "id": "browser_example.js",
+          "suite": "browser-chrome",
+          "assertions": 1,
+          "rawEvents": 6,
+          "verdict": "PASS",
+          "canaryPhase": null,
+          "canaryReason": null
+        }
+      },
+      "logSha256": "ca4509ef6cafb18f2e76a8f1cd41fa2b57571f5f702e83f8569ab4c7ed082021"
+    },
+    {
+      "case": "boolean",
+      "pr84": {
+        "accepted": true,
+        "value": {
+          "id": "browser_example.js",
+          "suite": "browser-chrome",
+          "assertions": 1,
+          "rawEvents": 6,
+          "verdict": "PASS",
+          "canaryPhase": null,
+          "canaryReason": null
+        }
+      },
+      "logSha256": "6d232fd481ef21afb2e5110fad74613f313b2f9f21399087449d79a371dceb80"
+    },
+    {
+      "case": "float",
+      "pr84": {
+        "accepted": true,
+        "value": {
+          "id": "browser_example.js",
+          "suite": "browser-chrome",
+          "assertions": 1,
+          "rawEvents": 6,
+          "verdict": "PASS",
+          "canaryPhase": null,
+          "canaryReason": null
+        }
+      },
+      "logSha256": "7b5187a7b137949772185126d62343e5040a46f152826d4ef24ae8d2ad45cf7e"
+    },
+    {
+      "case": "nonzero",
+      "pr84": {
+        "accepted": false,
+        "error": "unexpected native child exit"
+      },
+      "logSha256": "59c539cb6f51a02a8f8651ea80572ea99cf0538af79fde30f3aae086c2fdfc3a"
+    }
+  ]
+}

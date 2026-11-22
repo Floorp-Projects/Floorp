@@ -1,0 +1,11 @@
+{
+  "head": "718e688fbd7ad88a776534e7778ad8e4a7f67364",
+  "currentPatchSHA256": "ebb5800f550f78c5ddd75e3a5a51e38556b6937df900ee8c6177db11093bd462",
+  "candidatePatchSHA256": "ebb5800f550f78c5ddd75e3a5a51e38556b6937df900ee8c6177db11093bd462",
+  "diffMatchesCandidate": true,
+  "files": {
+    "tools/qa3/source.py": "99698eec43bc357db800a3400969595224f09ed3ffc77f80ec139f8f4a6c2115",
+    "tools/qa3/test_source.py": "8271578a5148caa4094060f546b969332405e319ffeeb6a2fbb313329993c6e3",
+    "tools/qa3/README.md": "ee150ba07a11f2ca5d73128450dcb1e00fd46a71603c39798df4fb4e7b2b6c88"
+  }
+}

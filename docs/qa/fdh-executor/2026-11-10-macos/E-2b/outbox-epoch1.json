@@ -1,0 +1,18 @@
+{
+  "jobId": "test-20261110t085218z-784cbb",
+  "epoch": 1,
+  "holder": "executor-5115-879da4",
+  "exitCode": 143,
+  "endedAt": "2026-11-10T08:52:33.546Z",
+  "logRef": "_dist/fdh/jobs/e2e-e2b-mwagbyda/test-20261110t085218z-784cbb-1-0.log",
+  "results": [
+    {
+      "index": 0,
+      "epoch": 1,
+      "exitCode": 143,
+      "startedAt": "2026-11-10T08:52:18.542Z",
+      "endedAt": "2026-11-10T08:52:22.032Z",
+      "logRef": "_dist/fdh/jobs/e2e-e2b-mwagbyda/test-20261110t085218z-784cbb-1-0.log"
+    }
+  ]
+}

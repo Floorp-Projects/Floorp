@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!-- Static page for the design matrix: no scripts, no animation, no network. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Design matrix page</title>
+    <style>
+    html {
+      background: #ffffff;
+      color: #1b1b1f;
+    }
+    body {
+      margin: 0;
+      font: 16px/1.5 sans-serif;
+    }
+    .stripes {
+      height: 140px;
+      background: repeating-linear-gradient(90deg, #0b6bcb 0 40px, #f0a400 40px
+        80px, #18a058 80px 120px);
+    }
+    main {
+      padding: 24px 32px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 28px;
+    }
+    .swatches {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .swatches div {
+      width: 96px;
+      height: 48px;
+      border: 1px solid #000;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="stripes"></div>
+    <main>
+      <h1>Design matrix</h1>
+      <p>This page is fixed so screenshots only change when the browser chrome changes.</p>
+      <div class="swatches">
+        <div style="background:#000000"></div>
+        <div style="background:#7f7f7f"></div>
+        <div style="background:#ffffff"></div>
+        <div style="background:#c62828"></div>
+      </div>
+    </main>
+  </body>
+</html>
