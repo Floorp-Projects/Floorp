@@ -716,7 +716,11 @@ export async function runPageTests() {
           `[data-part="${part}"]`,
         );
         assert(control, `Stepper ${part} missing`);
-        control.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        for (const type of ["pointerdown", "pointerup", "click"]) {
+          control.dispatchEvent(
+            new MouseEvent(type, { bubbles: true, cancelable: true }),
+          );
+        }
       };
       try {
         target.focus();

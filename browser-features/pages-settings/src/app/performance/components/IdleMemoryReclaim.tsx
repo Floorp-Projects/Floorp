@@ -14,7 +14,7 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { MemoryStick } from "lucide-react";
+import { ChevronDown, ChevronUp, MemoryStick } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -108,7 +108,14 @@ function NumberField({
     () => new Intl.NumberFormat(locale, formatOptions),
     [locale, formatOptions],
   );
-  const [text, setText] = useState(() => formatter.format(value));
+  const [text, setTextState] = useState(() => formatter.format(value));
+  // Zag's PRESS_UP commit can fire before React flushes the draft state, so
+  // read the live text through a ref at commit time.
+  const textRef = useRef(text);
+  const setText = (next: string) => {
+    textRef.current = next;
+    setTextState(next);
+  };
   const composing = useRef(false);
   // Ark's controlled-value watcher reformats and rewrites the DOM value on any
   // change, which drops a separately typed decimal separator and races IME
@@ -140,7 +147,9 @@ function NumberField({
   // pref — stepping would restart from it and ignore the visible draft. Step
   // from the parsed draft instead so repeated and post-edit steps accumulate.
   const stepBy = (amount: number) => {
-    const parsed = text.trim() === "" ? 0 : parseLocalizedNumber(text, formatter);
+    const parsed = textRef.current.trim() === ""
+      ? 0
+      : parseLocalizedNumber(textRef.current, formatter);
     const base = Number.isFinite(parsed) ? parsed : value;
     const next = Math.max(min, Math.round(base + amount));
     setText(formatter.format(next));
@@ -177,7 +186,9 @@ function NumberField({
         }}
         onValueCommit={() =>
           commit(
-            text.trim() === "" ? 0 : parseLocalizedNumber(text, formatter),
+            textRef.current.trim() === ""
+              ? 0
+              : parseLocalizedNumber(textRef.current, formatter),
           )}
       >
         <NumberInput.Input asChild>
@@ -194,19 +205,30 @@ function NumberField({
             }}
           />
         </NumberInput.Input>
+        {/* Zag derives trigger presses from the pinned controlled value, so
+            its triggers are not used; these plain buttons step from the draft
+            and keep the recipe styling via data-part. */}
         <NumberInput.Control>
-          <NumberInput.IncrementTrigger
-            onClick={(event) => {
-              event.preventDefault();
-              stepBy(1);
-            }}
-          />
-          <NumberInput.DecrementTrigger
-            onClick={(event) => {
-              event.preventDefault();
-              stepBy(-1);
-            }}
-          />
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label="increment"
+            data-part="increment-trigger"
+            disabled={disabled}
+            onClick={() => stepBy(1)}
+          >
+            <ChevronUp />
+          </button>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label="decrement"
+            data-part="decrement-trigger"
+            disabled={disabled}
+            onClick={() => stepBy(-1)}
+          >
+            <ChevronDown />
+          </button>
         </NumberInput.Control>
       </NumberInput.Root>
     </div>
