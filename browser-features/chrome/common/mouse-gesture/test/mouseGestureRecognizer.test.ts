@@ -1007,8 +1007,126 @@ function testRecognizeComplexShapeWithoutConfig(): void {
   );
 }
 
+function testSparseInitialDirectionUsesFirstLeg(): void {
+  // Captured W3C trails from a configured right-down gesture: both skip the
+  // 10–50px initial-direction sampling band, but retain the actual corner.
+  const trails = [
+    [{ x: 450, y: 450 }, { x: 650, y: 450 }, { x: 650, y: 650 }],
+    [
+      { x: 450, y: 450 },
+      { x: 550, y: 450 },
+      { x: 650, y: 450 },
+      { x: 650, y: 483 },
+      { x: 650, y: 650 },
+    ],
+  ];
+  for (const trail of trails) {
+    const { recognizer, shapeDb } = createRecognizer([
+      { pattern: ["right", "down"], action: "open-new-tab" },
+    ]);
+    const result = recognize(recognizer, trail, 0.73, shapeDb, 5);
+    assertEquals(result?.patternName, "right-down", "retain sparse first leg");
+  }
+  const { recognizer, shapeDb } = createRecognizer([
+    { pattern: ["right", "down"], action: "open-new-tab" },
+  ]);
+  assertEquals(
+    recognize(
+      recognizer,
+      [{ x: 450, y: 450 }, { x: 650, y: 650 }],
+      0.73,
+      shapeDb,
+      5,
+    ),
+    null,
+    "missing corner samples cannot establish an L-shaped gesture",
+  );
+}
+
+function testSparseReturningTrailKeepsInitialDirection(): void {
+  const { recognizer, shapeDb } = createRecognizer([
+    { pattern: ["up", "down"], action: "up-down-action" },
+    { pattern: ["down", "up"], action: "down-up-action" },
+  ]);
+  const result = recognize(
+    recognizer,
+    [{ x: 0, y: 0 }, { x: 0, y: -160 }, { x: 0, y: 16 }],
+    0.73,
+    shapeDb,
+    20,
+  );
+  assertEquals(
+    result?.patternName,
+    "up-down",
+    "returning beyond the start must not reverse the configured action",
+  );
+}
+
+function testSparseDirectionVariantsAndJitter(): void {
+  const variants: {
+    pattern: GestureDirection[];
+    corner: { x: number; y: number };
+    end: { x: number; y: number };
+  }[] = [
+    {
+      pattern: ["right", "down"],
+      corner: { x: 200, y: 0 },
+      end: { x: 200, y: 200 },
+    },
+    {
+      pattern: ["down", "left"],
+      corner: { x: 0, y: 200 },
+      end: { x: -200, y: 200 },
+    },
+    {
+      pattern: ["left", "up"],
+      corner: { x: -200, y: 0 },
+      end: { x: -200, y: -200 },
+    },
+    {
+      pattern: ["up", "right"],
+      corner: { x: 0, y: -200 },
+      end: { x: 200, y: -200 },
+    },
+  ];
+  const { recognizer, shapeDb } = createRecognizer(
+    variants.map(({ pattern }) => ({ pattern, action: "open-new-tab" })),
+  );
+  for (const { pattern, corner, end } of variants) {
+    const result = recognize(
+      recognizer,
+      [
+        { x: 0, y: 0 },
+        { x: 2, y: -1 },
+        corner,
+        end,
+      ],
+      0.73,
+      shapeDb,
+      5,
+    );
+    assertEquals(
+      result?.patternName,
+      pattern.join("-"),
+      "ignore initial jitter",
+    );
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("mouseGestureRecognizer.test.ts", [
+    {
+      name: "sparse initial direction retains the first leg",
+      fn: testSparseInitialDirectionUsesFirstLeg,
+    },
+    {
+      name: "sparse returning trail keeps its initial direction",
+      fn: testSparseReturningTrailKeepsInitialDirection,
+    },
+    {
+      name: "sparse direction variants ignore initial jitter",
+      fn: testSparseDirectionVariantsAndJitter,
+    },
     // angleToDirection / deltaToDirection
     { name: "angle and delta direction", fn: testAngleAndDeltaDirection },
     { name: "angleToDirection diagonals", fn: testAngleToDirectionDiagonals },

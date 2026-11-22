@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "acceptanceCriterion": "FDH v1.0 AC-07",
+  "result": "pass",
+  "execution": "dev-tool",
+  "stagedFallbackUsed": false,
+  "repository": "Floorp-Projects/Floorp",
+  "mainCommitTested": "6f621741aeabe173572d8a5abb4618eb81997ea5",
+  "kan135MergeCommit": "6c3aed941796de0ad8db1f85bd632272703fd52e",
+  "platform": {
+    "os": "Windows Server 2022 Standard",
+    "build": "10.0.20348",
+    "architecture": "x86_64",
+    "deno": "2.9.6"
+  },
+  "runtime": {
+    "distribution": "locked release",
+    "version": "160.0.1",
+    "buildId": "20261112140843",
+    "assetId": 741113422,
+    "assetName": "floorp-windows-x86_64-moz-artifact.zip",
+    "bootstrap": "repository BrowserGlue startup hook applied",
+    "fullPatcherSkipped": true
+  },
+  "observedUtc": {
+    "start": "2026-11-21T10:07:24Z",
+    "end": "2026-11-21T10:09:58Z"
+  },
+  "checks": {
+    "dependencySetup": "pass",
+    "devLaunch": "pass",
+    "browserStatusEvalNavigateScreenshotConsole": "pass",
+    "portIsolation": {
+      "result": "pass",
+      "offset": 100,
+      "osServerPort": 5275,
+      "marionettePort": 5280,
+      "osServerAndMarionetteOwnerPid": 9456,
+      "installedPortSentinel": 58261,
+      "installedPortSentinelOwnerPidBeforeDuringAndAfter": 1808
+    },
+    "checkoutScopedStop": {
+      "result": "pass",
+      "exitCode": 0,
+      "trackedProcessIdentities": 42,
+      "trackedProcessIdentitiesRemaining": 0,
+      "devListenersRemaining": 0
+    },
+    "authenticatedOsServerHealth": {
+      "result": "unverified",
+      "detail": "This runtime lacked the Windows private-profile token bridge and logged a token publication failure. An unauthenticated /health request returned an empty reply."
+    }
+  },
+  "artifacts": {
+    "logSummary": "README.md",
+    "screenshots": [
+      {
+        "path": "floorp-settings.png",
+        "view": "Floorp Hub from the Vite dev server",
+        "sha256": "117c45051ce0a805a74b5ec2133103cf5e5b15e5f1a00c5a1054a84b70c453c0"
+      },
+      {
+        "path": "browser-preferences.png",
+        "view": "Browser chrome after navigating to about:preferences",
+        "sha256": "95b8712302c0ee7f7ccd27e1fb7b56f1a51aa61c42eeaabf40f034fce2b1299f"
+      }
+    ]
+  }
+}

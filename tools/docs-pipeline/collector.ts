@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { DEV_PORTS, devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import * as path from "@std/path";
 import { PROJECT_ROOT } from "../src/defines.ts";
 import type {
@@ -182,16 +183,34 @@ export function extractSettingsRoutes(
   return routes.sort((left, right) => left.route.localeCompare(right.route));
 }
 
+const DEV_LOADER_ORIGIN_REF =
+  /devHttpOrigin\(\s*"loader"(?:\s*,\s*"([^"`]+)")?\s*\)/;
+const LAUNCH_LOADER_ORIGIN_REF =
+  /launchDevPort\.httpOrigin\(\s*"loader"(?:\s*,\s*"([^"`]+)")?\s*\)/;
+const LOADER_CONFIG_PORT_REF = /port:\s+DEV_PORTS\.loader\b/;
+
 export function extractBridgeLoader(
   chromeRootText: string,
   pathFromRoot = "bridge/startup/src/chrome_root.ts",
 ): ArchitectureInventory["bridgeLoader"] {
+  // FDH Gate 2 task 2-B: chrome_root.ts resolves the loader URL through the
+  // launch port resolver, so the literal-table reference lives in
+  // `launchDevPort.httpOrigin(...)`; accept both spellings and document the
+  // frozen base topology.
   const devLoaderUrl = chromeRootText.match(
     /https?:\/\/[^"'`]+\/loader\/index\.ts/,
-  )?.[0] ?? "unknown";
+  )?.[0] ??
+    (DEV_LOADER_ORIGIN_REF.test(chromeRootText) ||
+        LAUNCH_LOADER_ORIGIN_REF.test(chromeRootText)
+      ? devHttpOrigin("loader", "/loader/index.ts")
+      : "unknown");
   const testLoaderUrl = chromeRootText.match(
     /https?:\/\/[^"'`]+\/loader\/test\/index\.ts/,
-  )?.[0] ?? "unknown";
+  )?.[0] ??
+    (DEV_LOADER_ORIGIN_REF.test(chromeRootText) ||
+        LAUNCH_LOADER_ORIGIN_REF.test(chromeRootText)
+      ? devHttpOrigin("loader", "/loader/test/index.ts")
+      : "unknown");
   const productionLoader = chromeRootText.match(
     /chrome:\/\/[^"'`]+\/core\.js/,
   )?.[0] ?? "unknown";
@@ -208,9 +227,13 @@ export function extractLoaderDevServer(
   viteConfigText: string,
   pathFromRoot = "bridge/loader-features/vite.config.ts",
 ): ArchitectureInventory["loaderDevServer"] {
-  const match = viteConfigText.match(/port:\s+(\d+)/);
+  const portMatch = viteConfigText.match(/port:\s+(\d+)/);
+  const port = Number(
+    portMatch?.[1] ??
+      (LOADER_CONFIG_PORT_REF.test(viteConfigText) ? DEV_PORTS.loader : 0),
+  );
   return {
-    port: Number(match?.[1] ?? 0),
+    port,
     source: source(pathFromRoot, viteConfigText, "port:"),
   };
 }

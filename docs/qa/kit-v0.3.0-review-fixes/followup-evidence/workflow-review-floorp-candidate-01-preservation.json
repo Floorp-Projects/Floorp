@@ -1,0 +1,29 @@
+{
+  "baselineSha": "718e688fbd7ad88a776534e7778ad8e4a7f67364",
+  "candidateSourceSha256": "99698eec43bc357db800a3400969595224f09ed3ffc77f80ec139f8f4a6c2115",
+  "fixedRegistryEqual": true,
+  "unchangedFunctions": {
+    "digest": true,
+    "read_json": true,
+    "validate_plan": true,
+    "validate_coverage": true,
+    "validate_cases": true,
+    "validate_deno_inputs": true,
+    "audit_deno_subset": true,
+    "python_tests": true,
+    "child_environment": true,
+    "run_source": true,
+    "main": true
+  },
+  "changedFunctions": [
+    "read_junit",
+    "execute"
+  ],
+  "newFunctions": [
+    "_process_info",
+    "_process_snapshot",
+    "_owned_descendants",
+    "_cleanup_owned",
+    "_execute_owned"
+  ]
+}

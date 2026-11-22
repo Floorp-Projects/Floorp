@@ -1,0 +1,32 @@
+{
+  "phase": "ruff-check-red-01",
+  "command": [
+    "/usr/bin/prlimit",
+    "--as=1073741824",
+    "--cpu=15",
+    "--fsize=8388608",
+    "--",
+    "/workspace/qa-review-v030/tooling/python-lint/bin/ruff",
+    "check",
+    "--no-cache",
+    ".github/workflows/scripts/qa3_mozlog.py",
+    ".github/workflows/scripts/test_qa3_mozlog.py"
+  ],
+  "exit": 1,
+  "timeout": false,
+  "seconds": 0.016,
+  "limits": {
+    "AS": 1073741824,
+    "CPU": 15,
+    "FSIZE": 8388608,
+    "wall": 30
+  },
+  "log": "/workspace/qa-review-v030/fix-qa309/evidence/mozlog-ruff-check-red-01.log",
+  "logSha256": "92b7f70883eb5e8c30c3d307a77b36b9c80422e41cab15f59b263e85ea4ebfcc",
+  "sourceFiles": {
+    ".github/workflows/scripts/qa3_mozlog.py": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+    ".github/workflows/scripts/test_qa3_mozlog.py": "a915698dc2089ea3fc27620a0d4e5d2d4d757697545dab1a6f00b49fcd957e15"
+  },
+  "native": false,
+  "network": false
+}
