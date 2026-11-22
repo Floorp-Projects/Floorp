@@ -10,6 +10,22 @@ by the Runtime's upstream patch step. A missing patch is applied normally, while
 partially applied patches still fail validation. Native changes still require
 freshly compiled Runtime artifacts.
 
+`windows-uninstall-publisher.patch` gives official and Daylight Floorp branding
+an explicit uninstall Publisher. `SetUninstallKeys` uses that value both during
+installation and post-update registration; other branding retains its default.
+The PE CompanyName and signing identity are separate and unchanged. An existing
+Runtime patch writes Publisher under the application's main registration key,
+which does not fix the Programs and Features uninstall entry.
+Generate the isolated native NSIS regression with
+`python .github/scripts/test-windows-uninstall-publisher.py --runtime <checkout> --output <temporary-directory>`,
+compile its three `.nsi` files with `makensis`, then run the resulting executables
+on Windows. They exercise actual Runtime macros against unique per-user QA keys:
+new registration, replacement of an existing Mozilla value, display-name
+preservation and the guard against duplicating an existing machine install.
+The key locators are fixtures; this is not full installer/update validation.
+Windows packaging must regenerate both setup and `uninstall/helper.exe` from the
+patched sources. A prebuilt old helper alone cannot deliver the post-update fix.
+
 `workspace-external-containers.patch` chooses the workspace container before
 creating a browser for external URL opens, including cold launch and new windows.
 It changes only the existing BrowserContentHandler and BrowserDOMWindow JavaScript
@@ -133,3 +149,12 @@ parent for the top WindowContext before scripts/CSS execute, caching only the
 document identity result. Neither uses the currently selected tab.
 Changing away from support restores future access; reload open blog pages to
 remove already injected content and retry requests.
+
+`picture-in-picture-app-window.patch` accounts for embedded chrome documents in
+PiP activity ownership. Panel and ordinary-tab players share the containing
+AppWindow's active-state reference count and window/selection listeners. Closing
+one player keeps that AppWindow active until its final player closes. This avoids
+an invalid nested-context setter that aborted registration and later cleanup.
+The extracted `moz-src` patch has a parity test; native embedded-chrome regressions
+cover both opening orders in `pictureInPictureActivity.test.ts`. This changes
+JavaScript only and requires no native rebuild.

@@ -167,7 +167,7 @@ index 9a89d2b669a..f38cdc13cf9 100644
 +  PrivateBrowsingUtils:
 +    "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 +  TaskbarTabsUtils:
-+    "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs",
++    "moz-src:///browser/components/taskbartabs/TaskbarTabsUtils.sys.mjs",
  });
 
 +ChromeUtils.defineLazyGetter(lazy, "ShellServiceModule", () =>

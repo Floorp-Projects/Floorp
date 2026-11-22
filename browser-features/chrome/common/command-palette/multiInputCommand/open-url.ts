@@ -25,22 +25,24 @@ export const openUrlCommand: PaletteCommand = {
     defaultValue: "Open a URL in a new tab",
   }),
   category: "navigation",
-  keywords: [
-    "open url",
-    "navigate",
-    "go to",
-    "open page",
-    "url",
-    ...getJapaneseReadings("floorp-open-url"),
-    ...getEnglishStepCommandKeywords(
-      "commandPalette.openUrl",
-      "commandPalette.openUrlDescription",
-    ),
-    ...getSegmentedKeywordsFromI18nKeys(
-      "commandPalette.openUrl",
-      "commandPalette.openUrlDescription",
-    ),
-  ],
+  get keywords() {
+    return [
+      "open url",
+      "navigate",
+      "go to",
+      "open page",
+      "url",
+      ...getJapaneseReadings("floorp-open-url"),
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.openUrl",
+        "commandPalette.openUrlDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.openUrl",
+        "commandPalette.openUrlDescription",
+      ),
+    ];
+  },
   steps: [
     {
       id: "url",
