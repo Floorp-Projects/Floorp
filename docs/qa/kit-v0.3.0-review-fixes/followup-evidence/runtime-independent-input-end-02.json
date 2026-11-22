@@ -1,0 +1,66 @@
+{
+  "observedAtUtc": "2026-10-09T15:51:22.707689+00:00",
+  "HEAD": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+  "status": "",
+  "sourceHashesUnchangedDuringIndependentTests": true,
+  "filesSHA256": {
+    ".github/workflows/scripts/qa3_native_io.py": "8bbea4abfc5d8cf1a3b70a275287c7fe6725b96fa17afb4c74ef51814b7d142e",
+    ".github/workflows/scripts/test_qa3_native_io.py": "0dae5c088abd51a84338a62c977a7a43e5765dfb1fd8a0647090b10fcab625a6",
+    ".github/workflows/scripts/qa3_build_profile.py": "e7f84f39d36355074e15e3d192249cd5adde954110fc5f820b2bda6c47dbc00a",
+    ".github/workflows/scripts/setup-floorp.sh": "9bf55ac325397d76d3d162e681ba2bc47facc8b2ab61e68c2646e2d1b95f651c",
+    ".github/workflows/scripts/qa3_mozlog.py": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+    ".github/workflows/scripts/test_qa3_build_profile.py": "5b8452881d0107ea3f19643e1d36d380fd718753b9b9e51e440dc5642ded9c96",
+    ".github/workflows/scripts/test_qa3_mozlog.py": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063"
+  },
+  "artifactsSHA256": {
+    "runtime-independent-native-suite-8bbe-01.log": "5e2453d83b2be6562e93182b272f0841caee657a9287ba19f72f77d7c1ae0049",
+    "runtime-independent-parent-init-03.py": "9fbca4584c7750bce67007dcdf8363aa50a6f30e8e6fe6fc09eb5265c7ab35bc",
+    "runtime-independent-parent-init-04.py": "9466235daa193e08ec0fe7572f6935f63d6bdd179808ddfec262b979420dec9c",
+    "runtime-independent-prefork-8bbe-01.py": "fde5879860e448778dd21ca3543169e7b8356620dbb73231d6e3f745440221cc",
+    "runtime-independent-prefork-8bbe-01.json": "5dce7c36aef47532872801f2942b88c69eea2e052f16b7df4b9a8780c7f2cf1c",
+    "runtime-independent-native-candidate-8bbe-02.patch": "6dfb2aa6a44833b46145f39c302ef81dca3d08f0a923f07f255669446e146f11",
+    "runtime-independent-parent-init-raise-03.json": "2853535c5f731332eaed2a23806a0d897753f7949efebd4ddfb30e7a0af61093",
+    "runtime-independent-parent-init-raise-03.log": "8f5a4178eb09786fd20aa0e7cc41b415643e7ef7d13301c941d4025b8a188b49",
+    "runtime-independent-parent-init-none-03.json": "0f88a9be54376af94d4312f57834385473abe20b012fd3fca52cabe06042d50f",
+    "runtime-independent-parent-init-none-03.log": "cafe6a476cc7befd588cc224ba30f728e93752014aca6554ac5a4d03afb2f64a",
+    "runtime-independent-parent-init-close-reader-04.json": "20285ecf8d1577dddeda8e78480188e588a53ea09dcde766dfd546439223c12a",
+    "runtime-independent-parent-init-close-reader-04.log": "bd51d15f9953e7fce71c3eeb3397e8a93e96c7c84ba6269373d2ff9213ebe6cc",
+    "runtime-independent-parent-init-close-pidfd-04.json": "28377cbfc3229a77505a8921e11b2c189b6b700303459dddd22a4062d92e243a",
+    "runtime-independent-parent-init-close-pidfd-04.log": "5916a691a5f6866a5cbf0038f2c4a2ec859abddcfb9f36cffed08aa1e97f941c",
+    "runtime-independent-parent-init-fallback-04.json": "8a4fb7a0477878347316b0a9db1f7fb66bf62ba401dbd06be3b804f89eb67f5f",
+    "runtime-independent-parent-init-fallback-04.log": "ddff34386bfe53540bf04da30ffe723c39ce4dd65d5f5593263a0f0bfbfd8af2"
+  },
+  "nativeUnitSuite": {
+    "exitCode": 0,
+    "methods": 47,
+    "wallSeconds": 46.688,
+    "log": "runtime-independent-native-suite-8bbe-01.log",
+    "wallLimitSeconds": 90,
+    "cpuLimitSeconds": 40,
+    "addressSpaceLimitBytes": 34359738368,
+    "regularFileLimitBytes": 53687091200
+  },
+  "actualOwnedFixtures": {
+    "exitCodes": {
+      "raise": 0,
+      "none": 0,
+      "close-reader": 0,
+      "close-pidfd": 0,
+      "fallback": 0
+    },
+    "perRunWallLimitSeconds": 40,
+    "cpuLimitSeconds": 15,
+    "addressSpaceLimitBytes": 536870912,
+    "regularFileLimitBytes": 8388608,
+    "inMemoryMAX_EXPANDEDOverrideBytes": 8388608,
+    "nativeBuildOrBrowserExecuted": false
+  },
+  "preforkFixtures": {
+    "exitCode": 0,
+    "wallLimitSeconds": 10,
+    "cpuLimitSeconds": 5
+  },
+  "firstSetupErrorRetained": "runtime-independent-input-02-first-error.json",
+  "emptyInitialPatchRetained": "runtime-independent-native-candidate-8bbe.patch",
+  "emptyInitialPatchReason": "root committed candidate between initial read and diff capture; committed diff preserved as runtime-independent-native-candidate-8bbe-02.patch"
+}

@@ -1,0 +1,16 @@
+test_parent_reader_error_with_missing_snapshot_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_reader_error_with_missing_snapshot_reaps) ... FAIL
+
+======================================================================
+FAIL: test_parent_reader_error_with_missing_snapshot_reaps (test_qa3_native_io.SupervisorBoundaryTests.test_parent_reader_error_with_missing_snapshot_reaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 952, in test_parent_reader_error_with_missing_snapshot_reaps
+    self.parent_failure("reader")
+  File "/workspace/qa-review-v030/repos/Floorp-Runtime/.github/workflows/scripts/test_qa3_native_io.py", line 931, in parent_failure
+    self.assertFalse(owned_alive(self.owned))
+AssertionError: {58383: (58378, 'R', 4462752)} is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 12.100s
+
+FAILED (failures=1)
