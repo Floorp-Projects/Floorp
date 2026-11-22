@@ -1,0 +1,19 @@
+{
+  "base": "81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53",
+  "inputs": {
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/qa3_build_profile.py": {
+      "sha256": "e7f84f39d36355074e15e3d192249cd5adde954110fc5f820b2bda6c47dbc00a",
+      "bytes": 6224
+    },
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/setup-floorp.sh": {
+      "sha256": "9bf55ac325397d76d3d162e681ba2bc47facc8b2ab61e68c2646e2d1b95f651c",
+      "bytes": 6220
+    },
+    "/workspace/qa-review-v030/worktrees/Runtime-shadow-fixes/.github/workflows/scripts/test_qa3_build_profile.py": {
+      "sha256": "5b8452881d0107ea3f19643e1d36d380fd718753b9b9e51e440dc5642ded9c96",
+      "bytes": 14043,
+      "testMethods": 12
+    }
+  },
+  "readOnly": true
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "timestamp": "2026-11-10T14:56:21.997Z",
+    "command": "task start",
+    "note": "created task state for e2e-e-9-mwatc50v",
+    "exitCode": 0
+  },
+  {
+    "timestamp": "2026-11-10T14:56:22.126Z",
+    "command": "job intent intent-20261110t145622z-b5cae0",
+    "note": "pr draft PR by agent-a",
+    "exitCode": null
+  },
+  {
+    "timestamp": "2026-11-10T14:56:22.256Z",
+    "command": "task resume",
+    "note": "{\"restored\":[\"state-file\",\"worktree\",\"base-commit\",\"port-offset\"],\"stale\":[]}",
+    "exitCode": 0
+  },
+  {
+    "timestamp": "2026-11-10T14:56:22.529Z",
+    "command": "job result intent-20261110t145622z-b5cae0",
+    "note": "intent failed after 1 attempt(s), 1 lost, epoch 1",
+    "exitCode": 1
+  }
+]

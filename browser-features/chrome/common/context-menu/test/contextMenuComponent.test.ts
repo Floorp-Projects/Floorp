@@ -394,33 +394,6 @@ async function testOnPopupShowingPreservesNavigationSeparator(): Promise<void> {
   cleanupDOM();
 }
 
-async function testOnPopupShowingPreservesPdfjsSeparator(): Promise<void> {
-  const { ContextMenuUtils } = await import(
-    "#features-chrome/utils/context-menu.tsx"
-  );
-  cleanupDOM();
-  const menu = createMockContentAreaContextMenu();
-
-  // context-sep-pdfjs-selectall should NOT be hidden
-  const sep = document!.createElement("menuseparator");
-  sep.id = "context-sep-pdfjs-selectall";
-  sep.hidden = false;
-  menu.appendChild(sep);
-
-  const hiddenItem = document!.createElement("div");
-  hiddenItem.hidden = true;
-  menu.appendChild(hiddenItem);
-
-  ContextMenuUtils.onPopupShowing();
-
-  assertEquals(
-    sep.hidden,
-    false,
-    "context-sep-pdfjs-selectall should never be hidden by onPopupShowing",
-  );
-  cleanupDOM();
-}
-
 async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promise<
   void
 > {
@@ -429,6 +402,9 @@ async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promis
   );
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
+
+  const leadingItem = document!.createElement("div");
+  menu.appendChild(leadingItem);
 
   const sep = document!.createElement("menuseparator");
   sep.id = "context-sep-visible-test";
@@ -447,6 +423,136 @@ async function testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem(): Promis
     "separator before visible item should not be hidden",
   );
   cleanupDOM();
+}
+
+// KAN-32 / #2469: a separator followed by hidden rows and then a visible row
+// is a group boundary (e.g. context-sep-sendlinktodevice -> hidden media rows
+// -> "Search ..."). Firefox shows it, so the native repair must keep it.
+async function testOnPopupShowingKeepsSeparatorBeforeHiddenThenVisibleRow(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+
+  const sendLink = document!.createElement("menuitem");
+  menu.appendChild(sendLink);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-sendlinktodevice";
+  menu.appendChild(sep);
+  const mediaPlay = document!.createElement("menuitem");
+  mediaPlay.hidden = true;
+  menu.appendChild(mediaPlay);
+  const search = document!.createElement("menuitem");
+  menu.appendChild(search);
+
+  try {
+    ContextMenuUtils.onPopupShowing();
+    assertEquals(
+      sep.hidden,
+      false,
+      "separator before hidden rows and a visible row should stay visible",
+    );
+    assertEquals(
+      sep.hasAttribute("data-floorp-legacy-separator-hidden"),
+      false,
+      "kept separator should not carry the legacy marker",
+    );
+  } finally {
+    cleanupDOM();
+  }
+}
+
+// KAN-32 / #2469: a submenu's popupshowing bubbles through the parent popup.
+// It must not re-run the parent repair, which hid separators that were
+// visible when the submenu (flyout) was opened.
+async function testOnPopupShowingIgnoresBubbledSubmenuEvent(): Promise<void> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+
+  const item = document!.createElement("menuitem");
+  menu.appendChild(item);
+  const submenu = document!.createElement("menu");
+  const submenuPopup = document!.createElement("menupopup");
+  submenu.appendChild(submenuPopup);
+  menu.appendChild(submenu);
+  // Separator followed only by a hidden row: both the old and the new rule
+  // hide it on the parent's own popupshowing, so only the event-target guard
+  // keeps it visible for the bubbled submenu event.
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-trailing-test";
+  menu.appendChild(sep);
+  const hiddenRow = document!.createElement("menuitem");
+  hiddenRow.hidden = true;
+  menu.appendChild(hiddenRow);
+
+  menu.addEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+  try {
+    submenuPopup.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      sep.hidden,
+      false,
+      "bubbled submenu popupshowing should leave parent separators alone",
+    );
+
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    assertEquals(
+      sep.hidden,
+      true,
+      "the parent's own popupshowing still hides a trailing separator",
+    );
+  } finally {
+    menu.removeEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+    cleanupDOM();
+  }
+}
+
+// Floorp rows toggled by popupshowing listeners that run after the native
+// repair (or by MutationObserver mirrors) must still be taken into account.
+async function testOnPopupShowingRenormalizesAfterLaterListeners(): Promise<
+  void
+> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+
+  // Stale from a previous opening: visible during the repair's own pass.
+  const floorpRow = document!.createElement("menuitem");
+  menu.appendChild(floorpRow);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-open";
+  menu.appendChild(sep);
+  const item = document!.createElement("menuitem");
+  menu.appendChild(item);
+
+  const laterListener = () => {
+    floorpRow.hidden = true;
+  };
+  menu.addEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+  menu.addEventListener("popupshowing", laterListener);
+  try {
+    // ContextMenuParent opens the menu from script (openPopupAtScreen), so all
+    // popupshowing listeners run before the microtask re-run and before paint;
+    // a script dispatchEvent reproduces that ordering.
+    menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
+    await Promise.resolve();
+    assertEquals(
+      sep.hidden,
+      true,
+      "separator left leading by a later listener should be hidden",
+    );
+  } finally {
+    menu.removeEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+    menu.removeEventListener("popupshowing", laterListener);
+    cleanupDOM();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -510,10 +616,10 @@ async function testAddToolbarContentMenuPopupSetDoesNotThrow(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Tests: onPopupShowing — Screenshot and PDFjs separator handling
+// Tests: onPopupShowing — Screenshot separator handling
 // ---------------------------------------------------------------------------
 
-async function testOnPopupShowingShowsPdfjsSeparatorWhenScreenshotVisible(): Promise<
+async function testOnPopupShowingShowsScreenshotsSeparatorWhenScreenshotVisible(): Promise<
   void
 > {
   const { ContextMenuUtils } = await import(
@@ -522,32 +628,65 @@ async function testOnPopupShowingShowsPdfjsSeparatorWhenScreenshotVisible(): Pro
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
-  // Screenshot item is visible
   const screenshotItem = document!.createElement("menuitem");
   screenshotItem.id = "context-take-screenshot";
-  screenshotItem.hidden = false;
   menu.appendChild(screenshotItem);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-screenshots";
+  sep.hidden = true;
+  menu.appendChild(sep);
+  const after = document!.createElement("menuitem");
+  menu.appendChild(after);
 
-  // PDFjs separator should be shown
-  const pdfjsSep = document!.createElement("menuseparator");
-  pdfjsSep.id = "context-sep-pdfjs-selectall";
-  pdfjsSep.hidden = true; // Initially hidden
-  menu.appendChild(pdfjsSep);
-
-  ContextMenuUtils.onPopupShowing();
-
-  assertEquals(
-    pdfjsSep.hidden,
-    false,
-    "PDFjs separator should be shown when screenshot item is visible",
-  );
-  // The code sets nextSibling.hidden = false on the element right after screenshot.
-  // In the DOM, the next sibling of screenshotItem is pdfjsSep (which is now visible).
-  // pdfjsSep was the actual next sibling that got shown.
-  cleanupDOM();
+  try {
+    ContextMenuUtils.onPopupShowing();
+    assertEquals(
+      sep.hidden,
+      false,
+      "screenshots separator should be shown when screenshot item is visible",
+    );
+  } finally {
+    cleanupDOM();
+  }
 }
 
-async function testOnPopupShowingDoesNotShowPdfjsSeparatorWhenScreenshotHidden(): Promise<
+// The screenshot item's next sibling is #context-use-mini-window in Gecko 159.
+// Firefox hides it when browser.mini-window.enabled is false; the repair must
+// not un-hide it.
+async function testOnPopupShowingKeepsMiniWindowItemHidden(): Promise<void> {
+  const { ContextMenuUtils } = await import(
+    "#features-chrome/utils/context-menu.tsx"
+  );
+  cleanupDOM();
+  const menu = createMockContentAreaContextMenu();
+
+  const screenshotItem = document!.createElement("menuitem");
+  screenshotItem.id = "context-take-screenshot";
+  menu.appendChild(screenshotItem);
+  const miniWindow = document!.createElement("menuitem");
+  miniWindow.id = "context-use-mini-window";
+  miniWindow.hidden = true;
+  menu.appendChild(miniWindow);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-screenshots";
+  menu.appendChild(sep);
+  const after = document!.createElement("menuitem");
+  menu.appendChild(after);
+
+  try {
+    ContextMenuUtils.onPopupShowing();
+    assertEquals(
+      miniWindow.hidden,
+      true,
+      "mini-window item hidden by Firefox should stay hidden",
+    );
+    assertEquals(sep.hidden, false, "screenshots separator stays visible");
+  } finally {
+    cleanupDOM();
+  }
+}
+
+async function testOnPopupShowingDoesNotShowScreenshotsSeparatorWhenScreenshotHidden(): Promise<
   void
 > {
   const { ContextMenuUtils } = await import(
@@ -556,26 +695,29 @@ async function testOnPopupShowingDoesNotShowPdfjsSeparatorWhenScreenshotHidden()
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
-  // Screenshot item is hidden
+  const before = document!.createElement("menuitem");
+  menu.appendChild(before);
   const screenshotItem = document!.createElement("menuitem");
   screenshotItem.id = "context-take-screenshot";
   screenshotItem.hidden = true;
   menu.appendChild(screenshotItem);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-screenshots";
+  sep.hidden = true;
+  menu.appendChild(sep);
+  const after = document!.createElement("menuitem");
+  menu.appendChild(after);
 
-  // PDFjs separator should remain unchanged when screenshot is hidden
-  const pdfjsSep = document!.createElement("menuseparator");
-  pdfjsSep.id = "context-sep-pdfjs-selectall";
-  pdfjsSep.hidden = true;
-  menu.appendChild(pdfjsSep);
-
-  ContextMenuUtils.onPopupShowing();
-
-  assertEquals(
-    pdfjsSep.hidden,
-    true,
-    "PDFjs separator should remain hidden when screenshot item is hidden",
-  );
-  cleanupDOM();
+  try {
+    ContextMenuUtils.onPopupShowing();
+    assertEquals(
+      sep.hidden,
+      true,
+      "screenshots separator should stay hidden when screenshot item is hidden",
+    );
+  } finally {
+    cleanupDOM();
+  }
 }
 
 async function testOnPopupShowingHandlesMissingScreenshotItem(): Promise<void> {
@@ -586,10 +728,14 @@ async function testOnPopupShowingHandlesMissingScreenshotItem(): Promise<void> {
   const menu = createMockContentAreaContextMenu();
 
   // No screenshot item in menu
-  const pdfjsSep = document!.createElement("menuseparator");
-  pdfjsSep.id = "context-sep-pdfjs-selectall";
-  pdfjsSep.hidden = false;
-  menu.appendChild(pdfjsSep);
+  const before = document!.createElement("menuitem");
+  menu.appendChild(before);
+  const sep = document!.createElement("menuseparator");
+  sep.id = "context-sep-screenshots";
+  sep.hidden = true;
+  menu.appendChild(sep);
+  const after = document!.createElement("menuitem");
+  menu.appendChild(after);
 
   let threw = false;
   try {
@@ -598,16 +744,19 @@ async function testOnPopupShowingHandlesMissingScreenshotItem(): Promise<void> {
     threw = true;
   }
 
-  assert(
-    !threw,
-    "onPopupShowing should not throw when screenshot item is missing",
-  );
-  assertEquals(
-    pdfjsSep.hidden,
-    false,
-    "PDFjs separator should remain unchanged when screenshot item is missing",
-  );
-  cleanupDOM();
+  try {
+    assert(
+      !threw,
+      "onPopupShowing should not throw when screenshot item is missing",
+    );
+    assertEquals(
+      sep.hidden,
+      true,
+      "screenshots separator should stay hidden when screenshot item is missing",
+    );
+  } finally {
+    cleanupDOM();
+  }
 }
 
 async function testOnPopupShowingHandlesMissingNextSibling(): Promise<void> {
@@ -650,6 +799,9 @@ async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<
   cleanupDOM();
   const menu = createMockContentAreaContextMenu();
 
+  const leadingItem = document!.createElement("menuitem");
+  menu.appendChild(leadingItem);
+
   const sep1 = document!.createElement("menuseparator");
   sep1.id = "sep1";
   menu.appendChild(sep1);
@@ -676,20 +828,22 @@ async function testOnPopupShowingHidesMultipleConsecutiveSeparators(): Promise<
 
   ContextMenuUtils.onPopupShowing();
 
+  // Same rule as nsContextMenu.showHideSeparators: one separator remains
+  // between the two visible rows and the duplicates after it are hidden.
   assertEquals(
     sep1.hidden,
-    true,
-    "First separator before hidden item should be hidden",
+    false,
+    "First separator of a run between visible rows should stay visible",
   );
   assertEquals(
     sep2.hidden,
     true,
-    "Second separator before hidden item should be hidden",
+    "Duplicate separator after hidden rows should be hidden",
   );
   assertEquals(
     sep3.hidden,
-    false,
-    "Separator before visible item should not be hidden",
+    true,
+    "Second duplicate separator should be hidden",
   );
   cleanupDOM();
 }
@@ -740,13 +894,11 @@ async function testOnPopupShowingHandlesMenuWithOnlySeparators(): Promise<
 
   ContextMenuUtils.onPopupShowing();
 
-  // When nextSibling is null (last element) or another separator (hidden is false/undefined),
-  // the condition nextSibling?.hidden is falsy, so these separators are NOT hidden.
-  // Only separators whose next sibling is explicitly hidden get hidden.
+  // With no visible rows every separator is leading or trailing.
   assertEquals(
     sep1.hidden,
-    false,
-    "Separator with non-hidden next sibling should not be hidden",
+    true,
+    "Leading separator in a menu without rows should be hidden",
   );
   assertEquals(
     sep2.hidden,
@@ -755,8 +907,8 @@ async function testOnPopupShowingHandlesMenuWithOnlySeparators(): Promise<
   );
   assertEquals(
     sep3.hidden,
-    false,
-    "Separator at end (no next sibling with hidden=true) should not be hidden",
+    true,
+    "Trailing separator in a menu without rows should be hidden",
   );
   cleanupDOM();
 }
@@ -1037,12 +1189,24 @@ async function testLegacyNormalizationOutsideFlasco(): Promise<void> {
   const menu = createMockContentAreaContextMenu();
   const screenshot = document.createElement("menuitem");
   screenshot.id = "context-take-screenshot";
-  const adjacent = document.createElement("menuitem");
-  adjacent.hidden = true;
+  const miniWindow = document.createElement("menuitem");
+  miniWindow.id = "context-use-mini-window";
+  miniWindow.hidden = true;
+  const screenshotsSep = document.createElement("menuseparator");
+  screenshotsSep.id = "context-sep-screenshots";
+  screenshotsSep.hidden = true;
+  const item = document.createElement("menuitem");
   const separator = document.createElement("menuseparator");
   const hiddenItem = document.createElement("menuitem");
   hiddenItem.hidden = true;
-  menu.append(screenshot, adjacent, separator, hiddenItem);
+  menu.append(
+    screenshot,
+    miniWindow,
+    screenshotsSep,
+    item,
+    separator,
+    hiddenItem,
+  );
   const mod = await import("../index.ts");
   resetListenerTracking();
   wrapDocumentForTracking();
@@ -1056,18 +1220,23 @@ async function testLegacyNormalizationOutsideFlasco(): Promise<void> {
       0,
       "excluded customizer stays detached",
     );
-    assertEquals(adjacent.hidden, false, "legacy screenshot repair still runs");
+    assertEquals(
+      screenshotsSep.hidden,
+      false,
+      "legacy screenshot repair still runs",
+    );
+    assertEquals(miniWindow.hidden, true, "mini-window item stays hidden");
     assertEquals(
       separator.hidden,
       true,
       "native hidden-row separator is normalized",
     );
     invokeCapturedUnloadListener();
-    adjacent.hidden = true;
+    screenshotsSep.hidden = true;
     separator.hidden = false;
     menu.dispatchEvent(new Event("popupshowing", { bubbles: true }));
     assertEquals(
-      adjacent.hidden,
+      screenshotsSep.hidden,
       true,
       "component cleanup removes the native helper",
     );
@@ -1277,12 +1446,20 @@ export async function runAllTests(): Promise<void> {
       fn: testOnPopupShowingPreservesNavigationSeparator,
     },
     {
-      name: "onPopupShowing preserves context-sep-pdfjs-selectall",
-      fn: testOnPopupShowingPreservesPdfjsSeparator,
-    },
-    {
       name: "onPopupShowing does not hide separator before visible item",
       fn: testOnPopupShowingDoesNotHideSeparatorBeforeVisibleItem,
+    },
+    {
+      name: "onPopupShowing keeps separator before hidden then visible row",
+      fn: testOnPopupShowingKeepsSeparatorBeforeHiddenThenVisibleRow,
+    },
+    {
+      name: "onPopupShowing ignores bubbled submenu popupshowing",
+      fn: testOnPopupShowingIgnoresBubbledSubmenuEvent,
+    },
+    {
+      name: "onPopupShowing re-normalizes after later popupshowing listeners",
+      fn: testOnPopupShowingRenormalizesAfterLaterListeners,
     },
 
     // ContextMenuUtils — addContextBox
@@ -1297,15 +1474,20 @@ export async function runAllTests(): Promise<void> {
       fn: testAddToolbarContentMenuPopupSetDoesNotThrow,
     },
 
-    // onPopupShowing — Screenshot and PDFjs separator handling
+    // onPopupShowing — Screenshot separator handling
     {
-      name: "onPopupShowing shows PDFjs separator when screenshot visible",
-      fn: testOnPopupShowingShowsPdfjsSeparatorWhenScreenshotVisible,
+      name:
+        "onPopupShowing shows screenshots separator when screenshot visible",
+      fn: testOnPopupShowingShowsScreenshotsSeparatorWhenScreenshotVisible,
+    },
+    {
+      name: "onPopupShowing keeps the mini-window item hidden",
+      fn: testOnPopupShowingKeepsMiniWindowItemHidden,
     },
     {
       name:
-        "onPopupShowing does not show PDFjs separator when screenshot hidden",
-      fn: testOnPopupShowingDoesNotShowPdfjsSeparatorWhenScreenshotHidden,
+        "onPopupShowing does not show screenshots separator when screenshot hidden",
+      fn: testOnPopupShowingDoesNotShowScreenshotsSeparatorWhenScreenshotHidden,
     },
     {
       name: "onPopupShowing handles missing screenshot item",

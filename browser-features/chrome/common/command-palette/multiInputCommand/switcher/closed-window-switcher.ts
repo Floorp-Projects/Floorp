@@ -46,16 +46,24 @@ export const closedWindowSwitcherCommand: PaletteCommand = {
     defaultValue: "Reopen a recently closed window",
   }),
   category: "switcher",
-  keywords: [
-    "closed window",
-    "reopen window",
-    "undo close window",
-    "restore window",
-    "recently closed",
-    ...getEnglishStepCommandKeywords("commandPalette.closedWindowSwitcher", "commandPalette.closedWindowSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.closedWindowSwitcher", "commandPalette.closedWindowSwitcherDescription"),
-    ...getJapaneseReadings("floorp-closed-window-switcher"),
-  ],
+  get keywords() {
+    return [
+      "closed window",
+      "reopen window",
+      "undo close window",
+      "restore window",
+      "recently closed",
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.closedWindowSwitcher",
+        "commandPalette.closedWindowSwitcherDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.closedWindowSwitcher",
+        "commandPalette.closedWindowSwitcherDescription",
+      ),
+      ...getJapaneseReadings("floorp-closed-window-switcher"),
+    ];
+  },
   steps: [
     {
       id: "closedWindow",

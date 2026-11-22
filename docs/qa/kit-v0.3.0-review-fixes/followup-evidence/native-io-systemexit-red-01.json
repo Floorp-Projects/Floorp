@@ -1,0 +1,25 @@
+{
+  "selection": "test_qa3_native_io.SupervisorBoundaryTests.test_private_envelope_never_reconstructs_system_exit_zero",
+  "exitCode": 1,
+  "outerTimeout": false,
+  "durationSeconds": 0.227,
+  "limits": {
+    "softASMiB": 512,
+    "hardASGiB": 32,
+    "cpuSeconds": 40,
+    "softFileMiB": 32,
+    "hardFileGiB": 64,
+    "wallSeconds": 90
+  },
+  "outerRecoveryKilledOwnBirthCheckedPids": [],
+  "leftovers": [],
+  "sourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "testedVariant": "working-fix",
+  "testedSourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "testSha256": "b41a10cc3bae75e632dacfcc5d47f0c477f27bffc586b17ae231afbac4ec6f84",
+  "sourceUnchangedDuringRun": true,
+  "testsUnchangedDuringRun": true,
+  "logSha256": "248173b337f24a27b73d5ef967abb6d0738d9792f5ced77bbf73045b9a512692",
+  "credentialsPassed": false,
+  "nativeBrowserNetworkBuildExecuted": false
+}
