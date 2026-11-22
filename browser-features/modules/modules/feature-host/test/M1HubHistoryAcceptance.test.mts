@@ -363,6 +363,10 @@ async function testHistoryBackReconnectsAfterWithheldAcknowledgement(): Promise<
     if (!blankWindowGlobal) throw new Error("the blank WindowGlobal is absent");
     assertEquals(blankWindowGlobal === initialWindowGlobal, false);
     assertEquals(originalDocument.isLive(), false);
+    await waitForCondition(
+      () => closeFaultInjectedCalls === 1 && closeObserverCalls === 1,
+      "the original connection close listeners run after navigation",
+    );
     assertEquals(
       closeFaultInjectedCalls,
       1,
