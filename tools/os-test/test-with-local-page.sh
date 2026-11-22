@@ -3,7 +3,8 @@
 
 set -euo pipefail
 
-BASE_URL="http://127.0.0.1:58261"
+BASE_URL="${FLOORP_OS_BASE_URL:-http://127.0.0.1:58261}"
+BASE_URL="${BASE_URL%/}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEST_PAGE="file://${SCRIPT_DIR}/test-page.html"
 
@@ -211,4 +212,3 @@ if (( FAIL_COUNT > 0 )); then
   echo -e "${RED}❌ ${FAIL_COUNT} 件のHTTP検証失敗がありました${NC}"
   exit 1
 fi
-
