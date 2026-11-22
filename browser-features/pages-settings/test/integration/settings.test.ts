@@ -756,6 +756,26 @@ export async function runPageTests() {
           132,
           "Button step not saved",
         );
+        await type("5", "5");
+        trigger("increment-trigger");
+        await pause(80);
+        assertEquals(
+          target.value,
+          "60",
+          "Below-minimum draft was not clamped once",
+        );
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          60,
+          "Focus steal committed twice",
+        );
+        assertEquals(
+          document.activeElement === target,
+          true,
+          "Button press stole input focus",
+        );
+        await step("ArrowUp");
+        assertEquals(target.value, "61", "Focus lost after button press");
       } finally {
         target.blur();
         await pause(80);

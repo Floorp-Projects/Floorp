@@ -213,8 +213,12 @@ function NumberField({
             type="button"
             tabIndex={-1}
             aria-label="increment"
+            className="chakra-number-input__incrementTrigger"
             data-part="increment-trigger"
             disabled={disabled}
+            // Keep the input focused like the Zag triggers did, so a mouse
+            // press does not blur-commit and then step again.
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => stepBy(1)}
           >
             <ChevronUp />
@@ -223,8 +227,10 @@ function NumberField({
             type="button"
             tabIndex={-1}
             aria-label="decrement"
+            className="chakra-number-input__decrementTrigger"
             data-part="decrement-trigger"
             disabled={disabled}
+            onMouseDown={(event) => event.preventDefault()}
             onClick={() => stepBy(-1)}
           >
             <ChevronDown />
