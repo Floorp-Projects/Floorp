@@ -809,6 +809,25 @@ export async function runPageTests() {
           "isComposing arrow was suppressed",
         );
         assertEquals(target.value, "61", "isComposing arrow stepped the value");
+        const consumedByIme = new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "ArrowUp",
+          keyCode: 229,
+        });
+        target.dispatchEvent(consumedByIme);
+        await pause(80);
+        assertEquals(
+          consumedByIme.defaultPrevented,
+          false,
+          "IME-consumed arrow was suppressed",
+        );
+        assertEquals(target.value, "61", "IME-consumed arrow stepped the value");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          61,
+          "IME-consumed arrow committed a step",
+        );
         await step("ArrowUp");
         assertEquals(
           target.value,

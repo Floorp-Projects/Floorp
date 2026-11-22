@@ -161,8 +161,14 @@ function NumberField({
     if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
     // During IME composition, arrows navigate the candidate list; do not
     // suppress the event. nativeEvent.isComposing covers keydowns that fire
-    // before React delivers compositionstart.
-    if (composing.current || event.nativeEvent.isComposing) return;
+    // before React delivers compositionstart, and keyCode 229 marks keys the
+    // IME already consumed at composition boundaries (as Zag's guard does).
+    if (
+      composing.current || event.nativeEvent.isComposing ||
+      event.keyCode === 229
+    ) {
+      return;
+    }
     event.preventDefault();
     const step = event.shiftKey ? 10 : 1;
     stepBy(step * (event.key === "ArrowUp" ? 1 : -1));
