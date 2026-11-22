@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fix-qa309/evidence/runtime-independent-parent-init-01.py", line 74, in <module>
+    assert marker.exists(),"fixture command did not initialize"
+           ^^^^^^^^^^^^^^^
+AssertionError: fixture command did not initialize

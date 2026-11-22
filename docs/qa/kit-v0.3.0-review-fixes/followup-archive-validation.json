@@ -1,0 +1,13 @@
+{
+  "archive": "FOLLOWUP_QA309_Evidence.zip",
+  "bytes": 782560,
+  "sha256": "2c91b368a2f03ef4ec3267575ded489c4c5827d9db62810567b365132f397d17",
+  "entries": 347,
+  "expandedBytes": 3790824,
+  "crc": "PASS",
+  "pathsTypesEncryption": "PASS",
+  "credentialPatternScan": "PASS for temporary URL queries, GitHub-token shapes and private-key headers",
+  "index": "followup-evidence-index.json",
+  "indexSha256": "d862a8aea7f2851d340d596a318bc0a1dc89e63b545a106bc7fb0c89ec313416",
+  "originalLocalErrorsPreserved": true
+}

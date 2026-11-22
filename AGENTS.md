@@ -168,10 +168,15 @@ Colocated in `test/` directories next to source. The runner discovers them autom
 
 ```bash
 deno task dev-tool start      # Start dev server + browser in background (waits for Marionette ready)
-deno task dev-tool stop       # Kill all dev processes (deno, vite, floorp) cleanly
+deno task dev-tool stop       # Stop dev processes belonging to this checkout
+deno task dev-tool stop --all # Recovery: stop dev processes across ALL checkouts
 deno task dev-tool restart    # Stop then start
 deno task dev-tool rebuild    # Rebuild startup + modules + inject XHTML without restarting browser (HMR handles loader-features)
 ```
+
+Process identities are stored in this checkout's `_dist/dev-processes.json`.
+Use `stop --all` only for machine-wide recovery, including older orphaned runs
+without recorded identities; it also stops other checkouts.
 
 ### Browser Commands
 

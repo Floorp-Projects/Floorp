@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "description": "Shared EvidenceManifest v0 fixture registry. The Scheduler and the Runner both validate exactly these files (ADR 8061068 section 1.5).",
+  "valid": [
+    "converted/qa3-source-receipt.json",
+    "converted/final-package-native-verification.json",
+    "converted/final-package-web-panel-ua-report.json",
+    "converted/work-close-p2-doc-01.json",
+    "converted/work-independent-negative-01.json",
+    "converted/work-source106-clean-commit-01.json",
+    "valid/manifest-visual-judge-human.json",
+    "valid/manifest-cancel-requested.json"
+  ],
+  "invalid": [
+    {
+      "path": "invalid/unknown-schema-version.json",
+      "code": "unsupported-schema-version"
+    },
+    {
+      "path": "invalid/invalid-transition.json",
+      "code": "invalid-transition"
+    },
+    {
+      "path": "invalid/missing-runtime.json",
+      "code": "missing-required-evidence"
+    },
+    {
+      "path": "invalid/missing-cleanup.json",
+      "code": "missing-required-evidence"
+    },
+    {
+      "path": "invalid/missing-visual-judge.json",
+      "code": "missing-required-evidence"
+    },
+    {
+      "path": "invalid/missing-assertions.json",
+      "code": "missing-required-evidence"
+    },
+    {
+      "path": "invalid/empty-limitations.json",
+      "code": "schema-violation"
+    },
+    {
+      "path": "invalid/cancel-mismatch.json",
+      "code": "cancel-state-mismatch"
+    },
+    {
+      "path": "invalid/missing-session-entity.json",
+      "code": "missing-entity"
+    },
+    {
+      "path": "invalid/unknown-entity-reference.json",
+      "code": "unknown-entity-reference"
+    },
+    {
+      "path": "invalid/wrong-id-namespace.json",
+      "code": "invalid-id-namespace"
+    },
+    {
+      "path": "invalid/visual-judge-source-robot.json",
+      "code": "schema-violation"
+    },
+    {
+      "path": "invalid/stale-epoch.json",
+      "code": "stale-epoch",
+      "currentEpoch": 1,
+      "runnerAccepts": true
+    }
+  ]
+}

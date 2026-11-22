@@ -1,0 +1,702 @@
+diff --git a/tools/qa3/README.md b/tools/qa3/README.md
+index 16fc4e62..8e6b50cd 100644
+--- a/tools/qa3/README.md
++++ b/tools/qa3/README.md
+@@ -11,8 +11,8 @@ the calling workflow continues. Do not make packages depend on this job yet.
+ 
+ `source-plan.json` pins 106 existing cases: 60 Deno runner/utils/smoke host
+ cases, 28 Node final-package intake cases, and 18 Python source/packaging
+-provenance cases. These are Floorp host tool tests; they are not Mozilla native
+-tests or the unavailable implementation kit's 114 tests. The executor uses a
++provenance cases. These are Floorp host tool tests, separate from Mozilla native
++tests and the implementation kit's 114 tests. The executor uses a
+ fixed command registry and never calls `deno task test`, `test:integration`,
+ browser startup, signing or publication. Deno has no run/network/environment
+ permission. It uses `--no-config`, `--no-npm`, `--node-modules-dir=none` and a
+@@ -35,6 +35,9 @@ Node 22 JUnit uses generic `classname="test"` without a file field. Its origin
+ is bound to the one fixed Node input file and exact named cases; explicit
+ foreign file fields are rejected. Deno report origins remain explicit. A bounded
+ failure summary is printed to CI logs as well as retained in artifacts.
++JUnit inputs must be UTF-8 (an optional UTF-8 BOM is accepted). DTD/entity
++declarations, NUL bytes and declarations of a different encoding are rejected
++before XML parsing, including UTF-16/32 encodings of a DTD.
+ 
+ On a disposable Linux x86_64 host with Git, Python 3.12, Node 22, Deno 2.9.7 and
+ `/usr/bin/prlimit` (provided by Ubuntu util-linux):
+@@ -60,6 +63,19 @@ injection. Each group has a 180-second timeout and a 16-MiB limit for regular
+ file writes (including cache entries and logs) applied before exec by prlimit,
+ runs in an owned process group, and is reaped/terminated on exit. This is a
+ Linux source host, not the future cross-platform GUI/Agent supervisor.
++An isolated Python supervisor owns the command's descendant tree as a Linux
++subreaper. It checks process birth identities and uses pidfds before signaling,
++so detached descendants and forks during termination are included in bounded
++TERM/KILL/reap cleanup. The calling process's subreaper state and unrelated
++children are untouched. A bounded private control pipe reports completion;
++missing results and incomplete cleanup fail the source run. This requires Linux
++pidfd support, available on the Ubuntu 24.04 source worker.
++Cleanup syscall errors are retained separately from the initial failure, and
++later TERM/KILL/reap phases continue. A recorded cleanup error or supervisor
++interruption prevents PASS, even if subsequent cleanup succeeds. Loss of the
++supervisor through SIGKILL or a kernel stall requires external worker/job
++teardown; an absent control result always fails the source run. Logical process
++ownership is not a replacement for an external resource/teardown boundary.
+ 
+ ## Coverage and remaining gates
+ 
+@@ -75,9 +91,11 @@ common source/profdata contracts. The current source relation and official
+ Firefox Git/Hg match remain unverified; the latter is advisory. Native Debug
+ test-support/harness, final signed artifact QA, real memory safety/GUI coverage,
+ trusted first-FAIL history, revocation/expiry and qualification are later
+-stages. The implementation kit remains unreviewed because both Library inputs
+-returned HTTP 403 during this initial work. Equal declared ZIP sizes do not
+-prove equal contents.
++stages. The initial Library materialization was blocked by HTTP 403. The kit
++was subsequently reviewed from the user's immutable GitHub input, with its
++original 114 and separately repaired 130 host tests recorded in
++[Floorp #2893](https://github.com/Floorp-Projects/Floorp/pull/2893). Those kit
++tests are separate from the active source plan and do not qualify native builds.
+ 
+ Before any required promotion, run the fixed plan on a clean CI checkout and
+ measure missing coverage, initial failure/flake rate and resource use. Then
+diff --git a/tools/qa3/source.py b/tools/qa3/source.py
+index f72325c1..0c3f51c3 100644
+--- a/tools/qa3/source.py
++++ b/tools/qa3/source.py
+@@ -1,14 +1,17 @@
+ # SPDX-License-Identifier: MPL-2.0
+ 
+ import argparse
++import ctypes
+ import hashlib
+ import json
++import math
+ import os
+ import platform
+ import re
+ import signal
+ import subprocess
+ import sys
++import time
+ import unittest
+ import xml.etree.ElementTree as ET
+ from pathlib import Path
+@@ -225,13 +228,19 @@ def read_junit(path, repo, node_file=None):
+     if node_file is not None and node_file not in GROUPS["node-intake"]:
+         raise ValueError("unregistered single-file Node report origin")
+     data = path.read_bytes()
++    if not data or len(data) > 4 * 1024 * 1024 or b"\0" in data:
++        raise ValueError("missing, oversized, or unsafe JUnit report")
++    text = data.decode("utf-8-sig")
++    encoding = re.search(
++        r"<\?xml\s+[^?]*\bencoding\s*=\s*(['\"])(.*?)\1", text, re.IGNORECASE
++    )
+     if (
+-        not data
+-        or len(data) > 4 * 1024 * 1024
+-        or re.search(rb"<!\s*(?:DOCTYPE|ENTITY)", data, re.IGNORECASE)
++        re.search(r"<!\s*(?:DOCTYPE|ENTITY)", text, re.IGNORECASE)
++        or encoding
++        and encoding[2].lower() not in {"utf-8", "utf8"}
+     ):
+-        raise ValueError("missing, oversized, or unsafe JUnit report")
+-    root = ET.fromstring(data)
++        raise ValueError("unsafe or non-UTF-8 JUnit report")
++    root = ET.fromstring(text)
+     if root.tag not in {"testsuites", "testsuite"}:
+         raise ValueError("unsupported JUnit document")
+     for suite in root.iter():
+@@ -327,28 +336,267 @@ def child_environment():
+     }
+ 
+ 
+-def execute(args, log, repo, timeout=180):
+-    with log.open("xb") as stream:
+-        child = subprocess.Popen(
+-            ["/usr/bin/prlimit", "--fsize=16777216:16777216", "--", *args],
+-            cwd=repo,
++def _process_info(pid):
++    try:
++        fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
++        return int(fields[1]), fields[0], int(fields[19])
++    except (FileNotFoundError, ProcessLookupError, PermissionError):
++        return None
++
++
++def _process_snapshot():
++    result = {}
++    for entry in Path("/proc").iterdir():
++        if not entry.name.isdecimal():
++            continue
++        info = _process_info(int(entry.name))
++        if info:
++            result[int(entry.name)] = info
++    return result
++
++
++def _owned_descendants(owned):
++    snapshot = _process_snapshot()
++    ancestors = {
++        pid
++        for pid, birth in owned.items()
++        if pid in snapshot and snapshot[pid][2] == birth
++    } | {os.getpid()}
++    while True:
++        children = {
++            pid for pid, info in snapshot.items() if info[0] in ancestors
++        } - ancestors
++        if not children:
++            break
++        for pid in children:
++            owned[pid] = snapshot[pid][2]
++        ancestors.update(children)
++    return {
++        pid: snapshot[pid]
++        for pid, birth in owned.items()
++        if pid in snapshot and snapshot[pid][2] == birth
++    }
++
++
++def _cleanup_owned(process, owned):
++    errors = []
++
++    def record(error):
++        message = _bounded_error(error)
++        if message not in errors and len(errors) < 4:
++            errors.append(message)
++
++    for sig, interval in ((signal.SIGTERM, 2), (signal.SIGKILL, 2)):
++        deadline = time.monotonic() + interval
++        while True:
++            try:
++                alive = _owned_descendants(owned)
++            except OSError as error:
++                record(error)
++                alive = {}
++            try:
++                if process.poll() is None:
++                    process.send_signal(sig)
++            except OSError as error:
++                record(error)
++            for pid, info in alive.items():
++                if info[1] != "Z":
++                    try:
++                        fd = os.pidfd_open(pid)
++                    except ProcessLookupError:
++                        continue
++                    except OSError as error:
++                        record(error)
++                        continue
++                    try:
++                        current = _process_info(pid)
++                        if current and current[2] == info[2]:
++                            signal.pidfd_send_signal(fd, sig)
++                    except ProcessLookupError:
++                        pass
++                    except OSError as error:
++                        record(error)
++                    finally:
++                        os.close(fd)
++            try:
++                process.poll()
++            except OSError as error:
++                record(error)
++            for pid in alive:
++                if pid == process.pid:
++                    continue
++                try:
++                    os.waitpid(pid, os.WNOHANG)
++                except ChildProcessError:
++                    pass
++                except OSError as error:
++                    record(error)
++            try:
++                remaining = _owned_descendants(owned)
++            except OSError as error:
++                record(error)
++                remaining = True
++            if not remaining and process.returncode is not None:
++                break
++            if time.monotonic() >= deadline:
++                break
++            time.sleep(0.02)
++        if not remaining and process.returncode is not None:
++            break
++    try:
++        process.wait(timeout=1)
++    except (OSError, subprocess.TimeoutExpired) as error:
++        record(error)
++    try:
++        complete = not _owned_descendants(owned) and process.returncode is not None
++    except OSError as error:
++        record(error)
++        complete = False
++    return complete, errors
++
++
++def _bounded_error(error):
++    text = f"{type(error).__name__}: {error}"
++    text = "".join(c if c.isprintable() else " " for c in text)
++    return text.encode("utf-8", errors="replace")[:256].decode("utf-8", errors="ignore")
++
++
++def _execute_owned(control, timeout, argv):
++    result = {
++        "exitCode": None,
++        "error": None,
++        "cleanupErrors": [],
++        "ownedCleanupComplete": False,
++    }
++    process = None
++    owned = {}
++    interrupted = False
++
++    def stop(_signum, _frame):
++        nonlocal interrupted
++        interrupted = True
++
++    try:
++        if not math.isfinite(timeout) or timeout <= 0 or not argv:
++            raise ValueError("invalid source command deadline")
++        libc = ctypes.CDLL(None, use_errno=True)
++        if libc.prctl(36, 1, 0, 0, 0) != 0:
++            raise OSError("cannot own orphaned source descendants")
++        signal.signal(signal.SIGTERM, stop)
++        signal.signal(signal.SIGINT, stop)
++        process = subprocess.Popen(
++            ["/usr/bin/prlimit", "--fsize=16777216:16777216", "--", *argv],
+             env=child_environment(),
+-            stdout=stream,
+-            stderr=stream,
+             start_new_session=True,
+         )
++        deadline = time.monotonic() + timeout
++        while True:
++            _owned_descendants(owned)
++            if interrupted:
++                raise ValueError("source supervisor interrupted")
++            if time.monotonic() >= deadline:
++                raise ValueError("source command timed out")
++            if process.poll() is not None:
++                break
++            time.sleep(0.02)
++        result["exitCode"] = process.returncode
++    except (
++        OSError,
++        ValueError,
++        subprocess.SubprocessError,
++        KeyboardInterrupt,
++    ) as error:
++        result["error"] = _bounded_error(error)
++    finally:
++        if process is not None:
++            try:
++                complete, errors = _cleanup_owned(process, owned)
++                result["ownedCleanupComplete"] = complete
++                result["cleanupErrors"] = errors
++            except (
++                OSError,
++                ValueError,
++                subprocess.SubprocessError,
++                KeyboardInterrupt,
++            ) as error:
++                result["cleanupErrors"].append(_bounded_error(error))
++        else:
++            result["ownedCleanupComplete"] = True
++        if interrupted:
++            result["error"] = result["error"] or "source supervisor interrupted"
++        with os.fdopen(control, "w", encoding="utf-8") as stream:
++            json.dump(result, stream, ensure_ascii=False)
++
++
++def execute(args, log, repo, timeout=180):
++    if not math.isfinite(timeout) or timeout <= 0:
++        raise ValueError("invalid source command deadline")
++    with log.open("xb") as stream:
++        read_fd, write_fd = os.pipe()
+         try:
+-            code = child.wait(timeout=timeout)
+-        except subprocess.TimeoutExpired:
+-            os.killpg(child.pid, signal.SIGKILL)
+-            child.wait(timeout=10)
+-            raise ValueError("source command timed out")
++            child = subprocess.Popen(
++                [
++                    sys.executable,
++                    "-I",
++                    "-B",
++                    str(Path(__file__).resolve()),
++                    "_owned",
++                    str(write_fd),
++                    str(timeout),
++                    *args,
++                ],
++                cwd=repo,
++                env=child_environment(),
++                stdout=stream,
++                stderr=stream,
++                start_new_session=True,
++                pass_fds=(write_fd,),
++            )
++        except BaseException:
++            os.close(read_fd)
++            raise
+         finally:
++            os.close(write_fd)
++        with os.fdopen(read_fd, "rb") as control:
+             try:
+-                os.killpg(child.pid, signal.SIGKILL)
+-            except ProcessLookupError:
+-                pass
+-    return code
++                child.wait(timeout=timeout + 8)
++            except BaseException:
++                child.terminate()
++                try:
++                    child.wait(timeout=6)
++                except subprocess.TimeoutExpired:
++                    child.kill()
++                    child.wait(timeout=2)
++                raise
++            result = control.read(4097)
++        if child.returncode != 0 or not result or len(result) > 4096:
++            raise ValueError("source supervisor did not complete")
++        status = json.loads(result)
++        if not isinstance(status, dict) or set(status) != {
++            "exitCode",
++            "error",
++            "cleanupErrors",
++            "ownedCleanupComplete",
++        }:
++            raise ValueError("invalid source supervisor result")
++        if (
++            not isinstance(status["cleanupErrors"], list)
++            or len(status["cleanupErrors"]) > 4
++            or not all(isinstance(error, str) for error in status["cleanupErrors"])
++            or type(status["ownedCleanupComplete"]) is not bool
++            or status["error"] is not None
++            and not isinstance(status["error"], str)
++        ):
++            raise ValueError("untyped source supervisor result")
++        if status["cleanupErrors"] or status["ownedCleanupComplete"] is not True:
++            raise ValueError(
++                f"{status['error'] or 'source cleanup failed'}; cleanup: {status['cleanupErrors']}"
++            )
++        if status["error"] is not None:
++            raise ValueError(status["error"])
++        if type(status["exitCode"]) is not int:
++            raise ValueError("source supervisor lacks a command result")
++        return status["exitCode"]
+ 
+ 
+ def run_source(output, expected_head, local=False):
+@@ -532,4 +780,7 @@ def main():
+ 
+ 
+ if __name__ == "__main__":
++    if len(sys.argv) >= 5 and sys.argv[1] == "_owned":
++        _execute_owned(int(sys.argv[2]), float(sys.argv[3]), sys.argv[4:])
++        sys.exit(0)
+     sys.exit(main())
+diff --git a/tools/qa3/test_source.py b/tools/qa3/test_source.py
+index 1690da8e..5e00e8ca 100644
+--- a/tools/qa3/test_source.py
++++ b/tools/qa3/test_source.py
+@@ -1,7 +1,11 @@
+ # SPDX-License-Identifier: MPL-2.0
+ 
+ import copy
++import ctypes
++import json
+ import os
++import signal
++import subprocess
+ import sys
+ import tempfile
+ import time
+@@ -140,6 +144,33 @@ class SourceContractTests(unittest.TestCase):
+             )
+             self.assertEqual(source.read_junit(report, self.root)[0]["verdict"], "FAIL")
+ 
++    def test_junit_requires_utf8_and_rejects_encoded_dtd_entities(self):
++        report = self.root / "encoded.xml"
++        document = '<testsuite><testcase classname="file" name="日本語"/></testsuite>'
++        unsafe = '<!DOCTYPE testsuite [<!ENTITY origin "file">]><testsuite><testcase classname="&origin;" name="one"/></testsuite>'
++        for encoding in (
++            "utf-16",
++            "utf-16-le",
++            "utf-16-be",
++            "utf-32",
++            "utf-32-le",
++            "utf-32-be",
++        ):
++            for text in (document, unsafe):
++                with self.subTest(encoding=encoding, unsafe=text == unsafe):
++                    report.write_bytes(text.encode(encoding))
++                    with self.assertRaises(ValueError):
++                        source.read_junit(report, self.root)
++        for encoding in ("utf-8", "utf-8-sig"):
++            report.write_bytes(document.encode(encoding))
++            self.assertEqual(source.read_junit(report, self.root)[0]["name"], "日本語")
++            report.write_bytes(unsafe.encode(encoding))
++            with self.assertRaises(ValueError):
++                source.read_junit(report, self.root)
++        report.write_bytes(b'<?xml version="1.0" encoding="ISO-8859-1"?><testsuite/>')
++        with self.assertRaises(ValueError):
++            source.read_junit(report, self.root)
++
+     def test_node22_classname_is_bound_only_to_the_fixed_single_file_command(self):
+         report = self.root / "node22.xml"
+         report.write_text(
+@@ -243,6 +274,252 @@ class SourceContractTests(unittest.TestCase):
+         time.sleep(0.25)
+         self.assertFalse(marker.exists())
+ 
++    def test_exit_recovers_detached_descendant_and_preserves_unrelated_child(self):
++        libc = ctypes.CDLL(None, use_errno=True)
++        prior = ctypes.c_int()
++        self.assertEqual(libc.prctl(37, ctypes.byref(prior), 0, 0, 0), 0)
++        self.assertEqual(libc.prctl(36, 1, 0, 0, 0), 0)
++        unrelated = subprocess.Popen(
++            [sys.executable, "-c", "import time; time.sleep(10)"]
++        )
++        marker = self.root / "detached-pid"
++        descendant = (
++            "import os,signal,time,pathlib; "
++            "signal.signal(signal.SIGTERM,signal.SIG_IGN); "
++            "birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]; "
++            f"pathlib.Path({str(marker)!r}).write_text(str(os.getpid())+' '+birth); "
++            "time.sleep(10)"
++        )
++        command = (
++            "import pathlib,subprocess,sys,time; "
++            f"subprocess.Popen([sys.executable,'-c',{descendant!r}],start_new_session=True); "
++            f"marker=pathlib.Path({str(marker)!r}); "
++            "deadline=time.monotonic()+3\n"
++            "while not marker.exists() and time.monotonic()<deadline: time.sleep(.01)\n"
++            "assert marker.exists()"
++        )
++        pid = None
++        try:
++            self.assertEqual(
++                source.execute(
++                    [sys.executable, "-c", command],
++                    self.root / "detached.log",
++                    self.root,
++                ),
++                0,
++            )
++            pid, birth = map(int, marker.read_text().split())
++            try:
++                os.kill(pid, 0)
++            except ProcessLookupError:
++                alive = False
++            else:
++                alive = True
++            self.assertFalse(
++                alive, "detached owned descendant survived command completion"
++            )
++            self.assertIsNone(unrelated.poll())
++        finally:
++            if pid is None and marker.exists():
++                pid, birth = map(int, marker.read_text().split())
++            if pid is not None:
++                info = source._process_info(pid)
++                if info and info[2] == birth:
++                    try:
++                        os.kill(pid, signal.SIGKILL)
++                    except ProcessLookupError:
++                        pass
++                try:
++                    os.waitpid(pid, 0)
++                except ChildProcessError:
++                    pass
++            unrelated.kill()
++            unrelated.wait(timeout=3)
++            self.assertEqual(libc.prctl(36, prior.value, 0, 0, 0), 0)
++
++    def test_timeout_recovers_detached_child_that_forks_during_term(self):
++        marker = self.root / "late-fork-pid"
++        ready = self.root / "ready"
++        command = f"""
++import os, pathlib, signal, subprocess, sys, time
++def on_term(*_):
++    if os.fork() == 0:
++        os.setsid()
++        signal.signal(signal.SIGTERM, signal.SIG_IGN)
++        birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]
++        pathlib.Path({str(marker)!r}).write_text(str(os.getpid())+' '+birth)
++        time.sleep(10)
++        os._exit(0)
++    signal.signal(signal.SIGTERM, signal.SIG_IGN)
++signal.signal(signal.SIGTERM, on_term)
++birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]
++pathlib.Path({str(ready)!r}).write_text(str(os.getpid())+' '+birth)
++time.sleep(10)
++"""
++        try:
++            with self.assertRaisesRegex(ValueError, "timed out"):
++                source.execute(
++                    [sys.executable, "-c", command],
++                    self.root / "late-fork.log",
++                    self.root,
++                    timeout=0.5,
++                )
++            self.assertTrue(ready.exists())
++            self.assertTrue(
++                marker.exists(), "the late-fork cleanup path was not exercised"
++            )
++            with self.assertRaises(ProcessLookupError):
++                os.kill(int(marker.read_text().split()[0]), 0)
++        finally:
++            for file in (ready, marker):
++                if file.exists():
++                    pid, birth = map(int, file.read_text().split())
++                    info = source._process_info(pid)
++                    if info and info[2] == birth:
++                        try:
++                            os.kill(pid, signal.SIGKILL)
++                        except ProcessLookupError:
++                            pass
++
++    def test_execute_keeps_parent_subreaper_state_and_rejects_invalid_deadlines(self):
++        libc = ctypes.CDLL(None, use_errno=True)
++        prior = ctypes.c_int()
++        after = ctypes.c_int()
++        self.assertEqual(libc.prctl(37, ctypes.byref(prior), 0, 0, 0), 0)
++        self.assertEqual(
++            source.execute(
++                [sys.executable, "-c", "raise SystemExit(124)"],
++                self.root / "nonzero.log",
++                self.root,
++            ),
++            124,
++        )
++        self.assertEqual(libc.prctl(37, ctypes.byref(after), 0, 0, 0), 0)
++        self.assertEqual(after.value, prior.value)
++        for timeout in (0, -1, float("nan"), float("inf")):
++            with self.subTest(timeout=timeout), self.assertRaises(ValueError):
++                source.execute(
++                    [sys.executable, "-c", "pass"],
++                    self.root / "invalid.log",
++                    self.root,
++                    timeout,
++                )
++        self.assertFalse((self.root / "invalid.log").exists())
++
++    def test_spawn_failure_closes_control_pipe_without_overwriting_log(self):
++        count = len(list(Path("/proc/self/fd").iterdir()))
++        with (
++            patch.object(
++                source.subprocess, "Popen", side_effect=OSError("fixture spawn failure")
++            ),
++            self.assertRaisesRegex(OSError, "fixture spawn failure"),
++        ):
++            source.execute(
++                [sys.executable, "-c", "pass"],
++                self.root / "spawn-fail.log",
++                self.root,
++            )
++        self.assertEqual(len(list(Path("/proc/self/fd").iterdir())), count)
++
++    def test_cleanup_fault_and_interruption_are_recorded_without_leaking_children(self):
++        libc = ctypes.CDLL(None, use_errno=True)
++        prior = ctypes.c_int()
++        self.assertEqual(libc.prctl(37, ctypes.byref(prior), 0, 0, 0), 0)
++        self.assertEqual(libc.prctl(36, 1, 0, 0, 0), 0)
++        fixture = """
++import errno, os, pathlib, signal, sys
++sys.path.insert(0, sys.argv[2])
++import source
++marker = sys.argv[3]
++if sys.argv[4] == 'pidfd':
++    real = source.os.pidfd_open
++    first = True
++    def fault(pid):
++        global first
++        if first:
++            first = False
++            raise OSError(errno.EMFILE, 'fixture transient pidfd failure')
++        return real(pid)
++    source.os.pidfd_open = fault
++    child = "import os,pathlib,signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); birth=pathlib.Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()[19]; pathlib.Path("+repr(marker)+").write_text(str(os.getpid())+' '+birth); time.sleep(10)"
++else:
++    real = source._cleanup_owned
++    def interrupt(process, owned):
++        os.kill(os.getpid(), signal.SIGTERM)
++        return real(process, owned)
++    source._cleanup_owned = interrupt
++    child = 'raise SystemExit(0)'
++source._execute_owned(int(sys.argv[1]), .5, [sys.executable, '-I', '-c', child])
++"""
++        try:
++            for mode in ("pidfd", "interrupted"):
++                with self.subTest(mode=mode):
++                    marker = self.root / f"{mode}-child"
++                    read_fd, write_fd = os.pipe()
++                    worker = None
++                    try:
++                        worker = subprocess.Popen(
++                            [
++                                sys.executable,
++                                "-I",
++                                "-B",
++                                "-c",
++                                fixture,
++                                str(write_fd),
++                                str(Path(source.__file__).parent),
++                                str(marker),
++                                mode,
++                            ],
++                            pass_fds=(write_fd,),
++                            env=source.child_environment(),
++                            stdout=subprocess.DEVNULL,
++                            stderr=subprocess.DEVNULL,
++                            start_new_session=True,
++                        )
++                    except BaseException:
++                        os.close(read_fd)
++                        raise
++                    finally:
++                        os.close(write_fd)
++                    try:
++                        worker.wait(timeout=8)
++                        with os.fdopen(read_fd, "rb") as control:
++                            read_fd = None
++                            result = json.loads(control.read(4097))
++                        self.assertTrue(result["ownedCleanupComplete"])
++                        if mode == "pidfd":
++                            self.assertIn("timed out", result["error"])
++                            self.assertIn(
++                                "fixture transient pidfd failure",
++                                result["cleanupErrors"][0],
++                            )
++                            self.assertTrue(marker.exists())
++                            with self.assertRaises(ProcessLookupError):
++                                os.kill(int(marker.read_text().split()[0]), 0)
++                        else:
++                            self.assertEqual(result["exitCode"], 0)
++                            self.assertIn("supervisor interrupted", result["error"])
++                    finally:
++                        if read_fd is not None:
++                            os.close(read_fd)
++                        if worker is not None and worker.poll() is None:
++                            worker.kill()
++                            worker.wait(timeout=2)
++                        if marker.exists():
++                            pid, birth = map(int, marker.read_text().split())
++                            info = source._process_info(pid)
++                            if info and info[2] == birth:
++                                try:
++                                    os.kill(pid, signal.SIGKILL)
++                                except ProcessLookupError:
++                                    pass
++                            try:
++                                os.waitpid(pid, 0)
++                            except ChildProcessError:
++                                pass
++        finally:
++            self.assertEqual(libc.prctl(36, prior.value, 0, 0, 0), 0)
++
+     def test_reusing_an_output_log_cannot_erase_a_first_failure(self):
+         log = self.root / "first.log"
+         log.write_text("first FAIL\n")
