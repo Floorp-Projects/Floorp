@@ -1,0 +1,2 @@
+COMMAND   PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+deno    23173 user   21u  IPv4 0xefa73eafff2b0cb1      0t0  TCP 127.0.0.1:5383 (LISTEN)

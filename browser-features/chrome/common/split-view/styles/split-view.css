@@ -72,7 +72,9 @@
     .floorp-split-handle,
     .floorp-grid-handle
   ) {
-  display: none !important;
+  /* Keep browser frames alive while Gecko swaps split tabs between windows. */
+  position: absolute !important;
+  visibility: hidden !important;
 }
 
 /* ===== Custom drag handles ===== */

@@ -1,0 +1,8 @@
+{
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.0",
+    "@std/cli": "jsr:@std/cli@^1.0.25",
+    "@std/fs": "jsr:@std/fs@^1.0.20",
+    "@std/path": "jsr:@std/path@^1.1.4"
+  }
+}

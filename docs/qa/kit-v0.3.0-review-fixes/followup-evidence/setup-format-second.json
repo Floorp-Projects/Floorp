@@ -1,0 +1,14 @@
+{
+  "command": [
+    "/workspace/qa-review-v030/tooling/python-lint/bin/ruff",
+    "format",
+    "--check",
+    "--no-cache",
+    "--config",
+    "pyproject.toml",
+    ".github/workflows/scripts/qa3_build_profile.py",
+    ".github/workflows/scripts/test_qa3_build_profile.py"
+  ],
+  "exit": 0,
+  "credentialsInherited": false
+}

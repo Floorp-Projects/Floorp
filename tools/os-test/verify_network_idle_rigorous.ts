@@ -3,7 +3,7 @@
 
 import { parseArgs } from "@std/cli/parse-args";
 
-const DEFAULT_BASE_URL = "http://127.0.0.1:58261";
+import { resolveOsTestBaseUrl } from "../src/os_test_client.ts";
 
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html>
@@ -148,13 +148,15 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
   const parsed = parseArgs(argv, {
     string: ["base-url", "port", "timeout"],
     default: {
-      "base-url": DEFAULT_BASE_URL,
       port: "0",
       timeout: "10000",
     },
   });
 
-  const baseUrl = String(parsed["base-url"]);
+  const baseUrl = resolveOsTestBaseUrl(
+    parsed["base-url"],
+    Deno.env.get("FLOORP_OS_BASE_URL"),
+  ).replace(/\/$/, "");
   const serverPort = Number(parsed.port);
   const networkIdleTimeout = Number(parsed.timeout);
 
