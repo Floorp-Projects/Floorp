@@ -7,6 +7,7 @@ import {
   debugRuntimeArchiveName,
   filterRuntimeEntries,
   type InitializerRunDependencies,
+  installDebugRuntime,
   installLockedRuntime,
   type LockedReleaseMetadata,
   lockedReleasePublicDownloadUrl,
@@ -22,6 +23,13 @@ import {
   validateLockedRuntimeReleaseMetadata,
 } from "./initializer.ts";
 import type { RuntimeArtifact, RuntimeLock } from "./runtime_lock.ts";
+import {
+  buildPreparedRuntimeReceipt,
+  DEBUG_RUNTIME_MARKER_FILE,
+  PREPARED_RUNTIME_RECEIPT_FILE,
+  writePreparedRuntimeReceipt,
+} from "./prepared_runtime.ts";
+import type { PreparedRuntimeMarkerIdentity } from "./prepared_runtime_types.ts";
 
 // --- filterRuntimeEntries ---
 
@@ -1842,6 +1850,192 @@ Deno.test("matching locked Runtime marker still validates the installed tree", a
   } finally {
     await Deno.remove(root, { recursive: true });
   }
+});
+
+function writePreparedDebugTree(
+  root: string,
+  target: {
+    platform: "windows" | "linux" | "macos";
+    architecture: "x86_64" | "aarch64" | "universal";
+  },
+  overrides: Partial<PreparedRuntimeMarkerIdentity> = {},
+): PreparedRuntimeMarkerIdentity {
+  const marker: PreparedRuntimeMarkerIdentity = {
+    schemaVersion: 1,
+    distribution: "debug",
+    platform: target.platform,
+    architecture: target.architecture,
+    artifactName: "floorp-windows-x86_64-moz-artifact.zip",
+    artifactSize: 190337065,
+    artifactSha256:
+      "11fa924d1a9c427749efc74d8c594b46c5223c4e4049de7adec1ae72d27dbc0a",
+    version: "160.0.1",
+    buildId: "20261114215908",
+    ...overrides,
+  };
+  Deno.mkdirSync(root, { recursive: true });
+  Deno.writeTextFileSync(
+    path.join(root, DEBUG_RUNTIME_MARKER_FILE),
+    JSON.stringify(marker),
+  );
+  const floorpRoot = path.join(root, "floorp");
+  const modulesDir = path.join(floorpRoot, "modules");
+  Deno.mkdirSync(modulesDir, { recursive: true });
+  Deno.writeTextFileSync(
+    path.join(modulesDir, "AppConstants.sys.mjs"),
+    `export var AppConstants = Object.freeze({
+  DEBUG: true,
+  MOZ_APP_NAME: "floorp",
+  MOZ_APP_VERSION: "${marker.version}",
+  MOZ_BUILDID: "${marker.buildId}",
+});
+`,
+  );
+  const appRoot = marker.platform === "macos"
+    ? path.join(floorpRoot, "Floorp.app", "Contents", "Resources")
+    : floorpRoot;
+  Deno.mkdirSync(appRoot, { recursive: true });
+  Deno.writeTextFileSync(
+    path.join(appRoot, "application.ini"),
+    `[App]
+Name=Floorp
+Version=${marker.version}
+BuildID=${marker.buildId}
+`,
+  );
+  const executable = marker.platform === "macos"
+    ? path.join(floorpRoot, "Floorp.app", "Contents", "MacOS", "floorp")
+    : marker.platform === "windows"
+    ? path.join(floorpRoot, "floorp.exe")
+    : path.join(floorpRoot, "floorp-bin");
+  Deno.mkdirSync(path.dirname(executable), { recursive: true });
+  Deno.writeTextFileSync(executable, "binary");
+  return marker;
+}
+
+Deno.test("Debug initializer reuses a valid explicit prepared receipt without FTP", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target = resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
+    const marker = writePreparedDebugTree(root, target);
+    writePreparedRuntimeReceipt(
+      root,
+      buildPreparedRuntimeReceipt(marker, root),
+    );
+    let fetchCalls = 0;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (() => {
+      fetchCalls += 1;
+      return Promise.reject(new Error("FTP fetch must not run"));
+    }) as unknown as typeof fetch;
+    try {
+      await installDebugRuntime(root);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+    assertEquals(fetchCalls, 0);
+    assertEquals(
+      JSON.parse(
+        Deno.readTextFileSync(path.join(root, DEBUG_RUNTIME_MARKER_FILE)),
+      ).buildId,
+      "20261114215908",
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("Debug initializer fails closed on a malformed prepared receipt", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target = resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
+    writePreparedDebugTree(root, target);
+    Deno.writeTextFileSync(
+      path.join(root, PREPARED_RUNTIME_RECEIPT_FILE),
+      "{malformed",
+    );
+    let fetchCalls = 0;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (() => {
+      fetchCalls += 1;
+      return Promise.reject(new Error("FTP fetch must not run"));
+    }) as unknown as typeof fetch;
+    try {
+      await assertRejects(
+        () => installDebugRuntime(root),
+        Error,
+        "Invalid explicit FDH prepared Runtime receipt",
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+    assertEquals(fetchCalls, 0);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("Debug initializer fails closed when receipt/marker/binary disagree", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target = resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
+    const marker = writePreparedDebugTree(root, target);
+    writePreparedRuntimeReceipt(
+      root,
+      buildPreparedRuntimeReceipt(marker, root),
+    );
+    const executable = target.platform === "macos"
+      ? path.join(root, "floorp", "Floorp.app", "Contents", "MacOS", "floorp")
+      : target.platform === "windows"
+      ? path.join(root, "floorp", "floorp.exe")
+      : path.join(root, "floorp", "floorp-bin");
+    Deno.removeSync(executable);
+    await assertRejects(
+      () => installDebugRuntime(root),
+      Error,
+      "executable is missing or empty",
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("Debug initializer retains the FTP index path when no receipt exists", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const target = resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
+    writePreparedDebugTree(root, target);
+    let fetchCalls = 0;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (() => {
+      fetchCalls += 1;
+      return Promise.reject(new Error("FTP index fetch ran without a receipt"));
+    }) as unknown as typeof fetch;
+    try {
+      await assertRejects(
+        () => installDebugRuntime(root),
+        Error,
+        "FTP index fetch ran without a receipt",
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+    assertEquals(fetchCalls, 5);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("Debug initializer swap target uses the explicit binRootDir", async () => {
+  const source = await Deno.readTextFile(
+    new URL("./initializer.ts", import.meta.url),
+  );
+  const start = source.indexOf("export async function installDebugRuntime");
+  const end = source.indexOf("export async function run(", start);
+  const debugSource = source.slice(start, end);
+  const match = /swapLockedRuntime\(\s*stageRoot,\s*([A-Za-z_][A-Za-z0-9_]*),/
+    .exec(debugSource);
+  assertEquals(match?.[1], "binRootDir");
 });
 
 Deno.test("locked Runtime rollback failure retains the recovery backup path", async () => {

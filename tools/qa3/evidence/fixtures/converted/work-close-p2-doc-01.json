@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "work-record",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-evidence-converter",
+      "kind": "agent",
+      "grantedBy": "authenticated-dsh-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:docs-public-p2-doc-01",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "task-owner",
+        "label": "documentation public-evidence review finding P2-DOC-01"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:docs-public-independent-close-02",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "job-owner",
+        "label": "close receipt docs-public-independent-close-02"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:docs-public-independent-close-02",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:docs-public-independent-close-02:1",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:docs-public-independent-close-02-session",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "session-owner",
+        "context": "independent documentation review"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:docs-public-p2-doc-01",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "workspace-owner",
+        "path": "/workspace/qa-review-v030/fix-qa309"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:docs-public-p2-doc-01-publication",
+        "issuer": "host-authorization",
+        "owner": "UNVERIFIED",
+        "ownerRole": "approver",
+        "label": "no approval is requested by this record",
+        "decision": "not-required"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:docs-public-p2-doc-01",
+        "type": "task-has-job",
+        "to": "scheduler:job:docs-public-independent-close-02"
+      },
+      {
+        "from": "scheduler:job:docs-public-independent-close-02",
+        "type": "job-has-run",
+        "to": "executor:run:docs-public-independent-close-02"
+      },
+      {
+        "from": "executor:run:docs-public-independent-close-02",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:docs-public-independent-close-02:1"
+      },
+      {
+        "from": "executor:run:docs-public-independent-close-02",
+        "type": "run-uses-session",
+        "to": "host:session:docs-public-independent-close-02-session"
+      },
+      {
+        "from": "executor:run:docs-public-independent-close-02",
+        "type": "run-in-workspace",
+        "to": "host:workspace:docs-public-p2-doc-01"
+      },
+      {
+        "from": "host-authorization:approval:docs-public-p2-doc-01-publication",
+        "type": "approval-for-job",
+        "to": "scheduler:job:docs-public-independent-close-02"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": null,
+      "reason": "status=CLOSED"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "linux",
+      "arch": "UNVERIFIED"
+    },
+    "build": {
+      "commit": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+      "repository": "Floorp-Projects/Floorp"
+    },
+    "packageDigest": null,
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "c9027879e053c9031c7f3e27495f6d415d36c10f",
+        "pin": "floorp@c9027879e053c9031c7f3e27495f6d415d36c10f"
+      },
+      "python": {
+        "version": "UNVERIFIED"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:docs-public-independent-close-02",
+      "attempt": 1,
+      "startedAt": null,
+      "endedAt": null,
+      "result": "passed",
+      "exitCode": 0,
+      "logRef": "runtime-all-integrated-commit-02.log",
+      "notes": "Retained root-suite observation (independentlyReexecuted=false); the record carries no wall-clock window."
+    }
+  ],
+  "operations": [
+    {
+      "input": "FOLLOWUP_QA309.md and README.md (SHA-256 pinned inputs)",
+      "target": "documentation publication wording",
+      "order": 1,
+      "observation": "independent review recorded the initial finding P2-DOC-01 against the desired QA3 publication ordering"
+    },
+    {
+      "input": "docs-public-static-inspection-01.json and its failure log",
+      "target": "static public evidence selection",
+      "order": 2,
+      "observation": "initial evidence preserved byte-identical (3 files re-hashed)"
+    },
+    {
+      "input": "close receipt inputs and packager digest",
+      "target": "public evidence selection and wording",
+      "order": 3,
+      "observation": "status=CLOSED; selection files=322 bytes=3140758"
+    },
+    {
+      "input": "runtime-all-integrated-commit-02.log (retained observation)",
+      "target": "root unittest suite at the reviewed source head",
+      "order": 4,
+      "observation": "methods=203 exitCode=0 skips=0 independentlyReexecuted=False"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "finding-status",
+      "expected": "CLOSED",
+      "actual": "CLOSED",
+      "passed": true
+    },
+    {
+      "name": "no-new-findings",
+      "expected": "0",
+      "actual": "0",
+      "passed": true
+    },
+    {
+      "name": "source-not-mutated",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    },
+    {
+      "name": "packager-not-executed-or-imported",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    },
+    {
+      "name": "retained-root-suite-exit-code",
+      "expected": "0",
+      "actual": "0",
+      "passed": true
+    },
+    {
+      "name": "retained-root-suite-skips",
+      "expected": "0",
+      "actual": "0",
+      "passed": true
+    },
+    {
+      "name": "credential-shape-matches",
+      "expected": "0",
+      "actual": "0",
+      "passed": true
+    },
+    {
+      "name": "publication-not-authorized",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "Linux consumer environment /workspace/qa-review-v030/fix-qa309 (static documentation review)",
+    "network": "not-used",
+    "matchesTarget": false,
+    "deviations": [
+      "static documentation review: no product execution and no native build in this record",
+      "the root-suite observation is retained from an earlier run (independentlyReexecuted=false)"
+    ],
+    "notes": "Fidelity is limited to byte-level review of the recorded inputs and the retained suite observation."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "FOLLOWUP_QA309.md",
+        "sha256": "b6aa92471ab2b8b2bcf3fe5d352976f2d66eed17ac48e5e934141df776221e51",
+        "bytes": 10015
+      },
+      {
+        "path": "README.md",
+        "sha256": "5991067ab2f82763f2ed2043f3f724955e9eb4b19fae897083ad4d879b0ce1d6",
+        "bytes": 8669
+      },
+      {
+        "path": "docs-public-independent-review-01.md",
+        "sha256": "26517cbc066d5c7571af99aa19f59283ee2dbfe4a8200c1fefeae039a6af014c",
+        "bytes": 9180
+      },
+      {
+        "path": "docs-public-static-inspection-01.json",
+        "sha256": "1996f2b0fad3e3af14192c14a32355d6dc8b7f4e2e1011cfd416892531389ec1",
+        "bytes": 316657
+      },
+      {
+        "path": "docs-public-static-inspection-01-failure.log",
+        "sha256": "c3d07707e014faf698f06afea4eb84cb3893aa67ec8fcfdcbed1c0701eccc24d",
+        "bytes": 237
+      }
+    ],
+    "unchangedDuringRun": true,
+    "deviations": [],
+    "notes": "Inputs are the SHA-256 pinned review documents, the preserved initial evidence and the packager digest recorded by the close receipt."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "not-required",
+    "notes": "The review reads and re-hashes files only; no process is spawned."
+  },
+  "limitations": [
+    "Runtime architecture is UNVERIFIED: the record carries no architecture, so os.arch is UNVERIFIED.",
+    "DSH toolchain pin is UNVERIFIED for this record; only the Floorp source commit of the retained observation is pinned.",
+    "No wall-clock attempt timestamps are recorded, so attempts carry null startedAt/endedAt.",
+    "No visual (look-and-feel) judgment was performed for this record; visualJudge is null.",
+    "Task/Job ownership is UNVERIFIED: the record names no owner, so owners are marked UNVERIFIED.",
+    "Scoped documentation/publication review only: this record does not establish Native/code qualification, archive verification or publication authorization.",
+    "The retained root-suite observation was not independently re-executed (independentlyReexecuted=false)."
+  ],
+  "reproduction": {
+    "result": "reproduced",
+    "defectRef": "P2-DOC-01",
+    "notes": "finding P2-DOC-01 (publication ordering described as an existing production gate) was observed in the preserved independent review evidence and closed by this record; the wording defect itself is not re-executed here."
+  }
+}

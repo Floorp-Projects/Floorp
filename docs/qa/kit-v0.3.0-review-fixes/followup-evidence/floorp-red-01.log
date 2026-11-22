@@ -1,0 +1,188 @@
+test_all_publication_kinds_and_five_native_targets_remain_unverified (test_source.SourceContractTests.test_all_publication_kinds_and_five_native_targets_remain_unverified) ... ok
+test_bad_source_or_host_still_preserves_a_fail_receipt (test_source.SourceContractTests.test_bad_source_or_host_still_preserves_a_fail_receipt) ... ok
+test_browser_tasks_arbitrary_arguments_and_foreign_origin_are_rejected (test_source.SourceContractTests.test_browser_tasks_arbitrary_arguments_and_foreign_origin_are_rejected) ... ok
+test_children_do_not_inherit_credentials_or_runner_options (test_source.SourceContractTests.test_children_do_not_inherit_credentials_or_runner_options) ... ok
+test_exit_recovers_detached_descendant_and_preserves_unrelated_child (test_source.SourceContractTests.test_exit_recovers_detached_descendant_and_preserves_unrelated_child) ... FAIL
+test_fixed_plan_has_all_106_unique_host_cases (test_source.SourceContractTests.test_fixed_plan_has_all_106_unique_host_cases) ... ok
+test_host_deno_inputs_match_root_aliases_and_frozen_jsr_hashes (test_source.SourceContractTests.test_host_deno_inputs_match_root_aliases_and_frozen_jsr_hashes) ... ok
+test_junit_checks_case_identity_and_completion (test_source.SourceContractTests.test_junit_checks_case_identity_and_completion) ... ok
+test_junit_rejects_entities_skip_failure_and_aggregate_contradictions (test_source.SourceContractTests.test_junit_rejects_entities_skip_failure_and_aggregate_contradictions) ... ok
+test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) ... 
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16', unsafe=False) ... FAIL
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16', unsafe=True) ... FAIL
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-le', unsafe=False) ... FAIL
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-le', unsafe=True) ... FAIL
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-be', unsafe=False) ... FAIL
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-be', unsafe=True) ... FAIL
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32', unsafe=False) ... ERROR
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32', unsafe=True) ... ERROR
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-le', unsafe=False) ... ERROR
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-le', unsafe=True) ... ERROR
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-be', unsafe=False) ... ERROR
+  test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-be', unsafe=True) ... ERROR
+test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) ... FAIL
+test_missing_empty_reordered_and_duplicate_groups_are_rejected (test_source.SourceContractTests.test_missing_empty_reordered_and_duplicate_groups_are_rejected) ... ok
+test_node22_classname_is_bound_only_to_the_fixed_single_file_command (test_source.SourceContractTests.test_node22_classname_is_bound_only_to_the_fixed_single_file_command) ... ok
+test_per_test_retry_ignore_and_options_are_outside_the_fixed_host_plan (test_source.SourceContractTests.test_per_test_retry_ignore_and_options_are_outside_the_fixed_host_plan) ... ok
+test_policy_json_rejects_duplicate_fields_and_boolean_schema (test_source.SourceContractTests.test_policy_json_rejects_duplicate_fields_and_boolean_schema) ... ok
+test_reduced_or_duplicated_test_ids_are_rejected (test_source.SourceContractTests.test_reduced_or_duplicated_test_ids_are_rejected) ... ok
+test_reusing_an_output_log_cannot_erase_a_first_failure (test_source.SourceContractTests.test_reusing_an_output_log_cannot_erase_a_first_failure) ... ok
+test_timeout_kills_the_owned_process_group (test_source.SourceContractTests.test_timeout_kills_the_owned_process_group) ... ok
+test_unexecuted_duplicate_unknown_failed_and_skipped_cases_cannot_pass (test_source.SourceContractTests.test_unexecuted_duplicate_unknown_failed_and_skipped_cases_cannot_pass) ... ok
+
+======================================================================
+ERROR: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32', unsafe=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 155, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    source.read_junit(report, self.root)
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/source.py", line 234, in read_junit
+    root = ET.fromstring(data)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/xml/etree/ElementTree.py", line 1335, in XML
+    parser.feed(text)
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 1
+
+======================================================================
+ERROR: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32', unsafe=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 155, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    source.read_junit(report, self.root)
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/source.py", line 234, in read_junit
+    root = ET.fromstring(data)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/xml/etree/ElementTree.py", line 1335, in XML
+    parser.feed(text)
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 1
+
+======================================================================
+ERROR: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-le', unsafe=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 155, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    source.read_junit(report, self.root)
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/source.py", line 234, in read_junit
+    root = ET.fromstring(data)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/xml/etree/ElementTree.py", line 1335, in XML
+    parser.feed(text)
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 1
+
+======================================================================
+ERROR: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-le', unsafe=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 155, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    source.read_junit(report, self.root)
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/source.py", line 234, in read_junit
+    root = ET.fromstring(data)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/xml/etree/ElementTree.py", line 1335, in XML
+    parser.feed(text)
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 1
+
+======================================================================
+ERROR: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-be', unsafe=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 155, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    source.read_junit(report, self.root)
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/source.py", line 234, in read_junit
+    root = ET.fromstring(data)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/xml/etree/ElementTree.py", line 1335, in XML
+    parser.feed(text)
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 0
+
+======================================================================
+ERROR: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-32-be', unsafe=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 155, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    source.read_junit(report, self.root)
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/source.py", line 234, in read_junit
+    root = ET.fromstring(data)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/xml/etree/ElementTree.py", line 1335, in XML
+    parser.feed(text)
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 0
+
+======================================================================
+FAIL: test_exit_recovers_detached_descendant_and_preserves_unrelated_child (test_source.SourceContractTests.test_exit_recovers_detached_descendant_and_preserves_unrelated_child)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 303, in test_exit_recovers_detached_descendant_and_preserves_unrelated_child
+    self.assertFalse(alive, "detached owned descendant survived command completion")
+AssertionError: True is not false : detached owned descendant survived command completion
+
+======================================================================
+FAIL: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16', unsafe=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 154, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16', unsafe=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 154, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-le', unsafe=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 154, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-le', unsafe=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 154, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-be', unsafe=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 154, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities) (encoding='utf-16-be', unsafe=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 154, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_junit_requires_utf8_and_rejects_encoded_dtd_entities (test_source.SourceContractTests.test_junit_requires_utf8_and_rejects_encoded_dtd_entities)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/repos/Floorp/tools/qa3/test_source.py", line 163, in test_junit_requires_utf8_and_rejects_encoded_dtd_entities
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.458s
+
+FAILED (failures=8, errors=6)
+{"sourceHead": null, "sourceVerdict": "FAIL", "executedCases": 0, "publicationAuthorized": false, "steps": [], "error": "expected source must be a full Git SHA"}
+{"sourceHead": "718e688fbd7ad88a776534e7778ad8e4a7f67364", "sourceVerdict": "FAIL", "executedCases": 0, "publicationAuthorized": false, "steps": [], "error": "source checkout mismatch"}
+{"sourceHead": null, "sourceVerdict": "FAIL", "executedCases": 0, "publicationAuthorized": false, "steps": [], "error": "this source host plan requires a disposable Linux x86_64 worker"}

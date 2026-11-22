@@ -5,14 +5,18 @@ Floorp OS Server API テスト - エンハンスドエフェクト機能
 
 import requests
 import json
+import os
 import time
 from typing import Optional
 
-BASE_URL = "http://127.0.0.1:58261"
+from os_test_client import resolve_base_url
+
 
 class FloorpTabManager:
-    def __init__(self, base_url: str = BASE_URL):
-        self.base_url = base_url
+    def __init__(self, base_url: Optional[str] = None):
+        self.base_url = resolve_base_url(
+            base_url, os.environ.get("FLOORP_OS_BASE_URL")
+        ).rstrip("/")
         self.instance_id: Optional[str] = None
     
     def health_check(self):
@@ -219,4 +223,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

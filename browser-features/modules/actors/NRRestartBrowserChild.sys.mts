@@ -1,13 +1,23 @@
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
+
 export class NRRestartBrowserChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRRestartBrowserChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
+      launchDevPort.isTrustedPort(window?.location.port, ["settings"]) ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRRestartBrowser 5183 ! or Chrome Page!");
+      console.debug(
+        `NRRestartBrowser ${
+          launchDevPort.portString("settings")
+        } ! or Chrome Page!`,
+      );
       Cu.exportFunction(this.NRRestartBrowser.bind(this), window, {
         defineAs: "NRRestartBrowser",
       });

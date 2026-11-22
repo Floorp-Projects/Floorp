@@ -67,22 +67,24 @@ export const searchWebCommand: PaletteCommand = {
     defaultValue: "Search with your default search engine",
   }),
   category: "search",
-  keywords: [
-    "search",
-    "web search",
-    "find",
-    "lookup",
-    "google",
-    ...getJapaneseReadings("floorp-search-web"),
-    ...getEnglishStepCommandKeywords(
-      "commandPalette.searchWeb",
-      "commandPalette.searchWebDescription",
-    ),
-    ...getSegmentedKeywordsFromI18nKeys(
-      "commandPalette.searchWeb",
-      "commandPalette.searchWebDescription",
-    ),
-  ],
+  get keywords() {
+    return [
+      "search",
+      "web search",
+      "find",
+      "lookup",
+      "google",
+      ...getJapaneseReadings("floorp-search-web"),
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.searchWeb",
+        "commandPalette.searchWebDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.searchWeb",
+        "commandPalette.searchWebDescription",
+      ),
+    ];
+  },
   steps: [
     {
       id: "query",

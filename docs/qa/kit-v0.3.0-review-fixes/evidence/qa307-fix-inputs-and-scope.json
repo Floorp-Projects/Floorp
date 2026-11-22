@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "87311566a225936fbe7948db142bce3f1d3379d8",
+  "sourceRepository": "Floorp-Projects/Floorp",
+  "sourcePath": "docs/Floorp_QA_Implementation_Kit_v0.3.0.zip",
+  "gitBlob": "e688e2725ce502f36c600cfec88060e7954b30e2",
+  "zipBytes": 150471,
+  "zipSha256": "a4af60380399050f82465864734391227ab34024d26bdf16c31559e2824a8d50",
+  "kitOriginal": "/workspace/qa-review-v030/inputs/github-87311566/extracted/Floorp_QA_Implementation_Kit_v0.3.0",
+  "kitRepairWorkspace": "/workspace/qa-review-v030/fixes/kit-v030/Floorp_QA_Implementation_Kit_v0.3.0",
+  "floorpBase": "013bb6c9ed19250592898ec8fbc8d7d24aa847be",
+  "floorpBranch": "codex/qa-kit-v030-review-fixes",
+  "floorpWorktree": "/workspace/qa-review-v030/worktrees/Floorp-kit-fixes",
+  "runtimeBase": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+  "runtimePullRequest": 84,
+  "runtimeBranch": "codex/qa3-native-proof-contracts",
+  "runtimeFixPaths": [
+    ".github/workflows/scripts/qa3_mozlog.py",
+    ".github/workflows/scripts/test_qa3_mozlog.py"
+  ],
+  "repros": "qa306-kit-negative-repros.json and qa306-kit-pr84-mozlog-comparison.json",
+  "prodKitInstallation": false,
+  "nativeBuildAuthorized": false,
+  "blacksmithActionsAuthorized": false
+}

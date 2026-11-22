@@ -64,6 +64,16 @@ Packaging checks for an exact reverse-applicable patch before applying it, so
 JavaScript already included by the source build is not patched twice. Missing
 or partially applied patches still fail the build.
 
+`crashed-tab-session-history.patch` collects a tab's session history from the
+parent when its content process crashes, before SessionStore starts ignoring the
+crashed browser. Otherwise a navigation made less than
+`browser.sessionstore.interval` (15 s) before the crash was not yet in the tab
+state, and "Restore This Tab" reopened the previous page (Floorp's new tab page,
+or `about:blank`) instead. It changes only SessionStore JavaScript and needs no
+native rebuild; it applies before or after `tab-state-and-split-view.patch`.
+The matching `tools/patches` file covers local builds, and
+`tools/src/runtime_compatibility.test.ts` checks that both stay identical.
+
 `contextual-search-initialization.patch` lazily loads the selector configuration
 for contextual engine lookups. Floorp's fixed default engine list can initialize
 SearchService without loading that configuration. If it is unavailable, the
@@ -139,3 +149,12 @@ parent for the top WindowContext before scripts/CSS execute, caching only the
 document identity result. Neither uses the currently selected tab.
 Changing away from support restores future access; reload open blog pages to
 remove already injected content and retry requests.
+
+`picture-in-picture-app-window.patch` accounts for embedded chrome documents in
+PiP activity ownership. Panel and ordinary-tab players share the containing
+AppWindow's active-state reference count and window/selection listeners. Closing
+one player keeps that AppWindow active until its final player closes. This avoids
+an invalid nested-context setter that aborted registration and later cleanup.
+The extracted `moz-src` patch has a parity test; native embedded-chrome regressions
+cover both opening orders in `pictureInPictureActivity.test.ts`. This changes
+JavaScript only and requires no native rebuild.
