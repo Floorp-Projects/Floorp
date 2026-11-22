@@ -3,6 +3,7 @@
 import { M0_FIXTURES } from "./M0Fixtures.sys.mts";
 import { HUB_FIXTURES } from "./HubFixtures.sys.mts";
 import { getSharedHubRegistry, type HubRegistry } from "./HubRegistry.sys.mts";
+import { isHubIdentifier } from "./HubPageDescriptorValidation.ts";
 import {
   getFeatureWindowIdentity,
   isCandidateFeatureWindow,
@@ -597,7 +598,7 @@ function snapshotFeatureDefinition(input: unknown): FeatureDefinition {
   const value = input as Partial<FeatureDefinition>;
   if (
     typeof value.featureId !== "string" ||
-    !/^[a-z][a-z0-9-]{0,63}$/.test(value.featureId) ||
+    !isHubIdentifier(value.featureId) ||
     typeof value.fixtures !== "object" || value.fixtures === null ||
     Array.isArray(value.fixtures)
   ) throw new Error("invalid feature definition");

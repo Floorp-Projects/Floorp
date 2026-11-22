@@ -262,6 +262,8 @@ async function testIndependentFeatureLifecycle(): Promise<void> {
     null;
   let reopenedA: Awaited<ReturnType<typeof createFeatureHostForTests>> | null =
     null;
+  let disabledA: Awaited<ReturnType<typeof createFeatureHostForTests>> | null =
+    null;
   let hostB: Awaited<ReturnType<typeof createFeatureHostForTests>> | null =
     null;
   try {
@@ -358,20 +360,57 @@ async function testIndependentFeatureLifecycle(): Promise<void> {
       "succeeded",
     );
     assertBUnchanged();
+    assert(
+      definitionA.fixtures.v1.digest !== definitionB.fixtures.v1.digest,
+      "feature A and B v1 use distinct pinned sources",
+    );
     assertEquals(
-      (await hostA.host.disable(
-        "a-disable",
+      (await hostA.host.rollback(
+        "a-rollback-v1",
         hostA.host.diagnostics.stateRevision,
       )).status,
       "succeeded",
+      "A rollback resolves through A's catalog",
     );
+    assertEquals(hostA.host.diagnostics.selectedVersion, "v1");
+    assertEquals(
+      hostA.host.diagnostics.selectedDigest,
+      definitionA.fixtures.v1.digest,
+    );
+    assert(
+      hostA.host.diagnostics.selectedDigest !== definitionB.fixtures.v1.digest,
+      "A rollback must not resolve to B's v1 digest",
+    );
+    let entriesA = featureEntries(registry, featureA);
+    assertEquals(entriesA.length, 1);
+    assertEquals(entriesA[0].route, "/extensions/" + featureA + "/sample");
+    assertEquals(entriesA[0].view.params?.version, "v1");
     assertBUnchanged();
-    assertEquals(featureEntries(registry, featureA).length, 0);
+    assertEquals(
+      (await hostA.host.update(
+        "a-reupdate-1.2.0",
+        hostA.host.diagnostics.stateRevision,
+        "1.2.0",
+      )).status,
+      "succeeded",
+    );
+    assertEquals(hostA.host.diagnostics.selectedVersion, "1.2.0");
+    assertEquals(
+      hostA.host.diagnostics.selectedDigest,
+      definitionA.fixtures["1.2.0"].digest,
+    );
+    assertEquals(hostA.host.diagnostics.desiredEnabled, true);
+    entriesA = featureEntries(registry, featureA);
+    assertEquals(entriesA.length, 1);
+    assertEquals(entriesA[0].route, "/extensions/" + featureA + "/sample");
+    assertEquals(entriesA[0].view.params?.version, "1.2.0");
+    assertBUnchanged();
     const rootA = hostA.root;
     assertCleanDisposeReport(
       await hostA.shutdownForRestartForTests(),
-      "A restart shutdown",
+      "A enabled restart shutdown",
     );
+    assertBUnchanged();
     reopenedA = await createFeatureHostForTests(
       definitionA,
       true,
@@ -381,10 +420,56 @@ async function testIndependentFeatureLifecycle(): Promise<void> {
     );
     assertEquals(reopenedA.host.diagnostics.featureId, featureA);
     assertEquals(reopenedA.host.diagnostics.selectedVersion, "1.2.0");
-    assertEquals(reopenedA.host.diagnostics.desiredEnabled, false);
+    assertEquals(
+      reopenedA.host.diagnostics.selectedDigest,
+      definitionA.fixtures["1.2.0"].digest,
+    );
+    assertEquals(reopenedA.host.diagnostics.desiredEnabled, true);
+    entriesA = featureEntries(registry, featureA);
+    assertEquals(entriesA.length, 1);
+    assertEquals(entriesA[0].route, "/extensions/" + featureA + "/sample");
+    assertEquals(entriesA[0].view.params?.version, "1.2.0");
+    assertBUnchanged();
+    assertEquals(
+      (await reopenedA.host.disable(
+        "a-disable",
+        reopenedA.host.diagnostics.stateRevision,
+      )).status,
+      "succeeded",
+    );
+    assertBUnchanged();
+    assertEquals(featureEntries(registry, featureA).length, 0);
+    assertCleanDisposeReport(
+      await reopenedA.shutdownForRestartForTests(),
+      "A disabled restart shutdown",
+    );
+    assertBUnchanged();
+    disabledA = await createFeatureHostForTests(
+      definitionA,
+      true,
+      rootA,
+      true,
+      testOptions,
+    );
+    assertEquals(disabledA.host.diagnostics.featureId, featureA);
+    assertEquals(disabledA.host.diagnostics.selectedVersion, "1.2.0");
+    assertEquals(
+      disabledA.host.diagnostics.selectedDigest,
+      definitionA.fixtures["1.2.0"].digest,
+    );
+    assertEquals(disabledA.host.diagnostics.desiredEnabled, false);
+    assertEquals(featureEntries(registry, featureA).length, 0);
     assertBUnchanged();
   } finally {
     const cleanupAttempts: CleanupAttempt[] = [];
+    if (disabledA) {
+      cleanupAttempts.push(
+        await collectCleanupAttempt(
+          "disabled A reopen",
+          () => disabledA!.cleanup(),
+        ),
+      );
+    }
     if (reopenedA) {
       cleanupAttempts.push(
         await collectCleanupAttempt(
@@ -406,6 +491,123 @@ async function testIndependentFeatureLifecycle(): Promise<void> {
     assertCleanupAttempts(cleanupAttempts, [{
       name: "feature isolation registry",
       check: () => assertRegistryClear(registry, "feature isolation registry"),
+    }]);
+  }
+}
+
+async function testFeatureIdentifierMatchesHubBound(): Promise<void> {
+  const featureId48 = "a".repeat(48);
+  const featureId49 = featureId48 + "a";
+  assertEquals(featureId48.length, 48);
+  assertEquals(featureId49.length, 49);
+  const definition48 = await definitionFor(featureId48);
+  const definition49 = await definitionFor(featureId49);
+  const registry = new HubRegistry({ epoch: "m2-feature-id-boundary" });
+  const testOptions = {
+    excludeWindowsForTests: true,
+    hubRegistryForTests: registry,
+  };
+  const rejectedRoot = PathUtils.join(
+    PathUtils.profileDir,
+    "floorp-hotfix-m0-tests",
+    "feature-" +
+      Services.uuid.generateUUID().toString().replace(/[{}]/g, ""),
+  );
+  let host: Awaited<ReturnType<typeof createFeatureHostForTests>> | null = null;
+  let oversizedHost:
+    | Awaited<ReturnType<typeof createFeatureHostForTests>>
+    | null = null;
+  try {
+    assertEquals(
+      await IOUtils.exists(rejectedRoot),
+      false,
+      "49-character feature root begins absent",
+    );
+    host = await createFeatureHostForTests(
+      definition48,
+      true,
+      undefined,
+      false,
+      testOptions,
+    );
+    assertEquals(host.host.diagnostics.featureId, featureId48);
+    assertEquals(
+      (await host.host.install(
+        "max-id-install",
+        host.host.diagnostics.stateRevision,
+        "v1",
+      )).status,
+      "succeeded",
+    );
+    assertEquals(
+      (await host.host.enable(
+        "max-id-enable",
+        host.host.diagnostics.stateRevision,
+      )).status,
+      "succeeded",
+      "a 48-character feature ID activates through HubRegistry",
+    );
+    const entries = featureEntries(registry, featureId48);
+    assertEquals(entries.length, 1);
+    assertEquals(entries[0].route, "/extensions/" + featureId48 + "/sample");
+    assertEquals(entries[0].view.params?.version, "v1");
+
+    let rejection: unknown = null;
+    try {
+      oversizedHost = await createFeatureHostForTests(
+        definition49,
+        true,
+        rejectedRoot,
+        false,
+        testOptions,
+      );
+    } catch (error) {
+      rejection = error;
+    }
+    assert(
+      messageOf(rejection).includes("invalid feature definition"),
+      "a 49-character feature ID is rejected at definition admission",
+    );
+    assertEquals(
+      await IOUtils.exists(rejectedRoot),
+      false,
+      "a 49-character feature ID is rejected before root allocation",
+    );
+    const entriesAfterRejection = featureEntries(registry, featureId48);
+    assertEquals(entriesAfterRejection.length, 1);
+    assertEquals(entriesAfterRejection[0].featureId, featureId48);
+  } finally {
+    const cleanupAttempts: CleanupAttempt[] = [];
+    if (oversizedHost) {
+      cleanupAttempts.push(
+        await collectCleanupAttempt(
+          "oversized feature ID",
+          () => oversizedHost!.cleanup(),
+        ),
+      );
+    }
+    if (host) {
+      cleanupAttempts.push(
+        await collectCleanupAttempt(
+          "48-character feature",
+          () => host!.cleanup(),
+        ),
+      );
+    }
+    cleanupAttempts.push(
+      await collectCleanupAttempt(
+        "rejected 49-character root",
+        () =>
+          IOUtils.remove(rejectedRoot, {
+            recursive: true,
+            ignoreAbsent: true,
+          }),
+      ),
+    );
+    assertCleanupAttempts(cleanupAttempts, [{
+      name: "feature identifier boundary registry",
+      check: () =>
+        assertRegistryClear(registry, "feature identifier boundary registry"),
     }]);
   }
 }
@@ -781,6 +983,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "independent feature catalog lifecycle",
       fn: testIndependentFeatureLifecycle,
+    },
+    {
+      name: "feature identifier bound matches HubRegistry",
+      fn: testFeatureIdentifierMatchesHubBound,
     },
     {
       name: "catalog validation and nested caller mutation",
