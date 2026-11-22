@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { type FixtureVersion, M0_FIXTURES } from "./M0Fixtures.sys.mts";
+import { M0_FIXTURES } from "./M0Fixtures.sys.mts";
+import { HUB_FIXTURES } from "./HubFixtures.sys.mts";
+import { getSharedHubRegistry, type HubRegistry } from "./HubRegistry.sys.mts";
+import type {
+  HubGenerationLease,
+  HubHostClaim,
+  HubLiveDocument,
+} from "./HubRegistryTypes.ts";
+import type { FixtureVersion, M0Fixture } from "./FeatureHostTypes.ts";
 import {
   type Cleanup,
   type DisposeReport,
@@ -10,6 +18,7 @@ import {
 
 const FEATURE_ID = "experimental-local-sample";
 const HOST_BUILD_ID = "m0-schema-2";
+const FIXTURES = Object.freeze({ ...M0_FIXTURES, ...HUB_FIXTURES });
 const ROOT = PathUtils.join(PathUtils.profileDir, "floorp-hotfix-m0");
 const TEST_ROOT = PathUtils.join(
   PathUtils.profileDir,
@@ -127,6 +136,8 @@ export type M0DurableWriteObserverForTests = (
 export interface M0FeatureHostTestOptions {
   afterDurableWriteForTests?: M0DurableWriteObserverForTests;
   excludeWindowsForTests?: boolean;
+  hubRegistryForTests?: HubRegistry;
+  hubPublicationTimeoutMsForTests?: number;
 }
 
 const owners = new Map<string, M0FeatureHost>();
@@ -249,7 +260,7 @@ function withSnapshot(
 }
 
 function isVersion(value: unknown): value is FixtureVersion {
-  return value === "v1" || value === "v2" || value === "broken";
+  return typeof value === "string" && Object.hasOwn(FIXTURES, value);
 }
 
 function isTxId(value: unknown): value is string {
@@ -259,7 +270,7 @@ function isTxId(value: unknown): value is string {
 
 function isKnownDigest(value: unknown): value is string {
   return typeof value === "string" &&
-    Object.values(M0_FIXTURES).some((fixture) => fixture.digest === value);
+    Object.values(FIXTURES).some((fixture) => fixture.digest === value);
 }
 
 function isOperation(value: unknown): value is RequestOperation {
@@ -385,9 +396,9 @@ function isSnapshot(value: unknown): value is RecordSnapshot {
       (snapshot.rollbackHealthBuild === null)) &&
     (snapshot.selectedVersion === null ||
       snapshot.selectedDigest ===
-        M0_FIXTURES[snapshot.selectedVersion].digest) &&
+        FIXTURES[snapshot.selectedVersion].digest) &&
     (snapshot.rollbackVersion === null ||
-      snapshot.rollbackDigest === M0_FIXTURES[snapshot.rollbackVersion].digest);
+      snapshot.rollbackDigest === FIXTURES[snapshot.rollbackVersion].digest);
 }
 
 function isPending(value: unknown): value is PendingTransaction {
@@ -411,7 +422,7 @@ function isPending(value: unknown): value is PendingTransaction {
     (pending.targetDigest === null || isKnownDigest(pending.targetDigest)) &&
     pending.targetVersion !== null && pending.targetDigest !== null &&
     (pending.targetVersion === null ||
-      pending.targetDigest === M0_FIXTURES[pending.targetVersion].digest) &&
+      pending.targetDigest === FIXTURES[pending.targetVersion].digest) &&
     (pending.phase === "PREPARED" || pending.phase === "OLD_STOPPED" ||
       pending.phase === "CANDIDATE_READY");
 }
@@ -515,9 +526,9 @@ function validateRecord(value: unknown): M0Record {
         record.selectedHealthBuild !== null)) ||
     (record.rollbackVersion === null) !== (record.rollbackDigest === null) ||
     (record.selectedVersion !== null &&
-      record.selectedDigest !== M0_FIXTURES[record.selectedVersion].digest) ||
+      record.selectedDigest !== FIXTURES[record.selectedVersion].digest) ||
     (record.rollbackVersion !== null &&
-      record.rollbackDigest !== M0_FIXTURES[record.rollbackVersion].digest) ||
+      record.rollbackDigest !== FIXTURES[record.rollbackVersion].digest) ||
     (record.desiredEnabled && record.selectedVersion === null) ||
     (record.pending !== null &&
       (record.pending.txId === "" ||
@@ -539,7 +550,7 @@ function validateRecord(value: unknown): M0Record {
         record.attempt.originTxId !== record.lastOutcome.txId ||
         record.lastOutcome.selectedVersion === null ||
         !record.attempt.attemptedDigests.includes(
-          M0_FIXTURES[record.lastOutcome.selectedVersion].digest,
+          FIXTURES[record.lastOutcome.selectedVersion].digest,
         ))) ||
     (record.lastOutcome?.status === "failed_quarantined" &&
       record.blockedReason === null)
@@ -557,7 +568,7 @@ async function digest(source: string): Promise<string> {
   ).join("");
 }
 
-const HOST_CAPABILITIES = new Set(["window-marker"]);
+const HOST_CAPABILITIES = new Set(["window-marker", "hub-pages"]);
 
 export function isM0FixtureCompatibleForTests(
   version: FixtureVersion,
@@ -565,7 +576,7 @@ export function isM0FixtureCompatibleForTests(
   runtimeBuildId: string,
   availableCapabilities: readonly string[],
 ): boolean {
-  const compatibility = M0_FIXTURES[version].compatibility;
+  const compatibility = FIXTURES[version].compatibility;
   return compatibility.hostSchema === 2 &&
     compatibility.hostBuildId === HOST_BUILD_ID &&
     hostBuildId === HOST_BUILD_ID &&
@@ -584,7 +595,7 @@ class PackageStore {
   }
 
   async ensure(version: FixtureVersion): Promise<M0FixtureValue> {
-    const fixture = M0_FIXTURES[version];
+    const fixture = FIXTURES[version];
     if (
       !isM0FixtureCompatibleForTests(
         version,
@@ -641,7 +652,7 @@ class PackageStore {
     digestValue: string,
     version: FixtureVersion,
   ): Promise<M0FixtureValue> {
-    const fixture = M0_FIXTURES[version];
+    const fixture = FIXTURES[version];
     if (
       !isM0FixtureCompatibleForTests(
         version,
@@ -674,11 +685,7 @@ class PackageStore {
   }
 }
 
-interface M0FixtureValue {
-  version: FixtureVersion;
-  digest: string;
-  source: string;
-}
+interface M0FixtureValue extends M0Fixture {}
 
 export class M0FeatureHost {
   readonly #store: PackageStore;
@@ -717,7 +724,15 @@ export class M0FeatureHost {
   #nextWriteFault: WriteFaultPlan | null = null;
   #committedPendingPublishForTests: M0Record | null = null;
   readonly #afterDurableWriteForTests: M0DurableWriteObserverForTests | null;
+  readonly #hubRegistry: HubRegistry;
+  readonly #hubPublicationTimeoutMs: number;
+  readonly #hubGenerationLeases = new WeakMap<
+    M0ModuleHost,
+    HubGenerationLease
+  >();
   #evaluations = 0;
+  #hubClaim: HubHostClaim | null = null;
+  readonly #hubWaitControllers = new Set<AbortController>();
   readonly #markerKeys = new Set<string>();
   readonly #testWritesEnabled: boolean;
   #windowObserverInstalled = false;
@@ -738,6 +753,11 @@ export class M0FeatureHost {
     this.#afterDurableWriteForTests = testOptions?.afterDurableWriteForTests ??
       null;
     this.#testExcludeWindows = testOptions?.excludeWindowsForTests ?? false;
+    this.#hubRegistry = testOptions?.hubRegistryForTests ??
+      getSharedHubRegistry();
+    this.#hubPublicationTimeoutMs =
+      testOptions?.hubPublicationTimeoutMsForTests ??
+        2_000;
     this.#store = new PackageStore(root);
     this.#recordPath = PathUtils.join(root, "state.json");
   }
@@ -764,14 +784,20 @@ export class M0FeatureHost {
     ) throw new Error("M0 host is dev/test opt-in only");
     const opening = openingHosts.get(root);
     if (opening) {
-      if (testOptions?.afterDurableWriteForTests) {
+      if (
+        testOptions?.afterDurableWriteForTests ||
+        testOptions?.hubRegistryForTests
+      ) {
         throw new Error("M0 test observer must be installed before open");
       }
       return opening;
     }
     const existing = owners.get(root);
     if (existing) {
-      if (testOptions?.afterDurableWriteForTests) {
+      if (
+        testOptions?.afterDurableWriteForTests ||
+        testOptions?.hubRegistryForTests
+      ) {
         throw new Error("M0 test observer must be installed before open");
       }
       return existing;
@@ -918,7 +944,7 @@ export class M0FeatureHost {
         await this.#quarantine(txId, request, "recovery-attempt-exhausted");
         return;
       }
-      const targetDigest = M0_FIXTURES[targetVersion].digest;
+      const targetDigest = FIXTURES[targetVersion].digest;
       const recoveryPending: PendingTransaction = pending ?? {
         op: request.op,
         txId,
@@ -1050,7 +1076,7 @@ export class M0FeatureHost {
     targetVersion: FixtureVersion,
     base: M0Record,
   ): Promise<void> {
-    const targetDigest = M0_FIXTURES[targetVersion].digest;
+    const targetDigest = FIXTURES[targetVersion].digest;
     const episode = this.#record.attempt ??
       this.#newAttempt(txId, request, targetDigest);
     if (
@@ -1339,6 +1365,7 @@ export class M0FeatureHost {
   shutdown(): Promise<DisposeReport> {
     if (this.#shutdownPromise) return this.#shutdownPromise;
     this.#closed = true;
+    this.#abortHubWaits(new Error("host shutdown"));
     this.#revocationEpoch += 1;
     this.#admissionsOpen = false;
     this.#removeWindowObservers();
@@ -1354,6 +1381,8 @@ export class M0FeatureHost {
         ? await this.#running.stop("host-shutdown")
         : { errors: [], timedOut: false };
       this.#running = null;
+      this.#hubClaim?.release();
+      this.#hubClaim = null;
       this.#windows.clear();
       this.#markerKeys.clear();
       this.#windowEntries.clear();
@@ -1553,7 +1582,6 @@ export class M0FeatureHost {
     if (request.op === "disable") {
       if (!before.desiredEnabled) throw new Error("already disabled");
       const previousAdmission = this.#admissionsOpen;
-      this.#admissionsOpen = false;
       const pending: PendingTransaction = {
         op: request.op,
         txId,
@@ -1577,8 +1605,24 @@ export class M0FeatureHost {
         }
         throw error;
       }
-      const stopped = this.#running
-        ? await this.#running.stop("disable")
+      this.#abortHubWaits(new Error("feature disabled"));
+      this.#admissionsOpen = false;
+      const oldRuntime = this.#running;
+      const hadHubPages = oldRuntime !== null &&
+        this.#hubGenerationLeases.has(oldRuntime);
+      let hubW0: readonly HubLiveDocument[] = [];
+      let hubDiscoveryFailed = false;
+      if (hadHubPages) {
+        try {
+          hubW0 = this.#hubRegistry.captureW0(
+            this.#captureWindows().map((entry) => entry.id),
+          );
+        } catch {
+          hubDiscoveryFailed = true;
+        }
+      }
+      const stopped = oldRuntime
+        ? await oldRuntime.stop("disable")
         : { errors: [], timedOut: false };
       this.#assertOperationCurrent(operationEpoch);
       this.#running = null;
@@ -1588,6 +1632,31 @@ export class M0FeatureHost {
       this.#markerKeys.clear();
       if (stopped.errors.length || stopped.timedOut) {
         return await this.#quarantine(txId, request, "disable-cleanup-failure");
+      }
+      if (hadHubPages) {
+        if (hubDiscoveryFailed || !this.#hubClaim) {
+          return await this.#quarantine(
+            txId,
+            request,
+            "disable-hub-discovery-failure",
+          );
+        }
+        try {
+          await this.#withHubPublication((signal) =>
+            this.#hubRegistry.publishRemoval(
+              this.#hubClaim!,
+              hubW0,
+              signal,
+              this.#hubPublicationTimeoutMs,
+            )
+          );
+        } catch {
+          return await this.#quarantine(
+            txId,
+            request,
+            "disable-hub-publication-failure",
+          );
+        }
       }
       const outcome = await this.#terminal(txId, request, "succeeded", {
         ...this.#record,
@@ -1667,7 +1736,7 @@ export class M0FeatureHost {
 
   #selectedEligible(record: M0Record): boolean {
     return record.selectedVersion !== null &&
-      record.selectedDigest === M0_FIXTURES[record.selectedVersion].digest &&
+      record.selectedDigest === FIXTURES[record.selectedVersion].digest &&
       record.selectedHealth === "verified" &&
       record.selectedHealthBuild?.hostBuildId === HOST_BUILD_ID &&
       record.selectedHealthBuild.runtimeBuildId === Services.appinfo.appBuildID;
@@ -1676,7 +1745,7 @@ export class M0FeatureHost {
   #rollbackEligible(record: M0Record): boolean {
     return record.rollbackVersion !== null &&
       record.rollbackDigest !== record.selectedDigest &&
-      record.rollbackDigest === M0_FIXTURES[record.rollbackVersion].digest &&
+      record.rollbackDigest === FIXTURES[record.rollbackVersion].digest &&
       record.rollbackHealthBuild?.hostBuildId === HOST_BUILD_ID &&
       record.rollbackHealthBuild.runtimeBuildId === Services.appinfo.appBuildID;
   }
@@ -1724,6 +1793,7 @@ export class M0FeatureHost {
     operationEpoch = this.#revocationEpoch,
   ): Promise<Outcome> {
     this.#assertOperationCurrent(operationEpoch);
+    let committedInThisActivation = false;
     const committedOutcome = this.#record.lastOutcome;
     const recoveryPending = this.#record.pending;
     const committedFallbackRecovery =
@@ -1734,8 +1804,6 @@ export class M0FeatureHost {
     const verifiedFixture = fixture;
     const previousAdmission = this.#admissionsOpen;
     const previousPublishedToken = this.#publishedToken;
-    this.#admissionsOpen = false;
-    this.#publishedToken = null;
     const windows = windowSnapshot
       ? [...windowSnapshot]
       : this.#captureWindows();
@@ -1769,8 +1837,13 @@ export class M0FeatureHost {
         throw error;
       }
     }
+    this.#abortHubWaits(new Error("feature generation replaced"));
+    this.#admissionsOpen = false;
+    this.#publishedToken = null;
     if (this.#closed) throw new Error("host shutdown");
     const old = this.#running;
+    const previousHadHubPages = old !== null &&
+      this.#hubGenerationLeases.has(old);
     if (old) {
       this.#activeToken = null;
       const stopped = await old.stop("replacement");
@@ -1829,15 +1902,33 @@ export class M0FeatureHost {
       generation,
       verifiedFixture.digest,
       verifiedFixture.source,
-      (epoch, gen, json) => this.#broker(epoch, gen, json, token),
+      (epoch, gen, json) =>
+        this.#broker(
+          epoch,
+          gen,
+          json,
+          token,
+          verifiedFixture.compatibility.capabilities,
+        ),
     );
     this.#activeToken = token;
     this.#running = runtime;
     try {
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      let hubW0: readonly HubLiveDocument[] = [];
+      if (
+        verifiedFixture.compatibility.capabilities.includes("hub-pages") ||
+        previousHadHubPages
+      ) {
+        hubW0 = this.#hubRegistry.captureW0(windows.map((entry) => entry.id));
+      }
       this.#evaluations += 1;
       m0PayloadEvaluations += 1;
       await runtime.start();
+      const candidateHubLease = this.#hubGenerationLeases.get(runtime);
+      if (candidateHubLease) {
+        this.#hubRegistry.sealGeneration(candidateHubLease);
+      }
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
       for (const entry of windows) {
         const attached = await this.#attachWindowEntry(
@@ -1898,8 +1989,33 @@ export class M0FeatureHost {
           "commit-storage-failure",
         );
       }
+      committedInThisActivation = true;
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
       await this.#awaitWindowCleanups(runtime, token);
+      this.#assertGenerationCurrent(operationEpoch, runtime, token);
+      const hubLease = this.#hubGenerationLeases.get(runtime);
+      if (hubLease) {
+        await this.#withHubPublication((signal) =>
+          this.#hubRegistry.publishGeneration(
+            hubLease,
+            hubW0,
+            signal,
+            this.#hubPublicationTimeoutMs,
+          )
+        );
+      } else if (previousHadHubPages) {
+        if (!this.#hubClaim) {
+          throw new Error("HUB host claim missing for removal");
+        }
+        await this.#withHubPublication((signal) =>
+          this.#hubRegistry.publishRemoval(
+            this.#hubClaim!,
+            hubW0,
+            signal,
+            this.#hubPublicationTimeoutMs,
+          )
+        );
+      }
       this.#assertGenerationCurrent(operationEpoch, runtime, token);
       let outcome: Outcome;
       try {
@@ -1945,6 +2061,15 @@ export class M0FeatureHost {
           status: "storage_failed",
           selectedVersion: this.#record.selectedVersion,
         };
+      }
+      if (committedInThisActivation) {
+        return await this.#quarantine(
+          txId,
+          request,
+          stopped.errors.length || stopped.timedOut
+            ? "post-commit-hub-publication-cleanup-failure"
+            : "post-commit-hub-publication-failure",
+        );
       }
       if (
         !this.#closed && this.#windowCleanupFailures.get(token)?.length
@@ -1992,7 +2117,7 @@ export class M0FeatureHost {
         !alreadyTried.has(before.rollbackDigest)
       ) fallbackVersion = before.rollbackVersion;
       if (fallbackVersion) {
-        const fallbackDigest = M0_FIXTURES[fallbackVersion].digest;
+        const fallbackDigest = FIXTURES[fallbackVersion].digest;
         let fallback: M0FixtureValue;
         try {
           fallback = await this.#store.load(fallbackDigest, fallbackVersion);
@@ -2459,6 +2584,7 @@ export class M0FeatureHost {
     runtime: M0ModuleHost,
     token: string,
     initial = false,
+    signal?: AbortSignal,
   ): Promise<boolean> {
     const ready = await this.#waitForWindowReady(entry);
     if (
@@ -2491,6 +2617,23 @@ export class M0FeatureHost {
         return false;
       }
       if (!attached) throw new Error("core window attach failed");
+      if (signal?.aborted) {
+        throw signal.reason ?? new Error("window admission aborted");
+      }
+      const lease = !initial ? this.#hubGenerationLeases.get(runtime) : null;
+      if (lease && signal) {
+        const documents = this.#hubRegistry.captureW0([entry.id]);
+        await this.#hubRegistry.waitForCurrentSnapshot(
+          lease.owner,
+          documents,
+          signal,
+          this.#hubPublicationTimeoutMs,
+        );
+        if (
+          signal.aborted ||
+          !this.#isCurrentWindowAttachment(entry, runtime, token, initial)
+        ) return false;
+      }
       if (this.#publishedToken === token) {
         this.#publishWindowMarker(entry, token);
       }
@@ -2550,7 +2693,15 @@ export class M0FeatureHost {
       this.#publishedToken !== token || this.#windows.has(entry.id) ||
       this.#windowAdmissionTasks.has(entry.id)
     ) return;
-    const task = this.#attachWindowEntry(entry, runtime, token).then(() => {})
+    const controller = new AbortController();
+    this.#hubWaitControllers.add(controller);
+    const task = this.#attachWindowEntry(
+      entry,
+      runtime,
+      token,
+      false,
+      controller.signal,
+    ).then(() => {})
       .catch(
         () => {
           if (
@@ -2565,6 +2716,7 @@ export class M0FeatureHost {
           }
         },
       ).finally(() => {
+        this.#hubWaitControllers.delete(controller);
         if (this.#windowAdmissionTasks.get(entry.id) === task) {
           this.#windowAdmissionTasks.delete(entry.id);
         }
@@ -2592,6 +2744,7 @@ export class M0FeatureHost {
     ) return;
     const generation = this.#generation;
     this.#revocationEpoch += 1;
+    this.#abortHubWaits(new Error("active generation quarantined"));
     this.#admissionsOpen = false;
     this.#activeToken = null;
     this.#publishedToken = null;
@@ -2632,11 +2785,30 @@ export class M0FeatureHost {
     }
   }
 
+  async #withHubPublication<T>(
+    publish: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
+    const controller = new AbortController();
+    this.#hubWaitControllers.add(controller);
+    try {
+      return await publish(controller.signal);
+    } finally {
+      this.#hubWaitControllers.delete(controller);
+    }
+  }
+
+  #abortHubWaits(reason: Error): void {
+    for (const controller of this.#hubWaitControllers) {
+      controller.abort(reason);
+    }
+  }
+
   #broker(
     epoch: string,
     generation: number,
     json: string,
     token: string,
+    candidateCapabilities: readonly string[],
   ): string {
     const runtime = this.#running;
     if (
@@ -2647,12 +2819,60 @@ export class M0FeatureHost {
     ) {
       throw new Error("stale generation");
     }
-    const value: unknown = JSON.parse(json);
+    if (new TextEncoder().encode(json).byteLength > 8_192) {
+      throw new Error("broker request too large");
+    }
+    let value: unknown;
+    try {
+      value = JSON.parse(json);
+    } catch {
+      throw new Error("invalid broker JSON");
+    }
     if (typeof value !== "object" || value === null) {
       throw new Error("invalid broker request");
     }
     const request = value as Record<string, unknown>;
-    if (request.type !== "marker" || typeof request.windowId !== "string") {
+    if (request.type === "hub.register") {
+      if (
+        !candidateCapabilities.includes("hub-pages") ||
+        !HOST_CAPABILITIES.has("hub-pages") ||
+        Object.keys(request).length !== 2 ||
+        !Object.hasOwn(request, "descriptor")
+      ) throw new Error("HUB capability denied");
+      let descriptorJson: string;
+      try {
+        descriptorJson = JSON.stringify(request.descriptor) ?? "";
+      } catch {
+        throw new Error("invalid HUB descriptor");
+      }
+      if (!this.#hubClaim) {
+        this.#hubClaim = this.#hubRegistry.claimHost(FEATURE_ID, this.#epoch);
+      }
+      let lease = this.#hubGenerationLeases.get(runtime);
+      if (!lease) {
+        lease = this.#hubRegistry.beginGeneration({
+          featureId: FEATURE_ID,
+          hostEpoch: this.#epoch,
+          generation,
+        });
+        this.#hubGenerationLeases.set(runtime, lease);
+        try {
+          runtime.scope.register(() => lease!.dispose());
+        } catch (error) {
+          lease.dispose();
+          this.#hubGenerationLeases.delete(runtime);
+          throw error;
+        }
+      }
+      lease.registerDescriptor(descriptorJson);
+      return JSON.stringify({ ok: true });
+    }
+    if (
+      request.type !== "marker" ||
+      !candidateCapabilities.includes("window-marker") ||
+      Object.keys(request).length !== 2 ||
+      typeof request.windowId !== "string"
+    ) {
       throw new Error("unsupported broker request");
     }
     const window = this.#windows.get(request.windowId);
