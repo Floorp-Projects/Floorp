@@ -673,6 +673,72 @@ export async function runPageTests() {
     },
   });
   tests.push({
+    name: "Memory seconds step cumulatively from the visible draft",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 300,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(() => !target.disabled, "Ready");
+      const setNativeValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert(setNativeValue, "Native value setter missing");
+      const type = async (value: string, data: string) => {
+        setNativeValue.call(target, value);
+        target.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            data,
+            inputType: "insertText",
+          }),
+        );
+        await pause(80);
+      };
+      const step = async (key: string) => {
+        target.dispatchEvent(
+          new KeyboardEvent("keydown", { bubbles: true, key }),
+        );
+        await pause(80);
+      };
+      try {
+        target.focus();
+        await step("ArrowUp");
+        await step("ArrowUp");
+        assertEquals(target.value, "302", "Repeated steps did not accumulate");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          302,
+          "Accumulated step not saved",
+        );
+        await type("123", "3");
+        await step("ArrowUp");
+        assertEquals(target.value, "124", "Step ignored the typed draft");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          124,
+          "Draft-based step not saved",
+        );
+        await step("ArrowDown");
+        await step("ArrowDown");
+        assertEquals(target.value, "122", "Down steps did not accumulate");
+      } finally {
+        target.blur();
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
     name: "Memory seconds retain composition drafts until commit or cancel",
     fn: async () => {
       prefs.set(

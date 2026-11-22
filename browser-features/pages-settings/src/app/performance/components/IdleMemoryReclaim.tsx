@@ -136,6 +136,25 @@ function NumberField({
     }
   };
 
+  // Zag derives steps from the controlled value, which is pinned to the saved
+  // pref — stepping would restart from it and ignore the visible draft. Step
+  // from the parsed draft instead so repeated and post-edit steps accumulate.
+  const onStepKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    event.preventDefault();
+    if (composing.current) return;
+    const parsed = text.trim() === "" ? 0 : parseLocalizedNumber(text, formatter);
+    const base = Number.isFinite(parsed) ? parsed : value;
+    const next = Math.max(
+      min,
+      Math.round(base + (event.key === "ArrowUp" ? 1 : -1)),
+    );
+    setText(formatter.format(next));
+    if (next !== value) {
+      onCommit(next);
+    }
+  };
+
   return (
     <div className={styles.field}>
       <label htmlFor={id} className="text-sm">
@@ -163,6 +182,7 @@ function NumberField({
         <NumberInput.Input asChild>
           <ControlledNumberInput
             value={text}
+            onKeyDown={onStepKey}
             onChange={(event) => setText(event.currentTarget.value)}
             onCompositionStart={() => {
               composing.current = true;
