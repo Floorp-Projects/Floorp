@@ -294,6 +294,15 @@ export function legacyPatterns(raw: string): string[] {
   return legacySettings(raw).patterns;
 }
 
+/**
+ * Wraps a migrated legacy rule so matchPattern keeps its original meaning:
+ * the old feature matched an unanchored glob over the whole URL, which the
+ * bare string no longer expresses once it looks like a domain.
+ */
+export function migrateLegacyPattern(pattern: string): string {
+  return `*${pattern}*`;
+}
+
 /** Loads Firefox's TabUnloader from the first URL that resolves. */
 function loadTabUnloader(): TabUnloaderApi | null {
   for (const url of TAB_UNLOADER_URLS) {
@@ -457,7 +466,9 @@ export default class TabAutoUnload extends NoraComponentBase {
         TAB_AUTO_UNLOAD_PREF,
         JSON.stringify({
           ...DEFAULT_SETTINGS,
-          excludePatterns: legacySettingsValue.patterns,
+          excludePatterns: legacySettingsValue.patterns.map(
+            migrateLegacyPattern,
+          ),
         }),
       );
       Services.prefs.clearUserPref(LEGACY_TAB_SLEEP_EXCLUSION_PREF);

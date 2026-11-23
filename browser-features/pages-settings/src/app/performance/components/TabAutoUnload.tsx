@@ -158,8 +158,11 @@ export function TabAutoUnload() {
           <Switch
             id="tab-auto-unload-enabled"
             checked={settings.enabled}
-            onChange={(e) =>
-              void save(() => ({ enabled: e.currentTarget.checked }))}
+            onChange={(e) => {
+              // The CAS update runs after React clears currentTarget.
+              const enabled = e.currentTarget.checked;
+              void save(() => ({ enabled }));
+            }}
           />
         </div>
 

@@ -267,7 +267,11 @@ export async function getTabAutoUnloadSettings(): Promise<
 
     return {
       ...createDefaultTabAutoUnloadSettings(),
-      excludePatterns: normalizeExcludePatterns(legacy.patterns),
+      // The old feature matched an unanchored glob over the whole URL, so
+      // wrap each migrated rule to keep that meaning under the new matcher.
+      excludePatterns: normalizeExcludePatterns(legacy.patterns).map(
+        (pattern) => `*${pattern}*`,
+      ),
     };
   } catch (error) {
     console.error(

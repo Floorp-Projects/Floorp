@@ -15,6 +15,7 @@ import {
   legacyPatterns,
   legacySettings,
   matchPattern,
+  migrateLegacyPattern,
   normalizeExcludePatterns,
   sanitizeSettings,
   sanitizeStats,
@@ -264,6 +265,18 @@ function testMatchLegacyGlobPatterns(): void {
   assert(
     !matchPattern("https://example.com/home", "/admin"),
     "a missing fragment should not match",
+  );
+  assertEquals(
+    migrateLegacyPattern("intranet"),
+    "*intranet*",
+    "domain-shaped legacy rules are wrapped for unanchored matching",
+  );
+  assert(
+    matchPattern(
+      "https://portal.example/tools/intranet",
+      migrateLegacyPattern("intranet"),
+    ),
+    "a migrated domain-shaped rule still matches inside the URL",
   );
 }
 

@@ -177,8 +177,8 @@ async function testLegacyFallback(): Promise<void> {
     const loaded = await getTabAutoUnloadSettings();
     assertEquals(
       loaded.excludePatterns.join(","),
-      "legacy.example",
-      "legacy patterns should be used when the new pref is absent",
+      "*legacy.example*",
+      "legacy patterns should be wrapped to keep unanchored matching",
     );
     assertEquals(loaded.enabled, false, "legacy enabled state is not migrated");
   } finally {
