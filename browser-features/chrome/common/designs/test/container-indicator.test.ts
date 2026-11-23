@@ -16,11 +16,23 @@ function testContainerIdentitySurvivesPhotonSelection(): void {
     "http://www.w3.org/1999/xhtml",
     "style",
   );
-  style.textContent = leptonChromeCSS + "\n" + LEPTON_COMPAT_CSS +
-    "\n* { transition: none !important; animation: none !important; }";
+  // :hover cannot be forced on a synthetic node; mapping it to a class lets
+  // the fixture toggle the state while preserving each rule's specificity.
+  style.textContent =
+    (leptonChromeCSS + "\n" + LEPTON_COMPAT_CSS).replaceAll(
+      ":hover",
+      ".sim-hover",
+    ) + "\n* { transition: none !important; animation: none !important; }";
+  const toolbar = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "div",
+  );
+  toolbar.id = "TabsToolbar";
+  toolbar.setAttribute("brighttext", "true");
   const tabs = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
   tabs.id = "tabbrowser-tabs";
-  shadow.append(style, tabs);
+  toolbar.append(tabs);
+  shadow.append(style, toolbar);
   document.documentElement.appendChild(host);
   try {
     Services.prefs.setBoolPref(pref, true);
@@ -92,6 +104,26 @@ function testContainerIdentitySurvivesPhotonSelection(): void {
           `${state}: vertical indicator height`,
         );
         tabs.removeAttribute("orient");
+        tab.classList.add("sim-hover");
+        const hovered = getComputedStyle(line);
+        if (!hovered) throw new Error("Hovered line has no computed style");
+        assertEquals(
+          hovered.backgroundColor,
+          color,
+          `${state}: hover under brighttext keeps the container color`,
+        );
+        toolbar.removeAttribute("brighttext");
+        const hoveredPlain = getComputedStyle(line);
+        if (!hoveredPlain) {
+          throw new Error("Hovered line has no computed style");
+        }
+        assertEquals(
+          hoveredPlain.backgroundColor,
+          color,
+          `${state}: hover keeps the container color`,
+        );
+        toolbar.setAttribute("brighttext", "true");
+        tab.classList.remove("sim-hover");
         tab.remove();
       }
     }

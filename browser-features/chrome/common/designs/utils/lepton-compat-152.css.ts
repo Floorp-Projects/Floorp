@@ -273,6 +273,12 @@ export const LEPTON_CONTAINER_INDICATOR_CSS = `
     opacity: 1 !important;
     transform: none !important;
   }
+  /* The vendored #TabsToolbar[brighttext] hover rule is more specific than
+   * the one above and repaints hovered container lines translucent white.
+   * Two ids plus :hover beat it outright, toolbar-order independent. */
+  #TabsToolbar[brighttext] #tabbrowser-tabs .tabbrowser-tab[usercontextid]:hover > .tab-stack > .tab-background > .tab-context-line {
+    background-color: var(--identity-icon-color) !important;
+  }
   /* Photon forces a 2px height for horizontal tabs. Restore the native
    * vertical indicator's height when the tab strip changes orientation. */
   #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
