@@ -28,6 +28,10 @@ import {
   findSingleTopLevelAppDirectory,
 } from "./runtime_archive.ts";
 import { exists, Logger, runCommand, safeRemove } from "./utils.ts";
+import {
+  assertPreparedRuntimeReceiptMatchesTree,
+  readPreparedRuntimeReceipt,
+} from "./prepared_runtime.ts";
 
 const logger = new Logger("initializer");
 
@@ -36,6 +40,15 @@ const RUNTIME_INDEX_URL = `${RUNTIME_BASE_URL}.ftp-deploy-sync-state.json`;
 
 export const LOCKED_RUNTIME_GITHUB_TOKEN_ENV = "FLOORP_RUNTIME_GITHUB_TOKEN";
 export const LOCKED_RUNTIME_MARKER = ".floorp-runtime-lock.json";
+
+/**
+ * Runtime VERSION marker for a *target* platform. The host's `VERSION` cannot
+ * be used when installing a locked artifact for another platform: the marker
+ * file describes the target layout, not the machine running the install.
+ */
+export function runtimeVersionFor(platform: RuntimePlatform): string {
+  return platform === "macos" ? "000" : "002";
+}
 
 export type LockedRuntimeFetch = (
   input: string | URL | Request,
@@ -1583,9 +1596,11 @@ export async function installLockedRuntime(
       { createNew: true },
     );
     const layout = runtimeLayoutFor(stageRoot, artifact);
-    await Deno.writeTextFile(layout.legacyVersionFile, VERSION, {
-      createNew: true,
-    });
+    await Deno.writeTextFile(
+      layout.legacyVersionFile,
+      runtimeVersionFor(artifact.platform),
+      { createNew: true },
+    );
     await prepareLockedMacInfoPlist(stageRoot, binRootDir, artifact);
     await assertSafeFilesystemTree(stageRoot);
 
@@ -1851,16 +1866,36 @@ const fetchRuntimeIndex = async (): Promise<RuntimeDeployIndex> => {
   throw lastError ?? new Error("Failed to fetch runtime index");
 };
 
-async function installDebugRuntime(): Promise<void> {
-  const binArchive = getBinArchive();
+export async function installDebugRuntime(
+  binRootDir: string = BIN_ROOT_DIR,
+): Promise<void> {
   const target = resolveNativeRuntimeTarget(Deno.build.os, Deno.build.arch);
+  const receiptState = readPreparedRuntimeReceipt(binRootDir);
+  if (receiptState.status === "invalid") {
+    throw new Error(
+      `Invalid explicit FDH prepared Runtime receipt: ${receiptState.reason}. Refusing FTP fallback.`,
+    );
+  }
+  if (receiptState.status === "present") {
+    assertPreparedRuntimeReceiptMatchesTree(
+      binRootDir,
+      receiptState.receipt,
+      target,
+    );
+    logger.info(
+      `Explicit FDH prepared Runtime ${receiptState.receipt.identity.artifactName} is installed; reusing without FTP index/network/download.`,
+    );
+    return;
+  }
+
+  const binArchive = getBinArchive();
   const index = await fetchRuntimeIndex();
   const entry = selectDebugRuntimeEntry(
     filterRuntimeEntries(index),
     binArchive,
   );
 
-  if (await isMatchingDebugRuntime(BIN_ROOT_DIR, entry, target)) {
+  if (await isMatchingDebugRuntime(binRootDir, entry, target)) {
     logger.info(
       `Debug Runtime ${entry.name} (${entry.hash}) is already installed.`,
     );
@@ -1868,7 +1903,7 @@ async function installDebugRuntime(): Promise<void> {
   }
 
   const nonce = crypto.randomUUID();
-  const distRoot = path.dirname(BIN_ROOT_DIR);
+  const distRoot = path.dirname(binRootDir);
   const stageRoot = path.join(distRoot, `.runtime-debug-staging-${nonce}`);
   const backupRoot = path.join(distRoot, `.runtime-debug-backup-${nonce}`);
   const failedRoot = path.join(distRoot, `.runtime-debug-failed-${nonce}`);
@@ -1898,7 +1933,7 @@ async function installDebugRuntime(): Promise<void> {
     await Deno.mkdir(stageRoot, { recursive: true });
     await Deno.mkdir(downloadRoot, { recursive: true });
     await downloadBin(binArchive.filename, entry, archivePath);
-    await decompressBin(stageRoot, archivePath, BIN_ROOT_DIR);
+    await decompressBin(stageRoot, archivePath, binRootDir);
     await assertSafeFilesystemTree(stageRoot);
     const identity = await assertDebugRuntimeTree(stageRoot);
     const marker: DebugRuntimeMarker = {
@@ -1920,7 +1955,7 @@ async function installDebugRuntime(): Promise<void> {
 
     const backupPath = await swapLockedRuntime(
       stageRoot,
-      BIN_ROOT_DIR,
+      binRootDir,
       backupRoot,
       failedRoot,
       (from, to) => Deno.rename(from, to),

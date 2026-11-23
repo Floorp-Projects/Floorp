@@ -749,6 +749,8 @@ export class CommandPaletteController {
   }
 
   private enterInputMode(cmd: PaletteCommand): void {
+    // A queued command query must not become the first step's input.
+    this.debouncedUpdateSearch.clear();
     this.state.setMode("input");
     this.state.setActiveCommand(cmd);
     this.state.setCurrentStepIndex(0);

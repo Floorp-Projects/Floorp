@@ -1,0 +1,184 @@
+// SPDX-License-Identifier: MPL-2.0
+// Executed only in the owned synthetic browser's Marionette chrome context.
+const cfg = arguments[0];
+const done = arguments[arguments.length - 1];
+let observedState;
+let failureSnapshot;
+let syntheticProfileVerified = false;
+let observationStage = 'startup';
+(async () => {
+  const until = Date.now() + 70000;
+  const check = (condition, message) => { if (!condition) throw new Error(message); };
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const wait = async (predicate, message) => {
+    while (!predicate() && Date.now() < until) await sleep(50);
+    check(predicate(), message);
+  };
+  const bounded = promise => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Native restore/startup deadline')), 70000)),
+  ]);
+  const win = Services.wm.getMostRecentWindow('navigator:browser');
+  check(win, 'Owned browser window must exist');
+  const nativeIdentity = {
+    profile: Services.dirsvc.get('ProfD', Components.interfaces.nsIFile).path,
+    pid: Services.appinfo.processID,
+    version: Services.appinfo.version,
+    buildID: Services.appinfo.appBuildID,
+  };
+  check(nativeIdentity.profile === cfg.syntheticProfile?.realpath && nativeIdentity.pid === cfg.nativePid, 'Native profile and PID match the marked synthetic owner');
+  syntheticProfileVerified = true;
+  failureSnapshot = () => {
+    const browser = win.gBrowser;
+    let bootstrapIsolation = null;
+    try {
+      const raw = JSON.parse(Services.prefs.getStringPref('nora.tests.state', ''));
+      bootstrapIsolation = {runId:raw.runId, status:raw.status, aborted:raw.aborted,
+        resultsCount:Array.isArray(raw.results) ? raw.results.length : null,
+        discoveredCount:Array.isArray(raw.discoveredFiles) ? raw.discoveredFiles.length : null,
+        startupTest:Services.prefs.getStringPref('nora.startup.test', '')};
+    } catch { /* Bootstrap can itself be the original failure. */ }
+    return {
+      identity: nativeIdentity,
+      bootstrapIsolation,
+      configuredNewTabURL: win.BROWSER_NEW_TAB_URL,
+      homepage: Services.prefs.getStringPref('browser.startup.homepage', ''),
+      activeWorkspace: win.workspacesFuncs?.getSelectedWorkspaceID?.() ?? null,
+      pendingExit: Services.prefs.getBoolPref('floorp.workspaces.pending-exit-from-workspace-empty', false),
+      tabs: Array.from(browser?.tabs ?? []).map(tab => {
+        const currentURI = browser.getBrowserForTab(tab)?.currentURI?.spec ?? null;
+        let url = currentURI;
+        try {
+          const data = JSON.parse(win.SessionStore.getTabState(tab));
+          url = data.entries?.[(data.index || data.entries?.length || 1) - 1]?.url || currentURI;
+        } catch { /* A failed restore can still report the actual current URI. */ }
+        return {url, currentURI, workspace:tab.getAttribute('floorpWorkspaceId'), hidden:tab.hasAttribute('hidden'), selected:tab === browser.selectedTab};
+      }),
+    };
+  };
+  await wait(() => win.gBrowserInit?.delayedStartupFinished && win.SessionStore, 'Native startup completes');
+  const ss = win.SessionStore;
+  check(ss.promiseInitialized && ss.promiseAllWindowsRestored, 'Native restore promises exist');
+  await bounded(ss.promiseInitialized);
+  await bounded(ss.promiseAllWindowsRestored);
+  await wait(() => win.workspacesFuncs && win.gBrowser.selectedTab?.getAttribute('floorpWorkspaceId'), 'Workspace initializes after native restore');
+  check(cfg.control?.filter?.length === 1 && cfg.control.filter[0] === 'tools/workspace-restart-development/no-autodiscovered-suites.test.ts', 'Exact nonempty bootstrap isolation selector required');
+  let bootstrap;
+  await wait(() => {
+    const raw = Services.prefs.getStringPref('nora.tests.state', '');
+    if (!raw) return false;
+    bootstrap = JSON.parse(raw);
+    check(bootstrap.runId === cfg.control.runId, 'This native boot consumed its own bootstrap control');
+    check(bootstrap.results?.length === 0 && bootstrap.discoveredFiles?.length === 0, 'No automatic colocated suites can run beside restart');
+    check(bootstrap.status !== 'error' && !bootstrap.error && !bootstrap.abortReason, 'Bootstrap isolation has no original error');
+    return bootstrap.status === 'done' && Services.prefs.getStringPref('nora.startup.test', '') === 'loaded';
+  }, 'Bootstrap isolation completed before restart observations');
+  check(bootstrap.aborted === false && Date.now() < cfg.control.expiresAtMs, 'Fresh completed bootstrap lease without abort');
+  check(!Services.prefs.getStringPref('nora.startup.error', ''), 'Native startup has no original error');
+  const funcs = win.workspacesFuncs;
+  const gb = win.gBrowser;
+  const configuredNewTabURL = win.BROWSER_NEW_TAB_URL;
+  check(typeof configuredNewTabURL === 'string' && configuredNewTabURL.length > 0, 'Native configured new-tab URI is available');
+  const identity = {
+    profile: Services.dirsvc.get('ProfD', Components.interfaces.nsIFile).path,
+    pid: Services.appinfo.processID,
+    version: Services.appinfo.version,
+    buildID: Services.appinfo.appBuildID,
+    restoreCompleted: true,
+    bootstrapIsolation: {...bootstrap, startupTest:'loaded', completedAtMs:Date.now()},
+  };
+  const snapshot = () => ({
+    identity,
+    configuredNewTabURL,
+    activeWorkspace: funcs.getSelectedWorkspaceID(),
+    tabs: Array.from(gb.tabs).map(tab => {
+      const data = JSON.parse(ss.getTabState(tab));
+      const entry = data.entries?.[(data.index || data.entries?.length || 1) - 1];
+      return {
+        url: entry?.url || gb.getBrowserForTab(tab).currentURI.spec,
+        workspace: tab.getAttribute('floorpWorkspaceId'),
+        lastShow: tab.getAttribute('floorpWorkspaceLastShowId'),
+        hidden: tab.hasAttribute('hidden'),
+        selected: tab === gb.selectedTab,
+      };
+    }),
+    pendingExit: Services.prefs.getBoolPref('floorp.workspaces.pending-exit-from-workspace-empty', false),
+  });
+  if (cfg.action === 'prepare') {
+    observationStage = 'prepare';
+    check(cfg.case === 'normal' || cfg.case === 'workspace-exit', 'Exact case identity required');
+    const configName = 'floorp.workspaces.v4.config';
+    const config = JSON.parse(Services.prefs.getStringPref(configName, '{}'));
+    Services.prefs.setStringPref(configName, JSON.stringify({...config, exitOnLastTabClose: cfg.case === 'workspace-exit'}));
+    Services.prefs.setBoolPref('browser.tabs.closeWindowWithLastTab', true);
+    Services.prefs.setBoolPref('browser.warnOnQuit', false);
+    Services.prefs.setBoolPref('browser.tabs.warnOnClose', false);
+    const aTab = gb.selectedTab;
+    for (const other of Services.wm.getEnumerator('navigator:browser')) if (other !== win) other.close();
+    for (const tab of Array.from(gb.tabs)) if (tab !== aTab) gb.removeTab(tab, {animate:false});
+    const principal = Services.scriptSecurityManager.getSystemPrincipal();
+    const uri = label => 'about:robots#qa3-' + cfg.nonce + '-' + label;
+    const load = (tab, label) => gb.getBrowserForTab(tab).loadURI(Services.io.newURI(uri(label)), {triggeringPrincipal:principal});
+    const add = label => gb.addTab(uri(label), {triggeringPrincipal:principal, inBackground:true});
+    const a = funcs.getSelectedWorkspaceID();
+    load(aTab, 'A1');
+    let aSecond;
+    if (cfg.case === 'normal') { aSecond = add('A2'); gb.selectedTab = aSecond; }
+    const b = funcs.createNoNameWorkspace();
+    const bTab = gb.selectedTab;
+    load(bTab, 'B1');
+    let bSecond;
+    if (cfg.case === 'normal') { bSecond = add('B2'); gb.selectedTab = bSecond; }
+    else funcs.changeWorkspace(a);
+    const desired = cfg.case === 'normal' ? [uri('A1'),uri('A2'),uri('B1'),uri('B2')] : [uri('A1'),uri('B1')];
+    await wait(() => desired.every(url => Array.from(gb.tabs).some(tab => gb.getBrowserForTab(tab).currentURI.spec === url)), 'Synthetic local pages load before quit');
+    await sleep(300);
+    const {TabStateFlusher} = ChromeUtils.importESModule('moz-src:///browser/components/sessionstore/TabStateFlusher.sys.mjs');
+    await bounded(TabStateFlusher.flushWindow(win));
+    Services.prefs.savePrefFile(null);
+    const state = snapshot();
+    check(state.tabs.length === desired.length, 'Exact prepared tab count');
+    check(state.tabs.filter(t => t.selected).length === 1, 'One prepared selection');
+    if (cfg.case === 'workspace-exit') {
+      check(gb.selectedTab === aTab && !aTab.hasAttribute('hidden') && bTab.hasAttribute('hidden'), 'Last visible A tab and hidden user B tab are prepared');
+    }
+    return {ok:true, syntheticProfileVerified, phase:'prepared', case:cfg.case, nonce:cfg.nonce, state, a, b,
+      selectedURL:cfg.case === 'normal' ? uri('B2') : uri('A1'),
+      retainedURL:uri('B1'), closedURL:uri('A1')};
+  }
+  check(cfg.action === 'verify', 'Only prepared/verify phase actions permitted');
+  observationStage = 'verify-before-selection';
+  check(Array.from(Services.wm.getEnumerator('navigator:browser')).length === 1, 'Exactly one restored browser window');
+  const before = snapshot();
+  observedState = before;
+  const expected = cfg.expected;
+  check(expected?.case === cfg.case && expected.nonce === cfg.nonce, 'Original preparation identity required');
+  restartOracle.configuration(before, expected.state);
+  if (cfg.case === 'normal') {
+    check(before.tabs.length === expected.state.tabs.length, 'Restored exact tab count');
+    for (const tab of expected.state.tabs) {
+      const match = before.tabs.filter(t => t.url === tab.url);
+      check(match.length === 1 && match[0].workspace === tab.workspace, 'Original URL and workspace restored exactly once');
+      check(match[0].hidden === tab.hidden, 'Original workspace visibility restored');
+    }
+    check(before.activeWorkspace === expected.b, 'Original active workspace restored');
+    check(before.tabs.find(t => t.selected)?.url === expected.selectedURL, 'Original selected B tab restored');
+  } else {
+    const homepage = Services.prefs.getStringPref('browser.startup.homepage', '');
+    restartOracle.workspaceExit(before, expected, homepage);
+    observationStage = 'verify-after-selection';
+    funcs.changeWorkspace(expected.b);
+    await sleep(300);
+    const after = snapshot();
+    restartOracle.selectedWorkspace(after, before, expected, homepage);
+  }
+  return {ok:true, syntheticProfileVerified, phase:'verified', case:cfg.case, nonce:cfg.nonce, state:before};
+})().then(done, error => {
+  let diagnosticSnapshotError;
+  if (syntheticProfileVerified && failureSnapshot) {
+    try { observedState = failureSnapshot(); }
+    catch (snapshotError) { diagnosticSnapshotError = snapshotError instanceof Error ? snapshotError.message : String(snapshotError); }
+  }
+  done({ok:false, syntheticProfileVerified, phase:cfg.action === 'prepare' ? 'prepared' : 'verified', case:cfg.case, nonce:cfg.nonce,
+    error:error instanceof Error ? error.message : String(error), observedState, observationStage, diagnosticSnapshotError});
+});

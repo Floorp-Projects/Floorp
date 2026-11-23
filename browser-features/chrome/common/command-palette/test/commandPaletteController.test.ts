@@ -27,6 +27,7 @@ import {
   setShortcuts,
 } from "#features-chrome/common/command-palette/config.ts";
 import { getTabCommands } from "#features-chrome/common/command-palette/tab-provider.ts";
+import { getTabIdentity } from "#features-chrome/utils/tab-identity.ts";
 
 function makeStepCommand(
   steps: CommandStep[],
@@ -1113,14 +1114,12 @@ const tabSearchTests: TestCase[] = [
         ctrl.updateSearch("@t ");
         await flushDebounce();
         const filtered = ctrl.state.filteredCommands();
-        // Match the command id the same way tab-provider builds it
-        // (`tab.tabId ?? tab._tPos`).
-        const tabId = (targetTab as unknown as { tabId?: number }).tabId ??
-          (targetTab as unknown as { _tPos?: number })._tPos;
-        const targetCmd = filtered.find((c) => c.id === `__tab__${tabId}`);
+        const targetCmd = filtered.find((c) =>
+          c.id === `__tab__${getTabIdentity(targetTab)}`
+        );
         assert(
           targetCmd !== undefined,
-          `tab command "__tab__${tabId}" should be in the @t list`,
+          "target tab command should be in the @t list",
         );
         ctrl.executeCommand(targetCmd);
         assertEquals(
@@ -2807,6 +2806,86 @@ const rawTests: TestCase[] = [
         "step inputs should be empty",
       );
       assertEquals(ctrl.state.stepError(), null, "step error should be null");
+    },
+  },
+
+  {
+    name: "pending command query cannot erase loaded step choices after 100ms",
+    async fn() {
+      const ctrl = createController();
+      try {
+        ctrl.updateSearch("stale command query");
+        // Select the already-mounted command before its 30ms search runs.
+        ctrl.executeCommand(STEP_COMMAND_WITH_LOADER);
+        await Promise.resolve();
+        assertEquals(
+          ctrl.state.filteredStepChoices().length,
+          2,
+          "async choices should load before the old command timer",
+        );
+        assertEquals(ctrl.state.query(), "", "the new step should start empty");
+
+        // Model a user considering a choice after the command timer was due.
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        assertEquals(ctrl.state.mode(), "input", "the step should stay active");
+        assertEquals(
+          ctrl.state.query(),
+          "",
+          "the previous command query must not enter the current step",
+        );
+        assertEquals(
+          ctrl.state.filteredStepChoices().map((choice) => choice.value).join(),
+          "la,lb",
+          "loaded choices must remain available while the user considers them",
+        );
+      } finally {
+        ctrl.destroy();
+      }
+    },
+  },
+  {
+    name: "pending command query cannot overwrite a new step filter",
+    async fn() {
+      const ctrl = createController();
+      try {
+        ctrl.updateSearch("stale command query");
+        ctrl.executeCommand(STEP_COMMAND_WITH_CHOICES);
+        ctrl.updateSearch("alp");
+        assertEquals(
+          ctrl.state.query(),
+          "alp",
+          "step input should apply immediately",
+        );
+        assertEquals(
+          ctrl.state.filteredStepChoices()[0]?.value,
+          "a",
+          "step input should immediately filter to Alpha",
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        assertEquals(
+          ctrl.state.mode(),
+          "input",
+          "the filtered step should stay active",
+        );
+        assertEquals(
+          ctrl.state.query(),
+          "alp",
+          "current-step input must remain synchronous and survive the old timer",
+        );
+        assertEquals(
+          ctrl.state.filteredStepChoices().length,
+          1,
+          "the current filter should retain exactly one choice",
+        );
+        assertEquals(
+          ctrl.state.filteredStepChoices()[0]?.value,
+          "a",
+          "Alpha should remain selected by the current step filter",
+        );
+      } finally {
+        ctrl.destroy();
+      }
     },
   },
 

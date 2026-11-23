@@ -7,6 +7,7 @@ and XrayWrapper cloneInto event dispatch paths.
 """
 
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -14,7 +15,8 @@ from typing import Optional
 
 import requests
 
-BASE_URL = "http://127.0.0.1:58261"
+from os_test_client import resolve_base_url
+
 REQUEST_TIMEOUT = (5, 30)
 
 GREEN = "\033[0;32m"
@@ -33,8 +35,10 @@ FINGERPRINT_RE = re.compile(r"<!--fp:([a-z0-9]{8}(?:[a-z0-9]{8})?)-->")
 class API:
     """Thin wrapper around requests for the OS API server."""
 
-    def __init__(self, base_url: str = BASE_URL):
-        self.base_url = base_url
+    def __init__(self, base_url: Optional[str] = None):
+        self.base_url = resolve_base_url(
+            base_url, os.environ.get("FLOORP_OS_BASE_URL")
+        ).rstrip("/")
         self.timeout = REQUEST_TIMEOUT
 
     def get(self, path: str, **kw):

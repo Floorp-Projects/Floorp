@@ -530,6 +530,37 @@ void TestIMESelectionCache() {
       "disconnect releases the IME selection override");
 }
 
+void TestEmptyMarkedText() {
+  NSMutableArray<NSDictionary*>* events = [NSMutableArray array];
+  FPAShimView* view = [[FPAShimView alloc] initWithFrame:NSMakeRect(0, 0, 360, 240) windowID:1
+      sink:^(MessageType type, NSDictionary* payload) {
+        if (type == MessageType::Input) [events addObject:payload];
+      }];
+  Expect([view setEditorState:@{@"revision": @1, @"text": @"既存", @"selectionStart": @2,
+      @"selectionLength": @0, @"caretX": @20, @"caretY": @30, @"caretWidth": @1,
+      @"caretHeight": @18, @"editable": @YES}], "initialize empty marked text fixture");
+  NSRange unspecified = NSMakeRange(NSNotFound, 0);
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:unspecified];
+  Expect(events.count == 0, "empty marked text without a composition is a no-op");
+  [view setMarkedText:@"かな" selectedRange:NSMakeRange(0, 2) replacementRange:unspecified];
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:unspecified];
+  NSDictionary* cancellation = events.lastObject;
+  Expect(events.count == 2 && [cancellation[@"kind"] isEqual:@"insertText"] &&
+      [cancellation[@"text"] isEqual:@""] && [cancellation[@"editorRevision"] isEqual:@1] &&
+      [cancellation[@"replacement"][@"location"] integerValue] == -1,
+      "empty marked text ends Gecko's composition with an empty commit");
+  Expect(!view.hasMarkedText && view.markedRange.location == NSNotFound &&
+      NSEqualRanges(view.selectedRange, NSMakeRange(2, 0)),
+      "cancellation clears both marked text and the IME selection");
+  [view setMarkedText:@"" selectedRange:NSMakeRange(0, 0) replacementRange:unspecified];
+  Expect(events.count == 2, "repeated empty callbacks do not send another commit");
+  [view setMarkedText:@"次" selectedRange:NSMakeRange(1, 0) replacementRange:unspecified];
+  Expect(view.hasMarkedText && [events.lastObject[@"kind"] isEqual:@"setMarkedText"] &&
+      NSEqualRanges(view.markedRange, NSMakeRange(2, 1)),
+      "typing after cancellation starts a fresh marked range");
+  [view disconnect];
+}
+
 void TestReceivePortQueueLimit() {
   Port receiving = Port::Receive();
   Expect(bool(receiving), "receive port allocates");
@@ -578,6 +609,14 @@ void TestAsyncSender() {
   }
   Expect(sender.Enqueue(MessageType::WindowChanged, fullReplacementMessages, @{}) == EnqueueStatus::Backpressure,
       "async sender reports a replayed sequence as backpressure");
+  // Production receive ports use the largest kernel queue. Lower this peer's
+  // capacity before filling it so the attachment stays pending until Stop.
+  mach_port_limits_t stalledLimits = {};
+  stalledLimits.mpl_qlimit = MACH_PORT_QLIMIT_BASIC;
+  Expect(mach_port_set_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
+               reinterpret_cast<mach_port_info_t>(&stalledLimits),
+               MACH_PORT_LIMITS_INFO_COUNT) == KERN_SUCCESS,
+      "stall the receiving peer for cancellation and bounded sending");
   IOSurfaceRef cancelledSurface = MakeSurface(0xff00abcd);
   Port cancelledPort(IOSurfaceCreateMachPort(cancelledSurface));
   CFRelease(cancelledSurface);
@@ -593,15 +632,6 @@ void TestAsyncSender() {
   sender.Stop();
   Expect(mach_port_get_refs(mach_task_self(), cancelledPort.get(), MACH_PORT_RIGHT_SEND, &referencesAfter) == KERN_SUCCESS &&
       referencesAfter == referencesBefore, "Stop releases pending attachment while another send waits");
-  // Production receive ports ask for the largest kernel queue. Put this peer
-  // back to the default limit so it stops accepting messages again, which is
-  // the stalled receiver the bounded sender has to survive.
-  mach_port_limits_t stalledLimits = {};
-  stalledLimits.mpl_qlimit = MACH_PORT_QLIMIT_BASIC;
-  Expect(mach_port_set_attributes(mach_task_self(), receiving.get(), MACH_PORT_LIMITS_INFO,
-               reinterpret_cast<mach_port_info_t>(&stalledLimits),
-               MACH_PORT_LIMITS_INFO_COUNT) == KERN_SUCCESS,
-      "stall the receiving peer for the bounded sender");
   MessageSender bounded(receiving.get(), [&] { failed = true; });
   uint32_t admitted = 0;
   EnqueueStatus refusal = EnqueueStatus::Accepted;
@@ -749,6 +779,7 @@ int main(int argc, char* argv[]) {
     TestColdBootstrap(argv[0]);
     TestNativeView();
     TestIMESelectionCache();
+    TestEmptyMarkedText();
     TestReceivePortQueueLimit();
     TestAsyncSender();
     TestRelatedWindows();

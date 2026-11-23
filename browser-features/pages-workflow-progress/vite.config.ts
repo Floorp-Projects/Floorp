@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
 import { disableCspInDevPlugin } from "../../libs/vite-plugin-disable-csp/plugin.ts";
+import { DEV_PORTS } from "../../libs/shared/dev-ports/defines.ts";
 
 export default defineConfig(({ command }) => {
   if (command === "serve") process.env.NODE_ENV = "development";
@@ -30,7 +31,7 @@ export default defineConfig(({ command }) => {
       include: ["react", "react-dom", "react/jsx-runtime"],
     },
     server: {
-      port: 5192,
+      port: DEV_PORTS.workflowProgress,
       hmr: {
         overlay: true,
       },

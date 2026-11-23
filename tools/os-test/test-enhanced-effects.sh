@@ -3,7 +3,8 @@
 
 set -e
 
-BASE_URL="http://127.0.0.1:58261"
+BASE_URL="${FLOORP_OS_BASE_URL:-http://127.0.0.1:58261}"
+BASE_URL="${BASE_URL%/}"
 
 echo "=========================================="
 echo "🎨 Floorp Enhanced Effects API テスト"
@@ -110,4 +111,3 @@ echo "  ✓ アクション別の色分け（Fill=紫、Click=オレンジ）"
 echo "  ✓ 要素情報の詳細表示（進捗など）"
 echo "  ✓ 既存APIの自動エフェクト化"
 echo ""
-
