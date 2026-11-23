@@ -3,7 +3,7 @@
     {
       "id": "context_menu_customization",
       "name": "Context Menu Customization",
-      "description": "Shows the context-menu customization settings in Floorp Hub. Existing saved menu customizations remain active when this Flasco is disabled.",
+      "description": "Enables context-menu customization and its Floorp Hub settings for participating users. Saved menu customizations are retained while this Flasco is disabled.",
       "salt": "context_menu_customization_v1",
       "rollout": 0,
       "variants": [

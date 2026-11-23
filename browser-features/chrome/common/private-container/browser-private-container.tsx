@@ -6,13 +6,16 @@
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
 import { PrivateContainer } from "./PrivateContainer.ts";
 import { createRootHMR } from "@nora/solid-xul";
+import { getLiveTabIndex } from "#features-chrome/utils/tab-identity.ts";
 
 export class FloorpPrivateContainer {
   private get privateContainerMenuItem() {
-    return document?.querySelector("#open_in_private_container") as XULElement;
+    return document?.querySelector(
+      "#open_in_private_container",
+    ) as XULElement | null;
   }
   private get openLinkMenuItem() {
-    return document?.querySelector("#context-openlink") as XULElement;
+    return document?.querySelector("#context-openlink") as XULElement | null;
   }
 
   constructor() {
@@ -63,7 +66,10 @@ export class FloorpPrivateContainer {
         },
         "context-openlink",
         () => {
-          this.privateContainerMenuItem.hidden = this.openLinkMenuItem.hidden;
+          const item = this.privateContainerMenuItem;
+          const openLink = this.openLinkMenuItem;
+          if (!item || !openLink) return;
+          item.hidden = openLink.hidden;
         },
         "floorp.private-container.open-link",
       );
@@ -243,12 +249,16 @@ export class FloorpPrivateContainer {
   }
 
   public static reopenInPrivateContainer() {
+    const gBrowser = globalThis.gBrowser;
+    const contextTab = globalThis.TabContextMenu.contextTab;
+    if (!gBrowser || !contextTab) return;
     let userContextId = PrivateContainer.getPrivateContainerUserContextId();
-    const reopenedTabs = globalThis.TabContextMenu.contextTab.multiselected
-      ? globalThis.gBrowser.selectedTabs
-      : [globalThis.TabContextMenu.contextTab];
+    const reopenedTabs = contextTab.multiselected
+      ? Array.from(gBrowser.selectedTabs)
+      : [contextTab];
 
     for (const tab of reopenedTabs) {
+      if (getLiveTabIndex(gBrowser.tabs, tab) < 0) continue;
       /* Create a triggering principal that is able to load the new tab
            For content principals that are about: chrome: or resource: we need system to load them.
            Anything other than system principal needs to have the new userContextId.
@@ -307,13 +317,14 @@ export class FloorpPrivateContainer {
         currentURI?: { spec: string };
       };
       const tabPinned = (tab as unknown as { pinned?: boolean }).pinned;
-      const tabTpos = (tab as unknown as { _tPos?: number })._tPos;
-      const newTab = globalThis.gBrowser.addTab(
+      const tabIndex = getLiveTabIndex(gBrowser.tabs, tab);
+      if (tabIndex < 0) continue;
+      const newTab = gBrowser.addTab(
         tabLinkedBrowser.currentURI?.spec ?? "about:blank",
         {
           userContextId,
           pinned: tabPinned,
-          index: (tabTpos ?? 0) + 1,
+          tabIndex: tabIndex + 1,
           triggeringPrincipal,
         },
       );
@@ -342,8 +353,8 @@ export class FloorpPrivateContainer {
         }
       }
 
-      if (globalThis.gBrowser.selectedTab === tab) {
-        globalThis.gBrowser.selectedTab = newTab;
+      if (gBrowser.selectedTab === tab) {
+        gBrowser.selectedTab = newTab;
       }
       const tabMuted = (tab as unknown as { muted?: boolean }).muted;
       const newTabMuted = (newTab as unknown as { muted?: boolean }).muted;
@@ -356,7 +367,7 @@ export class FloorpPrivateContainer {
         );
       }
 
-      globalThis.gBrowser.removeTab(tab);
+      gBrowser.removeTab(tab);
     }
   }
 }

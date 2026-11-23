@@ -245,6 +245,7 @@ const FormField = ({ item, control }: FormFieldProps) => {
                 <button
                   ref={buttonRef}
                   type="button"
+                  disabled={item.disabled}
                   className={`w-full px-4 py-2 text-left text-gray-900 dark:text-white bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md focus:outline-none focus:ring-2 focus:ring-[#0061E0] transition duration-150 ease-in-out ${
                     item.classList || ""
                   }`}
@@ -253,38 +254,39 @@ const FormField = ({ item, control }: FormFieldProps) => {
                   {item.options?.find((opt) => opt.value === value)?.label ||
                     value}
                 </button>
-                {dropdownOpen && portalContainer && createPortal(
-                  <div
-                    ref={dropdownRef}
-                    style={dropdownStyle}
-                    className="fixed bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md shadow-lg overflow-y-auto scrollbar-thin"
-                  >
-                    <ul>
-                      {item.options?.map((opt) => (
-                        <li
-                          key={opt.value}
-                          className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
-                          onClick={() => {
-                            onChange(opt.value);
-                            setDropdownOpen(false);
-                          }}
-                        >
-                          {opt.icon
-                            ? (
-                              <img
-                                src={opt.icon}
-                                className="w-4 h-4 mr-2"
-                                alt=""
-                              />
-                            )
-                            : null}
-                          <span>{opt.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>,
-                  portalContainer,
-                )}
+                {dropdownOpen && !item.disabled && portalContainer &&
+                  createPortal(
+                    <div
+                      ref={dropdownRef}
+                      style={dropdownStyle}
+                      className="fixed bg-white dark:bg-[#42414D] border border-gray-300 dark:border-[#42414D] rounded-md shadow-lg overflow-y-auto scrollbar-thin"
+                    >
+                      <ul>
+                        {item.options?.map((opt) => (
+                          <li
+                            key={opt.value}
+                            className="flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer"
+                            onClick={() => {
+                              onChange(opt.value);
+                              setDropdownOpen(false);
+                            }}
+                          >
+                            {opt.icon
+                              ? (
+                                <img
+                                  src={opt.icon}
+                                  className="w-4 h-4 mr-2"
+                                  alt=""
+                                />
+                              )
+                              : null}
+                            <span>{opt.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>,
+                    portalContainer,
+                  )}
               </div>
             )}
           />

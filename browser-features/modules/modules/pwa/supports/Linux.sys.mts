@@ -132,7 +132,7 @@ export class LinuxSupport {
       `[LinuxSupport] Getting normalized ID for SSB: ${ssb.name} (id: ${ssb.id})`,
     );
     for (const candidate of candidates) {
-      if (candidate) {
+      if (typeof candidate === "string" && candidate) {
         const normalized = this.normalizeToken(candidate);
         if (normalized) {
           console.debug(
@@ -152,6 +152,39 @@ export class LinuxSupport {
     return fallbackId;
   }
 
+  /** Match the generated launcher identity without activating taskbar integration. */
+  static getWindowClass(ssb: Manifest): string {
+    return `floorp-${this.getNormalizedId(ssb)}`;
+  }
+
+  static registerBrowserWindowIdentity(): void {
+    Services.catMan.addCategoryEntry(
+      "browser-window-before-initial-xul-layout-document-preparation",
+      "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      "LinuxSupport.prepareBrowserWindow",
+      false,
+      true,
+    );
+  }
+
+  static prepareBrowserWindow(win: Window): void {
+    const root = win.document.documentElement;
+    if (root.hasAttribute("taskbartab") || root.hasAttribute("windowclass")) {
+      return;
+    }
+    const { AppConstants } = ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs",
+    );
+    const appInfo = Services.appinfo as typeof Services.appinfo & {
+      readonly remotingName?: string;
+    };
+    // A cold PWA's --name is process-wide; ordinary windows need their own ID.
+    root.setAttribute(
+      "windowclass",
+      appInfo.remotingName || AppConstants.MOZ_APP_NAME,
+    );
+  }
+
   private static getPathInfo(
     ssb: Manifest,
     dataHome = resolveLinuxDataHome(
@@ -159,8 +192,7 @@ export class LinuxSupport {
       Services.env.get("XDG_DATA_HOME"),
     ),
   ): LinuxPathInfo {
-    const slug = this.getNormalizedId(ssb);
-    const desktopBasename = `floorp-${slug}`;
+    const desktopBasename = this.getWindowClass(ssb);
     const iconDir = PathUtils.join(
       dataHome,
       "icons",
@@ -421,6 +453,48 @@ export class LinuxSupport {
     console.debug(`[LinuxSupport] Successfully installed SSB: ${ssb.name}`);
   }
 
+  private static async removeRenamedLaunchers(ssb: Manifest) {
+    const current = this.getPathInfo(ssb);
+    const legacy = this.getPathInfo(
+      ssb,
+      resolveLinuxDataHome(this.homeDir, ""),
+    );
+    const commands = [
+      this.buildExecCommand(ssb),
+      this.buildExecCommand(ssb, true),
+    ];
+    // Canonical filenames are removed by the dedicated canonical/legacy paths,
+    // which keep their icons together; deleting them here would orphan icons.
+    const canonical = new Set([current.desktopPath, legacy.desktopPath]);
+    // Users may rename a launcher to match an older Gecko window class. Its
+    // filename is no longer predictable, but the app ID and exact command still
+    // identify this installation and profile. Never recurse or follow links.
+    for (const directory of new Set([current.desktopDir, legacy.desktopDir])) {
+      for (
+        const path of await IOUtils.getChildren(directory, {
+          ignoreAbsent: true,
+        })
+      ) {
+        if (!path.endsWith(".desktop") || canonical.has(path)) continue;
+        let owned = false;
+        try {
+          const file = new this.nsIFile(path);
+          if (file.isSymlink() || !file.isFile()) continue;
+          owned = isOwnedLinuxDesktopEntry(
+            await IOUtils.readUTF8(path),
+            ssb.id,
+            commands,
+          );
+        } catch (error) {
+          console.warn("[LinuxSupport] Cannot inspect launcher", path, error);
+        }
+        // A deletion failure must reach the caller before icons/store are
+        // removed, so a remaining owned launcher is still usable for retry.
+        if (owned) await IOUtils.remove(path, { ignoreAbsent: true });
+      }
+    }
+  }
+
   async uninstall(ssb: Manifest) {
     console.debug(
       `[LinuxSupport] Uninstalling SSB: ${ssb.name} (id: ${ssb.id})`,
@@ -430,11 +504,13 @@ export class LinuxSupport {
       await LinuxSupport.requireOwnedLauncher(ssb, paths);
     } catch (error) {
       // An executable move or another profile may make ownership unverifiable.
-      // Allow the caller to remove its store entry without touching any files.
+      // Verified renamed launchers are still ours, so remove them, but leave
+      // icons and foreign files alone.
       console.warn(
         "[LinuxSupport] Preserving launcher files whose ownership cannot be verified",
         error,
       );
+      await LinuxSupport.removeRenamedLaunchers(ssb);
       return;
     }
 
@@ -450,6 +526,8 @@ export class LinuxSupport {
       // Preserve icons while the corresponding launcher still exists.
       throw e;
     }
+
+    await LinuxSupport.removeRenamedLaunchers(ssb);
 
     console.debug(`[LinuxSupport] Removing icon: ${paths.iconPath}`);
     try {

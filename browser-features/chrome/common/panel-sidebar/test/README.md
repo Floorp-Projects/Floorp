@@ -42,3 +42,13 @@ the default panel must still follow changes to the global width.
 
 This fixture exercises responsive layout and width persistence. Passing it does
 not establish that the WhatsApp-specific unresponsive state in #2722 is fixed.
+
+`webPanelRequestLifecycle.test.ts` checks that embedded panel creation and three
+unload/recreation cycles do not add HTTP observers, ordinary hide/show reuses
+the same content browser, and closing three additional native browser windows
+returns the observer count to its original value. It also covers child-window
+exclusion and repeated root/unload cleanup. Run it serially in the isolated
+browser profile, along with `webPanelUserAgentNetwork.test.ts`, which verifies
+the actual initial, hidden-panel, navigation, reload and UA-toggle HTTP headers
+against a loopback server while normal tabs and desktop-UA panels stay
+unchanged.

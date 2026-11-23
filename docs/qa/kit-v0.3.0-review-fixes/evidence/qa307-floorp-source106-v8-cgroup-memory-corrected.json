@@ -1,0 +1,27 @@
+{
+  "check": "floorp-source106",
+  "revision": "v8-cgroup-memory-corrected",
+  "startedAt": "2026-10-09T12:43:36.534942+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "tools/qa3/source.py",
+    "run",
+    "/workspace/qa-review-v030/evidence/qa307-floorp-source106-v8-cgroup-memory-corrected",
+    "--expected-head",
+    "718e688fbd7ad88a776534e7778ad8e4a7f67364"
+  ],
+  "cwd": "/workspace/qa-review-v030/repos/Floorp",
+  "exitCode": 0,
+  "timedOut": false,
+  "seconds": 0.924,
+  "log": "qa307-floorp-source106-v8-cgroup-memory-corrected.log",
+  "logSha256": "531182d2f0118d8b376d0cbe5f2c1edb32b35b44202fed1c675e72df611c8722",
+  "networkRequired": false,
+  "browserRequired": false,
+  "outerSoftASBytes": null,
+  "outerHardASBytes": null,
+  "workerPhysicalMemoryMaxBytes": 17179869184,
+  "outerSoftFSIZEBytes": 33554432,
+  "outerHardFSIZEBytes": 68719476736
+}

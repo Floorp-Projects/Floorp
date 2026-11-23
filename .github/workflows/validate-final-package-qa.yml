@@ -18,6 +18,31 @@ name: Validate final Floorp package regressions
         required: false
         type: boolean
         default: true
+      pre_publication:
+        description: Verify signed packages awaiting protected public release approval
+        required: false
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      package_run_id:
+        required: true
+        type: string
+      floorp_head_sha:
+        required: true
+        type: string
+      bundle_artifact:
+        description: Exact JSON identity of the signed bundle assembled in this run
+        required: true
+        type: string
+      installer_artifact_ids:
+        description: Exact JSON map of installer IDs from the assembled bundle
+        required: true
+        type: string
+      alpha:
+        description: Require the Windows result for Windows-only Alpha publication
+        type: boolean
+        default: false
 
 permissions:
   actions: read
@@ -28,10 +53,18 @@ jobs:
     name: Final package QA / ${{ matrix.platform }}/${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    # Preserve Windows shadow for stable and standalone QA. Alpha ships
+    # Windows only, so its publisher requires the Windows result.
+    continue-on-error: ${{ matrix.platform == 'windows' && !inputs.alpha }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          - platform: windows
+            arch: x86_64
+            runner: windows-2025
+            package: noraneko-windows-x86_64-installer
+            file: floorp-windows-x86_64.installer.exe
           - platform: linux
             arch: x86_64
             runner: ubuntu-24.04
@@ -44,7 +77,7 @@ jobs:
             file: floorp-macOS-universal.dmg
           - platform: mac
             arch: aarch64
-            runner: macos-14
+            runner: macos-15
             package: noraneko-mac-universal-installer
             file: floorp-macOS-universal.dmg
     steps:
@@ -57,12 +90,29 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Expose python3 for the shared bash steps on Windows
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v python3 >/dev/null 2>&1; then
+            shim="$RUNNER_TEMP/python3-shim"
+            mkdir -p "$shim"
+            printf '#!/usr/bin/env bash\nexec python "$@"\n' > "$shim/python3"
+            chmod +x "$shim/python3"
+            echo "$shim" >> "$GITHUB_PATH"
+          fi
+
       - name: Authenticate the normal package run and exact artifacts
         uses: actions/github-script@v7
         env:
           SOURCE_RUN_ID: ${{ inputs.package_run_id }}
           FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
-          VALIDATION_ONLY: ${{ inputs.validation_only }}
+          VALIDATION_ONLY: ${{ inputs.validation_only == true }}
+          PRE_PUBLICATION: ${{ inputs.pre_publication == true }}
+          BUNDLE_ARTIFACT: ${{ inputs.bundle_artifact }}
+          INSTALLER_ARTIFACT_IDS: ${{ inputs.installer_artifact_ids }}
+          ALPHA: ${{ inputs.alpha == true }}
           PACKAGE_NAME: ${{ matrix.package }}
           TARGET_PLATFORM: ${{ matrix.platform }}
           TARGET_ARCH: ${{ matrix.arch }}
@@ -71,19 +121,31 @@ jobs:
             const fs = require('node:fs');
             const path = require('node:path');
             const crypto = require('node:crypto');
+            const {validateSourceIdentity,validateFinalPackageSource} = await import(
+              `file://${process.env.GITHUB_WORKSPACE}/tools/final-package-qa-source.mjs`);
             if (!/^[1-9][0-9]*$/.test(process.env.SOURCE_RUN_ID || '') ||
                 !Number.isSafeInteger(Number(process.env.SOURCE_RUN_ID)) ||
                 !/^[0-9a-f]{40}$/.test(process.env.FLOORP_HEAD_SHA || '') ||
-                !['true', 'false'].includes(process.env.VALIDATION_ONLY)) {
+                !['true', 'false'].includes(process.env.VALIDATION_ONLY) ||
+                !['true', 'false'].includes(process.env.PRE_PUBLICATION)) {
               throw new Error('Invalid immutable package input');
             }
             const runId = Number(process.env.SOURCE_RUN_ID);
             const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: runId});
-            if (run.repository.full_name !== 'Floorp-Projects/Floorp' ||
-                run.path !== '.github/workflows/package_and_publish_release.yml' ||
-                run.status !== 'completed' || run.conclusion !== 'success' ||
-                run.head_sha !== process.env.FLOORP_HEAD_SHA || run.event !== 'workflow_dispatch') {
-              throw new Error('Expected a completed successful canonical package run');
+            const sameRun = Boolean(process.env.BUNDLE_ARTIFACT);
+            if (sameRun) {
+              const workflow = process.env.ALPHA === 'true'
+                ? 'package_and_publish_alpha.yml' : 'package_and_publish_release.yml';
+              if (runId !== context.runId || run.id !== runId ||
+                  run.repository?.full_name !== 'Floorp-Projects/Floorp' ||
+                  run.path !== `.github/workflows/${workflow}` ||
+                  run.head_sha !== context.sha || run.head_sha !== process.env.FLOORP_HEAD_SHA ||
+                  run.head_branch !== 'main' || run.event !== 'workflow_dispatch' ||
+                  process.env.VALIDATION_ONLY !== 'false' || process.env.PRE_PUBLICATION !== 'false') {
+                throw new Error('Expected the current canonical signed package run on main');
+              }
+            } else {
+              validateSourceIdentity(run,process.env.FLOORP_HEAD_SHA);
             }
             const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
               {...context.repo, run_id: runId, per_page: 100});
@@ -96,6 +158,60 @@ jobs:
             }
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
               {...context.repo, run_id: runId, per_page: 100});
+            const {data: sourcePackage} = await github.rest.repos.getContent({
+              ...context.repo, path:'package.json', ref:run.head_sha});
+            const {data: sourceLock} = await github.rest.repos.getContent({
+              ...context.repo, path:'floorp-runtime.lock.json', ref:run.head_sha});
+            const version = JSON.parse(Buffer.from(sourcePackage.content, 'base64').toString()).version;
+            const lock = JSON.parse(Buffer.from(sourceLock.content, 'base64').toString());
+            if (!/^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(version || '') ||
+                lock.schemaVersion !== 1 || !Array.isArray(lock.artifacts)) {
+              throw new Error('Invalid version metadata at the exact package source');
+            }
+            const runtimePlatform = process.env.TARGET_PLATFORM === 'mac' ? 'macos' : process.env.TARGET_PLATFORM;
+            const runtimeArch = process.env.TARGET_PLATFORM === 'mac' ? 'universal' : process.env.TARGET_ARCH;
+            const runtimes = lock.artifacts.filter(artifact =>
+              artifact.platform === runtimePlatform && artifact.architecture === runtimeArch);
+            if (runtimes.length !== 1 ||
+                !/^[0-9]+(?:\.[0-9]+){1,3}(?:[ab][0-9]+|esr)?$/.test(runtimes[0].version || '') ||
+                !/^[0-9]{14}$/.test(runtimes[0].buildId || '')) {
+              throw new Error('Missing unique pinned Runtime version and BuildID for this target');
+            }
+            const {version: firefoxVersion, buildId: runtimeBuildId} = runtimes[0];
+            let prePublicationEvidence = {};
+            if (process.env.PRE_PUBLICATION === 'true') {
+              const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
+                {...context.repo, run_id: runId});
+              let release = null;
+              try {
+                ({data: release} = await github.rest.repos.getReleaseByTag(
+                  {...context.repo, tag:`v${version}`}));
+              } catch (error) {
+                if (error.status !== 404) throw error;
+              }
+              prePublicationEvidence = {pendingDeployments,release,
+                bundleArtifacts:artifacts.filter(artifact => artifact.name === 'floorp-release-bundle-v2')};
+            }
+            let sourceEligibility;
+            if (sameRun) {
+              const expected = JSON.parse(process.env.BUNDLE_ARTIFACT);
+              const bundles = artifacts.filter(artifact =>
+                artifact.name === 'floorp-release-bundle-v2' && !artifact.expired);
+              if (bundles.length !== 1 || expected.name !== bundles[0].name ||
+                  !Number.isSafeInteger(expected.id) || expected.id !== bundles[0].id ||
+                  !/^sha256:[0-9a-f]{64}$/.test(expected.digest || '') ||
+                  expected.digest !== bundles[0].digest ||
+                  bundles[0].workflow_run?.id !== runId ||
+                  bundles[0].workflow_run?.head_sha !== run.head_sha) {
+                throw new Error('Expected the immutable signed bundle from this run');
+              }
+              sourceEligibility = {phase:'before-publication-approval', bundle:expected};
+            } else {
+              sourceEligibility = validateFinalPackageSource({run,
+                headSha:process.env.FLOORP_HEAD_SHA,jobs,
+                prePublication:process.env.PRE_PUBLICATION === 'true',
+                unsigned:process.env.VALIDATION_ONLY === 'true',...prePublicationEvidence});
+            }
             const packageName = process.env.PACKAGE_NAME +
               (process.env.VALIDATION_ONLY === 'true' ? '-unsigned' : '');
             const recordName = `floorp-native-verification-${process.env.TARGET_PLATFORM}-${process.env.TARGET_ARCH}-v2`;
@@ -107,6 +223,10 @@ jobs:
                 throw new Error(`Missing or ambiguous authenticated ${name}`);
               }
               const artifact = matches[0];
+              if (sameRun && kind === 'package' &&
+                  JSON.parse(process.env.INSTALLER_ARTIFACT_IDS)[process.env.TARGET_PLATFORM] !== artifact.id) {
+                throw new Error(`Package ${name} is not the installer assembled into the bundle`);
+              }
               const response = await github.rest.actions.downloadArtifact(
                 {...context.repo, artifact_id: artifact.id, archive_format: 'zip'});
               const bytes = Buffer.from(response.data);
@@ -115,13 +235,11 @@ jobs:
               fs.writeFileSync(path.join(process.env.RUNNER_TEMP, `${kind}.zip`), bytes);
               selected[kind] = {id:artifact.id, name, digest};
             }
-            const {data: sourcePackage} = await github.rest.repos.getContent({
-              ...context.repo, path:'package.json', ref:run.head_sha});
-            const version = JSON.parse(Buffer.from(sourcePackage.content, 'base64').toString()).version;
-            if (version !== '12.20.0') throw new Error('This regression run requires Floorp12.20.0');
             fs.mkdirSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa'));
             fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'final-package-qa/input.json'),
               JSON.stringify({runId, floorpHead:run.head_sha, floorpVersion:version,
+                firefoxVersion, runtimeBuildId,
+                sourceEligibility, probeHead:context.sha,
                 platform:process.env.TARGET_PLATFORM, arch:process.env.TARGET_ARCH,
                 unsigned:process.env.VALIDATION_ONLY === 'true', ...selected}, null, 2));
 
@@ -148,7 +266,10 @@ jobs:
               record['floorp']['workflow_run_id'] != expected['runId'] or
               record['floorp']['repository'] != 'Floorp-Projects/Floorp' or
               record['target_key'] != expected['platform'] or record['native_arch'] != expected['arch'] or
-              record['firefox_version'] != '157.0.1' or
+              record['firefox_version'] != expected['firefoxVersion'] or
+              record['runtime']['expected_build_id'] != expected['runtimeBuildId'] or
+              record['app_build_id'] != expected['runtimeBuildId'] or
+              record['platform_build_id'] != expected['runtimeBuildId'] or
               record['floorp_package'] != {
                   'artifact_id': expected['package']['id'],
                   'artifact_name': expected['package']['name'],
@@ -156,12 +277,36 @@ jobs:
                   'unsigned': expected['unsigned'],
               }):
               raise ValueError('Final native record does not bind this exact package/source')
+          with Path(os.environ['GITHUB_ENV']).open('a') as output:
+              output.write(f"QA_FLOORP_VERSION={expected['floorpVersion']}\n")
+              output.write(f"QA_FIREFOX_VERSION={expected['firefoxVersion']}\n")
           (root / 'final-package-qa/native-verification.json').write_text(json.dumps(record, indent=2) + '\n')
           with zipfile.ZipFile(root / 'package.zip') as archive:
               if archive.namelist() != [os.environ['PACKAGE_FILE']]:
                   raise ValueError('Unexpected final package ZIP contents')
               archive.extract(os.environ['PACKAGE_FILE'], root / 'package')
           PY
+
+      - name: Extract the exact Windows package
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Same SFX extraction as verify-release-artifact.yml's native gate.
+          $package = Join-Path $env:RUNNER_TEMP 'package/floorp-windows-x86_64.installer.exe'
+          $extractDirectory = Join-Path $env:RUNNER_TEMP 'browser'
+          New-Item -ItemType Directory -Path $extractDirectory -Force | Out-Null
+          & 7z x -y "-o$extractDirectory" $package
+          if ($LASTEXITCODE -ne 0) {
+            throw "7z failed to extract the final Floorp SFX package"
+          }
+          $binaries = @(
+            Get-ChildItem -LiteralPath $extractDirectory -Recurse -File -Filter 'floorp.exe'
+          )
+          if ($binaries.Count -ne 1) {
+            throw "Expected exactly one final floorp.exe; found $($binaries.Count)"
+          }
+          "QA_BROWSER=$($binaries[0].FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Set up the Linux display and extract the package
         if: matrix.platform == 'linux'
@@ -266,7 +411,29 @@ jobs:
           set -euo pipefail
           python3 tools/test-final-web-panel-ua.py --browser "$QA_BROWSER" \
             --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
-            --expected-floorp-version 12.20.0 --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
+            --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
+            --output "$RUNNER_TEMP/final-package-qa/web-panel-ua"
+
+      - name: Verify shipped Fluent lookup and Flasco context-menu availability
+        if: inputs.validation_only == false
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/test-final-context-menu.py --browser "$QA_BROWSER" \
+            --native-record "$RUNNER_TEMP/final-package-qa/native-verification.json" \
+            --expected-floorp-version "$QA_FLOORP_VERSION" --expected-firefox-version "$QA_FIREFOX_VERSION" \
+            --output "$RUNNER_TEMP/final-package-qa/fluent-flasco"
+
+      - name: Hide the Dock for the native GUI geometry
+        if: matrix.platform == 'mac'
+        shell: bash
+        run: |
+          set -euo pipefail
+          defaults write com.apple.dock autohide -bool true
+          defaults write com.apple.dock autohide-delay -float 0
+          killall Dock
+          sleep 5
+          osascript -l JavaScript -e "ObjC.import('AppKit'); const s = \$.NSScreen.mainScreen; const f = s.frame; const v = s.visibleFrame; JSON.stringify({frame: [f.size.width, f.size.height], visibleFrame: [v.origin.x, v.origin.y, v.size.width, v.size.height]})" || true
 
       - name: Verify final macOS PWA context menus and native GUI input
         if: matrix.platform == 'mac'
@@ -278,11 +445,49 @@ jobs:
           python3 tools/app-shim/test-runtime.py --browser "$QA_BROWSER" \
             --output "$RUNNER_TEMP/final-package-qa/native-gui" --launch-services --capture-window
 
+      - name: Verify the source still awaits publication after GUI QA
+        if: inputs.pre_publication == true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const {validateFinalPackageSource} = await import(
+              `file://${process.env.GITHUB_WORKSPACE}/tools/final-package-qa-source.mjs`);
+            const inputPath = path.join(process.env.RUNNER_TEMP,'final-package-qa/input.json');
+            const input = JSON.parse(fs.readFileSync(inputPath,'utf8'));
+            const {data: run} = await github.rest.actions.getWorkflowRun(
+              {...context.repo,run_id:input.runId});
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
+              {...context.repo,run_id:input.runId,per_page:100});
+            const {data: pendingDeployments} = await github.rest.actions.getPendingDeploymentsForRun(
+              {...context.repo,run_id:input.runId});
+            const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts,
+              {...context.repo,run_id:input.runId,per_page:100});
+            let release = null;
+            try {
+              ({data: release} = await github.rest.repos.getReleaseByTag(
+                {...context.repo,tag:`v${input.floorpVersion}`}));
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            const after = validateFinalPackageSource({run,headSha:input.floorpHead,jobs,
+              prePublication:true,unsigned:input.unsigned,pendingDeployments,release,
+              bundleArtifacts:artifacts.filter(a => a.name === 'floorp-release-bundle-v2')});
+            if (JSON.stringify(after) !== JSON.stringify(input.sourceEligibility)) {
+              throw new Error('The immutable bundle or publication approval state changed during QA');
+            }
+            // Standalone dispatch records the observed approval state.
+            fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'final-package-qa/source-after-qa.json'),
+              JSON.stringify({sourceEligibility:after,checkedAt:new Date().toISOString()},null,2));
+
       - name: Upload compact final package regression evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          name: >-
+            final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}${{
+              inputs.bundle_artifact && format('-attempt-{0}', github.run_attempt) || '' }}
           path: |
             ${{ runner.temp }}/final-package-qa/*.json
             ${{ runner.temp }}/final-package-qa/*.txt
@@ -291,6 +496,10 @@ jobs:
             ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser.stdout.log
             ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser.stderr.log
             ${{ runner.temp }}/final-package-qa/web-panel-ua/run-*/browser-window.png
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/report.json
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.log
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stdout.log
+            ${{ runner.temp }}/final-package-qa/fluent-flasco/run-*/browser.stderr.log
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/result.json
             ${{ runner.temp }}/final-package-qa/context-menu/run-*/browser.log
             ${{ runner.temp }}/final-package-qa/native-gui/run-*/report.json

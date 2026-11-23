@@ -149,6 +149,39 @@ export class OptionalContextMenuCatalogReporter
   }
 }
 
+function createCatalogLocalization(
+  resources: string[],
+): Pick<Localization, "formatMessagesSync"> {
+  // Missing keys must not enumerate combinations of every optional resource.
+  const localizations = resources.map((path) =>
+    new Localization(
+      [
+        ...new Set([
+          "branding/brand.ftl",
+          "toolkit/branding/brandings.ftl",
+          path,
+        ]),
+      ],
+      true,
+    )
+  );
+  return {
+    formatMessagesSync(keys) {
+      return Array.from(keys, (key) => {
+        for (const localization of localizations) {
+          try {
+            const message = localization.formatMessagesSync([key])[0];
+            if (message) return message;
+          } catch {
+            continue;
+          }
+        }
+        return null;
+      });
+    },
+  };
+}
+
 export class ContextMenuCatalogBuilder {
   readonly #registry: ContextMenuRegistry;
   readonly #surfaces = new Map<string, ContextMenuSurfaceDescriptor>();
@@ -166,11 +199,7 @@ export class ContextMenuCatalogBuilder {
     registry: ContextMenuRegistry,
     createLocalization: (
       resources: string[],
-    ) => Pick<Localization, "formatMessagesSync"> = (resources) =>
-      new Localization(
-        resources.map((path) => ({ path, optional: true })),
-        true,
-      ),
+    ) => Pick<Localization, "formatMessagesSync"> = createCatalogLocalization,
   ) {
     this.#registry = registry;
     this.#createLocalization = createLocalization;

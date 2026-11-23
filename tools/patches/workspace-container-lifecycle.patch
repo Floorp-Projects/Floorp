@@ -1,0 +1,320 @@
+diff --git a/browser/chrome/browser/content/browser/preferences/config/containers.mjs b/browser/chrome/browser/content/browser/preferences/config/containers.mjs
+index ecd46c8cd4763c859476012c6a02c0e60a0c0e07..1bcd0e65af84e6452d194da77e5603dca4774667 100644
+--- a/browser/chrome/browser/content/browser/preferences/config/containers.mjs
++++ b/browser/chrome/browser/content/browser/preferences/config/containers.mjs
+@@ -121,9 +121,24 @@ async function removeContainer(userContextId) {
+     if (rv != 0) {
+       return;
+     }
++  }
++  const operation = await lazy.ContextualIdentityService.prepareRemoval(
++    userContextId,
++    "delete"
++  );
++  let outcome = "cancelled";
++  try {
+     await lazy.ContextualIdentityService.closeContainerTabs(userContextId);
++    if (lazy.ContextualIdentityService.countContainerTabs(userContextId)) {
++      return;
++    }
++    if (!lazy.ContextualIdentityService.remove(userContextId, operation)) {
++      throw new Error("Container removal was blocked");
++    }
++    outcome = "completed";
++  } finally {
++    await lazy.ContextualIdentityService.finishRemoval(operation, outcome);
+   }
+-  lazy.ContextualIdentityService.remove(userContextId);
+ }
+ 
+ Preferences.addSetting(
+diff --git a/browser/chrome/browser/content/browser/preferences/config/tabs-browsing.mjs b/browser/chrome/browser/content/browser/preferences/config/tabs-browsing.mjs
+index 4f4aa1a0d9a52f2d9bdc29bab71d97f359c1a680..52a525a18d6a9a9b09b791a68f3588235c30dfd4 100644
+--- a/browser/chrome/browser/content/browser/preferences/config/tabs-browsing.mjs
++++ b/browser/chrome/browser/content/browser/preferences/config/tabs-browsing.mjs
+@@ -353,7 +353,8 @@ Preferences.addSetting({
+ 
+     // User confirmed - disable containers and close container tabs.
+     if (rv == 0) {
+-      await lazy.ContextualIdentityService.closeContainerTabs();
++      // ContextualIdentityService prepares durable close protection before
++      // closing tabs and resetting identities, including non-UI pref changes.
+       setting.pref.value = false;
+     }
+ 
+diff --git a/moz-src/toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs b/moz-src/toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs
+index 0c8379da8b1c7b3dd5cf946820fab8e69c70786d..6712b526c54bd8e615d5dfa9d464f2a3f0cfcb82 100644
+--- a/moz-src/toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs
++++ b/moz-src/toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs
+@@ -8,6 +8,35 @@ const LAST_CONTAINERS_JSON_VERSION = 8;
+ const SAVE_DELAY_MS = 1500;
+ const CONTEXTUAL_IDENTITY_ENABLED_PREF = "privacy.userContext.enabled";
+ 
++// Floorp waits for its account-bound close-protection journal before an
++// operation can destroy container tabs. Ordinary closeContainerTabs calls do
++// not enter this lifecycle and retain normal tab-close synchronization.
++const floorpRemovalOperations = new WeakMap();
++let floorpDisableInProgress = null;
++let floorpDisableRequested = false;
++
++async function notifyFloorpContainerRemoval(topic, operation, outcome) {
++  const detail = {
++    operationId: operation.id,
++    userContextId: operation.userContextId,
++    userContextIds: operation.userContextIds,
++    reason: operation.reason,
++    ...(outcome ? { outcome } : {}),
++    blockers: [],
++  };
++  Services.obs.notifyObservers({ wrappedJSObject: detail }, topic);
++  // Wait for every participant before cancellation. A late successful save
++  // must not reinstate protection after another participant has cancelled it.
++  const results = await Promise.allSettled(detail.blockers);
++  const failures = results.filter(result => result.status === "rejected");
++  if (failures.length) {
++    throw new AggregateError(
++      failures.map(result => result.reason),
++      "Container removal preparation could not be persisted"
++    );
++  }
++}
++
+ // Canonical container colors and icons. Adding/renaming an entry here must be
+ // mirrored in (kept in sync by browser_container_definitions_in_sync.js):
+ //   - usercontext.css: .identity-color-* / .identity-icon-* rules
+@@ -271,9 +300,9 @@ _ContextualIdentityService.prototype = {
+         CONTEXTUAL_IDENTITY_ENABLED_PREF
+       );
+       if (!contextualIdentitiesEnabled) {
+-        await this.closeContainerTabs();
+-        this.notifyAllContainersCleared();
+-        this.resetDefault();
++        // This also covers extension/about:config preference changes and the
++        // settings path with no open tabs. The UI must not close tabs first.
++        await this.requestDisableForFloorpRemoval();
+       }
+ 
+       Glean.containers.containersEnabled.record({
+@@ -549,7 +578,131 @@ _ContextualIdentityService.prototype = {
+     return !!movedIdentities.length;
+   },
+ 
+-  remove(userContextId) {
++  async prepareRemoval(userContextId, reason) {
++    this.ensureDataReady();
++    if (
++      !Number.isInteger(userContextId) ||
++      userContextId < 0 ||
++      userContextId >= MAX_USER_CONTEXT_ID ||
++      !["delete", "disable"].includes(reason) ||
++      (reason === "delete" && !this.getPublicIdentityFromId(userContextId)) ||
++      (reason === "disable" && userContextId !== 0)
++    ) {
++      throw new Error("Invalid container removal operation");
++    }
++    const operation = Object.freeze({
++      id: Services.uuid.generateUUID().toString().slice(1, -1),
++      userContextId,
++      userContextIds: Object.freeze(
++        reason === "disable" ? this.getPublicUserContextIds() : [userContextId]
++      ),
++      reason,
++    });
++    const state = { prepared: false, consumed: false };
++    floorpRemovalOperations.set(operation, state);
++    try {
++      await notifyFloorpContainerRemoval(
++        "floorp-container-removal-preparing",
++        operation
++      );
++      state.prepared = true;
++      return operation;
++    } catch (error) {
++      try {
++        await this.finishRemoval(operation, "cancelled");
++      } catch (cleanupError) {
++        console.error(
++          "[WorkspacesSync] Container removal cleanup failed",
++          cleanupError
++        );
++      }
++      throw error;
++    }
++  },
++
++  async finishRemoval(operation, outcome) {
++    const state = floorpRemovalOperations.get(operation);
++    if (
++      !state ||
++      !["completed", "cancelled"].includes(outcome)
++    ) {
++      throw new Error("Invalid container removal completion");
++    }
++    // A cancelled token must stop authorizing removal even when persisting the
++    // completion fails or another observer is still processing it.
++    state.prepared = false;
++    state.consumed = true;
++    await notifyFloorpContainerRemoval(
++      "floorp-container-removal-finished",
++      operation,
++      outcome
++    );
++    floorpRemovalOperations.delete(operation);
++  },
++
++  requestDisableForFloorpRemoval() {
++    floorpDisableRequested = true;
++    if (!floorpDisableInProgress) {
++      // Assign the in-flight promise before preparing observers can reenter.
++      // A new disable request during cancellation/completion persistence must
++      // receive another preflight after the current operation finishes.
++      floorpDisableInProgress = Promise.resolve().then(async () => {
++        try {
++          while (floorpDisableRequested) {
++            floorpDisableRequested = false;
++            if (!Services.prefs.getBoolPref(CONTEXTUAL_IDENTITY_ENABLED_PREF)) {
++              await this.disableContainersForFloorpRemoval();
++            }
++          }
++        } finally {
++          // Clear the marker inside the drain, before resolving its promise.
++          // A later observer can then start its own drain without an older
++          // observer's finally block clearing that newer in-flight marker.
++          floorpDisableInProgress = null;
++        }
++      });
++    }
++    return floorpDisableInProgress;
++  },
++
++  async disableContainersForFloorpRemoval() {
++    let operation;
++    let outcome = "cancelled";
++    try {
++      operation = await this.prepareRemoval(0, "disable");
++      if (Services.prefs.getBoolPref(CONTEXTUAL_IDENTITY_ENABLED_PREF)) {
++        return;
++      }
++      await this.closeContainerTabs();
++      if (this.countContainerTabs() !== 0) {
++        throw new Error("Container tab closure was cancelled");
++      }
++      if (Services.prefs.getBoolPref(CONTEXTUAL_IDENTITY_ENABLED_PREF)) {
++        return;
++      }
++      this.notifyAllContainersCleared();
++      this.resetDefault();
++      outcome = "completed";
++    } catch (error) {
++      // Do not clear identities or data after failed durable preparation or a
++      // refused beforeunload. Restoring the pref does not reopen closed tabs.
++      Services.prefs.setBoolPref(CONTEXTUAL_IDENTITY_ENABLED_PREF, true);
++      console.error("[WorkspacesSync] Container disabling was cancelled", error);
++    } finally {
++      if (operation) {
++        try {
++          await this.finishRemoval(operation, outcome);
++        } catch (error) {
++          console.error(
++            "[WorkspacesSync] Container removal completion failed",
++            error
++          );
++        }
++      }
++    }
++  },
++
++  remove(userContextId, operation = null) {
+     this.ensureDataReady();
+ 
+     let index = this._identities.findIndex(
+@@ -559,6 +712,35 @@ _ContextualIdentityService.prototype = {
+       return false;
+     }
+ 
++    const state = operation && floorpRemovalOperations.get(operation);
++    const prepared = !!(
++      state?.prepared &&
++      !state.consumed &&
++      operation.reason === "delete" &&
++      operation.userContextId === userContextId
++    );
++    const guard = {
++      operationId: prepared ? operation.id : null,
++      userContextId,
++      userContextIds: [userContextId],
++      reason: "delete",
++      prepared,
++      blocked: !!operation && !prepared,
++    };
++    // remove remains synchronous for existing callers. Floorp marks an
++    // unprepared deletion of a mapped identity blocked; unmapped identities
++    // and browsers without the workspace observer retain native behavior.
++    Services.obs.notifyObservers(
++      { wrappedJSObject: guard },
++      "floorp-container-removal-guard"
++    );
++    if (guard.blocked) {
++      return false;
++    }
++    if (prepared) {
++      state.consumed = true;
++    }
++
+     Services.clearData.deleteDataFromOriginAttributesPattern({ userContextId });
+ 
+     let deletedOutput = this.getIdentityObserverOutput(
+@@ -976,13 +1158,20 @@ _ContextualIdentityService.prototype = {
+       let remoteTabIds = new Set();
+       this._forEachContainerTab((tab, tabbrowser) => {
+         let frameLoader = tab.linkedBrowser.frameLoader;
++        const remoteTabId = frameLoader?.remoteTab?.tabId;
+ 
+         // We don't have remoteTab in non-e10s mode.
+-        if (frameLoader?.remoteTab) {
+-          remoteTabIds.add(frameLoader.remoteTab.tabId);
++        if (remoteTabId !== undefined) {
++          remoteTabIds.add(remoteTabId);
+         }
+ 
+         tabbrowser.removeTab(tab, removeTabOptions);
++        if (tab.isConnected && !tab.closing && remoteTabId !== undefined) {
++          // A refused beforeunload leaves this browser alive. Do not wait for
++          // a destruction notification that will never arrive; callers can
++          // inspect countContainerTabs and cancel their removal operation.
++          remoteTabIds.delete(remoteTabId);
++        }
+       }, userContextId);
+ 
+       if (remoteTabIds.size == 0) {
+diff --git a/chrome/toolkit/content/extensions/parent/ext-contextualIdentities.js b/chrome/toolkit/content/extensions/parent/ext-contextualIdentities.js
+index 0092cbeb93ee37113f2765c85accf9812cfcb899..f5463a73255af20ac6c472885e74b73f244dced4 100644
+--- a/chrome/toolkit/content/extensions/parent/ext-contextualIdentities.js
++++ b/chrome/toolkit/content/extensions/parent/ext-contextualIdentities.js
+@@ -344,10 +344,22 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
+           // We have to create the identity object before removing it.
+           let convertedIdentity = convertIdentity(identity);
+ 
+-          if (!ContextualIdentityService.remove(identity.userContextId)) {
+-            throw new ExtensionError(
+-              `Contextual identity failed to remove: ${cookieStoreId}`
+-            );
++          const operation = await ContextualIdentityService.prepareRemoval(
++            identity.userContextId,
++            "delete"
++          );
++          let outcome = "cancelled";
++          try {
++            if (
++              !ContextualIdentityService.remove(identity.userContextId, operation)
++            ) {
++              throw new ExtensionError(
++                `Contextual identity failed to remove: ${cookieStoreId}`
++              );
++            }
++            outcome = "completed";
++          } finally {
++            await ContextualIdentityService.finishRemoval(operation, outcome);
+           }
+ 
+           return convertedIdentity;

@@ -64,12 +64,29 @@
     "service": {
       "new-workspace": "Nieuwe Workspace ({{count}})"
     },
+    "sync": {
+      "help": "Synchroniseer deze werkruimte en de bijbehorende webtabbladen met je Mozilla-account.",
+      "error-title": "Werkruimte synchroniseren",
+      "incoming-failed": "Some synced data could not be read. Existing tabs are kept until sync succeeds.",
+      "invalid-workspace": "Deze werkruimte kon niet worden gesynchroniseerd. Gebruik een naam en een pictogram van maximaal 256 tekens en probeer het vervolgens opnieuw. De andere werkruimten worden gewoon verder gesynchroniseerd.",
+      "deleted-workspace": "Deze werkruimte is uit Sync verwijderd. Herstel deze vanuit een archief of maak een nieuwe werkruimte aan om deze opnieuw te synchroniseren.",
+      "indicator-selected": "{{name}} — Opgenomen in synchronisatie van werkruimte",
+      "indicator-attention": "{{name}} — Werkruimte-synchronisatiefout: {{error}}",
+      "status-selected": "Opgenomen in synchronisatie",
+      "status-error": "Synchronisatiefout",
+      "status-paused": "Synchroniseren gepauzeerd",
+      "indicator-paused": "{{name}} — Synchronisatie van werkruimte gepauzeerd: {{error}}",
+      "engine-disabled": "Workspace-synchronisatie is uitgeschakeld. Kies Synchronisatie van werkruimte hervatten in het werkruimtemenu om de geselecteerde werkruimten te synchroniseren."
+    },
     "context-menu": {
       "move-up": "Deze workspace naar boven verplaatsen",
       "move-down": "Deze workspace naar beneden verplaatsen",
       "delete": "Workspace verwijderen",
       "manage": "Workspace beheren",
-      "archive": "Archiveer Werkruimte"
+      "archive": "Archiveer Werkruimte",
+      "sync": "Deze werkruimte en de bijbehorende tabbladen synchroniseren",
+      "sync-paused": "Werkruimte synchronisatie vereist aandacht",
+      "sync-resume": "Synchronisatie van werkruimte hervatten"
     },
     "popup": {
       "create-new": "Nieuwe workspace maken...",
@@ -101,6 +118,36 @@
     },
     "error": {
       "invalidWorkspaceID": "Geen geldig ID voor Workspaces (misschien is de volgorde niet bijgewerkt)"
+    },
+    "containers": {
+      "title": "Werkruimtecontainers",
+      "setup": "Werkruimtecontainers instellen…",
+      "reopen": "Tabblad heropenen in de gesynchroniseerde container…",
+      "status-pending": "Containerconfiguratie vereist",
+      "indicator-pending": "{{name}} — Containerconfiguratie vereist: {{error}}",
+      "definition-missing": "De containerinformatie is nog niet ontvangen. Tabbladen worden geopend zodra deze beschikbaar is.",
+      "legacy-unresolved": "Sommige oudere gesynchroniseerde tabbladen hebben geen container. Gebruik Werkruimtecontainers instellen om te kiezen waarin ze moeten openen.",
+      "confirmation": "Kies de container die je wilt gebruiken voor “{{name}}”. De bestaande aanmeldingen worden op dit apparaat gebruikt.",
+      "deleted": "De container die gekoppeld is aan “{{name}}” is verwijderd. Koppel een andere container, maak een nieuwe aan of stop met het synchroniseren van deze werkruimte.",
+      "creating": "De werkruimtecontainer wordt aangemaakt. De bijbehorende tabbladen wachten.",
+      "disabled": "Containers zijn uitgeschakeld op dit apparaat. Schakel containers in om deze tabbladen te openen.",
+      "deleting": "De gekoppelde container wordt verwijderd. De bijbehorende tabbladen wachten.",
+      "creation-failed": "De container “{{name}}” kon niet worden aangemaakt of opgeslagen. Kies een bestaande container of probeer hem opnieuw aan te maken.",
+      "confirm": "De bestaande container “{{name}}” gebruiken voor deze gesynchroniseerde container? Tabbladen gebruiken de bijbehorende aanmeldingen op dit apparaat.",
+      "create": "Een nieuwe container “{{name}}” aanmaken (inloggen vereist)",
+      "unsubscribe": "Synchronisatie van werkruimte stoppen",
+      "operation-failed": "De containeractie kon niet worden voltooid. Controleer de status in het werkruimtemenu en probeer het opnieuw.",
+      "reopen-needed": "Sommige bestaande tabbladen moeten opnieuw worden geopend in hun gesynchroniseerde container. Kies de actie voor heropenen in het werkruimtemenu.",
+      "reopen-select": "Kies een tabblad om te heropenen in de gesynchroniseerde container.",
+      "reopen-confirm": "Dit tabblad heropenen in de gesynchroniseerde container? Het huidige tabblad wordt vervangen nadat de nieuwe pagina is geladen. Niet-opgeslagen formulierinvoer en de paginastatus kunnen verloren gaan.",
+      "default-unavailable": "Container — gebruik eerst 'Werkruimtecontainers instellen' in het werkruimtemenu.",
+      "legacy-scope": "Welke ontbrekende containertoewijzingen moeten worden ingesteld? 'Tabbladen' betekent elk tabblad in deze werkruimte waarvan de container nog onbekend is.",
+      "legacy-scope-default": "Alleen de standaardwerkruimte",
+      "legacy-scope-tabs": "Alle tabbladen met onbekende containers",
+      "legacy-scope-all": "Standaardwerkruimte en alle tabbladen met onbekende containers",
+      "legacy-target": "Kies de container voor de geselecteerde toewijzingen. Bestaande aanmeldingen op dit apparaat zullen worden gebruikt.",
+      "legacy-none": "Geen container (normaal surfen)",
+      "legacy-create": "Een container maken met de werkruimtenaam (aanmelden vereist)"
     }
   },
   "profile-manager-button": {
@@ -285,7 +332,12 @@
   },
   "qrcode-generate-page-action": "QR-code genereren voor deze pagina",
   "qrcode-generate-page-action-title": "QR-code Generator",
+  "firefoxSidebar": {
+    "edgeToggle": "De Firefox-zijbalk openen of vastzetten",
+    "resize": "De Firefox-zijbalk groter of kleiner maken"
+  },
   "panelSidebar": {
+    "resize": "Breedte van de zijbalk aanpassen",
     "modal": {
       "type": "Paneel Type",
       "typeOptions": {
@@ -510,8 +562,8 @@
       "media": "Media",
       "open-tabs": "Tabbladen openen",
       "switcher": "Schakelaar",
-      "history-suggestions": "Geschiedenis",
-      "bookmark-suggestions": "Bladwijzers"
+      "history-suggestions": "Geschiedenis (Dynamisch zoeken)",
+      "bookmark-suggestions": "Bladwijzers (Dynamisch zoeken)"
     },
     "noResults": "Geen opdrachten gevonden",
     "noResultsHint": "Probeer een andere zoekopdracht",
@@ -596,7 +648,15 @@
     "bookmarkSwitcherWhereLabel": "Waar openen",
     "bookmarkSwitcherWhereNewTab": "Nieuw tabblad",
     "bookmarkSwitcherWhereNewTabDesc": "Openen in een nieuw tabblad op de voorgrond",
-    "bookmarkSwitcherWherePlaceholder": "Kies waar je het wilt openen..."
+    "bookmarkSwitcherWherePlaceholder": "Kies waar je het wilt openen...",
+    "shortcutLabel": "@{{prefix}}",
+    "shortcutWithArgsLabel": "@{{prefix}} {{args}}",
+    "searchShortcutDescription": "Zoeken \"{{query}}\"",
+    "shortcuts": {
+      "reservedTabSearch": "Zoeken Open Tabs",
+      "reservedBookmarkSearch": "Zoeken in bladwijzers",
+      "reservedHistorySearch": "Zoekgeschiedenis"
+    }
   },
   "commandPaletteReadings": {}
 }

@@ -4,7 +4,7 @@
 // dependencies into the packaged actor, while browser-feature aliases are only
 // understood by the development feature loader and would remain bare in the
 // resource:// artifact consumed by Gecko.
-import { ContextMenuController } from "../../chrome/common/context-menu/controller.ts";
+import { ContextMenuRuntime } from "../../chrome/common/context-menu/runtime.ts";
 
 const SECONDARY_CONTEXT_MENU_DOCUMENTS = new Set([
   "chrome://browser/content/places/places.xhtml",
@@ -20,7 +20,7 @@ export function isSecondaryContextMenuDocumentUri(uri: string): boolean {
 
 /** Runs the shared customizer in chrome documents outside browser.xhtml. */
 export class NRContextMenuChild extends JSWindowActorChild {
-  #controller: ContextMenuController | null = null;
+  #runtime: ContextMenuRuntime | null = null;
 
   actorCreated(): void {
     this.attachIfSupported();
@@ -31,12 +31,12 @@ export class NRContextMenuChild extends JSWindowActorChild {
   }
 
   didDestroy(): void {
-    this.#controller?.destroy();
-    this.#controller = null;
+    this.#runtime?.destroy();
+    this.#runtime = null;
   }
 
   private attachIfSupported(): void {
-    if (this.#controller) return;
+    if (this.#runtime) return;
     const targetWindow = this.contentWindow;
     const targetDocument = targetWindow?.document;
     if (
@@ -47,9 +47,9 @@ export class NRContextMenuChild extends JSWindowActorChild {
       return;
     }
 
-    this.#controller = new ContextMenuController({
+    this.#runtime = new ContextMenuRuntime({
       window: targetWindow as unknown as Window,
     });
-    this.#controller.attach();
+    this.#runtime.start();
   }
 }

@@ -31,6 +31,8 @@ import {
   type TabBrowser,
 } from "./stack-bar.tsx";
 import { PROXY_DRAG_END_EVENT, proxyDragLifecycle } from "./proxy-drag.ts";
+import { initializeTabStacksWhenReady } from "./startup.ts";
+import type { TabStacksChrome, TabStacksStartupWindow } from "./types.ts";
 
 export const ENABLED_PREF = "floorp.tabstacks.enabled";
 export const GROUP_KINDS_PREF = "floorp.tabstacks.groupKinds";
@@ -274,7 +276,11 @@ export function updateGroupChips(
  */
 @noraComponent(import.meta.hot)
 export default class TabStacks extends NoraComponentBase {
+  // NoraComponentBase invokes init() from super(), before class field initializers.
+  declare private initializationStarted: boolean | undefined;
+
   init(): void {
+    if (this.initializationStarted) return;
     if (typeof document === "undefined" || typeof window === "undefined") {
       return;
     }
@@ -284,21 +290,46 @@ export default class TabStacks extends NoraComponentBase {
       );
       return;
     }
+    this.initializationStarted = true;
+    initializeTabStacksWhenReady({
+      window: window as unknown as TabStacksStartupWindow,
+      getChrome: () => {
+        const gb = getGBrowser();
+        const head = document.head;
+        const toolbox = document.getElementById("navigator-toolbox");
+        const navBar = document.getElementById("nav-bar");
+        return gb?.tabContainer && head && toolbox && navBar &&
+            navBar.parentNode === toolbox
+          ? { gb, head, toolbox, navBar }
+          : null;
+      },
+      initialize: (chrome) => {
+        if (Services.prefs.getBoolPref(ENABLED_PREF, false)) {
+          this.initialize(chrome);
+        }
+      },
+      logger: this.logger,
+    });
+  }
 
-    const gb = getGBrowser();
+  private initialize({ gb, head, toolbox, navBar }: TabStacksChrome): void {
     // Mount inside #navigator-toolbox, directly under the tab strip
     // (Vivaldi row order: tabs → stack bar → address bar).
-    const toolbox = document.getElementById("navigator-toolbox");
-    const navBar = document.getElementById("nav-bar");
-    if (!gb || !toolbox || !navBar) {
-      this.logger.warn("Browser chrome not ready; skipping tab stacks.");
-      return;
-    }
-
-    render(StackStyleElement, document.head, {
+    render(StackStyleElement, head, {
       hotCtx: import.meta.hot,
     });
-    render(StackBar, toolbox, { marker: navBar, hotCtx: import.meta.hot });
+    // StackBar returns a reactive Show accessor. The renderer does not retain
+    // its dynamic DOM for disposal, so own an isolated subtree explicitly.
+    // display:contents keeps the row in the toolbox's normal layout.
+    const mount = document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "div",
+    );
+    mount.id = "floorp-stack-mount";
+    mount.style.display = "contents";
+    onCleanup(() => mount.remove());
+    toolbox.insertBefore(mount, navBar);
+    render(StackBar, mount, { hotCtx: import.meta.hot });
 
     const tabsContainer = gb.tabContainer as unknown as Element;
 

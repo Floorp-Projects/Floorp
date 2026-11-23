@@ -7,6 +7,7 @@
         "welcomeContent": "{{productName}} 노트에 오신 것을 환영합니다! 사용 방법은 다음과 같습니다.\n\n{{productName}} 노트는 여러 장치에서 동기화할 수 있는 노트 필기 기능입니다. 동기화를 사용하려면 Mozilla 계정으로 {{productName}} 에 로그인해야 합니다.\n{{productName}} 노트는 {{productName}} 에 저장되며 Firefox 동기화를 사용해 여러 장치에서 동기화됩니다. Firefox 동기화는 Mozilla 계정 비밀번호로 동기화 내용을 암호화하므로 아무도 그 내용을 알 수 없습니다.",
         "new": "새 노트",
         "reorder": "재정렬",
+        "export": "마크다운으로 내보내기",
         "done": "완료",
         "emptyTitle": "제목 없음",
         "emptyContent": "내용 없음",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "노트 데이터 로드 실패",
         "saveFailed": "노트 데이터 로드 실패",
+        "exportFailed": "노트 내보내기에 실패했습니다",
         "indexOutOfRange": "인덱스 {{index}} 이 범위를 벗어났습니다."
     }
 }

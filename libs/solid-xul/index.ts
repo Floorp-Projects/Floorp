@@ -150,27 +150,67 @@ const _render = (
   return disposer;
 };
 
-export function createRootHMR<T>(fn: RootFunction<T>, hotCtx?: ViteHotContext) {
-  return createRoot((disposer) => {
-    const ret = fn(disposer);
-    if (hotCtx) {
-      hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), disposer]);
-      console.debug("register disposer to hotCtx in createRoot");
-      if (
-        !hotCtx.data.__solidXulExternalDisposeOwner &&
-        !hotCtx.data.__solidXulDisposeRegistered
-      ) {
-        hotCtx.data.__solidXulDisposeRegistered = true;
-        hotCtx.dispose(() => {
-          try {
-            disposeRoot(hotCtx);
-          } finally {
-            hotCtx.data.__solidXulDisposeRegistered = false;
-          }
-        });
+function isClosedWindow(target: EventTarget | null): boolean {
+  return target !== null && "closed" in target && target.closed === true;
+}
+
+export function createRootHMR<T>(
+  fn: RootFunction<T>,
+  hotCtx?: ViteHotContext,
+  lifecycleTarget: EventTarget | null = typeof window === "undefined"
+    ? null
+    : window,
+) {
+  if (isClosedWindow(lifecycleTarget)) {
+    throw new Error("Cannot initialize a Solid root for a closed window");
+  }
+  return createRoot((disposeSolidRoot) => {
+    let disposed = false;
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      lifecycleTarget?.removeEventListener("unload", dispose);
+      lifecycleTarget = null;
+      if (hotCtx) {
+        const remaining = hotCtxMap.get(hotCtx)?.filter((root) =>
+          root !== dispose
+        );
+        if (remaining?.length) hotCtxMap.set(hotCtx, remaining);
+        else hotCtxMap.delete(hotCtx);
       }
+      disposeSolidRoot();
+    };
+    lifecycleTarget?.addEventListener("unload", dispose, { once: true });
+
+    try {
+      const ret = fn(dispose);
+      if (isClosedWindow(lifecycleTarget)) dispose();
+      if (hotCtx && !disposed) {
+        hotCtxMap.set(hotCtx, [...(hotCtxMap.get(hotCtx) ?? []), dispose]);
+        console.debug("register disposer to hotCtx in createRoot");
+        if (
+          !hotCtx.data.__solidXulExternalDisposeOwner &&
+          !hotCtx.data.__solidXulDisposeRegistered
+        ) {
+          hotCtx.data.__solidXulDisposeRegistered = true;
+          hotCtx.dispose(() => {
+            try {
+              disposeRoot(hotCtx);
+            } finally {
+              hotCtx.data.__solidXulDisposeRegistered = false;
+            }
+          });
+        }
+      }
+      return ret;
+    } catch (error) {
+      try {
+        dispose();
+      } catch (cleanupError) {
+        console.error("[nora@solid-xul] failed root cleanup:", cleanupError);
+      }
+      throw error;
     }
-    return ret;
   });
 }
 
@@ -189,6 +229,7 @@ export function createRootHMR<T>(fn: RootFunction<T>, hotCtx?: ViteHotContext) {
 export function disposeRoot(hotCtx: ViteHotContext): void {
   const disposers = hotCtxMap.get(hotCtx);
   if (disposers) {
+    hotCtxMap.delete(hotCtx);
     for (const dispose of disposers) {
       try {
         dispose();
@@ -196,7 +237,6 @@ export function disposeRoot(hotCtx: ViteHotContext): void {
         console.error("[nora@solid-xul] disposeRoot error:", e);
       }
     }
-    hotCtxMap.delete(hotCtx);
   }
 }
 

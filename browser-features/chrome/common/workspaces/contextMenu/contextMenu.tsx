@@ -15,6 +15,13 @@ const translationKeys = {
   delete: "workspaces.context-menu.delete",
   manage: "workspaces.context-menu.manage",
   archive: "workspaces.context-menu.archive",
+  sync: "workspaces.context-menu.sync",
+  syncPaused: "workspaces.context-menu.sync-paused",
+  syncResume: "workspaces.context-menu.sync-resume",
+  syncDisabled: "workspaces.sync.engine-disabled",
+  syncHelp: "workspaces.sync.help",
+  containersSetup: "workspaces.containers.setup",
+  containersReopen: "workspaces.containers.reopen",
 };
 
 const translate = (
@@ -28,6 +35,13 @@ const getTranslations = () => ({
   delete: translate(translationKeys.delete),
   manage: translate(translationKeys.manage),
   archive: translate(translationKeys.archive),
+  sync: translate(translationKeys.sync),
+  syncPaused: translate(translationKeys.syncPaused),
+  syncResume: translate(translationKeys.syncResume),
+  syncDisabled: translate(translationKeys.syncDisabled),
+  syncHelp: translate(translationKeys.syncHelp),
+  containersSetup: translate(translationKeys.containersSetup),
+  containersReopen: translate(translationKeys.containersReopen),
 });
 
 export function ContextMenu(props: {
@@ -71,6 +85,67 @@ export function ContextMenu(props: {
         label={texts().manage}
         onCommand={() =>
           props.ctx.manageWorkspaceFromDialog(props.contextWorkspaceId)}
+      />
+      <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.sync"
+        type="checkbox"
+        autocheck="false"
+        disabled={!props.ctx.syncController?.isAvailable() || undefined}
+        label={props.ctx.syncController?.isSelected(props.contextWorkspaceId) &&
+            !props.ctx.syncController.isEnabled()
+          ? texts().syncResume
+          : props.ctx.syncController?.errorText(props.contextWorkspaceId)
+          ? texts().syncPaused
+          : texts().sync}
+        tooltiptext={props.ctx.syncController?.isSelected(
+            props.contextWorkspaceId,
+          ) &&
+            !props.ctx.syncController.isEnabled()
+          ? texts().syncDisabled
+          : props.ctx.syncController?.errorText(
+            props.contextWorkspaceId,
+          ) ?? texts().syncHelp}
+        checked={(props.ctx.syncController?.isEnabled() &&
+          props.ctx.syncController.isSelected(
+            props.contextWorkspaceId,
+          )) || undefined}
+        onCommand={() => {
+          const controller = props.ctx.syncController;
+          controller?.select(
+            props.contextWorkspaceId,
+            !controller.isSelected(props.contextWorkspaceId) ||
+              !controller.isEnabled(),
+          )
+            .catch((error: unknown) =>
+              console.error(
+                "[WorkspacesSync] Could not change sync selection",
+                error,
+              )
+            );
+        }}
+      />
+      <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.containers-setup"
+        hidden={!props.ctx.syncController?.isContainerAvailable?.() ||
+          undefined}
+        disabled={!props.ctx.syncController?.isSelected(
+          props.contextWorkspaceId,
+        ) || undefined}
+        label={texts().containersSetup}
+        onCommand={() =>
+          props.ctx.syncController?.setupContainers(props.contextWorkspaceId)}
+      />
+      <xul:menuitem
+        data-floorp-context-menu-key="floorp.workspaces.containers-reopen"
+        hidden={!props.ctx.syncController?.hasContainerReopen?.(
+          props.contextWorkspaceId,
+        ) || undefined}
+        label={texts().containersReopen}
+        onCommand={() =>
+          props.ctx.syncController?.reopenContainerTab(props.contextWorkspaceId)
+            .catch((error: unknown) =>
+              console.error("[WorkspacesSync] Container reopen failed", error)
+            )}
       />
       <xul:menuseparator
         data-floorp-context-menu-key="floorp.workspaces.separator-archive"

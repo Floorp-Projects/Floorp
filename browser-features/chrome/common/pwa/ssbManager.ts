@@ -144,8 +144,16 @@ export class SiteSpecificBrowserManager {
   }
 
   private listener = {
-    onLocationChange: () => {
-      this.onCurrentTabChangedOrLoaded();
+    onLocationChange: (browser: Browser, webProgress: nsIWebProgress) => {
+      if (
+        !webProgress.isTopLevel ||
+        browser !== globalThis.gBrowser.selectedBrowser
+      ) {
+        return;
+      }
+      void this.onCurrentTabChangedOrLoaded(browser).catch((error) => {
+        console.error("[SiteSpecificBrowserManager] Page check failed:", error);
+      });
     },
   };
 
@@ -367,21 +375,21 @@ export class SiteSpecificBrowserManager {
       await new MacOSSupport().install(manifest, this.dataManager);
       return;
     }
+    if (AppConstants.platform === "win") {
+      const { WindowsSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
+      );
+      // Keep the store commit and native work in the same per-app lifecycle.
+      await new WindowsSupport().install(
+        manifest,
+        this.dataManager,
+        TaskbarExperiment.isEnabledForCurrentPlatform(),
+      );
+      return;
+    }
     if (SupportClass) {
-      if (AppConstants.platform === "win") {
-        // Windows install (taskbar integration) is controlled by A/B test
-        if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-          const windowsSupport = new SupportClass();
-          await windowsSupport.install(manifest);
-        } else {
-          console.debug(
-            "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows install",
-          );
-        }
-      } else {
-        // Launcher file generation is independent of taskbar experiments.
-        await new SupportClass().install(manifest);
-      }
+      // Launcher file generation is independent of taskbar experiments.
+      await new SupportClass().install(manifest);
     }
 
     await this.dataManager.saveSsbData(manifest);
@@ -395,20 +403,19 @@ export class SiteSpecificBrowserManager {
       await new MacOSSupport().uninstall(manifest, this.dataManager);
       return;
     }
+    if (AppConstants.platform === "win") {
+      const { WindowsSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
+      );
+      await new WindowsSupport().uninstall(
+        manifest,
+        this.dataManager,
+        TaskbarExperiment.isEnabledForCurrentPlatform(),
+      );
+      return;
+    }
     if (SupportClass) {
-      if (AppConstants.platform === "win") {
-        // Windows uninstall (taskbar integration) is controlled by A/B test
-        if (TaskbarExperiment.isEnabledForCurrentPlatform()) {
-          const windowsSupport = new SupportClass();
-          await windowsSupport.uninstall(manifest);
-        } else {
-          console.debug(
-            "[SiteSpecificBrowserManager] PWA taskbar integration disabled by A/B test, skipping Windows uninstall",
-          );
-        }
-      } else {
-        await new SupportClass().uninstall(manifest);
-      }
+      await new SupportClass().uninstall(manifest);
     }
 
     await this.dataManager.removeSsbData(
@@ -449,11 +456,12 @@ export class SiteSpecificBrowserManager {
     await this.ssbRunner.runSsbByUrl(url, userContextId);
   }
 
-  private async onCurrentTabChangedOrLoaded() {
-    const browser = globalThis.gBrowser.selectedBrowser as Browser;
+  private async onCurrentTabChangedOrLoaded(browser: Browser) {
+    const requestedUrl = browser.currentURI.spec;
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
+    if (!currentPageCanBeInstalled) return;
     const currentPageHasSsbManifest = await this.manifestProcesser
       .getManifestFromBrowser(browser, true);
     const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
@@ -461,16 +469,18 @@ export class SiteSpecificBrowserManager {
     );
 
     if (
-      (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&
-      !currentPageIsInstalled
-    ) {
+      browser !== globalThis.gBrowser.selectedBrowser ||
+      !browserStillShowsUrl(browser, requestedUrl)
+    ) return;
+
+    if (!currentPageHasSsbManifest && !currentPageIsInstalled) {
       return;
     }
 
     // Update UI elements
     this.updateUIElements(currentPageIsInstalled);
     Services.obs.notifyObservers(
-      {} as nsISupports,
+      browser as unknown as nsISupports,
       "nora-pwa-check-page-has-manifest",
     );
   }
@@ -519,6 +529,17 @@ export class SiteSpecificBrowserManager {
         ssbObj,
         updatedManifest,
         this.dataManager,
+      );
+    }
+    if (AppConstants.platform === "win") {
+      const { WindowsSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
+      );
+      return await new WindowsSupport().rename(
+        ssbObj,
+        newName,
+        this.dataManager,
+        TaskbarExperiment.isEnabledForCurrentPlatform(),
       );
     }
 
@@ -629,6 +650,15 @@ export class SiteSpecificBrowserManager {
         "resource://noraneko/modules/pwa/NativeAppRuntime.sys.mjs",
       );
       return await NativeAppRuntime.withMutation(id, update) ?? false;
+    }
+    if (AppConstants.platform === "win") {
+      const { WindowsSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Windows.sys.mjs",
+      );
+      return await WindowsSupport.withMutation(
+        id,
+        () => WindowsSupport.withStoreMutation(update),
+      );
     }
     return await withLinuxMutation(update);
   }

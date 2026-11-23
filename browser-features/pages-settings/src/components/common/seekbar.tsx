@@ -1,6 +1,12 @@
-import { Flex, Slider, Text } from "@chakra-ui/react";
-import { useId } from "react";
+import { type KeyboardEvent, useId } from "react";
+import styles from "../../../../../libs/ui/controls.module.css";
 import type { SeekbarProps } from "./types.ts";
+
+function countDecimals(value: number): number {
+  const text = String(value);
+  const decimalIndex = text.indexOf(".");
+  return decimalIndex === -1 ? 0 : text.length - decimalIndex - 1;
+}
 
 export function Seekbar({
   label,
@@ -10,7 +16,7 @@ export function Seekbar({
   showMinMax = true,
   minLabel,
   maxLabel,
-  size = "md",
+  size: _size = "md",
   valuePrefix = "",
   valueSuffix = "",
   min = 0,
@@ -22,55 +28,85 @@ export function Seekbar({
   onMouseEnter,
   onMouseLeave,
 }: SeekbarProps) {
-  const descriptionId = useId();
+  const id = useId();
+  const descriptionId = `${id}-description`;
+  const precision = Math.max(
+    countDecimals(min),
+    countDecimals(max),
+    countDecimals(step),
+  );
+
+  const clamp = (nextValue: number): number =>
+    Math.min(max, Math.max(min, Number(nextValue.toFixed(precision))));
+
+  const updateValue = (nextValue: number): void => {
+    const clampedValue = clamp(nextValue);
+    if (clampedValue !== value) {
+      onValueChange?.(clampedValue);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    const pageStep = step * 10;
+    const keyActions: Record<string, number> = {
+      ArrowDown: -step,
+      ArrowLeft: -step,
+      ArrowRight: step,
+      ArrowUp: step,
+      End: max - value,
+      Home: min - value,
+      PageDown: -pageStep,
+      PageUp: pageStep,
+    };
+    const delta = keyActions[event.key];
+    if (delta === undefined) {
+      return;
+    }
+
+    event.preventDefault();
+    updateValue(value + delta);
+  };
+
   return (
-    <Slider.Root
-      className={className}
-      colorPalette="purple"
-      size={size}
-      value={[value]}
-      min={min}
-      max={max}
-      step={step}
-      disabled={disabled}
-      onValueChange={({ value }) => onValueChange?.(value[0])}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-    >
-      <Flex justify="space-between" gap="4">
-        <Slider.Label>{label}</Slider.Label>
+    <div className={`${styles.rangeField} ${className ?? ""}`}>
+      <div className={styles.rangeLabel}>
+        <label htmlFor={id}>{label}</label>
         {showValue && (
-          <Text textStyle="sm">{valuePrefix}{value}{valueSuffix}</Text>
+          <output htmlFor={id}>{valuePrefix}{value}{valueSuffix}</output>
         )}
-      </Flex>
+      </div>
       {description && (
-        <Text id={descriptionId} color="fg.muted" textStyle="sm">
+        <p id={descriptionId} className={styles.sectionDescription}>
           {description}
-        </Text>
+        </p>
       )}
-      <Slider.Control>
-        <Slider.Track>
-          <Slider.Range />
-        </Slider.Track>
-        <Slider.Thumb
-          index={0}
-          aria-describedby={description ? descriptionId : undefined}
-          aria-valuetext={`${valuePrefix}${value}${valueSuffix}`}
-        >
-          <Slider.HiddenInput />
-        </Slider.Thumb>
-      </Slider.Control>
+      <input
+        id={id}
+        type="range"
+        className={styles.range}
+        role="slider"
+        aria-label={label}
+        aria-describedby={description ? descriptionId : undefined}
+        aria-valuenow={value}
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuetext={`${valuePrefix}${value}${valueSuffix}`}
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onValueChange?.(Number(event.currentTarget.value))}
+        onKeyDown={handleKeyDown}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      />
       {showMinMax && (
-        <Flex
-          justify="space-between"
-          color="fg.muted"
-          textStyle="sm"
-          aria-hidden="true"
-        >
+        <div className={styles.rangeLabel} aria-hidden="true">
           <span>{minLabel ?? min}</span>
           <span>{maxLabel ?? max}</span>
-        </Flex>
+        </div>
       )}
-    </Slider.Root>
+    </div>
   );
 }
