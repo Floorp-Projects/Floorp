@@ -1,0 +1,22 @@
+taskStatus: undefined
+--- assertions ---
+{"name":"browser-connected","passed":true,"summary":null}
+{"name":"browser-eval-contains","passed":true,"summary":null}
+{"name":"build-exit-code","passed":true,"summary":null}
+--- validation ---
+null
+--- cleanup ---
+{"result":"completed","notes":"Dev server stopped by 'fdh dev down'.","details":["dev-tool stop"]}
+--- limitations count --- 11
+- "This evidence covers only the local fdh loop for task 'gate3-t02'; it is not a Gate 3 qualification or release approval."
+- "No visual judgment was performed (visualJudge is null); visual/look-and-feel behavior is not covered."
+- "The DSH toolchain identity is not available to fdh and is recorded as UNVERIFIED."
+- "Assertions reflect the recorded command exit codes and verbatim outputs only; they do not establish behavior beyond those commands."
+- "The local development worktree is not the qualification target environment (matchesTarget is false)."
+- "No GitHub or other shared-service behavior is exercised; the local loop does not need shared services."
+- "No host test verification was recorded; the host test state is UNVERIFIED."
+- "Browser eval output is recorded verbatim; only --expect turns it into a contains-check assertion, which does not prove behavior beyond the checked text."
+- "No approval was requested or recorded; the approval entity is marked not-required."
+- "The build/toolchain commit is the task's start base; an uncommitted working-tree diff is not hashed in this manifest."
+- "No defect was reproduced; reproduction is inconclusive by design rather than being inferred from command output."
+--- visualJudge --- null

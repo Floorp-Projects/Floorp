@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "work-record",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-evidence-converter",
+      "kind": "agent",
+      "grantedBy": "authenticated-dsh-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:qa3-floorp-source106",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "task-owner",
+        "label": "QA3 check floorp-source106 (clean-commit-01)"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:floorp-source106-clean-commit-01",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "job-owner",
+        "label": "recorded run floorp-source106-clean-commit-01"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:floorp-source106-clean-commit-01",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:floorp-source106-clean-commit-01:1",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:floorp-source106-clean-commit-01-session",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "session-owner",
+        "context": "independent QA3 source run"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:floorp-7747cf0e7119",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "workspace-owner",
+        "path": "/workspace/qa-review-v030/repos/Floorp"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:floorp-source106-clean-commit-01-approval",
+        "issuer": "host-authorization",
+        "owner": "UNVERIFIED",
+        "ownerRole": "approver",
+        "label": "no approval is requested by this record",
+        "decision": "not-required"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:qa3-floorp-source106",
+        "type": "task-has-job",
+        "to": "scheduler:job:floorp-source106-clean-commit-01"
+      },
+      {
+        "from": "scheduler:job:floorp-source106-clean-commit-01",
+        "type": "job-has-run",
+        "to": "executor:run:floorp-source106-clean-commit-01"
+      },
+      {
+        "from": "executor:run:floorp-source106-clean-commit-01",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:floorp-source106-clean-commit-01:1"
+      },
+      {
+        "from": "executor:run:floorp-source106-clean-commit-01",
+        "type": "run-uses-session",
+        "to": "host:session:floorp-source106-clean-commit-01-session"
+      },
+      {
+        "from": "executor:run:floorp-source106-clean-commit-01",
+        "type": "run-in-workspace",
+        "to": "host:workspace:floorp-7747cf0e7119"
+      },
+      {
+        "from": "host-authorization:approval:floorp-source106-clean-commit-01-approval",
+        "type": "approval-for-job",
+        "to": "scheduler:job:floorp-source106-clean-commit-01"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": null,
+      "reason": "exitCode=0"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "linux",
+      "arch": "UNVERIFIED"
+    },
+    "build": {
+      "commit": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "repository": "Floorp-Projects/Floorp"
+    },
+    "packageDigest": null,
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+        "pin": "floorp@7747cf0e711937e056a34594d8d39fcc8dfc54f0"
+      },
+      "python": {
+        "version": "UNVERIFIED"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:floorp-source106-clean-commit-01",
+      "attempt": 1,
+      "startedAt": "2026-10-09T15:00:34.290893+00:00",
+      "endedAt": "2026-10-09T15:00:35.763893+00:00",
+      "result": "passed",
+      "exitCode": 0,
+      "logRef": "floorp-source106-clean-commit-01.log",
+      "notes": "endedAt is derived from startedAt plus the recorded seconds field (1.473s); the source record stores no explicit end timestamp."
+    }
+  ],
+  "operations": [
+    {
+      "input": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3 -B tools/qa3/source.py run /workspace/qa-review-v030/fix-qa309/evidence/floorp-source106-clean-commit-01 --expected-head 7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "target": "/workspace/qa-review-v030/repos/Floorp",
+      "order": 1,
+      "observation": "exitCode=0 timedOut=False seconds=1.473 logSha256=0943389913994978..."
+    },
+    {
+      "input": "--expected-head 7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "target": "source HEAD pin of the QA3 executor",
+      "order": 2,
+      "observation": "sourceHead=7747cf0e711937e056a34594d8d39fcc8dfc54f0 matches the expected head"
+    },
+    {
+      "input": "resource limits recorded by the wrapper",
+      "target": "worker process",
+      "order": 3,
+      "observation": "wallTimeoutSeconds=150 workerPhysicalMemoryMaxBytes=17179869184 outerHardFSIZEBytes=68719476736"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "exit-code",
+      "expected": "0",
+      "actual": "0",
+      "passed": true
+    },
+    {
+      "name": "not-timed-out",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    },
+    {
+      "name": "wall-timeout-budget",
+      "expected": "<= 150s",
+      "actual": "1.473s",
+      "passed": true
+    },
+    {
+      "name": "credentials-not-inherited",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    },
+    {
+      "name": "browser-not-required",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    },
+    {
+      "name": "source-head-pin",
+      "expected": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "actual": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "Linux consumer container cwd=/workspace/qa-review-v030/repos/Floorp with recorded rlimits and wall timeout",
+    "network": "unknown",
+    "matchesTarget": false,
+    "deviations": [
+      "local QA3 source run on a consumer container; no product artifact, native launch or GUI executes"
+    ],
+    "notes": "Fidelity is limited to the recorded resource limits (memory, FSIZE, wall timeout) and the non-inherited credentials."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "floorp-source106-clean-commit-01.log",
+        "sha256": "094338991399497849c122614ea02dec8d429f8388a029cffdaffcd3d7cd0150"
+      }
+    ],
+    "unchangedDuringRun": true,
+    "deviations": [],
+    "notes": "Input pinning is the wrapper's log SHA-256 plus --expected-head 7747cf0e7119..., asserted by the QA3 executor itself."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "unknown",
+    "notes": "The wrapper record does not describe post-run teardown; the output directory and log are retained as evidence instead."
+  },
+  "limitations": [
+    "Runtime architecture is UNVERIFIED: the record carries no architecture, so os.arch is UNVERIFIED.",
+    "DSH toolchain pin is UNVERIFIED for this record; only the Floorp source commit is pinned.",
+    "No visual (look-and-feel) judgment was performed for this record; visualJudge is null.",
+    "Task/Job ownership is UNVERIFIED: the record names no owner, so owners are marked UNVERIFIED.",
+    "QA3 source-contract run on a consumer container: no product artifact, native launch or GUI executes here.",
+    "endedAt is derived from startedAt plus the recorded seconds field rather than an observed end timestamp."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "No defect reproduction target: the record reports one QA3 source execution and its resource envelope."
+  }
+}

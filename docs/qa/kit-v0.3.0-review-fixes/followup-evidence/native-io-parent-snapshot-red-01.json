@@ -1,0 +1,25 @@
+{
+  "selection": "test_qa3_native_io.SupervisorBoundaryTests.test_parent_snapshot_error_closes_control_and_reaps",
+  "exitCode": 1,
+  "outerTimeout": false,
+  "durationSeconds": 12.315,
+  "limits": {
+    "softASMiB": 512,
+    "hardASGiB": 32,
+    "cpuSeconds": 40,
+    "softFileMiB": 32,
+    "hardFileGiB": 64,
+    "wallSeconds": 90
+  },
+  "outerRecoveryKilledOwnBirthCheckedPids": [],
+  "leftovers": [],
+  "sourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "testedVariant": "working-fix",
+  "testedSourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "testSha256": "b41a10cc3bae75e632dacfcc5d47f0c477f27bffc586b17ae231afbac4ec6f84",
+  "sourceUnchangedDuringRun": true,
+  "testsUnchangedDuringRun": true,
+  "logSha256": "9a57c0e7cc54005a635f7f0a3410f398fc69080dc341501671f2aafd785b1de3",
+  "credentialsPassed": false,
+  "nativeBrowserNetworkBuildExecuted": false
+}

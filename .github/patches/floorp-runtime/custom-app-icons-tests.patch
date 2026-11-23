@@ -353,7 +353,7 @@ index 5e752dab52f..938d0e7ecf9 100644
 +    "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
 +  );
 +const { TaskbarTabsUtils } = ChromeUtils.importESModule(
-+  "resource:///modules/taskbartabs/TaskbarTabsUtils.sys.mjs"
++  "moz-src:///browser/components/taskbartabs/TaskbarTabsUtils.sys.mjs"
 +);
 +const { ShellService: ShellServiceModule } = ChromeUtils.importESModule(
 +  "moz-src:///browser/components/shell/ShellService.sys.mjs"
