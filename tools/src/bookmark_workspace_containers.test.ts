@@ -17,7 +17,7 @@ async function fixture() {
     "test the bookmark creation policy from the actual implementation",
   );
   const helper = match[0].replace("win: Window", "win").replace(
-    "): number {",
+    "): number | null {",
     ") {",
   );
   const state = {
@@ -26,6 +26,9 @@ async function fixture() {
     permanentPrivateBrowsing: false,
     workspacesEnabled: true,
     containersEnabled: true,
+    containerSyncEnabled: false,
+    workspaceReady: true,
+    missingController: false,
     getterThrows: false,
   };
   const identities = new Set([7]);
@@ -37,8 +40,9 @@ async function fixture() {
   )(
     {
       getCtx: () =>
-        state.workspacesEnabled
+        state.workspacesEnabled && !state.missingController
           ? {
+            canOpenWorkspaceTab: () => state.workspaceReady,
             getCurrentWorkspaceUserContextId: () => {
               if (state.getterThrows) throw new Error("workspace unloading");
               return state.context;
@@ -64,8 +68,18 @@ async function fixture() {
             },
           },
     },
-    { prefs: { getBoolPref: () => state.containersEnabled } },
-  ) as (win: object) => number;
+    {
+      prefs: {
+        getBoolPref: (name: string, fallback: boolean) =>
+          ({
+            "privacy.userContext.enabled": state.containersEnabled,
+            "floorp.workspaces.enabled": state.workspacesEnabled,
+            "floorp.workspaces.containerSync.enabled":
+              state.containerSyncEnabled,
+          })[name] ?? fallback,
+      },
+    },
+  ) as (win: object) => number | null;
   return { resolve: () => resolve({}), state, identities };
 }
 
@@ -101,4 +115,31 @@ Deno.test("bookmark container creation rejects deleted, internal and malformed i
     state.context = context;
     assertEquals(resolve(), 0, `invalid or non-public identity: ${context}`);
   }
+});
+
+Deno.test("bookmark workspace default remains pending until its controller and mapping are ready", async () => {
+  const { resolve, state } = await fixture();
+  state.containerSyncEnabled = true;
+  state.workspaceReady = false;
+  assertEquals(resolve(), null);
+  state.context = 0;
+  assertEquals(
+    resolve(),
+    null,
+    "unresolved default is not a default-container choice",
+  );
+  state.workspaceReady = true;
+  assertEquals(
+    resolve(),
+    0,
+    "resolved none is a valid default-container choice",
+  );
+  state.missingController = true;
+  assertEquals(resolve(), null, "cold window waits for its controller");
+  state.privateWindow = true;
+  assertEquals(
+    resolve(),
+    0,
+    "private browsing bypasses normal container selection",
+  );
 });

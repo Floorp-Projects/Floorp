@@ -5,10 +5,13 @@ import { dirname, fromFileUrl, join, toFileUrl } from "@std/path";
 import { MarionetteClient } from "../src/browser_connector.ts";
 
 const root = fromFileUrl(new URL("../../", import.meta.url));
-const options = parseArgs(Deno.args, { string: ["binary"] });
+const options = parseArgs(Deno.args, {
+  string: ["binary"],
+  boolean: ["model-only"],
+});
 if (!options.binary) {
   console.error(
-    "Usage: deno run -A tools/workspace-sync/verify-browser.ts --binary /absolute/path/to/floorp",
+    "Usage: deno run -A tools/workspace-sync/verify-browser.ts --binary /absolute/path/to/floorp [--model-only]",
   );
   Deno.exit(2);
 }
@@ -48,66 +51,156 @@ await bundle(
   "browser-features/modules/test/workspaces/workspaceSyncRecord.test.mts",
   "record-test.sys.mjs",
 );
-const enginePath = join(
-  root,
-  "browser-features/modules/modules/workspaces/FloorpWorkspacesSync.sys.mts",
+await bundle(
+  "browser-features/modules/test/workspaces/workspaceContainers.test.mts",
+  "container-model-test.sys.mjs",
 );
-await esbuild.build({
-  stdin: {
-    contents: (await Deno.readTextFile(enginePath)).replace(
-      '"floorp-workspaces-sync.json"',
-      '"floorp-workspaces-sync-manual.json"',
-    ),
-    resolveDir: dirname(enginePath),
-    loader: "ts",
-  },
-  bundle: true,
-  format: "esm",
-  platform: "neutral",
-  outfile: join(scratch, "engine.sys.mjs"),
-});
-
-const workspaceDir = join(root, "browser-features/chrome/common/workspaces");
-const stub = join(scratch, "store.ts");
-await Deno.writeTextFile(
-  stub,
-  `export const workspacesDataStore={data:new Map(),order:[]};
-export function setWorkspacesDataStore(key,value){workspacesDataStore[key]=typeof value==='function'?value(workspacesDataStore[key]):value;}`,
+await bundle(
+  "browser-features/modules/test/workspaces/workspaceContainerBindings.test.mts",
+  "container-bindings-test.sys.mjs",
 );
-const adapterPath = join(scratch, "adapter.ts");
-let adapter = await Deno.readTextFile(join(workspaceDir, "workspacesSync.ts"));
-adapter = adapter.replace(
-  'from "./data/data.ts"',
-  `from ${JSON.stringify(stub)}`,
-)
-  .replaceAll('from "./utils/', `from "${workspaceDir}/utils/`)
-  .replaceAll('from "#modules/', `from "${root}/browser-features/modules/`)
-  .replace(
-    "resource://noraneko/modules/workspaces/FloorpWorkspacesSync.sys.mjs",
-    "resource://floorp-workspace-sync-validation/engine.sys.mjs",
+await bundle(
+  "browser-features/modules/test/workspaces/workspaceContainerMigration.test.mts",
+  "container-migration-test.sys.mjs",
+);
+if (!options["model-only"]) {
+  const isolatedModuleSource = (source: string) =>
+    source.replaceAll(
+      "resource://noraneko/modules/workspaces/FloorpWorkspacesSync.sys.mjs",
+      "resource://floorp-workspace-sync-validation/engine.sys.mjs",
+    ).replaceAll(
+      "resource://noraneko/modules/workspaces/WorkspaceContainerBindings.sys.mjs",
+      "resource://floorp-workspace-sync-validation/container-bindings.sys.mjs",
+    ).replaceAll(
+      "resource://noraneko/modules/workspaces/WorkspaceContainerMigration.sys.mjs",
+      "resource://floorp-workspace-sync-validation/container-migration.sys.mjs",
+    );
+  const bindingsPath = join(
+    root,
+    "browser-features/modules/modules/workspaces/WorkspaceContainerBindings.sys.mts",
   );
-await Deno.writeTextFile(adapterPath, adapter);
-await esbuild.build({
-  stdin: {
-    contents: `export {WorkspacesSyncController} from ${
-      JSON.stringify(adapterPath)
-    }; export {createRoot} from 'solid-js'; export {workspacesDataStore as testingStore} from ${
-      JSON.stringify(stub)
-    };`,
-    resolveDir: root,
-  },
-  bundle: true,
-  format: "esm",
-  platform: "neutral",
-  conditions: ["browser"],
-  outfile: join(scratch, "adapter.sys.mjs"),
-  // System-module tests supply the browser globals that the real chrome entry
-  // naturally has. The tab API and SessionStore remain the actual browser's.
-  banner: {
-    js:
-      `const window=Services.wm.getMostRecentWindow("navigator:browser");const document=window.document;const gBrowser=window.gBrowser;const MutationObserver=window.MutationObserver;const AbortController=window.AbortController;globalThis.setTimeout=window.setTimeout.bind(window);globalThis.clearTimeout=window.clearTimeout.bind(window);`,
-  },
-});
+  await esbuild.build({
+    stdin: {
+      contents: isolatedModuleSource(await Deno.readTextFile(bindingsPath))
+        .replaceAll(
+          '"floorp-workspace-container-bindings.json"',
+          '"floorp-workspace-container-bindings-manual.json"',
+        ),
+      resolveDir: dirname(bindingsPath),
+      loader: "ts",
+    },
+    bundle: true,
+    format: "esm",
+    platform: "neutral",
+    outfile: join(scratch, "container-bindings.sys.mjs"),
+  });
+  const migrationPath = join(
+    root,
+    "browser-features/modules/modules/workspaces/WorkspaceContainerMigration.sys.mts",
+  );
+  await esbuild.build({
+    stdin: {
+      contents: isolatedModuleSource(await Deno.readTextFile(migrationPath))
+        .replaceAll(
+          '"floorp-workspaces-migration.json"',
+          '"floorp-workspaces-migration-manual.json"',
+        ),
+      resolveDir: dirname(migrationPath),
+      loader: "ts",
+    },
+    bundle: true,
+    format: "esm",
+    platform: "neutral",
+    outfile: join(scratch, "container-migration.sys.mjs"),
+  });
+  const enginePath = join(
+    root,
+    "browser-features/modules/modules/workspaces/FloorpWorkspacesSync.sys.mts",
+  );
+  await esbuild.build({
+    stdin: {
+      contents: isolatedModuleSource(await Deno.readTextFile(enginePath))
+        .replace(
+          '"floorp-workspaces-sync.json"',
+          '"floorp-workspaces-sync-legacy-manual.json"',
+        ).replace(
+          '"floorp-workspaces-sync-v2.json"',
+          '"floorp-workspaces-sync-v2-manual.json"',
+        ),
+      resolveDir: dirname(enginePath),
+      loader: "ts",
+    },
+    bundle: true,
+    format: "esm",
+    platform: "neutral",
+    outfile: join(scratch, "engine.sys.mjs"),
+    external: [
+      "./WorkspaceContainerBindings.sys.mts",
+      "./WorkspaceContainerMigration.sys.mts",
+    ],
+  });
+  const isolatedEngine = join(scratch, "engine.sys.mjs");
+  await Deno.writeTextFile(
+    isolatedEngine,
+    (await Deno.readTextFile(isolatedEngine)).replaceAll(
+      "./WorkspaceContainerBindings.sys.mts",
+      "resource://floorp-workspace-sync-validation/container-bindings.sys.mjs",
+    ).replaceAll(
+      "./WorkspaceContainerMigration.sys.mts",
+      "resource://floorp-workspace-sync-validation/container-migration.sys.mjs",
+    ),
+  );
+
+  const workspaceDir = join(root, "browser-features/chrome/common/workspaces");
+  const stub = join(scratch, "store.ts");
+  await Deno.writeTextFile(
+    stub,
+    `export const workspacesDataStore={data:new Map(),order:[]};
+export function setWorkspacesDataStore(key,value){workspacesDataStore[key]=typeof value==='function'?value(workspacesDataStore[key]):value;}`,
+  );
+  const adapterPath = join(scratch, "adapter.ts");
+  let adapter = isolatedModuleSource(
+    await Deno.readTextFile(join(workspaceDir, "workspacesSync.ts")),
+  );
+  adapter = adapter.replace(
+    'from "./data/data.ts"',
+    `from ${JSON.stringify(stub)}`,
+  )
+    .replaceAll('from "./utils/', `from "${workspaceDir}/utils/`)
+    .replaceAll('from "./', `from "${workspaceDir}/`)
+    .replaceAll('from "#modules/', `from "${root}/browser-features/modules/`)
+    .replace(
+      "resource://noraneko/modules/workspaces/FloorpWorkspacesSync.sys.mjs",
+      "resource://floorp-workspace-sync-validation/engine.sys.mjs",
+    );
+  await Deno.writeTextFile(adapterPath, adapter);
+  await esbuild.build({
+    stdin: {
+      contents: `export {WorkspacesSyncController} from ${
+        JSON.stringify(adapterPath)
+      }; export {createRoot} from 'solid-js'; export {workspacesDataStore as testingStore} from ${
+        JSON.stringify(stub)
+      };`,
+      resolveDir: root,
+    },
+    bundle: true,
+    format: "esm",
+    platform: "neutral",
+    conditions: ["browser"],
+    outfile: join(scratch, "adapter.sys.mjs"),
+    // System-module tests supply the browser globals that the real chrome entry
+    // naturally has. The tab API and SessionStore remain the actual browser's.
+    banner: {
+      js:
+        `const window=Services.wm.getMostRecentWindow("navigator:browser");const document=window.document;const gBrowser=window.gBrowser;const MutationObserver=window.MutationObserver;const AbortController=window.AbortController;globalThis.setTimeout=window.setTimeout.bind(window);globalThis.clearTimeout=window.clearTimeout.bind(window);`,
+    },
+  });
+  const isolatedAdapter = join(scratch, "adapter.sys.mjs");
+  await Deno.writeTextFile(
+    isolatedAdapter,
+    isolatedModuleSource(await Deno.readTextFile(isolatedAdapter)),
+  );
+}
 
 const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
 const port = (listener.addr as Deno.NetAddr).port;
@@ -147,7 +240,7 @@ await Deno.writeTextFile(
     'user_pref("browser.shell.checkDefaultBrowser", false);',
     'user_pref("floorp.browser.welcome.page.shown", true);',
     'user_pref("browser.startup.homepage_override.mstone", "ignore");',
-    'user_pref("services.sync.engine.floorp-workspaces", true);',
+    'user_pref("services.sync.engine.floorp-workspaces-v2", true);',
   ].join("\n"),
 );
 const child = new Deno.Command(binary, {
@@ -195,21 +288,25 @@ try {
   );
   const results = [];
   const scenarios = [
-    `async function runScenario(){await ChromeUtils.importESModule("resource://floorp-workspace-sync-validation/model-test.sys.mjs").runAllTests();await ChromeUtils.importESModule("resource://floorp-workspace-sync-validation/record-test.sys.mjs").runAllTests();return {passed:true,modelCases:23};}`,
-    await Deno.readTextFile(
-      join(
-        root,
-        "browser-features/modules/test/workspaces/manual/engine-scenario.js",
+    `async function runScenario(){const suites=["model-test","record-test","container-model-test","container-bindings-test","container-migration-test"];for(const name of suites){await ChromeUtils.importESModule("resource://floorp-workspace-sync-validation/"+name+".sys.mjs").runAllTests();}return {passed:true,modelSuites:suites};}`,
+    ...(options["model-only"] ? [] : [
+      await Deno.readTextFile(
+        join(
+          root,
+          "browser-features/modules/test/workspaces/manual/engine-scenario.js",
+        ),
       ),
-    ),
-    (await Deno.readTextFile(
-      join(
-        root,
-        "browser-features/modules/test/workspaces/manual/adapter-scenario.js",
-      ),
-    )).replaceAll("__WORKSPACE_SYNC_TEST_ORIGIN__", origin),
+      (await Deno.readTextFile(
+        join(
+          root,
+          "browser-features/modules/test/workspaces/manual/adapter-scenario.js",
+        ),
+      )).replaceAll("__WORKSPACE_SYNC_TEST_ORIGIN__", origin),
+    ]),
   ];
-  for (const script of scenarios) {
+  for (const [index, script] of scenarios.entries()) {
+    const scenario = ["models", "engine", "adapter"][index];
+    console.log(`[workspace-sync QA] Running ${scenario}`);
     const result = await client.sendWithTimeout(
       "WebDriver:ExecuteAsyncScript",
       {
@@ -221,6 +318,10 @@ try {
     );
     if (!result?.value?.passed) throw new Error(JSON.stringify(result?.value));
     results.push(result.value);
+    await Deno.writeTextFile(
+      join(scratch, "results.json"),
+      JSON.stringify({ complete: false, completed: results }, null, 2),
+    );
   }
   await Deno.writeTextFile(
     join(scratch, "results.json"),

@@ -20,6 +20,7 @@ import {
   WORKSPACE_LAST_SHOW_ID,
   WORKSPACE_PENDING_EXIT_PREF_NAME,
   WORKSPACE_TAB_ATTRIBUTION_ID,
+  WORKSPACE_TAB_MOVED_EVENT,
 } from "./utils/workspaces-static-names.ts";
 import { configStore, enabled } from "./data/config.ts";
 import type { WorkspaceIcons } from "./utils/workspace-icons.ts";
@@ -859,6 +860,13 @@ export class WorkspacesTabManager {
   moveTabToWorkspace(workspaceId: TWorkspaceID, tab: XULElement) {
     const oldWorkspaceId = this.getWorkspaceIdFromAttribute(tab);
     this.setWorkspaceIdToAttribute(tab, workspaceId);
+    if (oldWorkspaceId && oldWorkspaceId !== workspaceId) {
+      globalThis.dispatchEvent(
+        new CustomEvent(WORKSPACE_TAB_MOVED_EVENT, {
+          detail: { tab, fromWorkspaceId: oldWorkspaceId },
+        }),
+      );
+    }
 
     if (tab === globalThis.gBrowser.selectedTab && oldWorkspaceId) {
       const oldWorkspaceTabs = Array.from(

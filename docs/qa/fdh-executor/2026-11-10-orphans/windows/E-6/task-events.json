@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "2026-11-10T14:55:35.029Z",
+    "command": "task start",
+    "note": "created task state for e2e-e-6-mwatb4qm",
+    "exitCode": 0
+  },
+  {
+    "timestamp": "2026-11-10T14:55:35.190Z",
+    "command": "job intent intent-20261110t145535z-9d5a15",
+    "note": "push origin e2e-branch by agent-a",
+    "exitCode": null
+  },
+  {
+    "timestamp": "2026-11-10T14:55:57.453Z",
+    "command": "task resume",
+    "note": "{\"restored\":[\"state-file\",\"worktree\",\"base-commit\",\"port-offset\"],\"stale\":[]}",
+    "exitCode": 0
+  },
+  {
+    "timestamp": "2026-11-10T14:56:19.685Z",
+    "command": "task resume",
+    "note": "{\"restored\":[\"state-file\",\"worktree\",\"base-commit\",\"port-offset\"],\"stale\":[]}",
+    "exitCode": 0
+  },
+  {
+    "timestamp": "2026-11-10T14:56:19.849Z",
+    "command": "job result intent-20261110t145535z-9d5a15",
+    "note": "intent succeeded after 1 attempt(s), 1 lost, epoch 1",
+    "exitCode": 0
+  }
+]

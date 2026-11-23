@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { parseWorkspaceSyncDocument } from "./workspace-sync.ts";
+import { parseWorkspaceContainerDefinition } from "./workspace-container.ts";
+import type { WorkspaceContainerDefinition } from "./workspace-container-types.ts";
 import type {
   WorkspaceSyncDocument,
   WorkspaceSyncTab,
@@ -15,21 +17,27 @@ export const WORKSPACE_SYNC_RECORD_MAX_BYTES = 16 * 1024;
 
 export function parseWorkspaceSyncRecord(
   value: unknown,
+  expectedVersion?: 1 | 2,
 ): WorkspaceSyncRecordValue {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error("Invalid workspace sync record");
   }
   const raw = value as Record<string, unknown>;
-  if (raw.version !== 1) throw new Error("Unsupported workspace sync record");
+  if (
+    (raw.version !== 1 && raw.version !== 2) ||
+    (expectedVersion !== undefined && raw.version !== expectedVersion)
+  ) throw new Error("Unsupported workspace sync record");
+  const version = raw.version;
   let result: WorkspaceSyncRecordValue;
   if (raw.kind === "workspace") {
     const document = parseWorkspaceSyncDocument({ ...raw, tabs: [] });
     result = {
-      version: 1,
+      version,
       kind: "workspace",
       workspaceId: document.workspaceId,
       name: document.name,
       icon: document.icon,
+      ...(version === 2 ? { defaultContainer: document.defaultContainer } : {}),
       metadata: document.metadata,
     };
   } else if (raw.kind === "tab") {
@@ -38,10 +46,11 @@ export function parseWorkspaceSyncRecord(
       throw new Error("Tab deletion requires a Sync tombstone");
     }
     const document = parseWorkspaceSyncDocument({
-      version: 1,
+      version,
       workspaceId: raw.workspaceId,
       name: "",
       icon: null,
+      ...(version === 2 ? { defaultContainer: { kind: "none" } } : {}),
       metadata: {
         modifiedAt: tab.modifiedAt,
         modifiedBy: tab.modifiedBy,
@@ -52,11 +61,13 @@ export function parseWorkspaceSyncRecord(
       throw new Error("Workspace and tab IDs must be distinct");
     }
     result = {
-      version: 1,
+      version,
       kind: "tab",
       workspaceId: document.workspaceId,
       tab: document.tabs[0] as WorkspaceSyncTab & { deleted: false },
     };
+  } else if (raw.kind === "container" && version === 2) {
+    result = parseWorkspaceContainerDefinition(raw);
   } else {
     throw new Error("Invalid workspace sync record kind");
   }
@@ -73,11 +84,14 @@ export function workspaceMetadataRecord(
   document: WorkspaceSyncDocument,
 ): WorkspaceSyncMetadataRecordValue {
   return parseWorkspaceSyncRecord({
-    version: 1,
+    version: document.version,
     kind: "workspace",
     workspaceId: document.workspaceId,
     name: document.name,
     icon: document.icon,
+    ...(document.version === 2
+      ? { defaultContainer: document.defaultContainer }
+      : {}),
     metadata: document.metadata,
   }) as WorkspaceSyncMetadataRecordValue;
 }
@@ -85,11 +99,21 @@ export function workspaceMetadataRecord(
 export function workspaceTabRecord(
   workspaceId: string,
   tab: WorkspaceSyncTab,
+  version: 1 | 2 = tab.container === undefined ? 1 : 2,
 ): WorkspaceSyncTabRecordValue {
   return parseWorkspaceSyncRecord({
-    version: 1,
+    version,
     kind: "tab",
     workspaceId,
     tab,
   }) as WorkspaceSyncTabRecordValue;
+}
+
+export function workspaceContainerRecord(
+  definition: WorkspaceContainerDefinition,
+): WorkspaceContainerDefinition {
+  return parseWorkspaceSyncRecord(
+    definition,
+    2,
+  ) as WorkspaceContainerDefinition;
 }

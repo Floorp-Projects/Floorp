@@ -10,6 +10,22 @@ by the Runtime's upstream patch step. A missing patch is applied normally, while
 partially applied patches still fail validation. Native changes still require
 freshly compiled Runtime artifacts.
 
+`windows-uninstall-publisher.patch` gives official and Daylight Floorp branding
+an explicit uninstall Publisher. `SetUninstallKeys` uses that value both during
+installation and post-update registration; other branding retains its default.
+The PE CompanyName and signing identity are separate and unchanged. An existing
+Runtime patch writes Publisher under the application's main registration key,
+which does not fix the Programs and Features uninstall entry.
+Generate the isolated native NSIS regression with
+`python .github/scripts/test-windows-uninstall-publisher.py --runtime <checkout> --output <temporary-directory>`,
+compile its three `.nsi` files with `makensis`, then run the resulting executables
+on Windows. They exercise actual Runtime macros against unique per-user QA keys:
+new registration, replacement of an existing Mozilla value, display-name
+preservation and the guard against duplicating an existing machine install.
+The key locators are fixtures; this is not full installer/update validation.
+Windows packaging must regenerate both setup and `uninstall/helper.exe` from the
+patched sources. A prebuilt old helper alone cannot deliver the post-update fix.
+
 `workspace-external-containers.patch` chooses the workspace container before
 creating a browser for external URL opens, including cold launch and new windows.
 It changes only the existing BrowserContentHandler and BrowserDOMWindow JavaScript
@@ -20,6 +36,25 @@ maps BrowserContentHandler to the unpacked artifact's
 `moz-src:///browser/components/BrowserContentHandler.sys.mjs` module URI.
 Host policy/patch-parity tests and real HTTP hot/cold isolation runners are described
 in `browser-features/chrome/common/workspaces/test/external-container-regression.md`.
+Container-capable builds set `floorp.workspaces.containerSync.enabled`; while the
+workspace default is unresolved, external requests remain on owned `about:blank`
+placeholders until `floorp-workspace-container-ready`. The target URL and request
+parameters remain local to the window. Explicit Firefox container guesses,
+including 0, and current-tab navigation bypass this implicit-default guard.
+Navigation/typing in a placeholder cancels replay without closing the user's tab.
+An exception after a replay starts never automatically resubmits a POST body.
+
+`workspace-container-lifecycle.patch` lets the workspace engine persist removal
+protection before settings deletion, extension deletion, or container disabling
+can destroy tabs. `prepareRemoval` and `finishRemoval` await observer-provided
+blockers; the synchronous `remove` path exposes a guard for mapped identities.
+The preference observer owns disabling so direct preference changes are covered.
+Ordinary close-all operations do not enter this lifecycle. The patch changes four
+existing JavaScript resources and needs no native rebuild. The corresponding
+`tools/patches` patch targets their extracted Firefox 159 resource paths.
+`tools/src/workspace_container_lifecycle_patch.test.ts` executes the lifecycle and
+caller bodies from the shipping patch and verifies development/packaging parity;
+actual browser/Sync isolation remains a separate acceptance requirement.
 
 `tab-state-and-split-view.patch` preserves Floorp workspace/private-container
 session state and N-way split layouts on Firefox 159. The tabbrowser and
@@ -28,6 +63,16 @@ class with private methods. Matching `tools/patches` files cover local builds.
 Packaging checks for an exact reverse-applicable patch before applying it, so
 JavaScript already included by the source build is not patched twice. Missing
 or partially applied patches still fail the build.
+
+`crashed-tab-session-history.patch` collects a tab's session history from the
+parent when its content process crashes, before SessionStore starts ignoring the
+crashed browser. Otherwise a navigation made less than
+`browser.sessionstore.interval` (15 s) before the crash was not yet in the tab
+state, and "Restore This Tab" reopened the previous page (Floorp's new tab page,
+or `about:blank`) instead. It changes only SessionStore JavaScript and needs no
+native rebuild; it applies before or after `tab-state-and-split-view.patch`.
+The matching `tools/patches` file covers local builds, and
+`tools/src/runtime_compatibility.test.ts` checks that both stay identical.
 
 `contextual-search-initialization.patch` lazily loads the selector configuration
 for contextual engine lookups. Floorp's fixed default engine list can initialize
@@ -65,6 +110,8 @@ selection override ends on commit, unmark, cancellation, empty marked text,
 leaving an editable element, or disconnection. Candidate geometry uses that same
 selection. `tools/app-shim/test-ime.py` covers real native Japanese input in both
 textarea and contenteditable fixtures, using an isolated browser profile.
+Empty marked text from Escape or Backspace cancels through an empty commit;
+the test requires `compositionend` and a fresh visible composition on retyping.
 
 This patch requires a freshly compiled native Runtime, including XUL and
 `floorp-app-shim`. Applying it while packaging older prebuilt native artifacts
@@ -102,3 +149,12 @@ parent for the top WindowContext before scripts/CSS execute, caching only the
 document identity result. Neither uses the currently selected tab.
 Changing away from support restores future access; reload open blog pages to
 remove already injected content and retry requests.
+
+`picture-in-picture-app-window.patch` accounts for embedded chrome documents in
+PiP activity ownership. Panel and ordinary-tab players share the containing
+AppWindow's active-state reference count and window/selection listeners. Closing
+one player keeps that AppWindow active until its final player closes. This avoids
+an invalid nested-context setter that aborted registration and later cleanup.
+The extracted `moz-src` patch has a parity test; native embedded-chrome regressions
+cover both opening orders in `pictureInPictureActivity.test.ts`. This changes
+JavaScript only and requires no native rebuild.
