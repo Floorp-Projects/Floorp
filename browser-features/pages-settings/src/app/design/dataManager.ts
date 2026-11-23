@@ -232,31 +232,38 @@ async function saveDesignSettingsUnqueued(
     // whole save here would overwrite edits another window committed after
     // our CAS.
     if (!hasTabStyleChanged) {
-      const nativeAfter = await rpc.getBoolPref(VERTICAL_TABS_PREF);
-      if (nativeAfter !== null && nativeAfter !== nativeVerticalTabs) {
-        for (let r = 0; r < 8; r++) {
-          const latest = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
-          if (!latest) break;
-          const latestData = JSON.parse(latest);
-          const latestStored = normalizeTabbarStyle(
-            latestData.tabbar?.tabbarStyle,
-          );
-          // If our own write is still the stored style, the value it replaced
-          // was a concurrent intent; reconcile that one. Anything else means
-          // another writer has since landed, which is authoritative.
-          const reconciled = latestStored === tabbarStyle
-            ? resolveTabbarStyleFromNative(nativeAfter, storedStyle)
-            : latestStored;
-          if (reconciled === latestStored) break;
+      let nativeSeen = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+      for (
+        let r = 0;
+        r < 8 && nativeSeen !== null && nativeSeen !== nativeVerticalTabs;
+        r++
+      ) {
+        const latest = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
+        if (!latest) break;
+        const latestData = JSON.parse(latest);
+        const latestStored = normalizeTabbarStyle(
+          latestData.tabbar?.tabbarStyle,
+        );
+        // If our own write is still the stored style, the value it replaced
+        // was a concurrent intent; reconcile that one. Anything else means
+        // another writer has since landed, which is authoritative.
+        const reconciled = latestStored === tabbarStyle
+          ? resolveTabbarStyleFromNative(nativeSeen, storedStyle)
+          : latestStored;
+        if (reconciled !== latestStored) {
           latestData.tabbar = { ...latestData.tabbar, tabbarStyle: reconciled };
-          const { updated: reconciledWrite } = await rpc
-            .compareAndSetStringPref(
-              DESIGN_CONFIGS_PREF,
-              latest,
-              JSON.stringify(latestData),
-            );
-          if (reconciledWrite) break;
+          const { updated } = await rpc.compareAndSetStringPref(
+            DESIGN_CONFIGS_PREF,
+            latest,
+            JSON.stringify(latestData),
+          );
+          if (!updated) continue;
         }
+        // A toggle landing between the first read and this CAS wrote against
+        // an interim pref state the observer never saw; reconcile again.
+        const confirmed = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+        if (confirmed === null || confirmed === nativeSeen) break;
+        nativeSeen = confirmed;
       }
     }
     await rpc.setBoolPref(
