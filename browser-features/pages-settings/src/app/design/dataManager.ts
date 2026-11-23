@@ -132,6 +132,11 @@ async function saveDesignSettingsUnqueued(
   }
 
   const { hasTabStyleChanged = false } = options;
+  // When our CAS wins the race against another window's explicit style change,
+  // the stored style we just overwrote is the real concurrent intent. Remember
+  // it so a native-flip retry reconciles that style instead of the intermediate
+  // value this commit stored.
+  let lastCommit: { written: TabbarStyle; replaced: TabbarStyle } | undefined;
   for (let attempt = 0; attempt < 8; attempt++) {
     const result = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
     if (!result) {
@@ -142,7 +147,12 @@ async function saveDesignSettingsUnqueued(
     // Keep the stored style authoritative unless the user changed it. Reading
     // the native pref here prevents an unrelated edit from writing back a style
     // that a Firefox-side toggle already changed in another window.
-    const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
+    let storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
+    if (
+      !hasTabStyleChanged && lastCommit && storedStyle === lastCommit.written
+    ) {
+      storedStyle = lastCommit.replaced;
+    }
     const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
     const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
     const tabbarStyle = hasTabStyleChanged
@@ -233,6 +243,7 @@ async function saveDesignSettingsUnqueued(
       !hasTabStyleChanged &&
       await rpc.getBoolPref(VERTICAL_TABS_PREF) !== nativeVerticalTabs
     ) {
+      lastCommit = { written: tabbarStyle, replaced: storedStyle };
       continue;
     }
     await rpc.setBoolPref(
