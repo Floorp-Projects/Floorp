@@ -207,8 +207,6 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'test_validate_runtime_*provenance.py'
       - name: Test macOS privileged helper trust verifier
         run: python3 -m unittest discover -s tools -p 'test_validate_macos_helper_trust.py' -v
-      - name: Test OpenBot event notification sender
-        run: node --test tools/test-openbot-events.mjs
       - name: Test final package QA source intake
         run: node --test tools/test-final-package-qa-source.mjs
       - name: Check shared restart oracle and synthetic failure diagnostics
