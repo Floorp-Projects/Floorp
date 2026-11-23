@@ -189,7 +189,9 @@ export class MacOSSupport {
   }
 
   /** A bundle whose marker write never landed is still ours when its plist
-   * carries the bundle identifier only Floorp assigns to this SSB. */
+   * carries the bundle identifier only Floorp assigns to this SSB. Parse the
+   * CFBundleIdentifier entry itself: an identifier appearing in a comment or
+   * an unrelated key does not prove ownership. */
   private async isPartiallyOwnedBundle(
     path: string,
     bundleId: string,
@@ -198,9 +200,9 @@ export class MacOSSupport {
       const plist = await IOUtils.readUTF8(
         PathUtils.join(path, "Contents", "Info.plist"),
       );
-      return plist.includes(
-        `<key>CFBundleIdentifier</key><string>${bundleId}</string>`,
-      );
+      const entry = /<key>CFBundleIdentifier<\/key>\s*<string>([^<]*)<\/string>/
+        .exec(plist.replace(/<!--[\s\S]*?-->/g, ""));
+      return entry?.[1] === bundleId;
     } catch {
       return false;
     }
