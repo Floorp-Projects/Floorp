@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "repairRevision": "review-fixes.1",
+  "originalSourceCommit": "87311566a225936fbe7948db142bce3f1d3379d8",
+  "originalGitBlob": "e688e2725ce502f36c600cfec88060e7954b30e2",
+  "originalZipSha256": "a4af60380399050f82465864734391227ab34024d26bdf16c31559e2824a8d50",
+  "originalZipBytes": 150471,
+  "repairedZip": "Floorp_QA_Implementation_Kit_v0.3.0_review-fixes.1.zip",
+  "repairedZipBytes": 158581,
+  "repairedZipSha256": "60ad9a63c9fa7e328cc2da41187c6b725a64ee6144aaac8f66c2ebc3260710f2",
+  "patchSha256": "a8480bfd37075afe39724bd4f65ea259f25ff21db9ffa2aba79ab110330a5520",
+  "patchRoundtripExact": true,
+  "originalDesignDocumentsUnchanged": true,
+  "archiveEntries": 60,
+  "payloadManifestEntries": 59,
+  "expandedBytes": 389868,
+  "crcAndSafeExpansion": "PASS",
+  "generatedCachesIncluded": false,
+  "changedPayloadPaths": [
+    "MANIFEST.sha256",
+    "README.md",
+    "REVIEW_FIXES.md",
+    "qa/schemas/result.schema.json",
+    "tools/qa/agent.py",
+    "tools/qa/core.py",
+    "tools/qa/tests/test_core.py",
+    "tools/qa/tests/test_review_regressions.py",
+    "validation/review-fixes.json"
+  ],
+  "publicationAuthorized": false,
+  "nativeQualification": "UNVERIFIED"
+}

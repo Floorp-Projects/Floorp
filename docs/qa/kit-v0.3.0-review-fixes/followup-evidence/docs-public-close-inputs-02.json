@@ -1,0 +1,30 @@
+{
+  "packagerExecutedOrImported": false,
+  "limitedPackagerDiffConfirmed": true,
+  "changes": [
+    "remove unused import sys",
+    "include own source as regular evidence member"
+  ],
+  "files": [
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/docs-public-independent-review-01.md",
+      "bytes": 9180,
+      "sha256": "26517cbc066d5c7571af99aa19f59283ee2dbfe4a8200c1fefeae039a6af014c"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/docs-public-static-inspection-01.json",
+      "bytes": 316657,
+      "sha256": "1996f2b0fad3e3af14192c14a32355d6dc8b7f4e2e1011cfd416892531389ec1"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/evidence/docs-public-static-inspection-01-failure.log",
+      "bytes": 237,
+      "sha256": "c3d07707e014faf698f06afea4eb84cb3893aa67ec8fcfdcbed1c0701eccc24d"
+    },
+    {
+      "path": "/workspace/qa-review-v030/fix-qa309/fixtures/package_public_evidence.py",
+      "bytes": 6269,
+      "sha256": "9b41eee28cd37e8f351d0a12a578d580783e118b30f79d54b4b0e043ba988a32"
+    }
+  ]
+}

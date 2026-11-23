@@ -1,0 +1,333 @@
+{
+  "sourceSha256": "f8005ff48f51d857304b1001e2dfc3477f34edb753dcb3abd3a2ff0663438a55",
+  "nativeExecution": false,
+  "network": false,
+  "credentials": false,
+  "cases": [
+    {
+      "name": "valid bounded result",
+      "expected": "accept",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "empty wire",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response is not valid JSON",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "truncated JSON",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response is not valid JSON",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "nonobject",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response must be a JSON object",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "duplicate budget key",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "BuildContextError",
+      "error": "REST response contains duplicate JSON key 'budgetUsed'",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing result",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "KeyError",
+      "error": "'result'",
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing error",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "KeyError",
+      "error": "'error'",
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "missing budget",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "KeyError",
+      "error": "'budgetUsed'",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "boolean budget",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "regressed budget",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "oversized budget",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "null budget",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "string budget",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "ValueError",
+      "error": "owned supervisor changed the staging budget",
+      "budgetUsedAfter": 2,
+      "matchedExpectation": true
+    },
+    {
+      "name": "empty error object",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "boolean false error",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "numeric zero error",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "empty string error",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "extra envelope key",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "null success result",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": null,
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "scalar success result",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": "success",
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "incomplete result",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": 0,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": false,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "untyped result exit",
+      "expected": "reject",
+      "returnedNormally": true,
+      "returnedResult": {
+        "name": "fake-only",
+        "argv": [
+          "fixture-only"
+        ],
+        "exit": true,
+        "stop": null,
+        "durationSeconds": 0.001,
+        "stdoutSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stderrSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "ownedCleanupComplete": true,
+        "stdoutIsData": false
+      },
+      "budgetUsedAfter": 4,
+      "matchedExpectation": false
+    },
+    {
+      "name": "initial OSError",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "OSError",
+      "error": "[Errno 122] fixture quota",
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "unknown error class",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "RuntimeError",
+      "error": "fixture error",
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    },
+    {
+      "name": "SystemExit zero error",
+      "expected": "reject",
+      "returnedNormally": false,
+      "raised": "SystemExit",
+      "error": "0",
+      "systemExitCode": 0,
+      "budgetUsedAfter": 4,
+      "matchedExpectation": true
+    }
+  ],
+  "total": 25,
+  "typedGuardMismatches": [
+    "empty error object",
+    "boolean false error",
+    "numeric zero error",
+    "empty string error",
+    "extra envelope key",
+    "null success result",
+    "scalar success result",
+    "incomplete result",
+    "untyped result exit"
+  ],
+  "limitation": "Mutated reply is injected only into the trusted private producer serialization. This tests defensive protocol validation; it does not prove that a real untrusted native target can write the control pipe or bypass a qualification/publication gate."
+}

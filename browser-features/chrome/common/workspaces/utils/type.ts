@@ -109,3 +109,10 @@ export type TWorkspaceSnapshot = t.TypeOf<typeof zWorkspaceSnapshot>;
 export type PanelMultiViewParentElement = XULElement & {
   hidePopup: () => void;
 };
+
+/* Container dropdown */
+/** Subset of a ContextualIdentityService public identity used by the edit dialog. */
+export type TWorkspaceContainerIdentity = {
+  userContextId: number;
+  name?: string;
+};

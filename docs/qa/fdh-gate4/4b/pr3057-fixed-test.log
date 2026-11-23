@@ -1,0 +1,36 @@
+Check tools/src/dev_process_selection.test.ts
+Check tools/src/dev_processes.test.ts
+running 24 tests from ./tools/src/dev_process_selection.test.ts
+stop selects only this checkout's tree, recorded orphans and exact browser profile ... ok (988µs)
+stop accepts Windows case, separators, dot segments and trailing separator ... ok (76µs)
+stop rejects a profile with suffix -other ... ok (71µs)
+stop rejects a profile with suffix \child ... ok (42µs)
+stop rejects a profile with suffix  extra ... ok (40µs)
+stop rejects a profile with suffix "suffix ... ok (36µs)
+stop requires a real profile option and Floorp executable ... ok (81µs)
+stop rejects a reused recorded PID even with the same command line ... ok (54µs)
+stop rejects changed or missing identity ... ok (61µs)
+stale PID file without checkout evidence cannot select an unrelated tree ... ok (44µs)
+legacy Windows PID file is accepted with this checkout's absolute log path ... ok (52µs)
+Windows stale parent PID does not claim a child older than the parent ... ok (43µs)
+--all explicitly restores machine-wide Windows recovery and descendants ... ok (120µs)
+stop never selects excluded caller PIDs, even with --all ... ok (38µs)
+linux: mixed checkout trees and orphan identities stay isolated ... ok (281µs)
+linux: POSIX profiles remain case sensitive and exact ... ok (69µs)
+darwin: mixed checkout trees and orphan identities stay isolated ... ok (69µs)
+darwin: POSIX profiles remain case sensitive and exact ... ok (41µs)
+Linux argv preserves profile argument boundaries including spaces ... ok (61µs)
+macOS unquoted ps profile with spaces requires a complete argument ... ok (153µs)
+Windows argument parser handles quoted executable, empty args and escaped quotes ... ok (29µs)
+registry parser rejects malformed entries and missing start times ... ok (301µs)
+Unix ps parser preserves spaces in command lines and single-digit dates ... ok (154µs)
+normalization uses the supplied platform, independent of the test host ... ok (20µs)
+running 5 tests from ./tools/src/dev_processes.test.ts
+process recorder writes identity atomically and preserves orphan records ... ok (5ms)
+process reader tolerates a missing checkout registry ... ok (359µs)
+Windows process snapshot handles zero and one entries and rejects malformed data ... ignored (0ms)
+port conflict diagnostics query the reported port and print its PID and recovery command ... ok (221µs)
+normal startup logs do not query port owners ... ok (61µs)
+
+ok | 28 passed | 0 failed | 1 ignored (52ms)
+

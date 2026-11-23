@@ -1,0 +1,25 @@
+{
+  "selection": "test_qa3_native_io.SupervisorBoundaryTests.test_fork_failure_closes_both_fds_even_if_first_close_fails",
+  "exitCode": 1,
+  "outerTimeout": false,
+  "durationSeconds": 0.169,
+  "limits": {
+    "softASMiB": 512,
+    "hardASGiB": 32,
+    "cpuSeconds": 40,
+    "softFileMiB": 32,
+    "hardFileGiB": 64,
+    "wallSeconds": 90
+  },
+  "outerRecoveryKilledOwnBirthCheckedPids": [],
+  "leftovers": [],
+  "sourceSha256": "788f4088778e7903974e6071a636de4f7fb588d8652aaae76fcab18f1f6930be",
+  "testedVariant": "working-fix",
+  "testedSourceSha256": "788f4088778e7903974e6071a636de4f7fb588d8652aaae76fcab18f1f6930be",
+  "testSha256": "ef048c997fb993fdd89e1bf7cb23b5d5d6731c7dc079d64b1419b5c8f24227b0",
+  "sourceUnchangedDuringRun": true,
+  "testsUnchangedDuringRun": true,
+  "logSha256": "6f79e5a9b1ee74711e3f2a4e56af45843a585a69eba54fbae290947a2d6436a9",
+  "credentialsPassed": false,
+  "nativeBrowserNetworkBuildExecuted": false
+}

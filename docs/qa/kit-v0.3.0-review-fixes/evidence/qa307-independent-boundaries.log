@@ -1,0 +1,45 @@
+test_65536_byte_agent_frame_is_inclusive (__main__.IndependentBoundaries.test_65536_byte_agent_frame_is_inclusive) ... ok
+test_blank_missing_or_non_string_assertion_rejected (__main__.IndependentBoundaries.test_blank_missing_or_non_string_assertion_rejected) ... ok
+test_complete_aggregate_limit_and_one_extra (__main__.IndependentBoundaries.test_complete_aggregate_limit_and_one_extra) ... ok
+test_failure_skip_duplicate_and_hole_still_block (__main__.IndependentBoundaries.test_failure_skip_duplicate_and_hole_still_block) ... ok
+test_real_four_mib_line_boundary (__main__.IndependentBoundaries.test_real_four_mib_line_boundary) ... ok
+test_result_and_schema_exact_attempt_boundary (__main__.IndependentBoundaries.test_result_and_schema_exact_attempt_boundary) ... ok
+test_selection_extra_foreign_and_grouped_duplicate_cannot_pass (__main__.IndependentBoundaries.test_selection_extra_foreign_and_grouped_duplicate_cannot_pass) ... ok
+test_slow_partial_input_keeps_single_deadline (__main__.IndependentBoundaries.test_slow_partial_input_keeps_single_deadline) ... ok
+test_total_bytes_and_event_limits_are_inclusive (__main__.IndependentBoundaries.test_total_bytes_and_event_limits_are_inclusive) ... ok
+test_agent_eof_without_pending_frame (test_review_regressions.ReviewRegressions.test_agent_eof_without_pending_frame) ... ok
+test_agent_partial_eof_records_error_and_closes (test_review_regressions.ReviewRegressions.test_agent_partial_eof_records_error_and_closes) ... ok
+test_agent_partial_line_obeys_deadline_and_closes (test_review_regressions.ReviewRegressions.test_agent_partial_line_obeys_deadline_and_closes) ... ok
+test_agent_pipelined_complete_frames_preserved (test_review_regressions.ReviewRegressions.test_agent_pipelined_complete_frames_preserved) ... ok
+test_assertion_free_trace_cannot_pass (test_review_regressions.ReviewRegressions.test_assertion_free_trace_cannot_pass) ... ok
+test_attempt_cap_accepts_complete_bounded_history (test_review_regressions.ReviewRegressions.test_attempt_cap_accepts_complete_bounded_history) ... ok
+test_attempt_cap_rejects_complete_overlarge_history (test_review_regressions.ReviewRegressions.test_attempt_cap_rejects_complete_overlarge_history) ... ok
+test_child_exit_requires_integer_field (test_review_regressions.ReviewRegressions.test_child_exit_requires_integer_field) ... ok
+test_failed_child_cannot_pass (test_review_regressions.ReviewRegressions.test_failed_child_cannot_pass) ... ok
+test_grouped_suite_selection_preserves_positive_coverage (test_review_regressions.ReviewRegressions.test_grouped_suite_selection_preserves_positive_coverage) ... ok
+test_huge_attempt_returns_block_with_bounded_memory (test_review_regressions.ReviewRegressions.test_huge_attempt_returns_block_with_bounded_memory) ... ok
+test_missing_empty_duplicate_suite_selection_rejected (test_review_regressions.ReviewRegressions.test_missing_empty_duplicate_suite_selection_rejected) ... ok
+test_mozlog_input_limits_reject_without_large_allocations (test_review_regressions.ReviewRegressions.test_mozlog_input_limits_reject_without_large_allocations) ... ok
+test_retry_warning_cannot_pass (test_review_regressions.ReviewRegressions.test_retry_warning_cannot_pass) ... ok
+test_typed_child_zero_and_positive_assertion_pass (test_review_regressions.ReviewRegressions.test_typed_child_zero_and_positive_assertion_pass) ... ok
+test_unknown_execution_event_cannot_pass (test_review_regressions.ReviewRegressions.test_unknown_execution_event_cannot_pass) ... ok
+test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures (test_qa3_mozlog.MozlogContracts.test_canary_cannot_accept_zero_exit_crash_or_two_expected_failures) ... ok
+test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions (test_qa3_mozlog.MozlogContracts.test_canary_rejects_expected_fail_skip_retry_exit_and_untyped_assertions) ... ok
+test_canonical_package_id_and_browser_chrome_uri (test_qa3_mozlog.MozlogContracts.test_canonical_package_id_and_browser_chrome_uri) ... ok
+test_child_process_exit_requires_typed_zero (test_qa3_mozlog.MozlogContracts.test_child_process_exit_requires_typed_zero) ... ok
+test_crash_leak_and_unknown_event (test_qa3_mozlog.MozlogContracts.test_crash_leak_and_unknown_event) ... ok
+test_duplicate_execution_and_internal_retry (test_qa3_mozlog.MozlogContracts.test_duplicate_execution_and_internal_retry) ... ok
+test_empty_incomplete_assertion_free_and_missing_case (test_qa3_mozlog.MozlogContracts.test_empty_incomplete_assertion_free_and_missing_case) ... ok
+test_error_after_suite_and_truncated_raw_are_rejected (test_qa3_mozlog.MozlogContracts.test_error_after_suite_and_truncated_raw_are_rejected) ... ok
+test_exact_complete_required_execution (test_qa3_mozlog.MozlogContracts.test_exact_complete_required_execution) ... ok
+test_exact_expected_assertion_canary (test_qa3_mozlog.MozlogContracts.test_exact_expected_assertion_canary) ... ok
+test_extra_suite_foreign_source_and_duplicate_id (test_qa3_mozlog.MozlogContracts.test_extra_suite_foreign_source_and_duplicate_id) ... ok
+test_first_failed_process_cannot_be_hidden_by_pass_log (test_qa3_mozlog.MozlogContracts.test_first_failed_process_cannot_be_hidden_by_pass_log) ... ok
+test_required_skip_and_recovered_first_failure (test_qa3_mozlog.MozlogContracts.test_required_skip_and_recovered_first_failure) ... ok
+test_unexecuted_setup_failure_is_not_expected_canary (test_qa3_mozlog.MozlogContracts.test_unexecuted_setup_failure_is_not_expected_canary) ... ok
+
+----------------------------------------------------------------------
+Ran 39 tests in 2.188s
+
+OK
+{"testsRun": 39, "failures": 0, "errors": 0, "skips": 0, "successful": true}

@@ -19,12 +19,13 @@ function localPathToResourceURI(path: string) {
 }
 
 const STARTUP_MODE = Services.prefs.getStringPref("nora.startup.mode", "");
-const IS_LOCAL_DEVELOPMENT_MODE = STARTUP_MODE === "dev" ||
-  STARTUP_MODE === "test";
-const DEVELOPMENT_LOCALHOST_MATCHES = IS_LOCAL_DEVELOPMENT_MODE
+const ALLOW_DEVELOPMENT_WEB_ACTORS =
+  (STARTUP_MODE === "dev" || STARTUP_MODE === "test") &&
+  Services.prefs.getBoolPref("nora.dev.allow_http_loader", false);
+const DEVELOPMENT_LOCALHOST_MATCHES = ALLOW_DEVELOPMENT_WEB_ACTORS
   ? ["*://localhost/*"]
   : [];
-const DEVELOPMENT_LOOPBACK_MATCHES = IS_LOCAL_DEVELOPMENT_MODE
+const DEVELOPMENT_LOOPBACK_MATCHES = ALLOW_DEVELOPMENT_WEB_ACTORS
   ? ["*://localhost/*", "*://127.0.0.1/*"]
   : [];
 const WEB_REMOTE_TYPES = ["web", "webIsolated", "webCOOP+COEP"];
@@ -35,7 +36,7 @@ const WEB_FILE_AND_ABOUT_REMOTE_TYPES = [
   "parent",
 ];
 const DEVELOPMENT_WEB_ACTOR_OPTIONS: Partial<WindowActorOptions> =
-  IS_LOCAL_DEVELOPMENT_MODE
+  ALLOW_DEVELOPMENT_WEB_ACTORS
     ? {
       // Firefox 154 treats even loopback documents as untrusted web-process
       // content. These options exist only in local development/test modes,

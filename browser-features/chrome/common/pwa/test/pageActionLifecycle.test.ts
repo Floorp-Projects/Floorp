@@ -177,8 +177,87 @@ async function testNativeWindowCloseReleasesManifestObserver(): Promise<void> {
   }
 }
 
+async function testManifestNotificationBelongsToSelectedBrowser(): Promise<
+  void
+> {
+  let checks = 0;
+  const service = {
+    checkBrowserCanBeInstallAsPwa: () => {
+      checks++;
+      return Promise.resolve(false);
+    },
+    checkCurrentPageIsInstalled: () => Promise.resolve(false),
+    updateUIElements: () => {},
+  } as unknown as PwaService;
+  const selectedBrowser = gBrowser.selectedBrowser;
+  const background = gBrowser.addTab("about:blank", {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+  });
+  const dispose = createRootHMR(
+    (cleanup) => {
+      new SsbPageAction(service);
+      return cleanup;
+    },
+    undefined,
+    new EventTarget(),
+  );
+  try {
+    const initial = checks;
+    assertEquals(initial, 1, "constructor checks its selected page");
+    Services.obs.notifyObservers(
+      background.linkedBrowser as unknown as nsISupports,
+      MANIFEST_TOPIC,
+    );
+    Services.obs.notifyObservers({} as nsISupports, MANIFEST_TOPIC);
+    assertEquals(
+      checks,
+      initial,
+      "background and unscoped notifications do not fetch",
+    );
+    Services.obs.notifyObservers(
+      selectedBrowser as unknown as nsISupports,
+      MANIFEST_TOPIC,
+    );
+    assertEquals(checks, initial + 1, "the selected browser still refreshes");
+    gBrowser.selectedTab = background;
+    assertEquals(
+      checks,
+      initial + 2,
+      "real tab selection still checks the new page",
+    );
+    Services.obs.notifyObservers(
+      selectedBrowser as unknown as nsISupports,
+      MANIFEST_TOPIC,
+    );
+    assertEquals(
+      checks,
+      initial + 2,
+      "the previous tab no longer owns the action",
+    );
+    Services.obs.notifyObservers(
+      background.linkedBrowser as unknown as nsISupports,
+      MANIFEST_TOPIC,
+    );
+    assertEquals(
+      checks,
+      initial + 3,
+      "the newly selected browser owns the action",
+    );
+  } finally {
+    dispose();
+    gBrowser.removeTab(background);
+    await Promise.resolve();
+    await Promise.resolve();
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("pageActionLifecycle.test.ts", [
+    {
+      name:
+        "process-wide manifest notifications only refresh the selected browser",
+      fn: testManifestNotificationBelongsToSelectedBrowser,
+    },
     {
       name:
         "real page action constructor unload removes native listeners and invalidates either pending await",

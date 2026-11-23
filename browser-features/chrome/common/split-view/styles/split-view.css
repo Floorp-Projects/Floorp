@@ -72,7 +72,9 @@
     .floorp-split-handle,
     .floorp-grid-handle
   ) {
-  display: none !important;
+  /* Keep browser frames alive while Gecko swaps split tabs between windows. */
+  position: absolute !important;
+  visibility: hidden !important;
 }
 
 /* ===== Custom drag handles ===== */
@@ -751,6 +753,14 @@
   #tabbrowser-tabs:not([orient="vertical"])
   .tabbrowser-tab:not([pinned]) {
   min-width: unset !important;
+}
+
+/* Ordinary tabs still need the configured minimum. Keep the reset above for
+ * tabs inside split wrappers so large configured widths cannot overlap them. */
+#TabsToolbar[splitview-multibar]
+  #tabbrowser-tabs:not([orient="vertical"])
+  .tabbrowser-tab:not([pinned]):not([data-floorp-split-tab]) {
+  min-width: var(--floorp-tab-min-width) !important;
 }
 
 

@@ -41,16 +41,24 @@ export const closedTabSwitcherCommand: PaletteCommand = {
     defaultValue: "Reopen a recently closed tab",
   }),
   category: "switcher",
-  keywords: [
-    "closed tab",
-    "reopen tab",
-    "undo close tab",
-    "restore tab",
-    "recently closed",
-    ...getEnglishStepCommandKeywords("commandPalette.closedTabSwitcher", "commandPalette.closedTabSwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.closedTabSwitcher", "commandPalette.closedTabSwitcherDescription"),
-    ...getJapaneseReadings("floorp-closed-tab-switcher"),
-  ],
+  get keywords() {
+    return [
+      "closed tab",
+      "reopen tab",
+      "undo close tab",
+      "restore tab",
+      "recently closed",
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.closedTabSwitcher",
+        "commandPalette.closedTabSwitcherDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.closedTabSwitcher",
+        "commandPalette.closedTabSwitcherDescription",
+      ),
+      ...getJapaneseReadings("floorp-closed-tab-switcher"),
+    ];
+  },
   steps: [
     {
       id: "closedTab",
