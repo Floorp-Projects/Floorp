@@ -188,21 +188,23 @@ export class MacOSSupport {
     }
   }
 
-  /** A bundle whose marker write never landed is still ours when its plist
-   * carries the bundle identifier only Floorp assigns to this SSB. Parse the
-   * CFBundleIdentifier entry itself: an identifier appearing in a comment or
-   * an unrelated key does not prove ownership. */
+  /** A bundle whose marker write never landed is still ours when its plist is
+   * byte-identical to one this writer generates — the current form, or the
+   * legacy v3 form that names "launcher" as its executable. Comments, nested
+   * dictionaries and unrelated keys cannot forge that match. */
   private async isPartiallyOwnedBundle(
     path: string,
-    bundleId: string,
+    bundle: Awaited<ReturnType<typeof getMacAppBundle>>,
   ): Promise<boolean> {
     try {
       const plist = await IOUtils.readUTF8(
         PathUtils.join(path, "Contents", "Info.plist"),
       );
-      const entry = /<key>CFBundleIdentifier<\/key>\s*<string>([^<]*)<\/string>/
-        .exec(plist.replace(/<!--[\s\S]*?-->/g, ""));
-      return entry?.[1] === bundleId;
+      const legacyV3 = bundle.plist.replace(
+        "<key>CFBundleExecutable</key><string>applet</string>",
+        "<key>CFBundleExecutable</key><string>launcher</string>",
+      );
+      return plist === bundle.plist || plist === legacyV3;
     } catch {
       return false;
     }
@@ -229,7 +231,7 @@ export class MacOSSupport {
           if (!await IOUtils.exists(marker)) {
             if (
               await IOUtils.exists(backup) ||
-              await this.isPartiallyOwnedBundle(bundle.path, bundle.bundleId)
+              await this.isPartiallyOwnedBundle(bundle.path, bundle)
             ) {
               await this.repair(app, store);
             }
@@ -530,7 +532,7 @@ export class MacOSSupport {
       if (
         await IOUtils.exists(backupNativeMarker) ||
         (!await IOUtils.exists(backupMarker) &&
-          !await this.isPartiallyOwnedBundle(backup, bundle.bundleId))
+          !await this.isPartiallyOwnedBundle(backup, bundle))
       ) {
         throw new Error(
           "[MacOSSupport] Refusing to recover an unowned launcher backup",
@@ -568,7 +570,7 @@ export class MacOSSupport {
     if (await IOUtils.exists(bundle.path)) {
       if (
         !await IOUtils.exists(markerPath) &&
-        !await this.isPartiallyOwnedBundle(bundle.path, bundle.bundleId)
+        !await this.isPartiallyOwnedBundle(bundle.path, bundle)
       ) {
         throw new Error("[MacOSSupport] Refusing to replace an unowned bundle");
       }
