@@ -1,3 +1,10 @@
+import { HUB_DEV_PAGES } from "#libs/shared/dev-ports/defines.ts";
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
+
 const WORKSPACES_INIT_TOPIC = "floorp.workspaces.initialize";
 
 type InitializeResult = {
@@ -13,10 +20,7 @@ export class NRWorkspacesChild extends JSWindowActorChild {
   actorCreated() {
     const window = this.contentWindow;
     if (
-      window?.location.port === "5183" ||
-      window?.location.port === "5186" ||
-      window?.location.port === "5187" ||
-      window?.location.port === "5188" ||
+      launchDevPort.isTrustedPort(window?.location.port, HUB_DEV_PAGES) ||
       window?.location.href.startsWith("chrome://noraneko-settings") ||
       window?.location.href.startsWith("about:")
     ) {

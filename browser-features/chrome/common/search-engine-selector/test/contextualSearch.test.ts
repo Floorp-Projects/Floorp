@@ -12,7 +12,7 @@ const { RemoteSettings } = ChromeUtils.importESModule(
 ) as { RemoteSettings: (collection: string) => RemoteSettingsClient };
 const { SearchUtils } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
-) as { SearchUtils: { SETTINGS_KEY: string; SETTINGS_OVERRIDES_KEY: string } };
+) as { SearchUtils: { SETTINGS_KEY: string } };
 const { SearchService } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/search/SearchService.sys.mjs",
 );
@@ -65,7 +65,6 @@ async function testConcurrentFreshLookups(): Promise<void> {
   let release = () => {};
   const ready = new Promise<void>((resolve) => release = resolve);
   let configurationLoads = 0;
-  let overrideLoads = 0;
   const restores: Array<() => void> = [];
   let selector: Selector | undefined;
   try {
@@ -75,14 +74,6 @@ async function testConcurrentFreshLookups(): Promise<void> {
         configurationLoads++;
         await ready;
         return records;
-      },
-    ));
-    restores.push(replaceGet(
-      RemoteSettings(SearchUtils.SETTINGS_OVERRIDES_KEY),
-      async () => {
-        overrideLoads++;
-        await ready;
-        return [];
       },
     ));
     selector = new SearchEngineSelector(() => {});
@@ -109,11 +100,6 @@ async function testConcurrentFreshLookups(): Promise<void> {
       1,
       "concurrent lookups share one configuration load",
     );
-    assertEquals(
-      overrideLoads,
-      1,
-      "concurrent lookups share one overrides load",
-    );
     const cached = await selector.findContextualSearchEngineById(engineId);
     assertEquals(cached?.identifier, engineId, "cached lookup still matches");
     assertEquals(
@@ -121,7 +107,6 @@ async function testConcurrentFreshLookups(): Promise<void> {
       1,
       "cached lookups must not reload configuration",
     );
-    assertEquals(overrideLoads, 1, "cached lookups must not reload overrides");
     assertEquals(
       await selector.findContextualSearchEngineByHost("unmatched.example"),
       null,

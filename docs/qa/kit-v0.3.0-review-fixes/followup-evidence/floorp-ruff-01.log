@@ -1,0 +1,56 @@
+BLE001 Do not catch blind exception: `BaseException`
+   --> tools/qa3/source.py:454:12
+    |
+452 |             time.sleep(0.02)
+453 |         result["exitCode"] = process.returncode
+454 |     except BaseException as error:
+    |            ^^^^^^^^^^^^^
+455 |         result["error"] = str(error)[:1024] or type(error).__name__
+456 |     finally:
+    |
+
+BLE001 Do not catch blind exception: `BaseException`
+   --> tools/qa3/source.py:460:20
+    |
+458 |             try:
+459 |                 _cleanup_owned(process, owned)
+460 |             except BaseException as error:
+    |                    ^^^^^^^^^^^^^
+461 |                 result["error"] = (
+462 |                     result["error"] or str(error)[:1024] or type(error).__name__
+    |
+
+SIM117 [*] Use a single `with` statement with multiple contexts instead of nested `with` statements
+   --> tools/qa3/test_source.py:395:9
+    |
+393 |       def test_spawn_failure_closes_control_pipe_without_overwriting_log(self):
+394 |           count = len(list(Path("/proc/self/fd").iterdir()))
+395 | /         with patch.object(
+396 | |             source.subprocess, "Popen", side_effect=OSError("fixture spawn failure")
+397 | |         ):
+398 | |             with self.assertRaisesRegex(OSError, "fixture spawn failure"):
+    | |__________________________________________________________________________^
+399 |                   source.execute(
+400 |                       [sys.executable, "-c", "pass"],
+    |
+help: Combine `with` statements
+    |
+396 |             source.subprocess, "Popen", side_effect=OSError("fixture spawn failure")
+    -         ):
+    -             with self.assertRaisesRegex(OSError, "fixture spawn failure"):
+    -                 source.execute(
+    -                     [sys.executable, "-c", "pass"],
+    -                     self.root / "spawn-fail.log",
+    -                     self.root,
+    -                 )
+397 +         ), self.assertRaisesRegex(OSError, "fixture spawn failure"):
+398 +             source.execute(
+399 +                 [sys.executable, "-c", "pass"],
+400 +                 self.root / "spawn-fail.log",
+401 +                 self.root,
+402 +             )
+403 |         self.assertEqual(len(list(Path("/proc/self/fd").iterdir())), count)
+    |
+
+Found 3 errors.
+[*] 1 fixable with the `--fix` option.

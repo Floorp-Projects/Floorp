@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "work-record",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-cli",
+      "kind": "agent",
+      "grantedBy": "host:fdh-cli-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:gate3-t02",
+        "issuer": "scheduler",
+        "owner": "fdh-local-runner",
+        "ownerRole": "task-owner",
+        "label": "fdh local loop task gate3-t02"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:gate3-t02",
+        "issuer": "scheduler",
+        "owner": "fdh-local-runner",
+        "ownerRole": "job-owner",
+        "label": "local gate loop job for gate3-t02"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:gate3-t02:1",
+        "issuer": "executor",
+        "owner": "fdh-local-runner",
+        "ownerRole": "run-owner",
+        "label": "fdh command run for gate3-t02"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:gate3-t02:1:1",
+        "issuer": "executor",
+        "owner": "fdh-local-runner",
+        "ownerRole": "run-owner",
+        "label": "first attempt for gate3-t02"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:gate3-t02",
+        "issuer": "host",
+        "owner": "fdh-local-runner",
+        "ownerRole": "session-owner",
+        "context": "existing agent session driving the fdh CLI"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:gate3-t02",
+        "issuer": "host",
+        "owner": "fdh-local-runner",
+        "ownerRole": "workspace-owner",
+        "path": "/private/tmp/fdh-gate2/pr2b100"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:gate3-t02:local",
+        "issuer": "host-authorization",
+        "owner": "fdh-local-runner",
+        "ownerRole": "approver",
+        "decision": "not-required",
+        "label": "no approval is requested by the fdh local loop"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:gate3-t02",
+        "type": "task-has-job",
+        "to": "scheduler:job:gate3-t02"
+      },
+      {
+        "from": "scheduler:job:gate3-t02",
+        "type": "job-has-run",
+        "to": "executor:run:gate3-t02:1"
+      },
+      {
+        "from": "executor:run:gate3-t02:1",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:gate3-t02:1:1"
+      },
+      {
+        "from": "executor:run:gate3-t02:1",
+        "type": "run-uses-session",
+        "to": "host:session:gate3-t02"
+      },
+      {
+        "from": "executor:run:gate3-t02:1",
+        "type": "run-in-workspace",
+        "to": "host:workspace:gate3-t02"
+      },
+      {
+        "from": "host-authorization:approval:gate3-t02:local",
+        "type": "approval-for-job",
+        "to": "scheduler:job:gate3-t02"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-08T02:16:54.460Z",
+      "reason": "fdh local loop recorded the commands in operations[]"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "darwin",
+      "version": "25.6.0",
+      "arch": "aarch64"
+    },
+    "build": {
+      "commit": "4bbfe29fb0b8e48d52fcae5a45aa8268d73c1741",
+      "id": "gate3-t02",
+      "repository": "Floorp-Projects/Floorp"
+    },
+    "packageDigest": null,
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "4bbfe29fb0b8e48d52fcae5a45aa8268d73c1741",
+        "pin": "floorp@4bbfe29fb0b8e48d52fcae5a45aa8268d73c1741"
+      },
+      "deno": {
+        "version": "2.9.4"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:gate3-t02:1",
+      "attempt": 1,
+      "startedAt": "2026-11-08T02:13:31.859Z",
+      "endedAt": "2026-11-08T02:16:54.460Z",
+      "result": "passed",
+      "exitCode": null,
+      "notes": "fdh local loop; 5 command(s), 3 assertion(s)"
+    }
+  ],
+  "operations": [
+    {
+      "input": "deno run -A tools/dev-tool.ts start --port-offset 100",
+      "target": "/private/tmp/fdh-gate2/pr2b100",
+      "order": 1,
+      "observation": "exit 0; Starting feles-build dev...\n[dev-tool] Using port-offset=100 marionette=5280 pref=nora.dev.port_offset\nStarted (PID 6505). Waiting for Marionette...\nBrowser ready! Marionette on port 5280.\nLog: /private/tmp/fdh-gate2/pr2b100/_dist/dev-server.log"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts status",
+      "target": "/private/tmp/fdh-gate2/pr2b100",
+      "order": 2,
+      "observation": "exit 0; Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 2\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 705bea6e-dfdb-4268-9192-6c3e1391595e"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts eval (async () => {\n  const mod = ChromeUtils.importESModule(\"chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs\");\n  const bc = gBrowser.selectedBrowser.browsingContext;\n  const actor = mod.getMarionetteCommandsActorProxy(() => bc);\n  const raw = await actor.executeScript(\"return JSON.stringify({url: location.href, hit: document.body.innerText.includes(\\\"QA3-T02-MARKER\\\")})\", [], {});\n  const parsed = JSON.parse(raw);\n  return parsed.hit ? \"QA3-T02-MARKER @ \" + parsed.url : \"ABSENT @ \" + parsed.url;\n})()",
+      "target": "/private/tmp/fdh-gate2/pr2b100",
+      "order": 3,
+      "observation": "exit 0; QA3-T02-MARKER @ http://localhost:5283/#/overview/home\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 87ece8ab-9c68-484e-ba33-672444f64d61"
+    },
+    {
+      "input": "deno task feles-build build --phase after-mach",
+      "target": "/private/tmp/fdh-gate2/pr2b100",
+      "order": 4,
+      "observation": "exit 0; \u001b[32m[injector] SUCCESS: XHTML injection complete.\u001b[0m\nTask feles-build deno run -A tools/feles-build.ts 'build' '--phase' 'after-mach'"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts stop",
+      "target": "/private/tmp/fdh-gate2/pr2b100",
+      "order": 5,
+      "observation": "exit 0; Stopping dev processes for this checkout...\nStopped (33 processes)."
+    }
+  ],
+  "assertions": [
+    {
+      "name": "browser-connected",
+      "expected": "Connected to browser.",
+      "actual": "Connected to browser.",
+      "passed": true
+    },
+    {
+      "name": "browser-eval-contains",
+      "expected": "eval output contains \"QA3-T02-MARKER\"",
+      "actual": "QA3-T02-MARKER @ http://localhost:5283/#/overview/home",
+      "passed": true
+    },
+    {
+      "name": "build-exit-code",
+      "expected": "exit code 0",
+      "actual": "exit code 0",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "darwin 25.6.0 (aarch64)",
+    "network": "enabled",
+    "matchesTarget": false,
+    "deviations": [
+      "local development worktree rather than a packaged qualification environment",
+      "no external network services are used; only the local dev server may be running"
+    ],
+    "notes": "Local fdh loop on the recorded worktree; this is not a release-environment run."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "/private/tmp/fdh-gate2/pr2b100/_dist/fdh/tasks/gate3-t02.json",
+        "sha256": "156556089ba8609be39bc521b860addc99097c9ce674beff90ec873ac036753e",
+        "bytes": 8836
+      }
+    ],
+    "unchangedDuringRun": "unknown",
+    "deviations": [
+      "the task-state file is the evidence source and can change after this manifest is written"
+    ],
+    "notes": "Pinned input is the fdh task-state snapshot read while building this manifest."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "completed",
+    "notes": "Dev server stopped by 'fdh dev down'.",
+    "details": [
+      "dev-tool stop"
+    ]
+  },
+  "limitations": [
+    "This evidence covers only the local fdh loop for task 'gate3-t02'; it is not a Gate 3 qualification or release approval.",
+    "No visual judgment was performed (visualJudge is null); visual/look-and-feel behavior is not covered.",
+    "The DSH toolchain identity is not available to fdh and is recorded as UNVERIFIED.",
+    "Assertions reflect the recorded command exit codes and verbatim outputs only; they do not establish behavior beyond those commands.",
+    "The local development worktree is not the qualification target environment (matchesTarget is false).",
+    "No GitHub or other shared-service behavior is exercised; the local loop does not need shared services.",
+    "No host test verification was recorded; the host test state is UNVERIFIED.",
+    "Browser eval output is recorded verbatim; only --expect turns it into a contains-check assertion, which does not prove behavior beyond the checked text.",
+    "No approval was requested or recorded; the approval entity is marked not-required.",
+    "The build/toolchain commit is the task's start base; an uncommitted working-tree diff is not hashed in this manifest.",
+    "No defect was reproduced; reproduction is inconclusive by design rather than being inferred from command output."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "The fdh local loop records verification; it does not reproduce a defect."
+  }
+}

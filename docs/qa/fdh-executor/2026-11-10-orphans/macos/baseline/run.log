@@ -1,0 +1,7 @@
+[e2e] E-2c ...
+[e2e] E-2c FAIL (10.9 s)
+  ok   the root's children outlive it (orphans)
+  FAIL the takeover stopped the orphans — {"code":0,"left":[6690]}
+  FAIL the stop of the epoch-1 tree counted the orphans — stopped 0 process(es) of the step tree rooted at pid 6687
+  ok   the job succeeds at epoch 2
+[e2e] failed: E-2c
