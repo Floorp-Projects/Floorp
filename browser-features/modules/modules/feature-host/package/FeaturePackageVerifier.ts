@@ -695,20 +695,34 @@ export async function verifySignedFeaturePackage(
   let sourceDigest: ArrayBuffer;
   let packageDigest: ArrayBuffer;
   let publicKey: CryptoKey;
+  const cryptoOperations: Promise<unknown>[] = [];
+  const startCryptoOperation = <T>(launch: () => Promise<T>): Promise<T> => {
+    const operation = launch();
+    cryptoOperations.push(operation);
+    return operation;
+  };
   try {
     [sourceDigest, packageDigest, publicKey] = await Promise.all([
-      subtle.digest("SHA-256", arrayBuffer(parsed.sourceBytes)),
-      subtle.digest("SHA-256", arrayBuffer(parsed.canonicalBytes)),
-      subtle.importKey(
-        "raw",
-        arrayBuffer(trustedKey.publicKey),
-        { name: "Ed25519" },
-        false,
-        ["verify"],
+      startCryptoOperation(() =>
+        subtle.digest("SHA-256", arrayBuffer(parsed.sourceBytes))
+      ),
+      startCryptoOperation(() =>
+        subtle.digest("SHA-256", arrayBuffer(parsed.canonicalBytes))
+      ),
+      startCryptoOperation(() =>
+        subtle.importKey(
+          "raw",
+          arrayBuffer(trustedKey.publicKey),
+          { name: "Ed25519" },
+          false,
+          ["verify"],
+        )
       ),
     ]);
   } catch {
     fail("unsupported-crypto");
+  } finally {
+    await Promise.allSettled(cryptoOperations);
   }
   if (
     manifest.sourceBytes !== parsed.sourceBytes.length ||
