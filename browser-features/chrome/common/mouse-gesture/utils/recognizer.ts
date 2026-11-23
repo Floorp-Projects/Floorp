@@ -366,9 +366,9 @@ function calculateMeanDirection(trail: { x: number; y: number }[]): GestureDirec
     return deltaToDirection(meanDx, meanDy);
   }
 
-  // Fallback: if trail is shorter than sampling range, use the farthest point
-  // that's at least MIN_MOVEMENT_DISTANCE away
-  for (let i = trail.length - 1; i >= 1; i--) {
+  // A sparse first move can jump beyond the sampling range. Preserve its
+  // initial direction instead of inferring it from the whole trail's endpoint.
+  for (let i = 1; i < trail.length; i++) {
     if (distanceBetween(start, trail[i]) >= MIN_MOVEMENT_DISTANCE) {
       const dx = trail[i].x - start.x;
       const dy = trail[i].y - start.y;

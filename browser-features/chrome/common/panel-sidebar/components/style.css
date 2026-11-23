@@ -48,13 +48,6 @@
   overflow-y: auto;
 }
 
-#panel-sidebar-select-box:-moz-lwtheme {
-  background-color: var(
-    --lwt-accent-color-inactive,
-    var(--panel-sidebar-background-color)
-  );
-}
-
 /* Panel Sidebar Box */
 #panel-sidebar-box {
   background: var(--panel-sidebar-background-color);
