@@ -362,12 +362,21 @@ export class MacOSSupport {
           "[MacOSSupport] Refusing to overwrite a signed native bundle with a launcher",
         );
       }
+      // Damaged generated files can hold bytes readUTF8 cannot decode; treat
+      // that as a mismatch and let the rewrite path repair them.
+      const generated = async (path: string): Promise<string | null> => {
+        try {
+          return await IOUtils.readUTF8(path);
+        } catch {
+          return null;
+        }
+      };
       if (
-        await IOUtils.readUTF8(markerPath) === marker &&
+        await generated(markerPath) === marker &&
         await IOUtils.exists(executable) && await IOUtils.exists(icon) &&
         await IOUtils.exists(plist) &&
-        await IOUtils.readUTF8(executable) === bundle.launcher &&
-        await IOUtils.readUTF8(plist) === bundle.plist
+        await generated(executable) === bundle.launcher &&
+        await generated(plist) === bundle.plist
       ) {
         // An intact marker does not prove that generated files or their mode
         // survived copying/restoring the bundle. Restore executable permission

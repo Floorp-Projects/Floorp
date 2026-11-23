@@ -624,6 +624,20 @@ export async function runAllTests(): Promise<void> {
             originalMarker,
             "the fixture never invalidated the metadata marker",
           );
+          await IOUtils.write(launcher, new Uint8Array([0xff, 0xfe, 0x80]));
+          await support.repair(app, store);
+          assertEquals(
+            await IOUtils.readUTF8(launcher),
+            bundle.launcher,
+            "repair replaces a byte-corrupted launcher",
+          );
+          await IOUtils.write(plist, new Uint8Array([0x80, 0xfe, 0xff]));
+          await support.repair(app, store);
+          assertEquals(
+            await IOUtils.readUTF8(plist),
+            bundle.plist,
+            "repair replaces byte-corrupted Finder metadata",
+          );
           if (Services.appinfo.OS !== "WINNT") {
             await IOUtils.setPermissions(launcher, 0o644);
             await support.repair(app, store);
@@ -636,7 +650,7 @@ export async function runAllTests(): Promise<void> {
           await support.install(app);
           assertEquals(
             support.iconWrites,
-            3,
+            5,
             "intact and permission-only repairs avoid rewriting resources",
           );
         } finally {
