@@ -22,8 +22,16 @@ import {
 
 type BrowserTab = XULElement & {
   undiscardable?: boolean;
+  selected?: boolean;
+  pictureinpicture?: boolean;
+  soundPlaying?: boolean;
+  lastAccessed?: number;
   linkedBrowser?: {
+    isConnected?: boolean;
     currentURI?: { spec: string };
+    browsingContext?: {
+      currentWindowGlobal?: { hasActivePeerConnections?: () => boolean };
+    };
   };
 };
 
@@ -301,6 +309,84 @@ function loadTabUnloader(): TabUnloaderApi | null {
     }
   }
   return null;
+}
+
+interface EligibilityHelpers {
+  webrtcUI?: { browserHasStreams(browser: unknown): boolean };
+  privateBrowsing?: { isBrowserPrivate(browser: unknown): boolean };
+}
+
+/** Lazily imports the helpers Gecko uses to weigh discard eligibility. */
+function loadEligibilityHelpers(): EligibilityHelpers {
+  const helpers: EligibilityHelpers = {};
+  try {
+    helpers.webrtcUI = (
+      ChromeUtils.importESModule("resource:///modules/webrtcUI.sys.mjs") as {
+        webrtcUI?: EligibilityHelpers["webrtcUI"];
+      }
+    ).webrtcUI;
+  } catch {
+    // WebRTC stream detection is best-effort.
+  }
+  try {
+    helpers.privateBrowsing = (
+      ChromeUtils.importESModule(
+        "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+      ) as { PrivateBrowsingUtils?: EligibilityHelpers["privateBrowsing"] }
+    ).PrivateBrowsingUtils;
+  } catch {
+    // Private-browsing detection is best-effort.
+  }
+  return helpers;
+}
+
+/**
+ * Re-checks the conditions Gecko's TabUnloader weighs as NEVER_DISCARD,
+ * read live off the tab.
+ *
+ * getSortedTabs captures each tab's weight when it runs, and it yields
+ * again while collecting process memory, so by the time discardBrowser
+ * runs the snapshot may no longer describe the tab. This reads the same
+ * conditions directly at discard time.
+ */
+function isTabStillDiscardable(
+  tab: BrowserTab,
+  minInactiveMs: number,
+  helpers: EligibilityHelpers,
+): boolean {
+  const browser = tab.linkedBrowser;
+  if (!browser?.isConnected) {
+    return false;
+  }
+  if (tab.undiscardable || tab.selected) {
+    return false;
+  }
+  if (tab.pictureinpicture || tab.soundPlaying) {
+    return false;
+  }
+  if (
+    typeof tab.lastAccessed === "number" &&
+    Date.now() - tab.lastAccessed < minInactiveMs
+  ) {
+    return false;
+  }
+  try {
+    if (helpers.webrtcUI?.browserHasStreams(browser)) {
+      return false;
+    }
+    if (
+      browser.browsingContext?.currentWindowGlobal
+        ?.hasActivePeerConnections?.()
+    ) {
+      return false;
+    }
+    if (helpers.privateBrowsing?.isBrowserPrivate(browser)) {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+  return true;
 }
 
 @noraComponent(import.meta.hot)
@@ -608,7 +694,7 @@ export default class TabAutoUnload extends NoraComponentBase {
         return;
       }
 
-      await this.unloadOneTab(stats, now);
+      await this.unloadOneTab(stats, now, residentBytes);
     } finally {
       this.checking = false;
     }
@@ -618,6 +704,7 @@ export default class TabAutoUnload extends NoraComponentBase {
   private async unloadOneTab(
     stats: TabAutoUnloadStats,
     now: number,
+    residentBytes: number,
   ): Promise<void> {
     const tabUnloader = loadTabUnloader();
     if (!tabUnloader) {
@@ -636,6 +723,8 @@ export default class TabAutoUnload extends NoraComponentBase {
       console.error("[TabAutoUnload] getSortedTabs failed:", error);
       return;
     }
+
+    const eligibilityHelpers = loadEligibilityHelpers();
 
     for (const tabInfo of tabs) {
       if (this.disposed) {
@@ -664,19 +753,26 @@ export default class TabAutoUnload extends NoraComponentBase {
         ) {
           continue;
         }
-        // isDiscardable reads the weight captured by getSortedTabs, so
-        // tabInfo is stale by now: a tab that started playing audio, became
-        // undiscardable, or fell under a newly raised inactivity minimum
-        // during the await would still look discardable. Re-sort against
-        // the current settings and require a fresh discardable entry.
-        const freshTabs = await tabUnloader.getSortedTabs(
-          Math.round(this.settings.minInactiveMinutes * 60_000),
-        );
-        if (this.disposed || !this.settings.enabled) {
+        // The weight TabUnloader captured at sort time is stale by now, so
+        // re-check the discardability conditions live, and re-validate the
+        // memory threshold: either could have changed during the await.
+        if (
+          !shouldCheckMemory(
+            this.settings,
+            residentBytes,
+            { ...stats, lastRunAt: 0 },
+            now,
+          )
+        ) {
           return;
         }
-        const freshInfo = freshTabs.find((info) => info.tab === tabInfo.tab);
-        if (!freshInfo || !tabUnloader.isDiscardable(freshInfo)) {
+        if (
+          !isTabStillDiscardable(
+            tabInfo.tab,
+            Math.round(this.settings.minInactiveMinutes * 60_000),
+            eligibilityHelpers,
+          )
+        ) {
           continue;
         }
         if (!tabInfo.gBrowser.discardBrowser(tabInfo.tab)) {
