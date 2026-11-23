@@ -1,0 +1,97 @@
+// SPDX-License-Identifier: MPL-2.0
+
+export interface FeaturePackageCompatibility {
+  readonly hostSchema: number;
+  readonly hostBuildId: string;
+  readonly runtimeBuildIds: readonly string[];
+  readonly capabilities: readonly string[];
+}
+
+export interface FeaturePackageManifest {
+  readonly featureId: string;
+  readonly version: string;
+  readonly releaseSequence: number;
+  readonly sourceBytes: number;
+  readonly sourceSha256: string;
+  readonly compatibility: FeaturePackageCompatibility;
+}
+
+export interface SignedFeaturePackageEnvelope {
+  readonly formatVersion: 1;
+  readonly keyId: string;
+  readonly manifest: FeaturePackageManifest;
+  readonly source: string;
+  readonly signature: string;
+}
+
+export interface FeaturePackageTrustedKey {
+  readonly keyId: string;
+  readonly publicKey: string;
+}
+
+export interface FeaturePackagePolicy {
+  readonly featureId: string;
+  readonly hostSchema: number;
+  readonly hostBuildId: string;
+  readonly runtimeBuildId: string;
+  readonly allowedCapabilities: readonly string[];
+  readonly minimumReleaseSequence: number;
+  readonly trustedKeys: readonly FeaturePackageTrustedKey[];
+}
+
+export interface VerifiedFeaturePackage {
+  readonly formatVersion: 1;
+  readonly keyId: string;
+  readonly manifest: FeaturePackageManifest;
+  readonly source: string;
+  readonly packageSha256: string;
+}
+
+export interface FeaturePackageAuthoringMetadata {
+  readonly featureId: string;
+  readonly version: string;
+  readonly releaseSequence: number;
+  readonly compatibility: FeaturePackageCompatibility;
+}
+
+export interface FeaturePackageSnapshotTrustedKey {
+  readonly keyId: string;
+  readonly publicKey: Uint8Array;
+}
+
+export interface FeaturePackagePolicySnapshot {
+  readonly featureId: string;
+  readonly hostSchema: number;
+  readonly hostBuildId: string;
+  readonly runtimeBuildId: string;
+  readonly allowedCapabilities: readonly string[];
+  readonly minimumReleaseSequence: number;
+  readonly trustedKeys: readonly FeaturePackageSnapshotTrustedKey[];
+}
+
+export interface ParsedFeaturePackageEnvelope {
+  readonly envelope: SignedFeaturePackageEnvelope;
+  readonly sourceBytes: Uint8Array;
+  readonly signatureBytes: Uint8Array;
+  readonly canonicalBytes: Uint8Array;
+  readonly signingBytes: Uint8Array;
+  readonly manifest: FeaturePackageManifest;
+}
+
+export type FeaturePackageErrorCode =
+  | "invalid-envelope"
+  | "invalid-policy"
+  | "invalid-metadata"
+  | "invalid-source"
+  | "invalid-signing-key"
+  | "unsupported-crypto"
+  | "unsupported-version"
+  | "untrusted-key"
+  | "invalid-signature"
+  | "source-digest-mismatch"
+  | "feature-mismatch"
+  | "host-incompatible"
+  | "runtime-incompatible"
+  | "capability-denied"
+  | "sequence-too-low"
+  | "size-limit";
