@@ -20,12 +20,17 @@ function fileKind(file: nsIFile): FeaturePackageCacheEntry["kind"] {
   return "other";
 }
 
-function ensureDirectory(file: nsIFile): void {
+function ensureDirectory(
+  file: nsIFile,
+  onCreated?: (directory: nsIFile) => void,
+): void {
   if (file.exists()) {
     if (file.isSymlink() || !file.isDirectory()) failUnsafe();
     return;
   }
+  const createdDirectory = file.clone();
   file.create(Components.interfaces.nsIFile.DIRECTORY_TYPE!, 0o700);
+  onCreated?.(createdDirectory);
   if (file.isSymlink() || !file.isDirectory()) failUnsafe();
 }
 
@@ -40,6 +45,7 @@ export class GeckoFeaturePackageCacheStorage
   constructor(
     private readonly root: nsIFile,
     private readonly directories: readonly nsIFile[],
+    private readonly onDirectoryCreated?: (directory: nsIFile) => void,
   ) {}
 
   initialize(): Promise<void> {
@@ -48,7 +54,9 @@ export class GeckoFeaturePackageCacheStorage
       Components.interfaces.nsIFile,
     );
     if (profile.isSymlink() || !profile.isDirectory()) failUnsafe();
-    for (const directory of this.directories) ensureDirectory(directory);
+    for (const directory of this.directories) {
+      ensureDirectory(directory, this.onDirectoryCreated);
+    }
     return Promise.resolve();
   }
 
@@ -106,6 +114,7 @@ export class GeckoFeaturePackageCacheStorage
 export function createProfileFeaturePackageCacheStorage(
   featureId: string,
   testId?: string,
+  onDirectoryCreated?: (directory: nsIFile) => void,
 ): {
   readonly storage: GeckoFeaturePackageCacheStorage;
   readonly ownerKey: string;
@@ -135,7 +144,11 @@ export function createProfileFeaturePackageCacheStorage(
     ? normalized.toLowerCase()
     : normalized;
   return {
-    storage: new GeckoFeaturePackageCacheStorage(root, directories),
+    storage: new GeckoFeaturePackageCacheStorage(
+      root,
+      directories,
+      onDirectoryCreated,
+    ),
     ownerKey,
   };
 }

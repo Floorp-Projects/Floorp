@@ -14,6 +14,7 @@ import {
 export { HUB_PANEL_MENU_FEATURE_ID } from "./AppMenuRegistry.sys.mts";
 import { getSharedHubRegistry, type HubRegistry } from "./HubRegistry.sys.mts";
 import { isHubIdentifier } from "./HubPageDescriptorValidation.ts";
+import { isValidFeaturePackageId } from "./package/FeaturePackageVerifier.ts";
 import {
   getFeatureWindowIdentity,
   isCandidateFeatureWindow,
@@ -30,6 +31,14 @@ import type {
   FixtureVersion,
   PinnedFixture,
 } from "./FeatureHostTypes.ts";
+import { M0RecordCommitFailure } from "./M0FeatureHostAdapters.ts";
+import type {
+  M0IdentityCatalog,
+  M0PackageProvider,
+  M0PreparedRecordWrite,
+  M0RecordStoreAdapter,
+} from "./M0FeatureHostAdapters.types.ts";
+import { recordM3cCleanupEvidence } from "./M3cCleanupEvidence.ts";
 import {
   type Cleanup,
   type DisposeReport,
@@ -53,6 +62,12 @@ const TEST_ROOT = PathUtils.join(
   PathUtils.profileDir,
   "floorp-hotfix-m0-tests",
 );
+const SIGNED_TEST_ROOT = PathUtils.join(
+  PathUtils.profileDir,
+  "floorp-hotfix-signed-tests-v1",
+);
+const SIGNED_TEST_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs",
 );
@@ -169,6 +184,22 @@ export interface M0FeatureHostTestOptions {
   appMenuPublicationTimeoutMsForTests?: number;
 }
 
+export interface M0SignedHostOpenOptions {
+  readonly testId: string;
+  readonly definitionFingerprint: string;
+  readonly identityCatalog: M0IdentityCatalog;
+  readonly packageProvider: M0PackageProvider;
+  readonly recordStore: M0RecordStoreAdapter;
+  readonly testOptions?: M0FeatureHostTestOptions;
+  readonly onEngineCreated?: (host: M0FeatureHost) => void;
+  readonly failAfterRecoveryForTests?: boolean;
+}
+
+export interface M0QuiescenceResult {
+  readonly proven: boolean;
+  readonly evidence: readonly string[];
+}
+
 const owners = new Map<string, M0FeatureHost>();
 const openingHosts = new Map<string, Promise<M0FeatureHost>>();
 const openingDefinitions = new Map<string, string>();
@@ -216,6 +247,36 @@ class StorageFailure extends Error {
   }
 }
 
+export type M0ProviderBlockReason =
+  | "cache-io"
+  | "unsafe-layout"
+  | "cache-contract"
+  | "unsupported-crypto"
+  | "unexpected";
+
+export class M0ProviderInfrastructureFailure extends Error {
+  constructor(readonly reason: M0ProviderBlockReason) {
+    super("provider_blocked");
+    this.name = "M0ProviderInfrastructureFailure";
+  }
+}
+
+function pinnedIdentityCatalog(
+  definition: FeatureDefinition,
+): M0IdentityCatalog {
+  return {
+    featureId: definition.featureId,
+    hasVersion: (version) => Object.hasOwn(definition.fixtures, version),
+    digestForVersion: (version) => definition.fixtures[version]?.digest ?? null,
+    hasDigest: (digestValue) =>
+      Object.values(definition.fixtures).some((fixture) =>
+        fixture.digest === digestValue
+      ),
+    compatibilityForVersion: (version) =>
+      definition.fixtures[version]?.compatibility ?? null,
+  };
+}
+
 function defaultRecord(definition: FeatureDefinition): M0Record {
   return {
     schemaVersion: 2,
@@ -259,10 +320,10 @@ function withSnapshot(
 
 function isVersion(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): value is string {
   return typeof value === "string" &&
-    Object.hasOwn(definition.fixtures, value);
+    catalog.hasVersion(value);
 }
 
 function isTxId(value: unknown): value is string {
@@ -272,12 +333,9 @@ function isTxId(value: unknown): value is string {
 
 function isKnownDigest(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): value is string {
-  return typeof value === "string" &&
-    Object.values(definition.fixtures).some((fixture) =>
-      fixture.digest === value
-    );
+  return typeof value === "string" && catalog.hasDigest(value);
 }
 
 function isOperation(value: unknown): value is RequestOperation {
@@ -294,7 +352,7 @@ function hasExactKeys(value: object, keys: readonly string[]): boolean {
 
 function isDescriptor(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): value is Descriptor {
   if (
     typeof value !== "object" || value === null ||
@@ -309,13 +367,13 @@ function isDescriptor(
   ) return false;
   const descriptor = value as Partial<Descriptor>;
   if (
-    descriptor.featureId !== definition.featureId ||
+    descriptor.featureId !== catalog.featureId ||
     !isOperation(descriptor.op) ||
     !(descriptor.expectedRevision === null ||
       (typeof descriptor.expectedRevision === "number" &&
         Number.isSafeInteger(descriptor.expectedRevision) &&
         descriptor.expectedRevision >= 0)) ||
-    !(descriptor.target === null || isVersion(descriptor.target, definition)) ||
+    !(descriptor.target === null || isVersion(descriptor.target, catalog)) ||
     !(descriptor.recoveryEpoch === null || isTxId(descriptor.recoveryEpoch)) ||
     typeof descriptor.normalizedInput !== "string" ||
     descriptor.normalizedInput.length > 256
@@ -337,7 +395,7 @@ function isDescriptor(
 
 function isOutcome(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): value is Outcome {
   if (
     typeof value !== "object" || value === null ||
@@ -345,7 +403,7 @@ function isOutcome(
   ) return false;
   const outcome = value as Partial<Outcome>;
   return isTxId(outcome.txId) &&
-    isDescriptor(outcome.request, definition) &&
+    isDescriptor(outcome.request, catalog) &&
     (outcome.status === "pending" ||
       outcome.status === "committed_pending_publish" ||
       outcome.status === "succeeded" ||
@@ -353,7 +411,7 @@ function isOutcome(
       outcome.status === "failed_quarantined" ||
       outcome.status === "storage_failed") &&
     (outcome.selectedVersion === null ||
-      isVersion(outcome.selectedVersion, definition));
+      isVersion(outcome.selectedVersion, catalog));
 }
 
 function isHealthBuild(
@@ -373,7 +431,7 @@ function isHealthBuild(
 
 function isSnapshot(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): value is RecordSnapshot {
   if (
     typeof value !== "object" || value === null ||
@@ -391,13 +449,13 @@ function isSnapshot(
   const snapshot = value as Partial<RecordSnapshot>;
   return typeof snapshot.desiredEnabled === "boolean" &&
     (snapshot.selectedVersion === null ||
-      isVersion(snapshot.selectedVersion, definition)) &&
+      isVersion(snapshot.selectedVersion, catalog)) &&
     (snapshot.rollbackVersion === null ||
-      isVersion(snapshot.rollbackVersion, definition)) &&
+      isVersion(snapshot.rollbackVersion, catalog)) &&
     (snapshot.selectedDigest === null ||
-      isKnownDigest(snapshot.selectedDigest, definition)) &&
+      isKnownDigest(snapshot.selectedDigest, catalog)) &&
     (snapshot.rollbackDigest === null ||
-      isKnownDigest(snapshot.rollbackDigest, definition)) &&
+      isKnownDigest(snapshot.rollbackDigest, catalog)) &&
     (snapshot.selectedHealth === "verified" ||
       snapshot.selectedHealth === "unverified") &&
     isHealthBuild(snapshot.selectedHealthBuild) &&
@@ -415,15 +473,15 @@ function isSnapshot(
       (snapshot.rollbackHealthBuild === null)) &&
     (snapshot.selectedVersion === null ||
       snapshot.selectedDigest ===
-        definition.fixtures[snapshot.selectedVersion].digest) &&
+        catalog.digestForVersion(snapshot.selectedVersion)) &&
     (snapshot.rollbackVersion === null ||
       snapshot.rollbackDigest ===
-        definition.fixtures[snapshot.rollbackVersion].digest);
+        catalog.digestForVersion(snapshot.rollbackVersion));
 }
 
 function isPending(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): value is PendingTransaction {
   if (
     typeof value !== "object" || value === null ||
@@ -439,24 +497,24 @@ function isPending(
   ) return false;
   const pending = value as Partial<PendingTransaction>;
   return isOperation(pending.op) && isTxId(pending.txId) &&
-    isDescriptor(pending.request, definition) &&
+    isDescriptor(pending.request, catalog) &&
     pending.request.op === pending.op &&
-    isSnapshot(pending.before, definition) &&
+    isSnapshot(pending.before, catalog) &&
     (pending.targetVersion === null ||
-      isVersion(pending.targetVersion, definition)) &&
+      isVersion(pending.targetVersion, catalog)) &&
     (pending.targetDigest === null ||
-      isKnownDigest(pending.targetDigest, definition)) &&
+      isKnownDigest(pending.targetDigest, catalog)) &&
     pending.targetVersion !== null && pending.targetDigest !== null &&
     (pending.targetVersion === null ||
       pending.targetDigest ===
-        definition.fixtures[pending.targetVersion].digest) &&
+        catalog.digestForVersion(pending.targetVersion)) &&
     (pending.phase === "PREPARED" || pending.phase === "OLD_STOPPED" ||
       pending.phase === "CANDIDATE_READY");
 }
 
 function isAttemptEpisode(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): value is AttemptEpisode {
   if (
     typeof value !== "object" || value === null ||
@@ -472,15 +530,13 @@ function isAttemptEpisode(
   const episode = value as Partial<AttemptEpisode>;
   if (
     !isTxId(episode.recoveryEpoch) || !isTxId(episode.originTxId) ||
-    !isDescriptor(episode.request, definition) ||
-    !isKnownDigest(episode.targetDigest, definition) ||
+    !isDescriptor(episode.request, catalog) ||
+    !isKnownDigest(episode.targetDigest, catalog) ||
     !Array.isArray(episode.attemptedDigests) ||
     !Array.isArray(episode.rejectedDigests) ||
     episode.attemptedDigests.length > 2 || episode.rejectedDigests.length > 2 ||
-    !episode.attemptedDigests.every((entry) =>
-      isKnownDigest(entry, definition)
-    ) ||
-    !episode.rejectedDigests.every((entry) => isKnownDigest(entry, definition))
+    !episode.attemptedDigests.every((entry) => isKnownDigest(entry, catalog)) ||
+    !episode.rejectedDigests.every((entry) => isKnownDigest(entry, catalog))
   ) return false;
   const attempted = episode.attemptedDigests;
   const rejected = episode.rejectedDigests;
@@ -494,7 +550,7 @@ function isAttemptEpisode(
 
 function validateRecord(
   value: unknown,
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
 ): M0Record {
   if (typeof value !== "object" || value === null) {
     throw new Error("invalid M0 state record");
@@ -521,14 +577,14 @@ function validateRecord(
   if (
     Object.keys(value).some((key) => !keys.includes(key)) ||
     record.schemaVersion !== 2 ||
-    record.featureId !== definition.featureId ||
+    record.featureId !== catalog.featureId ||
     typeof record.desiredEnabled !== "boolean" ||
     !Number.isSafeInteger(record.stateRevision) ||
     (record.stateRevision ?? -1) < 0 ||
     !(record.selectedVersion === null ||
-      isVersion(record.selectedVersion, definition)) ||
+      isVersion(record.selectedVersion, catalog)) ||
     !(record.rollbackVersion === null ||
-      isVersion(record.rollbackVersion, definition)) ||
+      isVersion(record.rollbackVersion, catalog)) ||
     !(record.selectedDigest === null ||
       typeof record.selectedDigest === "string") ||
     !(record.rollbackDigest === null ||
@@ -543,20 +599,20 @@ function validateRecord(
       (record.rollbackHealthBuild === null) ||
     !Array.isArray(record.recentOutcomes) ||
     record.recentOutcomes.length > 32 ||
-    !record.recentOutcomes.every((entry) => isOutcome(entry, definition)) ||
+    !record.recentOutcomes.every((entry) => isOutcome(entry, catalog)) ||
     record.recentOutcomes.some((outcome) =>
       outcome.status === "pending" ||
       outcome.status === "committed_pending_publish" ||
       outcome.status === "storage_failed"
     ) ||
     !(record.lastOutcome === null ||
-      isOutcome(record.lastOutcome, definition)) ||
+      isOutcome(record.lastOutcome, catalog)) ||
     (record.lastOutcome !== null &&
       (record.lastOutcome.status === "pending" ||
         record.lastOutcome.status === "storage_failed")) ||
-    !(record.pending === null || isPending(record.pending, definition)) ||
+    !(record.pending === null || isPending(record.pending, catalog)) ||
     !(record.attempt === null ||
-      isAttemptEpisode(record.attempt, definition)) ||
+      isAttemptEpisode(record.attempt, catalog)) ||
     !(record.blockedReason === null ||
       typeof record.blockedReason === "string" &&
         record.blockedReason.length > 0 &&
@@ -568,10 +624,10 @@ function validateRecord(
     (record.rollbackVersion === null) !== (record.rollbackDigest === null) ||
     (record.selectedVersion !== null &&
       record.selectedDigest !==
-        definition.fixtures[record.selectedVersion].digest) ||
+        catalog.digestForVersion(record.selectedVersion)) ||
     (record.rollbackVersion !== null &&
       record.rollbackDigest !==
-        definition.fixtures[record.rollbackVersion].digest) ||
+        catalog.digestForVersion(record.rollbackVersion)) ||
     (record.desiredEnabled && record.selectedVersion === null) ||
     (record.pending !== null &&
       (record.pending.txId === "" ||
@@ -593,7 +649,7 @@ function validateRecord(
         record.attempt.originTxId !== record.lastOutcome.txId ||
         record.lastOutcome.selectedVersion === null ||
         !record.attempt.attemptedDigests.includes(
-          definition.fixtures[record.lastOutcome.selectedVersion].digest,
+          catalog.digestForVersion(record.lastOutcome.selectedVersion) ?? "",
         ))) ||
     (record.lastOutcome?.status === "failed_quarantined" &&
       record.blockedReason === null)
@@ -747,15 +803,14 @@ const HUB_PANEL_MENU_DEFINITION_FINGERPRINT = featureDefinitionFingerprint(
 );
 
 function isFixtureCompatible(
-  definition: FeatureDefinition,
+  catalog: M0IdentityCatalog,
   version: string,
   hostBuildId: string,
   runtimeBuildId: string,
   availableCapabilities: readonly string[],
 ): boolean {
-  const fixture = definition.fixtures[version];
-  if (!fixture) return false;
-  const compatibility = fixture.compatibility;
+  const compatibility = catalog.compatibilityForVersion(version);
+  if (!compatibility) return false;
   return compatibility.hostSchema === 2 &&
     compatibility.hostBuildId === HOST_BUILD_ID &&
     hostBuildId === HOST_BUILD_ID &&
@@ -773,7 +828,7 @@ export function isM0FixtureCompatibleForTests(
   availableCapabilities: readonly string[],
 ): boolean {
   return isFixtureCompatible(
-    M0_FEATURE_DEFINITION,
+    pinnedIdentityCatalog(M0_FEATURE_DEFINITION),
     version,
     hostBuildId,
     runtimeBuildId,
@@ -781,13 +836,15 @@ export function isM0FixtureCompatibleForTests(
   );
 }
 
-class PackageStore {
+class PackageStore implements M0PackageProvider {
   readonly #directory: string;
   readonly #definition: FeatureDefinition;
+  readonly #identityCatalog: M0IdentityCatalog;
 
   constructor(root: string, definition: FeatureDefinition) {
     this.#directory = PathUtils.join(root, "packages");
     this.#definition = definition;
+    this.#identityCatalog = pinnedIdentityCatalog(definition);
   }
 
   async ensure(version: string): Promise<M0FixtureValue> {
@@ -795,7 +852,7 @@ class PackageStore {
     if (!fixture) throw new Error("unknown package version");
     if (
       !isFixtureCompatible(
-        this.#definition,
+        this.#identityCatalog,
         version,
         HOST_BUILD_ID,
         Services.appinfo.appBuildID,
@@ -854,7 +911,7 @@ class PackageStore {
     if (!fixture) throw new Error("unknown package version");
     if (
       !isFixtureCompatible(
-        this.#definition,
+        this.#identityCatalog,
         version,
         HOST_BUILD_ID,
         Services.appinfo.appBuildID,
@@ -887,10 +944,37 @@ class PackageStore {
 
 type M0FixtureValue = PinnedFixture<string>;
 
+class FileM0RecordStore implements M0RecordStoreAdapter {
+  readonly #recordPath: string;
+
+  constructor(recordPath: string) {
+    this.#recordPath = recordPath;
+  }
+
+  async read(): Promise<unknown | null> {
+    if (!await IOUtils.exists(this.#recordPath)) return null;
+    return await IOUtils.readJSON(this.#recordPath);
+  }
+
+  prepare(next: unknown): M0PreparedRecordWrite {
+    const record = next as M0Record;
+    return {
+      commit: async () => {
+        await IOUtils.writeJSON(this.#recordPath, record, {
+          tmpPath: this.#recordPath + ".tmp",
+          flush: true,
+        });
+      },
+    };
+  }
+}
+
 export class M0FeatureHost {
   readonly #definition: FeatureDefinition;
   readonly #definitionFingerprint: string;
-  readonly #store: PackageStore;
+  readonly #identityCatalog: M0IdentityCatalog;
+  readonly #store: M0PackageProvider;
+  readonly #recordStore: M0RecordStoreAdapter;
   readonly #recordPath: string;
   readonly #windows = new Map<string, Window>();
   readonly #windowEntries = new Map<Window, WindowEntry>();
@@ -901,6 +985,7 @@ export class M0FeatureHost {
   readonly #closeWaiters = new Map<Window, Set<() => void>>();
   readonly #windowAdmissionTasks = new Map<string, Promise<void>>();
   readonly #windowDetachments = new Map<string, Set<Promise<DisposeReport>>>();
+  readonly #signedWindowCleanupTasks = new Set<Promise<DisposeReport>>();
   readonly #windowCleanupFailures = new Map<string, string[]>();
   readonly #windowObserver: nsIObserver = {
     observe: (subject: nsISupports | null, topic: string) => {
@@ -922,7 +1007,9 @@ export class M0FeatureHost {
   #queued = 0;
   #closed = false;
   #volatileBlocked = false;
+  #providerBlockReason: M0ProviderBlockReason | null = null;
   #shutdownPromise: Promise<DisposeReport> | null = null;
+  #shutdownCompleted = false;
   #nextWriteFault: WriteFaultPlan | null = null;
   #committedPendingPublishForTests: M0Record | null = null;
   readonly #afterDurableWriteForTests: M0DurableWriteObserverForTests | null;
@@ -957,6 +1044,10 @@ export class M0FeatureHost {
   #testExcludeWindows = false;
   #testOnlyWindows: WeakSet<Window> | null = null;
   #testOnlyWindowForTests: Window | null = null;
+  #cleanupUnproven = false;
+  readonly #signedExecution: boolean;
+  readonly #cleanupEvidence: string[] = [];
+  readonly #observedTopics = new Set<string>();
 
   private constructor(
     readonly root: string,
@@ -964,9 +1055,16 @@ export class M0FeatureHost {
     definition: FeatureDefinition,
     definitionFingerprint: string,
     testOptions?: M0FeatureHostTestOptions,
+    adapters?: Pick<
+      M0SignedHostOpenOptions,
+      "identityCatalog" | "packageProvider" | "recordStore"
+    >,
   ) {
     this.#definition = definition;
     this.#definitionFingerprint = definitionFingerprint;
+    this.#signedExecution = adapters !== undefined;
+    this.#identityCatalog = adapters?.identityCatalog ??
+      pinnedIdentityCatalog(definition);
     this.#record = defaultRecord(definition);
     this.#testWritesEnabled = testWritesEnabled;
     this.#afterDurableWriteForTests = testOptions?.afterDurableWriteForTests ??
@@ -985,8 +1083,11 @@ export class M0FeatureHost {
     this.#appMenuPublicationTimeoutMs =
       testOptions?.appMenuPublicationTimeoutMsForTests ??
         this.#hubPublicationTimeoutMs;
-    this.#store = new PackageStore(root, definition);
     this.#recordPath = PathUtils.join(root, "state.json");
+    this.#store = adapters?.packageProvider ??
+      new PackageStore(root, definition);
+    this.#recordStore = adapters?.recordStore ??
+      new FileM0RecordStore(this.#recordPath);
   }
 
   static async open(
@@ -1062,6 +1163,42 @@ export class M0FeatureHost {
     );
   }
 
+  static async openSignedForTests(
+    root: string,
+    experimentalOptIn: boolean,
+    options: M0SignedHostOpenOptions,
+  ): Promise<M0FeatureHost> {
+    if (
+      experimentalOptIn !== true || typeof root !== "string" ||
+      typeof options !== "object" || options === null ||
+      typeof options.testId !== "string" ||
+      !SIGNED_TEST_ID_PATTERN.test(options.testId)
+    ) throw new Error("invalid signed test identity");
+    const featureId = options.identityCatalog?.featureId;
+    if (
+      typeof featureId !== "string" || !isHubIdentifier(featureId) ||
+      !isValidFeaturePackageId(featureId) ||
+      root !== PathUtils.join(SIGNED_TEST_ROOT, options.testId, featureId)
+    ) throw new Error("invalid signed test identity");
+    const definition = Object.freeze({
+      featureId,
+      fixtures: Object.freeze(Object.create(null)) as FeatureDefinition[
+        "fixtures"
+      ],
+    });
+    return await this.#openWithDefinition(
+      root,
+      experimentalOptIn,
+      true,
+      true,
+      undefined,
+      options.testOptions,
+      definition,
+      "signed",
+      options,
+    );
+  }
+
   static async #openWithDefinition(
     root: string,
     experimentalOptIn: boolean,
@@ -1070,12 +1207,16 @@ export class M0FeatureHost {
     initialWriteFaultForTests: WriteFaultPlan | undefined,
     testOptions: M0FeatureHostTestOptions | undefined,
     definition: FeatureDefinition,
-    testRootPrefix: "m0" | "feature",
+    testRootPrefix: "m0" | "feature" | "signed",
+    signedOptions?: M0SignedHostOpenOptions,
   ): Promise<M0FeatureHost> {
+    const failAfterRecoveryForTests =
+      signedOptions?.failAfterRecoveryForTests === true;
     if (testOptions && !testRoot) {
       throw new Error("M0 test write observers require a test root");
     }
-    const definitionFingerprint = featureDefinitionFingerprint(definition);
+    const definitionFingerprint = signedOptions?.definitionFingerprint ??
+      featureDefinitionFingerprint(definition);
     const testRootPattern = testRootPrefix === "m0"
       ? /^m0-[0-9a-f-]+$/
       : /^feature-[0-9a-f-]+$/;
@@ -1084,16 +1225,25 @@ export class M0FeatureHost {
       (root === ROOT && definitionFingerprint === M0_DEFINITION_FINGERPRINT) ||
       (root === HUB_PANEL_MENU_ROOT &&
         definitionFingerprint === HUB_PANEL_MENU_DEFINITION_FINGERPRINT);
+    const validTestRoot = testRootPrefix === "signed"
+      ? signedOptions !== undefined &&
+        root === PathUtils.join(
+            SIGNED_TEST_ROOT,
+            signedOptions.testId,
+            definition.featureId,
+          )
+      : PathUtils.parent(root) === TEST_ROOT &&
+        testRootPattern.test(PathUtils.filename(root));
     if (
       (mode !== "dev" && mode !== "test") ||
       !experimentalOptIn ||
-      (testRoot
-        ? PathUtils.parent(root) !== TEST_ROOT ||
-          !testRootPattern.test(PathUtils.filename(root))
-        : !approvedBuiltIn)
+      (testRoot ? !validTestRoot : !approvedBuiltIn)
     ) throw new Error("M0 host is dev/test opt-in only");
     const opening = openingHosts.get(root);
     if (opening) {
+      if (testRootPrefix === "signed") {
+        throw new Error("signed owner already active");
+      }
       if (openingDefinitions.get(root) !== definitionFingerprint) {
         throw new Error("feature definition conflicts with existing root");
       }
@@ -1109,6 +1259,9 @@ export class M0FeatureHost {
     }
     const existing = owners.get(root);
     if (existing) {
+      if (testRootPrefix === "signed") {
+        throw new Error("signed owner already active");
+      }
       if (existing.#definitionFingerprint !== definitionFingerprint) {
         throw new Error("feature definition conflicts with existing root");
       }
@@ -1128,6 +1281,7 @@ export class M0FeatureHost {
       definition,
       definitionFingerprint,
       testOptions,
+      signedOptions,
     );
     if (initialWriteFaultForTests) {
       if (!testRoot) throw new Error("test write fault disabled");
@@ -1137,6 +1291,7 @@ export class M0FeatureHost {
       );
     }
     owners.set(root, host);
+    signedOptions?.onEngineCreated?.(host);
     const openingPromise = (async () => {
       try {
         if (testRoot && !reopenTestRoot && await IOUtils.exists(root)) {
@@ -1148,10 +1303,11 @@ export class M0FeatureHost {
           permissions: 0o700,
         });
         host.#installWindowObservers();
-        if (await IOUtils.exists(host.#recordPath)) {
+        const storedRecord = await host.#recordStore.read();
+        if (storedRecord !== null) {
           host.#record = validateRecord(
-            await IOUtils.readJSON(host.#recordPath),
-            host.#definition,
+            storedRecord,
+            host.#identityCatalog,
           );
           if (
             !host.#record.blockedReason &&
@@ -1177,12 +1333,22 @@ export class M0FeatureHost {
             selectedHealth: "unverified",
             selectedHealthBuild: null,
           });
+        } else if (signedOptions) {
+          throw new Error("signed journal is missing");
         }
         await host.#recover();
+        if (failAfterRecoveryForTests) {
+          throw new Error("signed-test-recovery-completed");
+        }
         return host;
       } catch (error) {
         host.#removeWindowObservers();
-        owners.delete(root);
+        await host.shutdown();
+        if (
+          !signedOptions || host.quiescenceForSignedTests().proven
+        ) {
+          if (owners.get(root) === host) owners.delete(root);
+        }
         throw error;
       }
     })();
@@ -1283,7 +1449,9 @@ export class M0FeatureHost {
         await this.#quarantine(txId, request, "recovery-attempt-exhausted");
         return;
       }
-      const targetDigest = this.#definition.fixtures[targetVersion].digest;
+      const targetDigest = this.#identityCatalog.digestForVersion(
+        targetVersion,
+      )!;
       const recoveryPending: PendingTransaction = pending ?? {
         op: request.op,
         txId,
@@ -1309,6 +1477,10 @@ export class M0FeatureHost {
       try {
         fixture = await this.#store.load(targetDigest, targetVersion);
       } catch (error) {
+        if (error instanceof M0ProviderInfrastructureFailure) {
+          this.#blockOnProviderFailure(error);
+          throw error;
+        }
         if (error instanceof StorageFailure) throw error;
         await this.#rejectRecoveryCandidate(
           txId,
@@ -1372,6 +1544,10 @@ export class M0FeatureHost {
         startupVersion,
       );
     } catch (error) {
+      if (error instanceof M0ProviderInfrastructureFailure) {
+        this.#blockOnProviderFailure(error);
+        throw error;
+      }
       if (error instanceof StorageFailure) throw error;
       await this.#rejectRecoveryCandidate(
         startupTxId,
@@ -1415,7 +1591,9 @@ export class M0FeatureHost {
     targetVersion: string,
     base: M0Record,
   ): Promise<void> {
-    const targetDigest = this.#definition.fixtures[targetVersion].digest;
+    const targetDigest = this.#identityCatalog.digestForVersion(
+      targetVersion,
+    )!;
     const episode = this.#record.attempt ??
       this.#newAttempt(txId, request, targetDigest);
     if (
@@ -1466,6 +1644,10 @@ export class M0FeatureHost {
     try {
       fixture = await this.#store.load(fallbackDigest, fallbackVersion);
     } catch (error) {
+      if (error instanceof M0ProviderInfrastructureFailure) {
+        this.#blockOnProviderFailure(error);
+        throw error;
+      }
       if (error instanceof StorageFailure) throw error;
       const attempt = record.attempt!;
       if (
@@ -1687,6 +1869,32 @@ export class M0FeatureHost {
       : detachedOutcome(found);
   }
 
+  signedStateForTests(): Readonly<{
+    featureId: string;
+    revision: number;
+    desiredEnabled: boolean;
+    selectedVersion: string | null;
+    selectedDigest: string | null;
+    selectedHealth: string;
+    rollbackVersion: string | null;
+    rollbackDigest: string | null;
+    blocked: boolean;
+    providerBlockReason: M0ProviderBlockReason | null;
+  }> {
+    return Object.freeze({
+      featureId: this.#identityCatalog.featureId,
+      revision: this.#record.stateRevision,
+      desiredEnabled: this.#record.desiredEnabled,
+      selectedVersion: this.#record.selectedVersion,
+      selectedDigest: this.#record.selectedDigest,
+      selectedHealth: this.#record.selectedHealth,
+      rollbackVersion: this.#record.rollbackVersion,
+      rollbackDigest: this.#record.rollbackDigest,
+      blocked: this.#volatileBlocked || this.#record.blockedReason !== null,
+      providerBlockReason: this.#providerBlockReason,
+    });
+  }
+
   #findOutcome(txId: string): Outcome | "outcome_unknown_or_expired" {
     if (this.#record.pending?.txId === txId) {
       return {
@@ -1719,28 +1927,139 @@ export class M0FeatureHost {
     this.#publishedToken = null;
     this.#shutdownPromise = (async () => {
       await this.#queue;
-      await Promise.allSettled([...this.#windowAdmissionTasks.values()]);
+      const admissions = await Promise.allSettled([
+        ...this.#windowAdmissionTasks.values(),
+      ]);
+      if (admissions.some((entry) => entry.status === "rejected")) {
+        this.#markCleanupUnproven("window-admission-rejected");
+      }
       this.#activeToken = null;
       this.#publishedToken = null;
       const result = this.#running
-        ? await this.#running.stop("host-shutdown")
+        ? await this.#stopRuntime(this.#running, "host-shutdown")
         : { errors: [], timedOut: false };
       this.#running = null;
-      this.#hubClaim?.release();
+      if (this.#signedExecution) await this.#awaitAllWindowDetachments();
+      try {
+        this.#hubClaim?.release();
+      } catch (error) {
+        this.#markCleanupUnproven("hub-host-release");
+        if (!this.#signedExecution) throw error;
+      }
       this.#hubClaim = null;
-      this.#appMenuClaim?.release();
+      try {
+        this.#appMenuClaim?.release();
+      } catch (error) {
+        this.#markCleanupUnproven("app-menu-host-release");
+        if (!this.#signedExecution) throw error;
+      }
       this.#appMenuClaim = null;
       this.#windows.clear();
       this.#markerKeys.clear();
       this.#windowEntries.clear();
       if (
         result.errors.length === 0 && !result.timedOut &&
-        !this.#record.blockedReason && !this.#volatileBlocked
+        (!this.#signedExecution || !this.#cleanupUnproven) &&
+        !this.#record.blockedReason &&
+        !this.#volatileBlocked
       ) owners.delete(this.root);
       else this.#volatileBlocked = true;
+      this.#shutdownCompleted = true;
       return result;
     })();
     return this.#shutdownPromise;
+  }
+
+  #markCleanupUnproven(evidence: string): void {
+    this.#cleanupUnproven = true;
+    recordM3cCleanupEvidence(this.#cleanupEvidence, evidence);
+  }
+
+  #recordDisposeReport(report: DisposeReport, path: string): void {
+    if (
+      report.errors.length || report.timedOut ||
+      (report.pendingTasks ?? 0) > 0 || (report.pendingResources ?? 0) > 0
+    ) this.#markCleanupUnproven(path);
+  }
+
+  #blockOnProviderFailure(error: M0ProviderInfrastructureFailure): void {
+    this.#providerBlockReason = error.reason;
+    this.#volatileBlocked = true;
+  }
+
+  providerBlockReasonForSignedTests(): M0ProviderBlockReason | null {
+    return this.#providerBlockReason;
+  }
+
+  async #stopRuntime(
+    runtime: M0ModuleHost,
+    reason: string,
+  ): Promise<DisposeReport> {
+    try {
+      const report = await runtime.stop(reason);
+      this.#recordDisposeReport(report, "runtime-stop:" + reason);
+      return report;
+    } catch (error) {
+      this.#markCleanupUnproven("runtime-stop-rejected:" + reason);
+      if (!this.#signedExecution) throw error;
+      return { errors: ["runtime stop rejected"], timedOut: false };
+    }
+  }
+
+  async #awaitAllWindowDetachments(): Promise<void> {
+    while (
+      this.#windowDetachments.size || this.#signedWindowCleanupTasks.size
+    ) {
+      const pending = [
+        ...[...this.#windowDetachments.values()].flatMap((set) => [...set]),
+        ...this.#signedWindowCleanupTasks,
+      ];
+      if (!pending.length) {
+        this.#windowDetachments.clear();
+        break;
+      }
+      const settled = await Promise.allSettled(pending);
+      if (settled.some((entry) => entry.status === "rejected")) {
+        this.#markCleanupUnproven("window-detach-rejected");
+      }
+      for (const entry of settled) {
+        if (
+          entry.status === "fulfilled" &&
+          (entry.value.errors.length > 0 || entry.value.timedOut ||
+            (entry.value.pendingTasks ?? 0) > 0 ||
+            (entry.value.pendingResources ?? 0) > 0)
+        ) this.#markCleanupUnproven("window-detach-incomplete");
+      }
+    }
+  }
+
+  quiescenceForSignedTests(): M0QuiescenceResult {
+    const evidence = [...this.#cleanupEvidence];
+    if (!this.#closed) evidence.push("host-not-closed");
+    if (!this.#shutdownCompleted) evidence.push("shutdown-incomplete");
+    if (this.#running) evidence.push("runtime-still-owned");
+    if (this.#queued) evidence.push("engine-queue-pending");
+    if (this.#windowObserverInstalled) {
+      evidence.push("window-observer-installed");
+    }
+    if (this.#windowAdmissionTasks.size) {
+      evidence.push("window-admission-pending");
+    }
+    if (this.#windowDetachments.size) evidence.push("window-detach-pending");
+    if (this.#signedWindowCleanupTasks.size) {
+      evidence.push("signed-window-cleanup-pending");
+    }
+    if (this.#windowCleanupFailures.size) {
+      evidence.push("window-cleanup-failed");
+    }
+    if (this.#hubClaim || this.#appMenuClaim) {
+      evidence.push("registry-host-claim-retained");
+    }
+    const bounded = evidence.slice(0, 16).map((entry) => entry.slice(0, 96));
+    return {
+      proven: bounded.length === 0 && !this.#cleanupUnproven,
+      evidence: Object.freeze(bounded),
+    };
   }
 
   #enqueue<T>(operation: () => Promise<T>): Promise<T> {
@@ -1790,7 +2109,8 @@ export class M0FeatureHost {
       ...next,
       stateRevision: nextRevision,
     } as M0Record;
-    validateRecord(committed, this.#definition);
+    validateRecord(committed, this.#identityCatalog);
+    const prepared = this.#recordStore.prepare(committed, this.#record);
     const plan = this.#nextWriteFault;
     const fault = plan?.skip === 0 ? plan.mode : null;
     if (plan) {
@@ -1799,19 +2119,21 @@ export class M0FeatureHost {
     }
     if (fault === "before_replace") throw new StorageFailure(false);
     try {
-      await IOUtils.writeJSON(this.#recordPath, committed, {
-        tmpPath: `${this.#recordPath}.tmp`,
-        flush: true,
-      });
-    } catch {
+      await prepared.commit();
+    } catch (error) {
+      if (error instanceof M0RecordCommitFailure) {
+        throw new StorageFailure(error.uncertain);
+      }
       throw new StorageFailure();
     }
     if (
       this.#testWritesEnabled &&
       committed.lastOutcome?.status === "committed_pending_publish"
     ) this.#committedPendingPublishForTests = committed;
+    if (fault !== "after_replace" || this.#signedExecution) {
+      this.#record = committed;
+    }
     if (fault === "after_replace") throw new StorageFailure();
-    this.#record = committed;
     if (this.#afterDurableWriteForTests) {
       const snapshot = JSON.parse(JSON.stringify(committed)) as Record<
         string,
@@ -1842,7 +2164,7 @@ export class M0FeatureHost {
       recoveryEpoch: null,
       normalizedInput: `${op}:${target ?? "none"}`,
     };
-    if (!isDescriptor(request, this.#definition)) {
+    if (!isDescriptor(request, this.#identityCatalog)) {
       return Promise.reject(new Error("invalid transaction descriptor"));
     }
     const known = this.#findOutcome(txId);
@@ -1870,6 +2192,16 @@ export class M0FeatureHost {
       try {
         return detachedOutcome(await this.#perform(txId, request));
       } catch (error) {
+        if (error instanceof M0ProviderInfrastructureFailure) {
+          this.#blockOnProviderFailure(error);
+          if (this.#signedExecution) throw error;
+          return {
+            txId,
+            request,
+            status: "storage_failed",
+            selectedVersion: this.#record.selectedVersion,
+          };
+        }
         if (!(error instanceof StorageFailure)) throw error;
         if (error.uncertain || this.#record.pending?.txId === txId) {
           this.#volatileBlocked = true;
@@ -1969,7 +2301,7 @@ export class M0FeatureHost {
         }
       }
       const stopped = oldRuntime
-        ? await oldRuntime.stop("disable")
+        ? await this.#stopRuntime(oldRuntime, "disable")
         : { errors: [], timedOut: false };
       this.#assertOperationCurrent(operationEpoch);
       this.#running = null;
@@ -2084,7 +2416,7 @@ export class M0FeatureHost {
   #selectedEligible(record: M0Record): boolean {
     return record.selectedVersion !== null &&
       record.selectedDigest ===
-        this.#definition.fixtures[record.selectedVersion].digest &&
+        this.#identityCatalog.digestForVersion(record.selectedVersion) &&
       record.selectedHealth === "verified" &&
       record.selectedHealthBuild?.hostBuildId === HOST_BUILD_ID &&
       record.selectedHealthBuild.runtimeBuildId === Services.appinfo.appBuildID;
@@ -2094,7 +2426,7 @@ export class M0FeatureHost {
     return record.rollbackVersion !== null &&
       record.rollbackDigest !== record.selectedDigest &&
       record.rollbackDigest ===
-        this.#definition.fixtures[record.rollbackVersion].digest &&
+        this.#identityCatalog.digestForVersion(record.rollbackVersion) &&
       record.rollbackHealthBuild?.hostBuildId === HOST_BUILD_ID &&
       record.rollbackHealthBuild.runtimeBuildId === Services.appinfo.appBuildID;
   }
@@ -2204,7 +2536,7 @@ export class M0FeatureHost {
       let stopped: DisposeReport;
       this.#appMenuRemovalReasons.set(old, "replacement");
       try {
-        stopped = await old.stop("replacement");
+        stopped = await this.#stopRuntime(old, "replacement");
       } finally {
         this.#appMenuRemovalReasons.delete(old);
       }
@@ -2497,7 +2829,7 @@ export class M0FeatureHost {
       if (ownedGeneration && this.#activeToken === token) {
         this.#activeToken = null;
       }
-      const stopped = await runtime.stop("candidate-failed");
+      const stopped = await this.#stopRuntime(runtime, "candidate-failed");
       if (this.#running === runtime && this.#generation === generation) {
         this.#running = null;
         this.#windows.clear();
@@ -2582,12 +2914,23 @@ export class M0FeatureHost {
         !alreadyTried.has(before.rollbackDigest)
       ) fallbackVersion = before.rollbackVersion;
       if (fallbackVersion) {
-        const fallbackDigest =
-          this.#definition.fixtures[fallbackVersion].digest;
+        const fallbackDigest = this.#identityCatalog.digestForVersion(
+          fallbackVersion,
+        )!;
         let fallback: M0FixtureValue;
         try {
           fallback = await this.#store.load(fallbackDigest, fallbackVersion);
         } catch (fallbackError) {
+          if (fallbackError instanceof M0ProviderInfrastructureFailure) {
+            this.#blockOnProviderFailure(fallbackError);
+            if (this.#signedExecution) throw fallbackError;
+            return {
+              txId,
+              request,
+              status: "storage_failed",
+              selectedVersion: this.#record.selectedVersion,
+            };
+          }
           if (fallbackError instanceof StorageFailure) {
             this.#volatileBlocked = true;
             return {
@@ -2683,7 +3026,7 @@ export class M0FeatureHost {
       this.#admissionsOpen = false;
       this.#publishedToken = null;
     }
-    await runtime.stop(reason);
+    await this.#stopRuntime(runtime, reason);
     if (this.#running === runtime && this.#generation === generation) {
       this.#running = null;
       this.#windows.clear();
@@ -2692,8 +3035,8 @@ export class M0FeatureHost {
     let selectedVersion = this.#record.selectedVersion;
     try {
       const durable = validateRecord(
-        await IOUtils.readJSON(this.#recordPath),
-        this.#definition,
+        await this.#recordStore.read(),
+        this.#identityCatalog,
       );
       this.#record = durable;
       selectedVersion = durable.selectedVersion;
@@ -2727,13 +3070,12 @@ export class M0FeatureHost {
     try {
       for (const topic of topics) {
         Services.obs.addObserver(this.#windowObserver, topic);
+        this.#observedTopics.add(topic);
         registered += 1;
       }
       this.#windowObserverInstalled = true;
     } catch (error) {
-      for (const topic of topics.slice(0, registered)) {
-        Services.obs.removeObserver(this.#windowObserver, topic);
-      }
+      if (registered) this.#removeWindowObservers();
       throw error;
     }
     const windows = Services.wm.getEnumerator("navigator:browser");
@@ -2743,20 +3085,18 @@ export class M0FeatureHost {
   }
 
   #removeWindowObservers(): void {
-    if (this.#windowObserverInstalled) {
-      for (
-        const topic of [
-          "domwindowopened",
-          "browser-delayed-startup-finished",
-          "domwindowclosed",
-        ]
-      ) {
+    for (const topic of this.#observedTopics) {
+      try {
         Services.obs.removeObserver(this.#windowObserver, topic);
+      } catch (error) {
+        this.#markCleanupUnproven("window-observer-remove");
+        if (!this.#signedExecution) throw error;
       }
-      this.#windowObserverInstalled = false;
+      this.#observedTopics.delete(topic);
     }
+    this.#windowObserverInstalled = false;
     for (const [window, listener] of this.#loadListeners) {
-      window.removeEventListener("load", listener);
+      this.#removeLoadListener(window, listener);
     }
     this.#loadListeners.clear();
     this.#pendingStartupWindows.clear();
@@ -2769,6 +3109,15 @@ export class M0FeatureHost {
     this.#windowEntries.clear();
     this.#testOnlyWindows = null;
     this.#testOnlyWindowForTests = null;
+  }
+
+  #removeLoadListener(window: Window, listener: EventListener): void {
+    try {
+      window.removeEventListener("load", listener);
+    } catch (error) {
+      this.#markCleanupUnproven("window-load-listener-remove");
+      if (!this.#signedExecution) throw error;
+    }
   }
 
   #onWindowOpened(window: Window): void {
@@ -2796,7 +3145,7 @@ export class M0FeatureHost {
   #considerLoadedWindow(window: Window): void {
     const listener = this.#loadListeners.get(window);
     if (listener) {
-      window.removeEventListener("load", listener);
+      this.#removeLoadListener(window, listener);
       this.#loadListeners.delete(window);
     }
     if (
@@ -2825,7 +3174,7 @@ export class M0FeatureHost {
     }
     const listener = this.#loadListeners.get(window);
     if (listener) {
-      window.removeEventListener("load", listener);
+      this.#removeLoadListener(window, listener);
       this.#loadListeners.delete(window);
     }
     this.#pendingStartupWindows.delete(window);
@@ -2936,6 +3285,7 @@ export class M0FeatureHost {
       try {
         this.#appMenuRegistry.closeWindow(menuLease, window);
       } catch (error) {
+        this.#markCleanupUnproven("app-menu-window-close");
         console.error("[FeatureHost]", error);
       }
     }
@@ -2958,18 +3308,28 @@ export class M0FeatureHost {
     token: string | null,
     generation: number,
   ): Promise<DisposeReport> {
-    const detached = runtime.detachWindow(windowId).then(
-      (report) => report,
-      (error) => ({ errors: [String(error)], timedOut: false }),
-    );
-    if (!token) return detached;
-    let pending = this.#windowDetachments.get(token);
-    if (!pending) {
-      pending = new Set();
+    const detached: Promise<DisposeReport> = runtime.detachWindow(windowId)
+      .then(
+        (report): DisposeReport => report,
+        (): DisposeReport => ({
+          errors: ["window detach rejected"],
+          timedOut: false,
+          pendingTasks: 0,
+          pendingResources: 0,
+        }),
+      );
+    let pending: Set<Promise<DisposeReport>> | null = null;
+    if (token) {
+      pending = this.#windowDetachments.get(token) ?? new Set();
       this.#windowDetachments.set(token, pending);
     }
     const tracked = detached.then((report) => {
+      const incomplete = report.errors.length > 0 || report.timedOut ||
+        (report.pendingTasks ?? 0) > 0 ||
+        (report.pendingResources ?? 0) > 0;
+      if (incomplete) this.#markCleanupUnproven("window-detach-report");
       if (report.errors.length || report.timedOut) {
+        if (!token) return report;
         const failures = this.#windowCleanupFailures.get(token) ?? [];
         if (failures.length < 8) {
           failures.push(
@@ -2982,6 +3342,7 @@ export class M0FeatureHost {
           this.#windowCleanupFailures.set(token, failures);
         }
         if (
+          token &&
           this.#running === runtime && this.#generation === generation &&
           this.#publishedToken === token
         ) {
@@ -2993,11 +3354,17 @@ export class M0FeatureHost {
         }
       }
       return report;
-    }).finally(() => {
-      pending?.delete(tracked);
-      if (pending?.size === 0) this.#windowDetachments.delete(token);
     });
-    pending.add(tracked);
+    const removeTracked = () => {
+      this.#signedWindowCleanupTasks.delete(tracked);
+      if (token && pending) {
+        pending.delete(tracked);
+        if (pending.size === 0) this.#windowDetachments.delete(token);
+      }
+    };
+    if (this.#signedExecution) this.#signedWindowCleanupTasks.add(tracked);
+    if (pending) pending.add(tracked);
+    void tracked.then(removeTracked, removeTracked);
     return tracked;
   }
 
@@ -3011,6 +3378,7 @@ export class M0FeatureHost {
       await Promise.all(pending);
     }
     if (this.#windowCleanupFailures.get(token)?.length) {
+      this.#markCleanupUnproven("window-cleanup-failed");
       throw new Error("window cleanup failed before activation finalized");
     }
   }
@@ -3019,7 +3387,7 @@ export class M0FeatureHost {
     this.#pendingStartupWindows.delete(window);
     const listener = this.#loadListeners.get(window);
     if (listener) {
-      window.removeEventListener("load", listener);
+      this.#removeLoadListener(window, listener);
       this.#loadListeners.delete(window);
     }
     this.#resolveWindowReady(window, null);
@@ -3030,7 +3398,14 @@ export class M0FeatureHost {
     const menuLease = runtime
       ? this.#appMenuGenerationLeases.get(runtime)
       : null;
-    if (menuLease) this.#appMenuRegistry.forgetWindow(menuLease, window);
+    if (menuLease) {
+      try {
+        this.#appMenuRegistry.forgetWindow(menuLease, window);
+      } catch (error) {
+        this.#markCleanupUnproven("app-menu-window-forget");
+        if (!this.#signedExecution) throw error;
+      }
+    }
     this.#windowEntries.delete(window);
     this.#windows.delete(entry.id);
     for (const key of this.#markerKeys) {
@@ -3253,20 +3628,30 @@ export class M0FeatureHost {
     this.#revocationEpoch += 1;
     this.#abortHubWaits(new Error("active generation quarantined"));
     const menuLease = this.#appMenuGenerationLeases.get(runtime);
-    const menuCleanupErrors = menuLease
-      ? this.#appMenuRegistry.revoke(menuLease)
-      : [];
+    let menuCleanupFailed = false;
+    try {
+      if (menuLease) {
+        menuCleanupFailed = this.#appMenuRegistry.revoke(menuLease).length > 0;
+      }
+    } catch (error) {
+      menuCleanupFailed = true;
+      this.#markCleanupUnproven("app-menu-generation-revoke");
+      if (!this.#signedExecution) throw error;
+    }
+    if (menuCleanupFailed) {
+      this.#markCleanupUnproven("app-menu-generation-revoke");
+    }
     this.#admissionsOpen = false;
     this.#activeToken = null;
     this.#publishedToken = null;
     this.#volatileBlocked = true;
-    const stopped = await runtime.stop(reason);
+    const stopped = await this.#stopRuntime(runtime, reason);
     if (this.#running !== runtime || this.#generation !== generation) return;
     this.#running = null;
     this.#windows.clear();
     this.#markerKeys.clear();
     const durableReason = stopped.errors.length || stopped.timedOut ||
-        menuCleanupErrors.length
+        menuCleanupFailed
       ? `${reason}:cleanup-failure`
       : reason;
     try {
@@ -3516,6 +3901,53 @@ export class M0FeatureHost {
       return { ...entry, status: "storage_failed" };
     }
   }
+}
+
+export function createM0EmptyRecordForSignedTests(featureId: string): unknown {
+  if (!isHubIdentifier(featureId)) throw new Error("invalid signed feature ID");
+  return defaultRecord({
+    featureId,
+    fixtures: Object.freeze(Object.create(null)) as FeatureDefinition[
+      "fixtures"
+    ],
+  });
+}
+
+export function m0SignedPolicyBindingForTests(): Readonly<{
+  hostSchema: 2;
+  hostBuildId: string;
+  runtimeBuildId: string;
+  capabilities: readonly string[];
+}> {
+  return Object.freeze({
+    hostSchema: 2,
+    hostBuildId: HOST_BUILD_ID,
+    runtimeBuildId: Services.appinfo.appBuildID,
+    capabilities: Object.freeze([...HOST_CAPABILITIES]),
+  });
+}
+
+export function m0SignedCapabilitiesAllowedForTests(
+  featureId: string,
+  capabilities: readonly string[],
+): boolean {
+  return capabilities.every((capability) =>
+    HOST_CAPABILITIES.has(capability) &&
+    (capability !== "app-menu" ||
+      featureId === HUB_PANEL_MENU_FEATURE_ID) &&
+    (capability !== "window-marker" || featureId === M0_FEATURE_ID)
+  );
+}
+
+export function retireM0FeatureHostOwnerAfterSignedTests(
+  host: M0FeatureHost,
+): boolean {
+  if (!host.quiescenceForSignedTests().proven) return false;
+  const current = owners.get(host.root);
+  if (!current) return true;
+  if (current !== host) return false;
+  owners.delete(host.root);
+  return true;
 }
 
 export interface M0TestHostHandle {

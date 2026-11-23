@@ -18,7 +18,7 @@
 import * as path from "@std/path";
 import { prepareRuntimeBootstrap } from "./prepared_runtime_bootstrap.ts";
 import type { PreparedRuntimeBootstrapResult } from "./prepared_runtime_bootstrap_types.ts";
-import { BRANDING, PATHS } from "./defines.ts";
+import { BRANDING, PATHS, resolveTestProfilePath } from "./defines.ts";
 import { run as runInjector } from "./injector.ts";
 import { copyDirectoryTreeSafely } from "./runtime_archive.ts";
 import { exists, safeRemove } from "./utils.ts";
@@ -686,4 +686,14 @@ export async function prepareSetup(
     { deps, runtime, profile, vite },
     options.now ?? (() => new Date().toISOString()),
   );
+}
+
+export async function prepareSetupWithProfileOverride(
+  profileOverride: string | undefined,
+  options: Omit<PrepareSetupOptions, "profile"> = {},
+): Promise<SetupRecord> {
+  const profile = profileOverride === undefined
+    ? undefined
+    : { profileDir: resolveTestProfilePath(profileOverride) };
+  return await prepareSetup({ ...options, profile });
 }

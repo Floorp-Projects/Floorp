@@ -13,6 +13,7 @@
  */
 
 import * as path from "@std/path";
+import { resolveTestProfilePath } from "./src/defines.ts";
 import { isTcpPortInUse, parsePortOffsetSpec } from "./src/port_offset.ts";
 import {
   appendEvent,
@@ -507,6 +508,8 @@ const DEPS_INSTALLED_ENV = "FDH_PREPARE_DEPS_INSTALLED";
 async function cmdTaskPrepare(parsed: ParsedArgs): Promise<void> {
   assertNoPositional(parsed, 2);
   assertAllowedOptions(parsed, ["task-id", "runtime-source"]);
+  const profileOverride = Deno.env.get("FLOORP_TEST_PROFILE_DIR");
+  if (profileOverride !== undefined) resolveTestProfilePath(profileOverride);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
 
@@ -562,12 +565,17 @@ async function cmdTaskPrepare(parsed: ParsedArgs): Promise<void> {
     // "already" result is upgraded, never a CI skip.
     deps = { ...deps, status: "prepared", installed: true };
   }
-  const { prepareSetup } = await import("./src/setup.ts");
-  const record: SetupRecord = await prepareSetup({
-    projectRoot: state.worktree,
-    depsResult: deps,
-    runtime: { sourcePath: runtimeSource },
-  });
+  const { prepareSetupWithProfileOverride } = await import(
+    "./src/setup.ts"
+  );
+  const record: SetupRecord = await prepareSetupWithProfileOverride(
+    profileOverride,
+    {
+      projectRoot: state.worktree,
+      depsResult: deps,
+      runtime: { sourcePath: runtimeSource },
+    },
+  );
 
   const previous = state.setup;
   state.setup = {

@@ -17,6 +17,7 @@ import type {
 function createCache(
   featureId: string,
   testId?: string,
+  onDirectoryCreated?: (directory: nsIFile) => void,
 ): Promise<FeaturePackageCache> {
   if (!isValidFeaturePackageId(featureId)) {
     throw new FeaturePackageCacheError("cache-invalid-feature-id");
@@ -25,6 +26,7 @@ function createCache(
     const { storage, ownerKey } = createProfileFeaturePackageCacheStorage(
       featureId,
       testId,
+      onDirectoryCreated,
     );
     return openFeaturePackageCache(featureId, ownerKey, storage);
   } catch (error: unknown) {
@@ -42,12 +44,13 @@ export function openProfileFeaturePackageCache(
 export function openTestProfileFeaturePackageCache(
   featureId: string,
   testId: string,
+  onDirectoryCreated?: (directory: nsIFile) => void,
 ): Promise<FeaturePackageCache> {
   if (!isValidFeaturePackageId(featureId)) {
     throw new FeaturePackageCacheError("cache-invalid-feature-id");
   }
   const validTestId = validateFeaturePackageCacheTestId(testId);
-  return createCache(featureId, validTestId);
+  return createCache(featureId, validTestId, onDirectoryCreated);
 }
 
 export { FeaturePackageCacheError };
