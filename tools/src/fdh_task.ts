@@ -717,8 +717,20 @@ export interface CommandResult {
 }
 
 export interface StreamOptions {
+  env?: Record<string, string>;
   onStdout?: (chunk: string) => void;
   onStderr?: (chunk: string) => void;
+}
+
+export function devUpStreamOptions(
+  setup: FdhSetup | undefined,
+  options: StreamOptions = {},
+): StreamOptions {
+  const env = { ...options.env, ...setup?.guardEnv };
+  if (setup?.profilePath !== undefined) {
+    env.FLOORP_TEST_PROFILE_DIR = setup.profilePath;
+  }
+  return Object.keys(env).length === 0 ? options : { ...options, env };
 }
 
 /** Runs a child command while streaming stdout/stderr, returning both. */
@@ -738,6 +750,7 @@ export const runStreamingCommand: StreamRunner = async (
   const child = new Deno.Command(command, {
     args,
     cwd,
+    ...(options.env === undefined ? {} : { env: options.env }),
     stdout: "piped",
     stderr: "piped",
   }).spawn();

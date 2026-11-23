@@ -19,6 +19,7 @@ import {
   appendEvent,
   createTaskState,
   defaultGitRunner,
+  devUpStreamOptions,
   fdhDir,
   nowIso,
   readTaskState,
@@ -170,9 +171,11 @@ Commands:
                             copy the Debug runtime into _dist/bin (optional
                             registry source), relink the devdir mounts,
                             wipe the copied sessionstore and node_modules/.vite,
-                            then record setup.guardEnv for 'dev up'
+                            then record the profile path and setup.guardEnv for
+                            'dev up'
   dev up --task-id <id>     Start dev-tool for the recorded worktree/offset
-                            (setup.guardEnv is passed to the child process)
+                            (the prepared profile path and setup.guardEnv are
+                            passed to the child process)
   dev down --task-id <id>   Stop dev-tool for the recorded worktree
   verify build --task-id <id> [--phase <all|before-mach|after-mach>]
                             Run the source compile (before-mach) then the XHTML
@@ -833,14 +836,8 @@ async function runDevCommand(
     throw new Error("recorded port offset must be an integer, not 'auto'");
   }
 
-  // `fdh task prepare` records the local Patcher guard. Set it on this CLI
-  // process so the spawned dev-tool inherits it; no manual export is needed.
-  if (action === "up" && state.setup?.guardEnv !== undefined) {
-    for (const [name, value] of Object.entries(state.setup.guardEnv)) {
-      Deno.env.set(name, value);
-    }
-  }
-
+  // `fdh task prepare` records the profile and Patcher guard; pass both
+  // directly to the spawned dev-tool.
   const displayCommand = action === "up"
     ? `deno run -A tools/dev-tool.ts start --port-offset ${offset}`
     : "deno run -A tools/dev-tool.ts stop";
@@ -863,7 +860,9 @@ async function runDevCommand(
       args,
       cwd: state.worktree,
       displayCommand,
-      stream: streamToConsole(),
+      stream: action === "up"
+        ? devUpStreamOptions(state.setup, streamToConsole())
+        : streamToConsole(),
     },
     runStreamingCommand,
   );
