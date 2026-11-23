@@ -1,7 +1,7 @@
 diff --git a/browser/chrome/browser/content/browser/tabbrowser/tab-context-menu.js b/browser/chrome/browser/content/browser/tabbrowser/tab-context-menu.js
 --- a/browser/chrome/browser/content/browser/tabbrowser/tab-context-menu.js
 +++ b/browser/chrome/browser/content/browser/tabbrowser/tab-context-menu.js
-@@ -84,9 +84,12 @@
+@@ -91,9 +91,12 @@ var TabContextMenu = {
            items: [
              ["#context_bookmarkSelectedTabs", "#context_bookmarkTab"],
              ["#context_addNote", "#context_editNote"],
@@ -14,7 +14,7 @@ diff --git a/browser/chrome/browser/content/browser/tabbrowser/tab-context-menu.
              "#context_selectAllTabs",
              "#context_tabToolsSeparator",
            ],
-@@ -213,6 +216,8 @@
+@@ -222,6 +225,8 @@ var TabContextMenu = {
               * moveTabOptionsMenu layout below). The top-level group items stay
               * listed here for coverage but are hidden by per-show logic.
               */
@@ -23,8 +23,8 @@ diff --git a/browser/chrome/browser/content/browser/tabbrowser/tab-context-menu.
              "#context_moveTabOptions",
              [
                "#context_moveTabToNewGroup",
-@@ -222,6 +227,7 @@
-               "#context_ungroupSplitView",
+@@ -236,6 +241,7 @@ var TabContextMenu = {
+               "#context_reverseSplitView",
              ],
              "#context_reopenInContainer",
 +            { selector: "#context_toggleToPrivateContainer", optional: true },

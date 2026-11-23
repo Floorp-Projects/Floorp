@@ -1,4 +1,4 @@
-# Floorp private profile token native service; source pin 741c4537e89b550b0297ed7ea493026506930d4d
+# Floorp private profile token native service; source pin 64024fee8215388debd8749f5e3917aaa234d78a
 # Requires freshly compiled Windows Runtime artifacts; prebuilt package patching is not activation.
 diff --git a/xpcom/io/moz.build b/xpcom/io/moz.build
 --- a/xpcom/io/moz.build

@@ -35,7 +35,7 @@ const added = [
 ];
 const context = lines.slice(index, index + 4);
 let patch =
-  "# Floorp private profile token native service; source pin 741c4537e89b550b0297ed7ea493026506930d4d\n" +
+  "# Floorp private profile token native service; source pin 64024fee8215388debd8749f5e3917aaa234d78a\n" +
   "# Requires freshly compiled Windows Runtime artifacts; prebuilt package patching is not activation.\n" +
   "diff --git a/xpcom/io/moz.build b/xpcom/io/moz.build\n--- a/xpcom/io/moz.build\n+++ b/xpcom/io/moz.build\n" +
   "@@ -" + (index + 1) + ",4 +" + (index + 1) + "," + (4 + added.length) +
