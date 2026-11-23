@@ -1,0 +1,44 @@
+diff --git a/.github/workflows/scripts/qa3_mozlog.py b/.github/workflows/scripts/qa3_mozlog.py
+index 14e13453a44..a6dbf6bda81 100644
+--- a/.github/workflows/scripts/qa3_mozlog.py
++++ b/.github/workflows/scripts/qa3_mozlog.py
+@@ -134,7 +134,7 @@ def verify_mozlog(path, case, package, process, canary=False):
+                 if type(entry.get("bytes")) is not int or entry["bytes"] != 0:
+                     raise ValueError("native leak total is missing or nonzero")
+             elif action == "process_exit":
+-                if entry.get("exitcode", 0) != 0:
++                if type(entry.get("exitcode")) is not int or entry["exitcode"] != 0:
+                     raise ValueError("unexpected native child exit")
+             elif action == "log":
+                 if entry.get("level") in {"ERROR", "CRITICAL", "FATAL"}:
+diff --git a/.github/workflows/scripts/test_qa3_mozlog.py b/.github/workflows/scripts/test_qa3_mozlog.py
+index aa7dc72394d..872ca919cac 100644
+--- a/.github/workflows/scripts/test_qa3_mozlog.py
++++ b/.github/workflows/scripts/test_qa3_mozlog.py
+@@ -129,6 +129,26 @@ class MozlogContracts(unittest.TestCase):
+             with self.subTest(event=event), self.assertRaises(ValueError):
+                 self.verify([*self.events[:3], event, *self.events[3:]])
+ 
++    def test_child_process_exit_requires_typed_zero(self):
++        event = {"action": "process_exit", "process": "fixture", "exitcode": 0}
++        self.assertEqual(
++            self.verify([*self.events[:3], event, *self.events[3:]])["verdict"],
++            "PASS",
++        )
++        for invalid in (
++            {},
++            {"exitcode": False},
++            {"exitcode": True},
++            {"exitcode": 0.0},
++            {"exitcode": 1.0},
++            {"exitcode": None},
++            {"exitcode": "0"},
++            {"exitcode": 1},
++        ):
++            event = {"action": "process_exit", "process": "fixture", **invalid}
++            with self.subTest(event=event), self.assertRaises(ValueError):
++                self.verify([*self.events[:3], event, *self.events[3:]])
++
+     def test_exact_expected_assertion_canary(self):
+         events = copy.deepcopy(self.events)
+         events[2].update(

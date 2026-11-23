@@ -90,6 +90,9 @@ on:
       artifact_digest:
         description: "Immutable release bundle artifact digest"
         value: ${{ jobs.assemble.outputs.artifact_digest }}
+      installer_artifact_ids:
+        description: "JSON map of the exact installer IDs assembled into this bundle"
+        value: ${{ jobs.assemble.outputs.installer_artifact_ids }}
       manifest_set_id:
         description: "Release manifest set identity"
         value: ${{ jobs.assemble.outputs.manifest_set_id }}
@@ -117,6 +120,7 @@ jobs:
       artifact_id: ${{ steps.upload.outputs.artifact-id }}
       artifact_digest: >-
         ${{ format('sha256:{0}', steps.upload.outputs.artifact-digest) }}
+      installer_artifact_ids: ${{ steps.contract.outputs.installer-artifact-ids }}
       manifest_set_id: ${{ steps.assemble.outputs.manifest-set-id }}
       firefox_version: ${{ steps.assemble.outputs.firefox-version }}
       floorp_version: ${{ steps.assemble.outputs.floorp-version }}
@@ -313,6 +317,11 @@ jobs:
               }
               core.setOutput(`${key}-artifact-id`, String(expected.id));
             }
+            core.setOutput("installer-artifact-ids", JSON.stringify({
+              windows: identities.get("windows-installer").id,
+              linux: identities.get("linux-installer").id,
+              mac: identities.get("mac-installer").id,
+            }));
             core.setOutput(
               "artifact-name",
               validationOnly

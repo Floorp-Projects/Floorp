@@ -1,0 +1,25 @@
+{
+  "scope": "Read-only final acceptance after the follow-up archive froze; distinct from final-head documentation CI",
+  "files": [
+    {
+      "path": "docs-public-archive-inspection-03.json",
+      "bytes": 389666,
+      "sha256": "ac2e6c0bb9941254749152cac2cf3464bce0e5d7f57a5ff48e78eb63018af0b3"
+    },
+    {
+      "path": "docs-public-archive-inspection-03.py",
+      "bytes": 7085,
+      "sha256": "fe5a8baf370bf2c07baf1e26cffabc205d5f962963c4925a3a1bb0dd3b923aa0"
+    },
+    {
+      "path": "docs-public-count-binding-03.json",
+      "bytes": 949,
+      "sha256": "8031dfd7df3618b99ce40add23c88444cc6d0f8b8cbd9d87ba3ff9985fc04833"
+    },
+    {
+      "path": "docs-public-independent-review-03.md",
+      "bytes": 7300,
+      "sha256": "75e27bb14ea2c1c0cbeda34a3e57beed073653df84b442a79e90a0c315cc90bf"
+    }
+  ]
+}

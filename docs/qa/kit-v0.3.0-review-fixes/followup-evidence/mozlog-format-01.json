@@ -1,0 +1,20 @@
+{
+  "command": [
+    "/workspace/qa-review-v030/tooling/python-lint/bin/ruff",
+    "format",
+    "--no-cache",
+    ".github/workflows/scripts/qa3_mozlog.py",
+    ".github/workflows/scripts/test_qa3_mozlog.py"
+  ],
+  "exit": 0,
+  "before": {
+    ".github/workflows/scripts/qa3_mozlog.py": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+    ".github/workflows/scripts/test_qa3_mozlog.py": "cf05dbd564c963c25dfe404c6987017319cbd4c8358c8e7917de56ed18f1514d"
+  },
+  "after": {
+    ".github/workflows/scripts/qa3_mozlog.py": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+    ".github/workflows/scripts/test_qa3_mozlog.py": "5625812d4eab52274efa040100155fa376dfe21672bedfc67dc033d3f4e0e063"
+  },
+  "native": false,
+  "network": false
+}
