@@ -132,7 +132,7 @@ export class LinuxSupport {
       `[LinuxSupport] Getting normalized ID for SSB: ${ssb.name} (id: ${ssb.id})`,
     );
     for (const candidate of candidates) {
-      if (candidate) {
+      if (typeof candidate === "string" && candidate) {
         const normalized = this.normalizeToken(candidate);
         if (normalized) {
           console.debug(
@@ -152,6 +152,39 @@ export class LinuxSupport {
     return fallbackId;
   }
 
+  /** Match the generated launcher identity without activating taskbar integration. */
+  static getWindowClass(ssb: Manifest): string {
+    return `floorp-${this.getNormalizedId(ssb)}`;
+  }
+
+  static registerBrowserWindowIdentity(): void {
+    Services.catMan.addCategoryEntry(
+      "browser-window-before-initial-xul-layout-document-preparation",
+      "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      "LinuxSupport.prepareBrowserWindow",
+      false,
+      true,
+    );
+  }
+
+  static prepareBrowserWindow(win: Window): void {
+    const root = win.document.documentElement;
+    if (root.hasAttribute("taskbartab") || root.hasAttribute("windowclass")) {
+      return;
+    }
+    const { AppConstants } = ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs",
+    );
+    const appInfo = Services.appinfo as typeof Services.appinfo & {
+      readonly remotingName?: string;
+    };
+    // A cold PWA's --name is process-wide; ordinary windows need their own ID.
+    root.setAttribute(
+      "windowclass",
+      appInfo.remotingName || AppConstants.MOZ_APP_NAME,
+    );
+  }
+
   private static getPathInfo(
     ssb: Manifest,
     dataHome = resolveLinuxDataHome(
@@ -159,8 +192,7 @@ export class LinuxSupport {
       Services.env.get("XDG_DATA_HOME"),
     ),
   ): LinuxPathInfo {
-    const slug = this.getNormalizedId(ssb);
-    const desktopBasename = `floorp-${slug}`;
+    const desktopBasename = this.getWindowClass(ssb);
     const iconDir = PathUtils.join(
       dataHome,
       "icons",
