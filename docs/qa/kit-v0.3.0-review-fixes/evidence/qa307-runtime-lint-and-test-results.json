@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "sourceHead": "120f443af5c257cbdd4712f23b28f9c6fa8c4396",
+  "finding": "PR84-P2-01",
+  "changedFiles": {
+    ".github/workflows/scripts/qa3_mozlog.py": "bea848caac52c0d1025b2ef586c145a2fb89ede65b77767764eac724eddb4e1c",
+    ".github/workflows/scripts/test_qa3_mozlog.py": "1ed4356fa3734058825499d49f537ad6ed25fa4f0f53d0b10ee01a79765d0ec8"
+  },
+  "patchSha256": "94610ca0cceb7b557705bafd0c185b5b7926c48044ede15b22d553789df203ae",
+  "ruff": {
+    "version": "0.16.10",
+    "check": "PASS",
+    "format": "PASS"
+  },
+  "targetedMachLint": {
+    "exitCode": 0,
+    "problems": 0,
+    "log": "qa307-runtime-mach-lint.log"
+  },
+  "allModifiedMachLint": {
+    "exitCode": 1,
+    "status": "BLOCKED",
+    "reason": "sparse checkout lacks third_party/node/pnpm-lock.yaml required while registering pnpm-audit",
+    "log": "qa307-runtime-mach-lint-all-modified.log"
+  },
+  "allRuntimeTests": {
+    "count": 162,
+    "original": 161,
+    "newMethods": 1,
+    "invalidValueSubtests": 8,
+    "skipped": 0,
+    "exitCode": 0,
+    "log": "qa307-runtime-all-corrected-outer-both-limits-3.log"
+  },
+  "initialWholeSuiteFailuresPreserved": [
+    "qa307-runtime-all-after-fix-1.log",
+    "qa307-runtime-all-corrected-outer-limit-2.log"
+  ],
+  "envelopeCorrection": "outer AS and FSIZE hard limits must allow the existing fixture prlimit; no test implementation or expected outcome changed",
+  "nativeQualification": "UNVERIFIED",
+  "publicationAuthorized": false
+}

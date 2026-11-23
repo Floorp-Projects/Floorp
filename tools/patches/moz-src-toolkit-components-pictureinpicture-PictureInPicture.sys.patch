@@ -1,0 +1,39 @@
+diff --git a/moz-src/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs b/moz-src/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs
+--- a/moz-src/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs
++++ b/moz-src/toolkit/components/pictureinpicture/PictureInPicture.sys.mjs
+@@ -414,13 +414,15 @@
+    *   we'll read its parent window to increase PiP window count in originatingWinWeakMap.
+    */
+   addOriginatingWinToWeakMap(browser) {
+-    let parentWin = browser.documentGlobal;
++    // Embedded chrome documents share the containing AppWindow. Only its top
++    // chrome browsing context can be forced active, including for captions.
++    let parentWin = browser.documentGlobal.browsingContext.topChromeWindow;
+     let count = this.originatingWinWeakMap.get(parentWin);
+     if (!count || count == 0) {
+       this.setOriginatingWindowActive(parentWin.browsingContext, true);
+       this.originatingWinWeakMap.set(parentWin, 1);
+
+-      let gBrowser = browser.getTabBrowser();
++      let gBrowser = parentWin.gBrowser;
+       if (gBrowser) {
+         gBrowser.tabContainer.addEventListener("TabSelect", this);
+       }
+@@ -461,7 +463,7 @@
+    *   we'll read its parent window to decrease PiP window count in originatingWinWeakMap.
+    */
+   removeOriginatingWinFromWeakMap(browser) {
+-    let parentWin = browser?.documentGlobal;
++    let parentWin = browser?.documentGlobal?.browsingContext.topChromeWindow;
+
+     if (!parentWin) {
+       return;
+@@ -472,7 +474,7 @@
+       this.originatingWinWeakMap.delete(parentWin, 0);
+       this.setOriginatingWindowActive(parentWin.browsingContext, false);
+
+-      let gBrowser = browser.getTabBrowser();
++      let gBrowser = parentWin.gBrowser;
+       if (gBrowser) {
+         gBrowser.tabContainer.removeEventListener("TabSelect", this);
+       }

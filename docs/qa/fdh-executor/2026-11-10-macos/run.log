@@ -1,0 +1,50 @@
+[e2e] E-1 ...
+[e2e] E-1 PASS (6.8 s)
+  ok   the executor process is still running after its controller was killed
+  ok   a new controller reconnects and the job succeeds
+  ok   one attempt at epoch 1
+[e2e] E-2 ...
+[e2e] E-2 PASS (12.8 s)
+  ok   the job succeeds after the executor was killed
+  ok   attempt 1 is lost and attempt 2 (epoch 2) succeeded
+  ok   the lost attempt's step process is not running any more
+[e2e] E-2b ...
+[e2e] E-2b PASS (14.8 s)
+  ok   the job still succeeds
+  ok   the epoch-1 step tree was stopped (by either controller)
+  ok   the epoch-1 step process is not running
+[e2e] E-3 ...
+[e2e] E-3 PASS (6.3 s)
+  ok   the journal was not updated by the ACK
+  ok   reconcile applies the outbox and the job succeeds
+  ok   not rerun: one attempt
+  ok   the recovery is recorded
+[e2e] E-4/E-5 ...
+[e2e] E-4/E-5 PASS (12.4 s)
+  ok   E-4: epoch 2 took over and the job succeeded
+  ok   E-5: the epoch-1 report was rejected as stale and recorded
+  ok   E-5: attempt 1 stays lost, with the late report in its notes
+  ok   the job's result is epoch 2's
+[e2e] E-6 ...
+[e2e] E-6 PASS (0.5 s)
+  ok   task resume puts the unconfirmed intent into awaiting-approval
+  ok   the quota ledger lists it as pending
+  ok   a second resume does not rerun or re-queue it
+  ok   the approver's resolution closes it
+  ok   and approves its pending entry
+[e2e] E-7 ...
+[e2e] E-7 PASS (6.4 s)
+  ok   the job fails instead of rerunning
+  ok   no second attempt
+  ok   the reason is recorded
+[e2e] E-8 ...
+[e2e] E-8 PASS (12.4 s)
+  ok   the job fails after maxAttempts lost attempts
+  ok   exactly two attempts, both lost
+  ok   gave-up is recorded
+[e2e] E-9 ...
+[e2e] E-9 PASS (0.4 s)
+  ok   the late confirm is refused
+  ok   the intent still awaits approval
+  ok   the late report is recorded
+[e2e] all cases passed

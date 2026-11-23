@@ -1,0 +1,241 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "work-record",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-cli",
+      "kind": "agent",
+      "grantedBy": "host:fdh-cli-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:fdh-ac07-macos-prepared",
+        "issuer": "scheduler",
+        "owner": "fdh-local-runner",
+        "ownerRole": "task-owner",
+        "label": "fdh local loop task fdh-ac07-macos-prepared"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:fdh-ac07-macos-prepared",
+        "issuer": "scheduler",
+        "owner": "fdh-local-runner",
+        "ownerRole": "job-owner",
+        "label": "local gate loop job for fdh-ac07-macos-prepared"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:fdh-ac07-macos-prepared:1",
+        "issuer": "executor",
+        "owner": "fdh-local-runner",
+        "ownerRole": "run-owner",
+        "label": "fdh command run for fdh-ac07-macos-prepared"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:fdh-ac07-macos-prepared:1:1",
+        "issuer": "executor",
+        "owner": "fdh-local-runner",
+        "ownerRole": "run-owner",
+        "label": "first attempt for fdh-ac07-macos-prepared"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:fdh-ac07-macos-prepared",
+        "issuer": "host",
+        "owner": "fdh-local-runner",
+        "ownerRole": "session-owner",
+        "context": "existing agent session driving the fdh CLI"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:fdh-ac07-macos-prepared",
+        "issuer": "host",
+        "owner": "fdh-local-runner",
+        "ownerRole": "workspace-owner",
+        "path": "/Users/devin/repos/Floorp-ac07"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:fdh-ac07-macos-prepared:local",
+        "issuer": "host-authorization",
+        "owner": "fdh-local-runner",
+        "ownerRole": "approver",
+        "decision": "not-required",
+        "label": "no approval is requested by the fdh local loop"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:fdh-ac07-macos-prepared",
+        "type": "task-has-job",
+        "to": "scheduler:job:fdh-ac07-macos-prepared"
+      },
+      {
+        "from": "scheduler:job:fdh-ac07-macos-prepared",
+        "type": "job-has-run",
+        "to": "executor:run:fdh-ac07-macos-prepared:1"
+      },
+      {
+        "from": "executor:run:fdh-ac07-macos-prepared:1",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:fdh-ac07-macos-prepared:1:1"
+      },
+      {
+        "from": "executor:run:fdh-ac07-macos-prepared:1",
+        "type": "run-uses-session",
+        "to": "host:session:fdh-ac07-macos-prepared"
+      },
+      {
+        "from": "executor:run:fdh-ac07-macos-prepared:1",
+        "type": "run-in-workspace",
+        "to": "host:workspace:fdh-ac07-macos-prepared"
+      },
+      {
+        "from": "host-authorization:approval:fdh-ac07-macos-prepared:local",
+        "type": "approval-for-job",
+        "to": "scheduler:job:fdh-ac07-macos-prepared"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-21T10:11:04.140Z",
+      "reason": "fdh local loop recorded the commands in operations[]"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "darwin",
+      "version": "25.6.0",
+      "arch": "aarch64"
+    },
+    "build": {
+      "commit": "6f621741aeabe173572d8a5abb4618eb81997ea5",
+      "id": "fdh-ac07-macos-prepared",
+      "repository": "Floorp-Projects/Floorp"
+    },
+    "packageDigest": null,
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "6f621741aeabe173572d8a5abb4618eb81997ea5",
+        "pin": "floorp@6f621741aeabe173572d8a5abb4618eb81997ea5"
+      },
+      "deno": {
+        "version": "2.9.8"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:fdh-ac07-macos-prepared:1",
+      "attempt": 1,
+      "startedAt": "2026-11-21T10:09:54.026Z",
+      "endedAt": "2026-11-21T10:11:04.140Z",
+      "result": "passed",
+      "exitCode": null,
+      "notes": "fdh local loop; 4 command(s), 2 assertion(s)"
+    }
+  ],
+  "operations": [
+    {
+      "input": "deno run -A tools/dev-tool.ts start --port-offset 100",
+      "target": "/Users/devin/repos/Floorp-ac07",
+      "order": 1,
+      "observation": "exit 0; Starting feles-build dev...\n[dev-tool] Using port-offset=100 marionette=5280 os-server=http://127.0.0.1:5275 pref=nora.dev.port_offset\nStarted (PID 4955). Waiting for Marionette...\nBrowser ready! Marionette on port 5280.\nLog: /Users/devin/repos/Floorp-ac07/_dist/dev-server.log"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts status",
+      "target": "/Users/devin/repos/Floorp-ac07",
+      "order": 2,
+      "observation": "exit 0; Connected to browser.\n  Title: Floorp Hub\n  URL: chrome://browser/content/browser.xhtml\n  Tabs: 1\n  Active tab: Floorp Hub\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: d16e23aa-60fb-4b4a-9e4e-a40d75a151f4"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts eval JSON.stringify({brand: Services.appinfo.name, build: Services.appinfo.appBuildID, offset: Services.prefs.getIntPref(\"nora.dev.port_offset\"), osServerPort: Services.prefs.getIntPref(\"floorp.os.server.port\"), httpLoader: Services.prefs.getBoolPref(\"nora.dev.allow_http_loader\"), startup: Services.prefs.getStringPref(\"nora.startup.mode\", \"\"), loader: Services.prefs.getStringPref(\"nora.startup.loader\", \"\"), error: Services.prefs.getStringPref(\"nora.startup.error\", \"\"), active: gBrowser.selectedBrowser.currentURI.spec})",
+      "target": "/Users/devin/repos/Floorp-ac07",
+      "order": 3,
+      "observation": "exit 0; {\"brand\":\"Floorp\",\"build\":\"20261112140843\",\"offset\":100,\"osServerPort\":5275,\"httpLoader\":true,\"startup\":\"dev\",\"loader\":\"loaded\",\"error\":\"\",\"active\":\"http://localhost:5283/#/overview/home\"}\n[marionette] Connecting to port 5280\n[marionette] Connected (protocol v3)\n[marionette] Session: 8905b59b-a582-4a8e-a3fa-86e7267e7090"
+    },
+    {
+      "input": "deno run -A tools/dev-tool.ts stop",
+      "target": "/Users/devin/repos/Floorp-ac07",
+      "order": 4,
+      "observation": "exit 0; Stopping dev processes for this checkout...\nStopped (31 processes)."
+    }
+  ],
+  "assertions": [
+    {
+      "name": "browser-connected",
+      "expected": "Connected to browser.",
+      "actual": "Connected to browser.",
+      "passed": true
+    },
+    {
+      "name": "browser-eval-contains",
+      "expected": "eval output contains \"\\\"loader\\\":\\\"loaded\\\"\"",
+      "actual": "{\"brand\":\"Floorp\",\"build\":\"20261112140843\",\"offset\":100,\"osServerPort\":5275,\"httpLoader\":true,\"startup\":\"dev\",\"loader\":\"loaded\",\"error\":\"\",\"active\":\"http://localhost:5283/#/overview/home\"}",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "darwin 25.6.0 (aarch64)",
+    "network": "enabled",
+    "matchesTarget": false,
+    "deviations": [
+      "local development worktree rather than a packaged qualification environment",
+      "no external network services are used; only the local dev server may be running"
+    ],
+    "notes": "Local fdh loop on the recorded worktree; this is not a release-environment run."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "/Users/devin/repos/Floorp-ac07/_dist/fdh/tasks/fdh-ac07-macos-prepared.json",
+        "sha256": "c27ac393dc389b6b6a9ddaf387a2b3aab65dd630cac2146c95977430d96a0fe0",
+        "bytes": 9005
+      }
+    ],
+    "unchangedDuringRun": "unknown",
+    "deviations": [
+      "the task-state file is the evidence source and can change after this manifest is written"
+    ],
+    "notes": "Pinned input is the fdh task-state snapshot read while building this manifest."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "completed",
+    "notes": "Dev server stopped by 'fdh dev down'.",
+    "details": [
+      "dev-tool stop"
+    ]
+  },
+  "limitations": [
+    "This evidence covers only the local fdh loop for task 'fdh-ac07-macos-prepared'; it is not a Gate 3 qualification or release approval.",
+    "No visual judgment was performed (visualJudge is null); visual/look-and-feel behavior is not covered.",
+    "The DSH toolchain identity is not available to fdh and is recorded as UNVERIFIED.",
+    "Assertions reflect the recorded command exit codes and verbatim outputs only; they do not establish behavior beyond those commands.",
+    "The local development worktree is not the qualification target environment (matchesTarget is false).",
+    "No GitHub or other shared-service behavior is exercised; the local loop does not need shared services.",
+    "No build verification was recorded; the build state is UNVERIFIED.",
+    "No host test verification was recorded; the host test state is UNVERIFIED.",
+    "Browser eval output is recorded verbatim; only --expect turns it into a contains-check assertion, which does not prove behavior beyond the checked text.",
+    "No approval was requested or recorded; the approval entity is marked not-required.",
+    "The build/toolchain commit is the task's start base; an uncommitted working-tree diff is not hashed in this manifest.",
+    "No defect was reproduced; reproduction is inconclusive by design rather than being inferred from command output."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "The fdh local loop records verification; it does not reproduce a defect."
+  }
+}
