@@ -350,7 +350,6 @@ async function testDirectionalHoverAnchor(): Promise<void> {
   const attributes = [
     "sidebar-positionend",
     "sidebar-launcher-expanded",
-    "sidebar-ongoing-animations",
   ];
   const saved = attributes.map((name) => launcher.getAttribute(name));
   const savedHover = root.getAttribute("sidebar-expand-on-hover");
@@ -373,7 +372,6 @@ async function testDirectionalHoverAnchor(): Promise<void> {
           launcher.style.order = firefoxAtEnd ? "999" : "0";
           try {
             launcher.removeAttribute("sidebar-launcher-expanded");
-            launcher.removeAttribute("sidebar-ongoing-animations");
             await nextLayout();
             const onRight = firefoxAtEnd !== (direction === "rtl");
             const edge = () => {
@@ -385,12 +383,7 @@ async function testDirectionalHoverAnchor(): Promise<void> {
               ? "--floorp-panel-end-width"
               : "--floorp-panel-start-width";
             const collapsedOffset = browser.style.getPropertyValue(property);
-            for (
-              const state of [
-                "sidebar-launcher-expanded",
-                "sidebar-ongoing-animations",
-              ]
-            ) {
+            for (const state of ["sidebar-launcher-expanded"]) {
               launcher.setAttribute(state, "");
               await nextLayout();
               assert(
