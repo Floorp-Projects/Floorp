@@ -194,7 +194,7 @@ function legacyGlobMatch(url: string, lowerPattern: string): boolean {
   try {
     const escaped = lowerPattern
       .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
-      .replace(/\*/g, ".*");
+      .replace(/\*+/g, ".*");
     return new RegExp(escaped, "i").test(url);
   } catch {
     return url.toLowerCase().includes(lowerPattern);

@@ -37,6 +37,7 @@ export function installBridge() {
       PREF_BOOL: 128,
       PREF_INT: 64,
       PREF_STRING: 32,
+      PREF_INVALID: 0,
       getPrefType: (key: string) => {
         if (key === faults.read) throw new Error("Injected read failure");
         const type = typeof prefs.get(key);

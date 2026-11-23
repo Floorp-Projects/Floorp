@@ -266,6 +266,14 @@ function testMatchLegacyGlobPatterns(): void {
     !matchPattern("https://example.com/home", "/admin"),
     "a missing fragment should not match",
   );
+  assert(
+    matchPattern("https://m.youtube.com/", "**youtube**"),
+    "adjacent wildcards collapse without changing what matches",
+  );
+  assert(
+    !matchPattern("https://example.com/", "**youtube**"),
+    "collapsed adjacent wildcards still reject non-matches",
+  );
   assertEquals(
     migrateLegacyPattern("intranet"),
     "*intranet*",
