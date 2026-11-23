@@ -565,6 +565,60 @@ Deno.test("signed package rejects noncanonical, malformed UTF-8 and unsupported 
   );
 });
 
+Deno.test(
+  "signed package rejects noncanonical nested manifest and compatibility properties",
+  async () => {
+    const bytes = await signed("source");
+    const text = new TextDecoder().decode(bytes);
+    const original = JSON.parse(text) as Record<string, unknown>;
+    await verifySignedFeaturePackage(bytes, policy);
+
+    const cases = [
+      {
+        name: "manifest property reordering",
+        wire: text.replace(
+          '"featureId":"hub-panel-menu","version":"v1.0"',
+          '"version":"v1.0","featureId":"hub-panel-menu"',
+        ),
+      },
+      {
+        name: "duplicate manifest property",
+        wire: text.replace(
+          '"featureId":"hub-panel-menu",',
+          '"featureId":"hub-panel-menu","featureId":"hub-panel-menu",',
+        ),
+      },
+      {
+        name: "compatibility property reordering",
+        wire: text.replace(
+          '"hostSchema":2,"hostBuildId":"floorp-host-1"',
+          '"hostBuildId":"floorp-host-1","hostSchema":2',
+        ),
+      },
+      {
+        name: "duplicate compatibility property",
+        wire: text.replace(
+          '"hostSchema":2,',
+          '"hostSchema":2,"hostSchema":2,',
+        ),
+      },
+    ];
+
+    for (const { name, wire } of cases) {
+      assert(wire !== text, `${name} changes only the wire encoding`);
+      const candidate = JSON.parse(wire) as Record<string, unknown>;
+      assertEquals(candidate.keyId, original.keyId);
+      assertEquals(candidate.source, original.source);
+      assertEquals(candidate.signature, original.signature);
+      assertEquals(candidate.manifest, original.manifest);
+      await rejectsWith(
+        verifySignedFeaturePackage(encoder.encode(wire), policy),
+        "invalid-envelope",
+      );
+    }
+  },
+);
+
 Deno.test("signed package enforces canonical base64url, digest and byte-length encodings", async () => {
   const bytes = await signed("source");
   const envelope = JSON.parse(new TextDecoder().decode(bytes)) as Record<
