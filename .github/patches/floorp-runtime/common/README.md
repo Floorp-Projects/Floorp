@@ -10,6 +10,12 @@ by the Runtime's upstream patch step. A missing patch is applied normally, while
 partially applied patches still fail validation. Native changes still require
 freshly compiled Runtime artifacts.
 
+`update-timer-shutdown.patch` prevents queued update-timer callbacks from creating
+or notifying consumers after shutdown is confirmed. It includes the native
+timermanager xpcshell regression from Floorp-Runtime PR #103. The matching
+`tools/patches/modules-UpdateTimerManager.sys.patch` covers extracted development
+builds. Only JavaScript changes; native recompilation is not required.
+
 `windows-uninstall-publisher.patch` gives official and Daylight Floorp branding
 an explicit uninstall Publisher. `SetUninstallKeys` uses that value both during
 installation and post-update registration; other branding retains its default.

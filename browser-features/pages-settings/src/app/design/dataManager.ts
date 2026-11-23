@@ -225,6 +225,16 @@ async function saveDesignSettingsUnqueued(
       JSON.stringify(newData),
     );
     if (!updated) continue;
+    // The native pref can flip between the read above and this commit: a
+    // style toggle committed by another window in that gap leaves a stale
+    // style stored, and the pref observer only runs on later changes.
+    // Re-read it and retry so the final write reconciles fresh native state.
+    if (
+      !hasTabStyleChanged &&
+      await rpc.getBoolPref(VERTICAL_TABS_PREF) !== nativeVerticalTabs
+    ) {
+      continue;
+    }
     await rpc.setBoolPref(
       SPLIT_VIEW_DND_CREATE_PREF,
       settings.tabDragToSplitCreate,
