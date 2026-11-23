@@ -132,11 +132,6 @@ async function saveDesignSettingsUnqueued(
   }
 
   const { hasTabStyleChanged = false } = options;
-  // When our CAS wins the race against another window's explicit style change,
-  // the stored style we just overwrote is the real concurrent intent. Remember
-  // it so a native-flip retry reconciles that style instead of the intermediate
-  // value this commit stored.
-  let lastCommit: { written: TabbarStyle; replaced: TabbarStyle } | undefined;
   for (let attempt = 0; attempt < 8; attempt++) {
     const result = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
     if (!result) {
@@ -147,12 +142,7 @@ async function saveDesignSettingsUnqueued(
     // Keep the stored style authoritative unless the user changed it. Reading
     // the native pref here prevents an unrelated edit from writing back a style
     // that a Firefox-side toggle already changed in another window.
-    let storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
-    if (
-      !hasTabStyleChanged && lastCommit && storedStyle === lastCommit.written
-    ) {
-      storedStyle = lastCommit.replaced;
-    }
+    const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
     const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
     const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
     const tabbarStyle = hasTabStyleChanged
@@ -238,13 +228,36 @@ async function saveDesignSettingsUnqueued(
     // The native pref can flip between the read above and this commit: a
     // style toggle committed by another window in that gap leaves a stale
     // style stored, and the pref observer only runs on later changes.
-    // Re-read it and retry so the final write reconciles fresh native state.
-    if (
-      !hasTabStyleChanged &&
-      await rpc.getBoolPref(VERTICAL_TABS_PREF) !== nativeVerticalTabs
-    ) {
-      lastCommit = { written: tabbarStyle, replaced: storedStyle };
-      continue;
+    // Reconcile just the tab style against fresh native state — restarting the
+    // whole save here would overwrite edits another window committed after
+    // our CAS.
+    if (!hasTabStyleChanged) {
+      const nativeAfter = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+      if (nativeAfter !== null && nativeAfter !== nativeVerticalTabs) {
+        for (let r = 0; r < 8; r++) {
+          const latest = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
+          if (!latest) break;
+          const latestData = JSON.parse(latest);
+          const latestStored = normalizeTabbarStyle(
+            latestData.tabbar?.tabbarStyle,
+          );
+          // If our own write is still the stored style, the value it replaced
+          // was a concurrent intent; reconcile that one. Anything else means
+          // another writer has since landed, which is authoritative.
+          const reconciled = latestStored === tabbarStyle
+            ? resolveTabbarStyleFromNative(nativeAfter, storedStyle)
+            : latestStored;
+          if (reconciled === latestStored) break;
+          latestData.tabbar = { ...latestData.tabbar, tabbarStyle: reconciled };
+          const { updated: reconciledWrite } = await rpc
+            .compareAndSetStringPref(
+              DESIGN_CONFIGS_PREF,
+              latest,
+              JSON.stringify(latestData),
+            );
+          if (reconciledWrite) break;
+        }
+      }
     }
     await rpc.setBoolPref(
       SPLIT_VIEW_DND_CREATE_PREF,
