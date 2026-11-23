@@ -636,7 +636,19 @@ export default class TabAutoUnload extends NoraComponentBase {
         ) {
           continue;
         }
-        if (!tabUnloader.isDiscardable(tabInfo)) {
+        // isDiscardable reads the weight captured by getSortedTabs, so
+        // tabInfo is stale by now: a tab that started playing audio, became
+        // undiscardable, or fell under a newly raised inactivity minimum
+        // during the await would still look discardable. Re-sort against
+        // the current settings and require a fresh discardable entry.
+        const freshTabs = await tabUnloader.getSortedTabs(
+          Math.round(this.settings.minInactiveMinutes * 60_000),
+        );
+        if (this.disposed || !this.settings.enabled) {
+          return;
+        }
+        const freshInfo = freshTabs.find((info) => info.tab === tabInfo.tab);
+        if (!freshInfo || !tabUnloader.isDiscardable(freshInfo)) {
           continue;
         }
         if (!tabInfo.gBrowser.discardBrowser(tabInfo.tab)) {
