@@ -155,10 +155,13 @@ async function testAlternativeLineGeometry(): Promise<void> {
 async function testAliasScopeAndPreferenceGates(): Promise<void> {
   await withContainerFixture((_tabs, content) => {
     const computed = getComputedStyle(content);
+    // The Floorp-wide .tabbrowser-tab alias (gecko-152-var-aliases) also
+    // resolves --tab-inline-padding; only the container geometry layer is
+    // scoped to [usercontextid], so the control sees the plain alias.
     assertEquals(
       computed?.getPropertyValue("--tab-inline-padding").trim(),
-      "",
-      "non-container control gets no compatibility tokens",
+      "8px",
+      "non-container control resolves only the Floorp-wide alias",
     );
     assertEquals(
       getComputedStyle(content, "::before")?.borderBottomWidth,
@@ -181,8 +184,8 @@ async function testAliasScopeAndPreferenceGates(): Promise<void> {
       assertEquals(
         getComputedStyle(content)?.getPropertyValue("--tab-inline-padding")
           .trim(),
-        "",
-        `${name}: unrelated rendering path gets no aliases`,
+        "8px",
+        `${name}: unrelated rendering path resolves only the Floorp-wide alias`,
       );
       Services.prefs.setBoolPref(name, PREFS[name]);
     }
