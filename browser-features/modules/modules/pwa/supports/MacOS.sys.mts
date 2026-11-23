@@ -188,6 +188,24 @@ export class MacOSSupport {
     }
   }
 
+  /** A bundle whose marker write never landed is still ours when its plist
+   * carries the bundle identifier only Floorp assigns to this SSB. */
+  private async isPartiallyOwnedBundle(
+    path: string,
+    bundleId: string,
+  ): Promise<boolean> {
+    try {
+      const plist = await IOUtils.readUTF8(
+        PathUtils.join(path, "Contents", "Info.plist"),
+      );
+      return plist.includes(
+        `<key>CFBundleIdentifier</key><string>${bundleId}</string>`,
+      );
+    } catch {
+      return false;
+    }
+  }
+
   /** Upgrade owned legacy launchers after normal browser startup. A broken v3
    * Finder launcher cannot itself enter the PWA code path that repairs it. */
   async repairExistingLaunchers(store: MacAppStore): Promise<void> {
@@ -207,7 +225,12 @@ export class MacOSSupport {
           const marker = PathUtils.join(bundle.path, "Contents", "floorp.json");
           const backup = `${bundle.path}.floorp-backup`;
           if (!await IOUtils.exists(marker)) {
-            if (await IOUtils.exists(backup)) await this.repair(app, store);
+            if (
+              await IOUtils.exists(backup) ||
+              await this.isPartiallyOwnedBundle(bundle.path, bundle.bundleId)
+            ) {
+              await this.repair(app, store);
+            }
             continue;
           }
           const data = await IOUtils.readJSON(marker) as {
@@ -503,25 +526,28 @@ export class MacOSSupport {
         "floorp.json",
       );
       if (
-        !await IOUtils.exists(backupMarker) ||
-        await IOUtils.exists(backupNativeMarker)
+        await IOUtils.exists(backupNativeMarker) ||
+        (!await IOUtils.exists(backupMarker) &&
+          !await this.isPartiallyOwnedBundle(backup, bundle.bundleId))
       ) {
         throw new Error(
           "[MacOSSupport] Refusing to recover an unowned launcher backup",
         );
       }
-      const previous = await IOUtils.readJSON(backupMarker) as {
-        profileDir?: string;
-        integration?: string;
-        ssb?: { id?: string };
-      };
-      if (
-        previous.profileDir !== options.profileDir ||
-        previous.ssb?.id !== ssb.id || previous.integration === "app-shim"
-      ) {
-        throw new Error(
-          "[MacOSSupport] Refusing to recover an unowned launcher backup",
-        );
+      if (await IOUtils.exists(backupMarker)) {
+        const previous = await IOUtils.readJSON(backupMarker) as {
+          profileDir?: string;
+          integration?: string;
+          ssb?: { id?: string };
+        };
+        if (
+          previous.profileDir !== options.profileDir ||
+          previous.ssb?.id !== ssb.id || previous.integration === "app-shim"
+        ) {
+          throw new Error(
+            "[MacOSSupport] Refusing to recover an unowned launcher backup",
+          );
+        }
       }
       if (!await IOUtils.exists(bundle.path)) {
         await IOUtils.move(backup, bundle.path);
@@ -538,25 +564,13 @@ export class MacOSSupport {
       }
     }
     if (await IOUtils.exists(bundle.path)) {
-      if (!await IOUtils.exists(markerPath)) {
-        // A launcher install interrupted before its marker write leaves a
-        // partial bundle Floorp itself created. The plist it already wrote
-        // still proves ownership via the bundle identifier; refuse anything
-        // else as unowned.
-        let partial = false;
-        try {
-          partial = (await IOUtils.readUTF8(
-            PathUtils.join(bundle.path, "Contents", "Info.plist"),
-          )).includes(`<string>${bundle.bundleId}</string>`);
-        } catch {
-          partial = false;
-        }
-        if (!partial) {
-          throw new Error(
-            "[MacOSSupport] Refusing to replace an unowned bundle",
-          );
-        }
-      } else {
+      if (
+        !await IOUtils.exists(markerPath) &&
+        !await this.isPartiallyOwnedBundle(bundle.path, bundle.bundleId)
+      ) {
+        throw new Error("[MacOSSupport] Refusing to replace an unowned bundle");
+      }
+      if (await IOUtils.exists(markerPath)) {
         const owner = await IOUtils.readJSON(markerPath) as {
           profileDir?: string;
           integration?: string;
