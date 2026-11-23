@@ -37,7 +37,7 @@
         "keyboardShortcut": "キーボードショートカット",
         "performance": "パフォーマンス",
         "search": {
-            "title": "検索の設定",
+            "title": "設定を検索",
             "resultsFor": "[{{query}}] の検索結果",
             "searchResultsDescription": "[{{query}}] の検索結果です。 {{productName}} の設定のみ表示されます。 Firefox の設定は含まれません。",
             "noResults": "何も見つかりませんでした",

@@ -681,6 +681,12 @@ bool ReadRange(NSDictionary* payload, NSString* startKey, NSString* lengthKey,
   NSString* text = PlainText(value);
   if (!_editable || !text || !TextFitsWire(text) || selected.location > text.length ||
       selected.length > text.length - selected.location) return;
+  // AppKit ends a composition by setting empty marked text (Escape or Delete).
+  // Commit the empty string so Gecko also dispatches compositionend.
+  if (!text.length) {
+    if ([self hasMarkedText]) [self insertText:text replacementRange:replacement];
+    return;
+  }
   NSUInteger markedStart = replacement.location != NSNotFound ? replacement.location
       : [self hasMarkedText] ? _markedRange.location : _selectedRange.location;
   if (markedStart > UINT32_MAX - text.length) return;

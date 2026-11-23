@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "jobId": "intent-20261110t085311z-450ea0",
+  "taskId": "e2e-e-9-mwagd32g",
+  "worktree": "/Users/user/fdh-posix-e2e",
+  "kind": "intent",
+  "step": null,
+  "intent": {
+    "op": "pr",
+    "target": "draft PR"
+  },
+  "inputs": {
+    "baseCommit": "5b7829d81d55c2006680eb09351412cb794819cb",
+    "head": "",
+    "guardEnv": {}
+  },
+  "executionDigest": "b3dd93017e5d7d69137b54b3acea5629eb1d6c7579623b93fd6d920916504861",
+  "state": "failed",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 1800000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "agent-a",
+      "scheduledAt": "2026-11-10T08:53:11.148Z",
+      "startedAt": "2026-11-10T08:53:11.148Z",
+      "endedAt": "2026-11-10T08:53:11.241Z",
+      "result": "lost",
+      "exitCode": null,
+      "logRef": null,
+      "process": null,
+      "notes": "holder lost; outcome unknown",
+      "lastSeenAt": "2026-11-10T08:53:11.148Z"
+    }
+  ],
+  "checkpoint": 0,
+  "commandResults": [],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T08:53:11.148Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T08:53:11.148Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T08:53:11.148Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "awaiting-approval",
+      "at": "2026-11-10T08:53:11.241Z",
+      "reason": "unknown outcome of non-idempotent pr operation"
+    },
+    {
+      "from": "awaiting-approval",
+      "to": "failed",
+      "at": "2026-11-10T08:53:11.394Z",
+      "reason": "resolved failed by approver: e2e cleanup"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T08:53:11.241Z",
+      "kind": "lease-expired",
+      "epoch": 1,
+      "note": "holder agent-a lost"
+    },
+    {
+      "at": "2026-11-10T08:53:11.317Z",
+      "kind": "late-report",
+      "epoch": 1,
+      "note": "report by agent-a (exit 0) after the holder was declared lost; not applied"
+    },
+    {
+      "at": "2026-11-10T08:53:11.394Z",
+      "kind": "resolved",
+      "epoch": 1,
+      "note": "resolved failed by approver: e2e cleanup"
+    }
+  ],
+  "createdAt": "2026-11-10T08:53:11.148Z",
+  "updatedAt": "2026-11-10T08:53:11.394Z"
+}

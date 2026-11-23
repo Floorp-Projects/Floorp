@@ -1,7 +1,7 @@
-diff --git a/browser/modules/MigrationUtils.sys.mjs b/browser/modules/MigrationUtils.sys.mjs
+diff --git a/moz-src/browser/components/migration/MigrationUtils.sys.mjs b/moz-src/browser/components/migration/MigrationUtils.sys.mjs
 index 3a08fea..a258343 100644
---- ./browser/modules/MigrationUtils.sys.mjs
-+++ ./browser/modules/MigrationUtils.sys.mjs
+--- ./moz-src/browser/components/migration/MigrationUtils.sys.mjs
++++ ./moz-src/browser/components/migration/MigrationUtils.sys.mjs
 @@ -703,19 +703,29 @@ class MigrationUtils {
      let skipSourceSelection = false,
        migrator = null,

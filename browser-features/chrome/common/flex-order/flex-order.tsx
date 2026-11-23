@@ -93,8 +93,7 @@ export namespace gFlexOrder {
     const launcher = document.getElementById("sidebar-container");
     if (
       document.documentElement.hasAttribute("sidebar-expand-on-hover") &&
-      (launcher?.hasAttribute("sidebar-launcher-expanded") ||
-        launcher?.hasAttribute("sidebar-ongoing-animations"))
+      launcher?.hasAttribute("sidebar-launcher-expanded")
     ) {
       // Expanding Firefox's launcher can let a flex-shrunk Floorp panel grow.
       // Keep the collapsed measurement so the hover target does not move.
@@ -149,10 +148,7 @@ export namespace gFlexOrder {
     const panelObserver = new MutationObserver(updateHoverOffset);
     const launcherObserver = new MutationObserver(() => {
       const launcher = document.getElementById("sidebar-container");
-      if (
-        !launcher?.hasAttribute("sidebar-launcher-expanded") &&
-        !launcher?.hasAttribute("sidebar-ongoing-animations")
-      ) {
+      if (!launcher?.hasAttribute("sidebar-launcher-expanded")) {
         scheduleHoverOffsetUpdate();
       }
     });
@@ -183,7 +179,6 @@ export namespace gFlexOrder {
           attributeFilter: [
             "sidebar-positionend",
             "sidebar-launcher-expanded",
-            "sidebar-ongoing-animations",
           ],
         });
       }

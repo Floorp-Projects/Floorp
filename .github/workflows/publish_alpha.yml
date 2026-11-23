@@ -3,97 +3,132 @@
 name: "(A) |α| Publish Alpha"
 
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
-      win_runtime_artifact_workflow_call:
+      bundle_artifact:
+        description: Exact JSON identity of the signed bundle from this run
         type: string
-        required: false
-        default: ""
-      linux_runtime_artifact_workflow_call:
+        required: true
+      installer_artifact_ids:
+        description: Exact installer IDs from the assembled bundle
         type: string
-        required: false
-        default: ""
-      mac_runtime_artifact_workflow_call:
-        type: string
-        required: false
-        default: ""
+        required: true
 
 permissions:
-  contents: write
+  actions: read
+  contents: read
 
-run-name: "|α| Publish Alpha"
+concurrency:
+  group: publish-alpha-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
+  final-package-qa:
+    uses: ./.github/workflows/validate-final-package-qa.yml
+    with:
+      alpha: true
+      package_run_id: ${{ github.run_id }}
+      floorp_head_sha: ${{ github.sha }}
+      bundle_artifact: ${{ inputs.bundle_artifact }}
+      installer_artifact_ids: ${{ inputs.installer_artifact_ids }}
+
   main:
+    needs: final-package-qa
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Configure required reviewers for this environment in repository settings.
+    environment: Deploy-to-installer-alpha
+    permissions:
+      actions: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          persist-credentials: false
 
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-      - name: init zx
-        run: |
-          deno install -g -A npm:zx
 
-      - name: Retrieve run IDs
-        run: |
-          if [ -z "${{ inputs.win_runtime_artifact_workflow_call }}" ]; then
-            WINDOWS_ID=$(curl -s \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/package.yml/runs?branch=main&status=success" \
-            | jq -r '[.workflow_runs[] | select(.display_title | endswith("Windows-x64"))][0].id')
-            echo "WINDOWS_RUN_ID=$WINDOWS_ID" >> $GITHUB_ENV
-          else
-            echo "WINDOWS_RUN_ID=${{ inputs.win_runtime_artifact_workflow_call }}" >> $GITHUB_ENV
-          fi
+      - name: Revalidate the QA bundle after approval
+        id: bundle
+        uses: actions/github-script@v7
+        env:
+          BUNDLE_ARTIFACT: ${{ inputs.bundle_artifact }}
+        with:
+          script: |
+            const expected = JSON.parse(process.env.BUNDLE_ARTIFACT);
+            const {data: artifact} = await github.rest.actions.getArtifact({
+              ...context.repo, artifact_id: expected.id,
+            });
+            if (artifact.expired || artifact.name !== 'floorp-release-bundle-v2' ||
+                artifact.digest !== expected.digest ||
+                artifact.workflow_run?.id !== context.runId ||
+                artifact.workflow_run?.head_sha !== context.sha) {
+              throw new Error('The final QA bundle changed while waiting for approval');
+            }
+            core.setOutput('id', String(artifact.id));
 
-      - name: Download Windows artifact
+      - name: Download the exact approved bundle
         uses: actions/download-artifact@v4
         with:
-          name: noraneko-win-x86_64-mar-full
-          run-id: ${{ env.WINDOWS_RUN_ID }}
-          path: ~/noraneko-publish/win
+          artifact-ids: ${{ steps.bundle.outputs.id }}
+          run-id: ${{ github.run_id }}
           github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/floorp-release-bundle-v2
+          merge-multiple: true
 
-      - name: Download Windows installer
-        uses: actions/download-artifact@v4
-        with:
-          name: noraneko-win-x86_64-installer
-          run-id: ${{ env.WINDOWS_RUN_ID }}
-          path: ~/noraneko-publish/win-dist
-          github-token: ${{ github.token }}
-
-      - name: Setup
+      - name: Validate the bundle and stage the Windows Alpha assets
+        shell: bash
+        env:
+          BUNDLE_DIR: ${{ runner.temp }}/floorp-release-bundle-v2
+          PUBLISH_DIR: ${{ runner.temp }}/noraneko-publish
         run: |
-          deno install --allow-scripts
-          sudo apt install jq
-          deno run -A ./scripts/update/xml.ts ~/noraneko-publish/win/meta.json ~/noraneko-publish/win/WINNT_x86_64-msvc-x64.update.xml
+          set -euo pipefail
+          deno run --allow-read tools/src/release_provenance.ts \
+            validate-release-bundle --bundle-dir "$BUNDLE_DIR" --production
+          mkdir "$PUBLISH_DIR"
+          cp "$BUNDLE_DIR/floorp-windows-x86_64.installer.exe" \
+            "$BUNDLE_DIR/floorp-windows-x86_64-full.mar" "$PUBLISH_DIR/"
+          deno eval '
+            import { generateUpdateXml } from "./tools/src/update.ts";
+            generateUpdateXml(Deno.args[0], Deno.args[1], Deno.args[2]);
+          ' "$BUNDLE_DIR/win-meta.json" "$PUBLISH_DIR/WINNT_x86_64-msvc-x64.update.xml" \
+            "https://github.com/$GITHUB_REPOSITORY/releases/download/alpha/floorp-windows-x86_64-full.mar"
 
-          echo "VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.version' | sed 's/\"//g')" >> "$GITHUB_ENV"
-          echo "NR_VERSION=$(cat ~/noraneko-publish/win/meta.json | jq '.noraneko_version' | sed 's/\"//g')" >> "$GITHUB_ENV"
-          echo "ROOT_DIR=$(echo ~)" >> "$GITHUB_ENV"
-
-      - name: Deploy to GitHub Releases 🚀
+      - name: Deploy to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ env.ROOT_DIR }}/noraneko-publish/win/*.mar
-            ${{ env.ROOT_DIR }}/noraneko-publish/win/*.xml
-            ${{ env.ROOT_DIR }}/noraneko-publish/win-dist/*.exe
+            ${{ runner.temp }}/noraneko-publish/*
+          fail_on_unmatched_files: true
           tag_name: "alpha"
+          target_commitish: ${{ github.sha }}
           name: "Alpha Release"
           body: "Noraneko Alpha for Windows"
           draft: false
           prerelease: true
           token: ${{ github.token }}
 
-      - name: Publish Package 🎁
+      # The release action only uses target_commitish when creating the tag.
+      # Advance the rolling tag after the prerelease assets upload successfully.
+      - name: Bind the rolling Alpha tag to the QA source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = { ...context.repo, ref: 'tags/alpha' };
+            const { data: current } = await github.rest.git.getRef(ref);
+            if (current.object.type === 'commit' && current.object.sha === context.sha) return;
+
+            const { data: updated } = await github.rest.git.updateRef({
+              ...ref, sha: context.sha, force: true,
+            });
+            if (updated.object.type !== 'commit' || updated.object.sha !== context.sha) {
+              throw new Error('The rolling Alpha tag does not point to the QA source');
+            }
+
+      - name: Upload published Alpha assets
         uses: actions/upload-artifact@v4
         with:
           name: noraneko-publish
-          path: ~/noraneko-publish/*
+          path: ${{ runner.temp }}/noraneko-publish/*

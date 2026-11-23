@@ -1,0 +1,41 @@
+{
+  "ranAt": "2026-11-10T14:34:05.748Z",
+  "head": "f2a82803d3a51b9e9cce0bd0767f848588be8fef",
+  "os": "linux x86_64",
+  "osRelease": "6.12.111+deb13-amd64",
+  "deno": "2.8.3",
+  "leaseTtlMs": 3000,
+  "cases": [
+    {
+      "id": "E-2c",
+      "passed": false,
+      "checks": [
+        {
+          "name": "the root's children outlive it (orphans)",
+          "passed": true,
+          "detail": "{\"children\":[915969],\"orphans\":[915969]}"
+        },
+        {
+          "name": "the takeover stopped the orphans",
+          "passed": false,
+          "detail": "{\"code\":0,\"left\":[915969]}"
+        },
+        {
+          "name": "the stop of the epoch-1 tree counted the orphans",
+          "passed": false,
+          "detail": "stopped 0 process(es) of the step tree rooted at pid 915959"
+        },
+        {
+          "name": "the job succeeds at epoch 2",
+          "passed": true,
+          "detail": "{\"state\":\"succeeded\",\"epoch\":2}"
+        }
+      ],
+      "notes": [
+        "killed executor executor-915935-e1b547 and step root 915959; children 915969 now have parent pid(s) 1",
+        "reconcile: [{\"jobId\":\"test-20261110t143331z-491657\",\"kind\":\"test\",\"state\":\"running\",\"epoch\":2,\"action\":\"respawn\",\"stopped\":0,\"executorPid\":916207}]",
+        "task e2e-e2c-mwasir36, job test-20261110t143331z-491657"
+      ]
+    }
+  ]
+}

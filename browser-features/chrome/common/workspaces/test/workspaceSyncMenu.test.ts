@@ -16,14 +16,21 @@ import {
 async function testNativeSyncMenuStateTracksSignals(): Promise<void> {
   const [available, setAvailable] = createSignal(true);
   const [selected, setSelected] = createSignal(false);
+  const [enabled, setEnabled] = createSignal(true);
+  const selections: boolean[] = [];
   const workspaceId = "24be4056-599f-466b-9d3d-fd33ed287ac8" as TWorkspaceID;
   // Only the sync command is exercised. The real component and renderer retain
   // ownership of every XUL attribute; the service boundary supplies state only.
   const ctx = {
     syncController: {
       isAvailable: available,
+      isEnabled: enabled,
       isSelected: selected,
       errorText: () => null,
+      select: (_id: TWorkspaceID, value: boolean) => {
+        selections.push(value);
+        return Promise.resolve();
+      },
     },
   } as unknown as WorkspacesService;
   const host = document.createXULElement("menupopup");
@@ -65,6 +72,18 @@ async function testNativeSyncMenuStateTracksSignals(): Promise<void> {
       "an unselected workspace must omit the checked attribute",
     );
 
+    const normalHelp = item.getAttribute("tooltiptext");
+    assert(normalHelp, "an unselected workspace has normal sync help");
+    setEnabled(false);
+    await Promise.resolve();
+    assertEquals(
+      item.getAttribute("tooltiptext"),
+      normalHelp,
+      "an unselected workspace must not advertise an unavailable resume action",
+    );
+    setEnabled(true);
+    await Promise.resolve();
+
     setSelected(true);
     await Promise.resolve();
     assertEquals(
@@ -72,6 +91,27 @@ async function testNativeSyncMenuStateTracksSignals(): Promise<void> {
       "true",
       "selection changes must reach the rendered menu item",
     );
+
+    setEnabled(false);
+    await Promise.resolve();
+    assert(!item.hasAttribute("checked"), "paused transport is not checked");
+    assertEquals(item.disabled, false, "paused transport can be resumed");
+    assert(
+      /Resume Workspace Sync|ワークスペース同期を再開/u.test(
+        item.getAttribute("label") ?? "",
+      ),
+      "a selected but paused workspace exposes the resume action",
+    );
+    item.dispatchEvent(new Event("command", { bubbles: true }));
+    await Promise.resolve();
+    assertEquals(
+      selections.at(-1),
+      true,
+      "resume reselects, rather than opts out",
+    );
+    setEnabled(true);
+    await Promise.resolve();
+    assertEquals(item.getAttribute("checked"), "true", "resumed selection");
 
     setSelected(false);
     await Promise.resolve();

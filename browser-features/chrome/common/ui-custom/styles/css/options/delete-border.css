@@ -92,7 +92,7 @@ browser[type="content"] > html {
   border-top: none !important;
 }
 
-#nav-bar:-moz-lwtheme {
+:root[lwtheme] #nav-bar {
   box-shadow: none !important;
 }
 

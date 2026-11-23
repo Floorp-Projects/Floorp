@@ -2,7 +2,10 @@
 
 type FirefoxTabRemovalState = {
   closing?: unknown;
-  _endRemoveArgs?: unknown;
+};
+
+type FirefoxReplacementEventDetail = {
+  floorpReplacementForTab?: unknown;
 };
 
 type BrowserWithBrowsingContext = {
@@ -77,20 +80,25 @@ export function hasOriginUserContextId(
 }
 
 /**
- * Firefox sets `_endRemoveArgs[1]` to true before synchronously opening the
- * keep-alive tab that replaces the last visible tab in a window. Treat the
- * private field as a capability: if its shape or value is unavailable, fail
- * safe and do not classify any opened tab as a replacement.
+ * The patched Firefox keep-alive TabOpen names its exact closing source.
+ * Firefox 159 stores removal arguments in a private WeakMap, so neither old
+ * expando fields nor the opened tab's URL can authorize replacement tracking.
  */
-export function hasFirefoxReplacementSignal(tab: unknown): boolean {
-  if (typeof tab !== "object" || tab === null) {
+export function hasFirefoxReplacementSignal(
+  tab: unknown,
+  eventDetail?: unknown,
+): boolean {
+  if (
+    typeof tab !== "object" || tab === null ||
+    typeof eventDetail !== "object" || eventDetail === null
+  ) {
     return false;
   }
 
   const removalState = tab as FirefoxTabRemovalState;
   return removalState.closing === true &&
-    Array.isArray(removalState._endRemoveArgs) &&
-    removalState._endRemoveArgs[1] === true;
+    (eventDetail as FirefoxReplacementEventDetail).floorpReplacementForTab ===
+      tab;
 }
 
 /** Remove only the exact Firefox replacement object captured for this close. */
@@ -111,11 +119,19 @@ export class FirefoxTabReplacementTracker<T extends object> {
   private readonly replacementByClosingTab = new WeakMap<T, T>();
   private readonly terminalClosingTabs = new WeakSet<T>();
 
-  observeTabOpen(openedTab: T, tabs: readonly T[]): void {
+  observeTabOpen(
+    openedTab: T,
+    tabs: readonly T[],
+    eventDetail?: unknown,
+  ): void {
+    if (!tabs.includes(openedTab)) {
+      return;
+    }
+
     const closingCandidates = tabs.filter((candidate) =>
       candidate !== openedTab &&
       !this.terminalClosingTabs.has(candidate) &&
-      hasFirefoxReplacementSignal(candidate)
+      hasFirefoxReplacementSignal(candidate, eventDetail)
     );
 
     if (closingCandidates.length !== 1) {
