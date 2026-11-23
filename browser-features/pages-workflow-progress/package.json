@@ -4,7 +4,7 @@
     "description": "Workflow progress PIP window for Floorp OS",
     "main": "index.js",
     "scripts": {
-        "dev": "vite --port 5192",
+        "dev": "vite",
         "build": "vite build"
     },
     "keywords": [],

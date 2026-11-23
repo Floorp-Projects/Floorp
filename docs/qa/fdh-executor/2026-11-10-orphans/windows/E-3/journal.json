@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "jobId": "test-20261110t145504z-da53b2",
+  "taskId": "e2e-e-3-mwatagxh",
+  "worktree": "E:\\floorp-browser-dev\\fdh-followup",
+  "kind": "test",
+  "step": {
+    "cwd": "E:\\floorp-browser-dev\\fdh-followup",
+    "displayCommand": "deno task test:host",
+    "commands": [
+      {
+        "argv": [
+          "deno",
+          "task",
+          "test:host"
+        ],
+        "displayCommand": "deno task test:host",
+        "assertionName": "host-test-exit-code",
+        "expected": "exit code 0"
+      }
+    ]
+  },
+  "intent": null,
+  "inputs": {
+    "baseCommit": "c9110a990d97ca43c7cc69b960d897a1819554d8",
+    "head": "c9110a990d97ca43c7cc69b960d897a1819554d8",
+    "guardEnv": {},
+    "worktreeState": "5b8173c51723b21589c0deff1175c6dab3137fc3367da5de25d1d50ca0d567f4"
+  },
+  "executionDigest": "1ee37617490e1c5bc7f106a89cb8caf5c7928865a0a89a50906045ffc3a9b5f5",
+  "state": "succeeded",
+  "epoch": 1,
+  "lease": null,
+  "leaseTtlMs": 3000,
+  "maxAttempts": 3,
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "holder": "executor-87156-166ce4",
+      "scheduledAt": "2026-11-10T14:55:04.464Z",
+      "startedAt": "2026-11-10T14:55:04.805Z",
+      "endedAt": "2026-11-10T14:55:15.844Z",
+      "result": "succeeded",
+      "exitCode": 0,
+      "logRef": "_dist/fdh/jobs/e2e-e-3-mwatagxh/test-20261110t145504z-da53b2-1-0.log",
+      "process": {
+        "pid": 54960,
+        "startTime": "2026-11-10T14:55:04.8095270Z",
+        "commandLine": "C:\\Users\\user\\.deno\\bin\\deno.exe task test:host"
+      },
+      "notes": ""
+    }
+  ],
+  "checkpoint": 1,
+  "commandResults": [
+    {
+      "index": 0,
+      "epoch": 1,
+      "exitCode": 0,
+      "startedAt": "2026-11-10T14:55:04.806Z",
+      "endedAt": "2026-11-10T14:55:15.844Z",
+      "logRef": "_dist/fdh/jobs/e2e-e-3-mwatagxh/test-20261110t145504z-da53b2-1-0.log"
+    }
+  ],
+  "recordedToTask": true,
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-10T14:55:04.464Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-10T14:55:04.464Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-10T14:55:04.805Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-10T14:55:16.295Z",
+      "reason": "attempt 1 exited 0"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-11-10T14:55:16.295Z",
+      "kind": "outbox-applied",
+      "epoch": 1,
+      "note": "result recovered from outbox"
+    }
+  ],
+  "createdAt": "2026-11-10T14:55:04.464Z",
+  "updatedAt": "2026-11-10T14:55:16.295Z"
+}

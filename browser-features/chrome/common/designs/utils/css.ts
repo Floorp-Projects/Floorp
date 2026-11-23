@@ -14,7 +14,17 @@ import protonfixUserJs from "@nora/skin/lepton/userjs/protonfix.js?raw";
 // CSS raw imports for development
 import leptonChromeStylesRaw from "@nora/skin/lepton/css/leptonChrome.css?raw";
 import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
+// Floorp-owned overlays for the vendored Lepton sheets. css/ is a
+// byte-identical copy of upstream (skin/lepton/UPSTREAM.json); Floorp changes
+// to Lepton CSS go to these files, each loaded right after its Lepton sheet
+// at the same level (see skin/lepton/README.md).
+import leptonChromeOverlayRaw from "@nora/skin/lepton/overlay/leptonChromeOverlay.css?raw";
+import leptonContentOverlayRaw from "@nora/skin/lepton/overlay/leptonContentOverlay.css?raw";
 import fluerialStylesRaw from "@nora/skin/fluerial/css/fluerial.css?raw";
+import { launchDevPorts } from "#modules/common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+const launchDevPort = launchDevPorts();
 import {
   FLUERIAL_TAB_CORNER_CSS,
   TAB_COLOR_LIKE_TOOLBAR_CSS,
@@ -43,9 +53,19 @@ import {
  *
  *   - Default / built-in themes (default-theme, compact-light, compact-dark):
  *     Firefox does NOT set `[lwtheme]` for these, so they fall through to the
- *     "no theme" branch and are painted with the selected tab color. Lepton's
- *     own `userChrome.tab.color_like_toolbar` aligns the tab to the toolbar
- *     here, so this reads as the intended Lepton "one surface" look.
+ *     "no theme" branch and are painted with the toolbar color. Lepton's
+ *     own `userChrome.tab.color_like_toolbar` (lepton / photon) aligns the
+ *     selected tab to that same color, which gives the Lepton "one surface"
+ *     look.
+ *   - The bars never read `--tab-selected-bgcolor`. Floorp aliases it to
+ *     Gecko's `--tab-background-color-selected` on :root
+ *     (gecko-152-var-aliases.css.ts), and only `color_like_toolbar` (or
+ *     Lepton's Windows / macOS system-color block) unsets it. ProtonFix keeps
+ *     `color_like_toolbar` off, so on Linux the alias stays set, and with the
+ *     built-in Light / Dark themes (whose selected tab is `#fff` /
+ *     `rgba(106, 106, 120, 0.7)`, unlike the toolbar) the nav-bar and
+ *     bookmark bar took the tab color while #browser, the panel sidebar and
+ *     the status bar kept the toolbar color.
  *   - Third-party LWTs (community colorways, add-on themes): these DO set the
  *     `[lwtheme]` attribute. We respect the theme's own toolbar color instead
  *     of the tab color, so the bar stays anchored to the toolbar the author
@@ -84,10 +104,12 @@ import {
  */
 export const navBarBackgroundColorCSS = `
 /* No theme loaded (default-theme, built-in Light/Dark, etc.): paint nav-bar /
- * PersonalToolbar with the selected tab color. Lepton's color_like_toolbar
- * unsets --tab-selected-bgcolor, so this resolves to --toolbar-bgcolor -- the
- * exact token that paints the selected .tab-background -- keeping the bars
- * flush with the active tab.
+ * PersonalToolbar with the toolbar color, the same token #browser and the
+ * other chrome surfaces use. Lepton's color_like_toolbar makes the selected
+ * .tab-background use it too, keeping the bars flush with the active tab.
+ * Do not read --tab-selected-bgcolor here: with color_like_toolbar off
+ * (protonfix) it stays the selected-tab color on Linux, which split the bars
+ * from the rest of the chrome under the built-in Light / Dark themes.
  *
  * NOTE: this opaque fill is deliberately scoped to :root:not([lwtheme]).
  * A loaded LWT draws its background artwork on <body> and relies on the
@@ -95,8 +117,8 @@ export const navBarBackgroundColorCSS = `
 :root:not([lwtheme]) #nav-bar,
 :root:not([lwtheme]) #PersonalToolbar {
   --floorp-chrome-surface-color: var(
-    --tab-selected-bgcolor,
-    var(--toolbar-bgcolor, var(--toolbar-background-color))
+    --toolbar-bgcolor,
+    var(--toolbar-background-color)
   );
   background-color: var(--floorp-chrome-surface-color) !important;
   color: var(--toolbar-text-color);
@@ -156,13 +178,33 @@ const getIconBasePath = (skin: string): string => {
   return `${getStylePath(`${skin}/icons`)}`;
 };
 
+/** Lepton sheets with their Floorp overlays, in load order. */
+const LEPTON_CHROME_STYLES_RAW = [
+  leptonChromeStylesRaw,
+  leptonChromeOverlayRaw,
+];
+const LEPTON_CONTENT_STYLES_RAW = [
+  leptonContentStylesRaw,
+  leptonContentOverlayRaw,
+];
+const LEPTON_CHROME_STYLES = [
+  getStylePath("lepton/css/leptonChrome.css"),
+  getStylePath("lepton/overlay/leptonChromeOverlay.css"),
+];
+const LEPTON_CONTENT_STYLES = [
+  getStylePath("lepton/css/leptonContent.css"),
+  getStylePath("lepton/overlay/leptonContentOverlay.css"),
+];
+
 /**
- * Get CSS configuration based on the selected UI theme
+ * Get CSS configuration based on the selected UI theme. `isDev` selects the
+ * dev (raw CSS) or production (chrome:// URL) branch; tests pass it to cover
+ * both.
  */
 export function getCSSFromConfig(
   pref: t.TypeOf<typeof zFloorpDesignConfigs>,
+  isDev: boolean = import.meta.env.DEV,
 ): FCSS {
-  const isDev = import.meta.env.DEV;
   const uiTheme = pref.globalConfigs.userInterface;
 
   switch (uiTheme) {
@@ -178,7 +220,7 @@ export function getCSSFromConfig(
             // once the built-in-theme signals go unreliable on 152.
             GECKO_152_COLOR_FIX_CSS,
           ],
-          iconBasePath: "http://localhost:5174/fluerial/icons",
+          iconBasePath: launchDevPort.httpOrigin("designs", "/fluerial/icons"),
           userjs: null,
           useTabColorAsToolbarColor: true,
         };
@@ -200,21 +242,23 @@ export function getCSSFromConfig(
       if (isDev) {
         return {
           chromeStylesRaw: [
-            leptonChromeStylesRaw,
-            leptonContentStylesRaw,
+            ...LEPTON_CHROME_STYLES_RAW,
             LEPTON_COMPAT_CSS,
             navBarBackgroundColorCSS,
           ],
-          iconBasePath: "http://localhost:5174/lepton/icons",
+          // Lepton's userContent part must also reach content documents
+          // (about:newtab, about:home, about:preferences, ...), the same as
+          // photon and protonfix. A chrome-document <link> alone never
+          // matches those pages, so the userContent.* prefs had no effect.
+          stylesRaw: [...LEPTON_CONTENT_STYLES_RAW],
+          iconBasePath: launchDevPort.httpOrigin("designs", "/lepton/icons"),
           userjs: leptonUserJs,
         };
       }
       return {
-        chromeStyles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [...LEPTON_CHROME_STYLES, ...LEPTON_CONTENT_STYLES],
         chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],
+        styles: [...LEPTON_CONTENT_STYLES],
         userjs: leptonUserJs,
       };
     }
@@ -223,22 +267,19 @@ export function getCSSFromConfig(
       if (isDev) {
         return {
           chromeStylesRaw: [
-            leptonChromeStylesRaw,
+            ...LEPTON_CHROME_STYLES_RAW,
             LEPTON_COMPAT_CSS,
             navBarBackgroundColorCSS,
           ],
-          stylesRaw: [leptonContentStylesRaw],
-          iconBasePath: "http://localhost:5174/lepton/icons",
+          stylesRaw: [...LEPTON_CONTENT_STYLES_RAW],
+          iconBasePath: launchDevPort.httpOrigin("designs", "/lepton/icons"),
           userjs: photonUserJs,
         };
       }
       return {
-        chromeStyles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [...LEPTON_CHROME_STYLES, ...LEPTON_CONTENT_STYLES],
         chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],
-        styles: [getStylePath("lepton/css/leptonContent.css")],
+        styles: [...LEPTON_CONTENT_STYLES],
         userjs: photonUserJs,
       };
     }
@@ -247,22 +288,19 @@ export function getCSSFromConfig(
       if (isDev) {
         return {
           chromeStylesRaw: [
-            leptonChromeStylesRaw,
+            ...LEPTON_CHROME_STYLES_RAW,
             LEPTON_COMPAT_CSS,
             navBarBackgroundColorCSS,
           ],
-          stylesRaw: [leptonContentStylesRaw],
-          iconBasePath: "http://localhost:5174/lepton/icons",
+          stylesRaw: [...LEPTON_CONTENT_STYLES_RAW],
+          iconBasePath: launchDevPort.httpOrigin("designs", "/lepton/icons"),
           userjs: protonfixUserJs,
         };
       }
       return {
-        chromeStyles: [
-          getStylePath("lepton/css/leptonChrome.css"),
-          getStylePath("lepton/css/leptonContent.css"),
-        ],
+        chromeStyles: [...LEPTON_CHROME_STYLES, ...LEPTON_CONTENT_STYLES],
         chromeStylesRaw: [LEPTON_COMPAT_CSS, navBarBackgroundColorCSS],
-        styles: [getStylePath("lepton/css/leptonContent.css")],
+        styles: [...LEPTON_CONTENT_STYLES],
         userjs: protonfixUserJs,
       };
     }
