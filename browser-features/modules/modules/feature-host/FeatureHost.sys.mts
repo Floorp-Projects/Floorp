@@ -162,6 +162,7 @@ export type M0DurableWriteObserverForTests = (
 export interface M0FeatureHostTestOptions {
   afterDurableWriteForTests?: M0DurableWriteObserverForTests;
   excludeWindowsForTests?: boolean;
+  onlyWindowsForTests?: readonly Window[];
   hubRegistryForTests?: HubRegistry;
   appMenuRegistryForTests?: AppMenuRegistry;
   hubPublicationTimeoutMsForTests?: number;
@@ -954,7 +955,8 @@ export class M0FeatureHost {
   #nextWindowAttachCompletionGate: WindowAttachGate | null = null;
   #testAttachFailureWindowId: string | null = null;
   #testExcludeWindows = false;
-  #testOnlyWindow: Window | null = null;
+  #testOnlyWindows: WeakSet<Window> | null = null;
+  #testOnlyWindowForTests: Window | null = null;
 
   private constructor(
     readonly root: string,
@@ -970,6 +972,9 @@ export class M0FeatureHost {
     this.#afterDurableWriteForTests = testOptions?.afterDurableWriteForTests ??
       null;
     this.#testExcludeWindows = testOptions?.excludeWindowsForTests ?? false;
+    this.#testOnlyWindows = testOptions?.onlyWindowsForTests !== undefined
+      ? new WeakSet(testOptions.onlyWindowsForTests)
+      : null;
     this.#hubRegistry = testOptions?.hubRegistryForTests ??
       getSharedHubRegistry();
     this.#hubPublicationTimeoutMs =
@@ -1095,7 +1100,8 @@ export class M0FeatureHost {
       if (
         testOptions?.afterDurableWriteForTests ||
         testOptions?.hubRegistryForTests ||
-        testOptions?.appMenuRegistryForTests
+        testOptions?.appMenuRegistryForTests ||
+        testOptions?.onlyWindowsForTests !== undefined
       ) {
         throw new Error("M0 test observer must be installed before open");
       }
@@ -1109,7 +1115,8 @@ export class M0FeatureHost {
       if (
         testOptions?.afterDurableWriteForTests ||
         testOptions?.hubRegistryForTests ||
-        testOptions?.appMenuRegistryForTests
+        testOptions?.appMenuRegistryForTests ||
+        testOptions?.onlyWindowsForTests !== undefined
       ) {
         throw new Error("M0 test observer must be installed before open");
       }
@@ -1619,7 +1626,8 @@ export class M0FeatureHost {
       throw new Error("window filter is unavailable");
     }
     this.#testExcludeWindows = false;
-    this.#testOnlyWindow = window;
+    this.#testOnlyWindows = new WeakSet([window]);
+    this.#testOnlyWindowForTests = window;
     for (const current of this.#windowEntries.keys()) {
       if (current !== window) this.#forgetWindow(current);
     }
@@ -2759,13 +2767,14 @@ export class M0FeatureHost {
       this.#signalWindowClosed(window);
     }
     this.#windowEntries.clear();
-    this.#testOnlyWindow = null;
+    this.#testOnlyWindows = null;
+    this.#testOnlyWindowForTests = null;
   }
 
   #onWindowOpened(window: Window): void {
     if (
       this.#closed || this.#testExcludeWindows || window.closed ||
-      (this.#testOnlyWindow && this.#testOnlyWindow !== window) ||
+      (this.#testOnlyWindows && !this.#testOnlyWindows.has(window)) ||
       this.#pendingStartupWindows.has(window)
     ) {
       return;
@@ -2790,7 +2799,10 @@ export class M0FeatureHost {
       window.removeEventListener("load", listener);
       this.#loadListeners.delete(window);
     }
-    if (this.#closed || window.closed) {
+    if (
+      this.#closed || window.closed ||
+      (this.#testOnlyWindows && !this.#testOnlyWindows.has(window))
+    ) {
       this.#forgetWindow(window);
       return;
     }
@@ -2806,7 +2818,7 @@ export class M0FeatureHost {
   #onWindowReady(window: Window): void {
     if (
       this.#closed || this.#testExcludeWindows || window.closed ||
-      (this.#testOnlyWindow && this.#testOnlyWindow !== window)
+      (this.#testOnlyWindows && !this.#testOnlyWindows.has(window))
     ) {
       this.#forgetWindow(window);
       return;
@@ -2912,6 +2924,7 @@ export class M0FeatureHost {
   }
 
   #onWindowClosed(window: Window): void {
+    if (this.#testOnlyWindows && !this.#testOnlyWindows.has(window)) return;
     const entry = this.#windowEntries.get(window) ?? null;
     const wasAttached = entry !== null &&
       this.#windows.get(entry.id) === window;
@@ -2926,7 +2939,10 @@ export class M0FeatureHost {
         console.error("[FeatureHost]", error);
       }
     }
-    if (this.#testOnlyWindow === window) this.#testOnlyWindow = null;
+    if (this.#testOnlyWindowForTests === window) {
+      this.#testOnlyWindowForTests = null;
+      this.#testOnlyWindows = null;
+    }
     this.#forgetWindow(window);
     if (!entry || !wasAttached) return;
     const runtime = this.#running;
@@ -3028,7 +3044,7 @@ export class M0FeatureHost {
     const enumerator = Services.wm.getEnumerator("navigator:browser");
     while (enumerator.hasMoreElements()) {
       const window = enumerator.getNext() as unknown as Window;
-      if (this.#testOnlyWindow && this.#testOnlyWindow !== window) continue;
+      if (this.#testOnlyWindows && !this.#testOnlyWindows.has(window)) continue;
       if (!isEligibleM0Window(window)) continue;
       const entry = this.#ensureWindowEntry(window);
       if (!entry) continue;
@@ -3041,7 +3057,7 @@ export class M0FeatureHost {
 
   #isCurrentWindowEntry(entry: WindowEntry): boolean {
     return !this.#closed && !this.#testExcludeWindows && !entry.window.closed &&
-      (!this.#testOnlyWindow || this.#testOnlyWindow === entry.window) &&
+      (!this.#testOnlyWindows || this.#testOnlyWindows.has(entry.window)) &&
       this.#windowEntries.get(entry.window) === entry &&
       isEligibleM0Window(entry.window);
   }

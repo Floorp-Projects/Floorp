@@ -24,7 +24,11 @@ const {
   "resource://noraneko/modules/feature-host/FeatureHost.sys.mjs",
 ) as HostModule;
 type RegistryModule = typeof import("./AppMenuRegistry.sys.mts");
-const { AppMenuRegistry, HUB_PANEL_MENU_FEATURE_ID } = ChromeUtils
+const {
+  AppMenuRegistry,
+  HUB_PANEL_MENU_FEATURE_ID,
+  HUB_PANEL_MENU_TRIGGER_ID,
+} = ChromeUtils
   .importESModule(
     "resource://noraneko/modules/feature-host/AppMenuRegistry.sys.mjs",
   ) as RegistryModule;
@@ -131,14 +135,36 @@ async function waitForDelayedStartup(browserWindow: Window): Promise<void> {
   });
 }
 
-function eligibleBrowserWindows(): Window[] {
-  const windows: Window[] = [];
-  const enumerator = Services.wm.getEnumerator("navigator:browser");
-  while (enumerator.hasMoreElements()) {
-    const browserWindow = enumerator.getNext() as Window;
-    if (isEligibleFeatureWindow(browserWindow)) windows.push(browserWindow);
+async function openAppMenuTestWindow(): Promise<Window> {
+  const browserWindow = openTestBrowserWindow();
+  try {
+    await waitForDelayedStartup(browserWindow);
+    const trigger = browserWindow.document.getElementById(
+      HUB_PANEL_MENU_TRIGGER_ID,
+    );
+    if (!isEligibleFeatureWindow(browserWindow) || !trigger?.isConnected) {
+      throw new Error("opened test window is missing its app-menu trigger");
+    }
+    return browserWindow;
+  } catch (error) {
+    if (!browserWindow.closed) browserWindow.close();
+    throw error;
   }
-  return windows;
+}
+
+async function openAppMenuTestWindows(count: number): Promise<Window[]> {
+  const windows: Window[] = [];
+  try {
+    for (let index = 0; index < count; index += 1) {
+      windows.push(await openAppMenuTestWindow());
+    }
+    return windows;
+  } catch (error) {
+    for (const browserWindow of windows) {
+      if (!browserWindow.closed) browserWindow.close();
+    }
+    throw error;
+  }
 }
 
 async function waitForCondition(
@@ -585,10 +611,7 @@ async function testInitialDefaultWriteFaultBoundaries(): Promise<void> {
 }
 
 async function testAppMenuReadinessAndGenerationFencing(): Promise<void> {
-  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser") as
-    | Window
-    | null;
-  if (!browserWindow) throw new Error("test requires a browser window");
+  const browserWindow = await openAppMenuTestWindow();
   const registry = new AppMenuRegistry();
   const leases: ReturnType<AppMenuRegistryInstance["beginGeneration"]>[] = [];
   let claim: ReturnType<AppMenuRegistryInstance["claimHost"]> | null = null;
@@ -723,6 +746,9 @@ async function testAppMenuReadinessAndGenerationFencing(): Promise<void> {
       }),
       () => connection?.dispose(),
       () => claim?.release(),
+      () => {
+        if (!browserWindow.closed) browserWindow.close();
+      },
     ], "readiness test cleanup failed");
   }
 }
@@ -730,10 +756,7 @@ async function testAppMenuReadinessAndGenerationFencing(): Promise<void> {
 async function testReentrantAdapterReplacementFencesOldAcknowledgement(): Promise<
   void
 > {
-  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser") as
-    | Window
-    | null;
-  if (!browserWindow) throw new Error("test requires a browser window");
+  const browserWindow = await openAppMenuTestWindow();
   const registry = new AppMenuRegistry();
   const signal = new AbortController().signal;
   let failureCount = 0;
@@ -787,15 +810,15 @@ async function testReentrantAdapterReplacementFencesOldAcknowledgement(): Promis
       () => replacement?.dispose(),
       () => oldConnection?.dispose(),
       () => claim?.release(),
+      () => {
+        if (!browserWindow.closed) browserWindow.close();
+      },
     ], "reentrant adapter test cleanup failed");
   }
 }
 
 async function testMissingAdapterAndHmrRebindAreBounded(): Promise<void> {
-  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser") as
-    | Window
-    | null;
-  if (!browserWindow) throw new Error("test requires a browser window");
+  const missingWindow = await openAppMenuTestWindow();
   const missingRegistry = new AppMenuRegistry();
   let missingClaim: ReturnType<AppMenuRegistryInstance["claimHost"]> | null =
     null;
@@ -819,7 +842,7 @@ async function testMissingAdapterAndHmrRebindAreBounded(): Promise<void> {
     missingRegistry.stageDescriptor(missingLease, { command: "open-hub" });
     const missingError = await rejectMessage(missingRegistry.stageAndWait(
       missingLease,
-      [browserWindow],
+      [missingWindow],
       new AbortController().signal,
       5,
     ));
@@ -837,9 +860,13 @@ async function testMissingAdapterAndHmrRebindAreBounded(): Promise<void> {
         }
       },
       () => missingClaim?.release(),
+      () => {
+        if (!missingWindow.closed) missingWindow.close();
+      },
     ], "missing adapter test cleanup failed");
   }
 
+  const browserWindow = await openAppMenuTestWindow();
   const registry = new AppMenuRegistry();
   let claim: ReturnType<AppMenuRegistryInstance["claimHost"]> | null = null;
   let first: AppMenuAdapterConnection | null = null;
@@ -962,6 +989,9 @@ async function testMissingAdapterAndHmrRebindAreBounded(): Promise<void> {
       () => replacement?.dispose(),
       () => first?.dispose(),
       () => claim?.release(),
+      () => {
+        if (!browserWindow.closed) browserWindow.close();
+      },
     ], "HMR rebind test cleanup failed");
   }
 }
@@ -969,8 +999,8 @@ async function testMissingAdapterAndHmrRebindAreBounded(): Promise<void> {
 async function testInFlightPublicationFailureSettlesOnce(): Promise<void> {
   const root = rootPath();
   const registry = new AppMenuRegistry();
-  const windows = eligibleBrowserWindows();
-  assert(windows.length > 0, "publication test has eligible windows");
+  const testWindow = await openAppMenuTestWindow();
+  const windows = [testWindow];
   const connections: AppMenuAdapterConnection[] = [];
   const renderCounts = new Map<Window, number>();
   const durablePending: Record<string, unknown>[] = [];
@@ -996,6 +1026,7 @@ async function testInFlightPublicationFailureSettlesOnce(): Promise<void> {
       undefined,
       {
         appMenuRegistryForTests: registry,
+        onlyWindowsForTests: windows,
         appMenuPublicationTimeoutMsForTests: 1_000,
         afterDurableWriteForTests: (record) => {
           if (
@@ -1048,6 +1079,9 @@ async function testInFlightPublicationFailureSettlesOnce(): Promise<void> {
         if (host) await host.shutdown();
       },
       ...connections.map((connection) => () => connection.dispose()),
+      () => {
+        if (!testWindow.closed) testWindow.close();
+      },
       () => IOUtils.remove(root, { recursive: true, ignoreAbsent: true }),
     ], "in-flight publication test cleanup failed");
   }
@@ -1056,8 +1090,8 @@ async function testInFlightPublicationFailureSettlesOnce(): Promise<void> {
 async function testLateMenuFailurePreservesTerminalReplay(): Promise<void> {
   const root = rootPath();
   const registry = new AppMenuRegistry();
-  const windows = eligibleBrowserWindows();
-  assert(windows.length > 0, "late failure test has eligible windows");
+  const testWindow = await openAppMenuTestWindow();
+  const windows = [testWindow];
   const connections: AppMenuAdapterConnection[] = [];
   const owners = new Map<Window, AppMenuOwner>();
   let host:
@@ -1080,6 +1114,7 @@ async function testLateMenuFailurePreservesTerminalReplay(): Promise<void> {
       undefined,
       {
         appMenuRegistryForTests: registry,
+        onlyWindowsForTests: windows,
         appMenuPublicationTimeoutMsForTests: 1_000,
       },
     );
@@ -1145,6 +1180,9 @@ async function testLateMenuFailurePreservesTerminalReplay(): Promise<void> {
         if (host) await host.shutdown();
       },
       ...connections.map((connection) => () => connection.dispose()),
+      () => {
+        if (!testWindow.closed) testWindow.close();
+      },
       () => IOUtils.remove(root, { recursive: true, ignoreAbsent: true }),
     ], "late failure test cleanup failed");
   }
@@ -1155,8 +1193,8 @@ async function testTerminalWriteObserverFailurePreservesOutcome(): Promise<
 > {
   const root = rootPath();
   const registry = new AppMenuRegistry();
-  const windows = eligibleBrowserWindows();
-  assert(windows.length > 0, "terminal-write test has eligible windows");
+  const testWindow = await openAppMenuTestWindow();
+  const windows = [testWindow];
   const connections: AppMenuAdapterConnection[] = [];
   const owners = new Map<Window, AppMenuOwner>();
   const txId = "stage2-terminal-write-health";
@@ -1181,6 +1219,7 @@ async function testTerminalWriteObserverFailurePreservesOutcome(): Promise<
       undefined,
       {
         appMenuRegistryForTests: registry,
+        onlyWindowsForTests: windows,
         appMenuPublicationTimeoutMsForTests: 1_000,
         afterDurableWriteForTests: (record) => {
           const outcome = record.lastOutcome;
@@ -1232,6 +1271,9 @@ async function testTerminalWriteObserverFailurePreservesOutcome(): Promise<
         if (host) await host.shutdown();
       },
       ...connections.map((connection) => () => connection.dispose()),
+      () => {
+        if (!testWindow.closed) testWindow.close();
+      },
       () => IOUtils.remove(root, { recursive: true, ignoreAbsent: true }),
     ], "terminal durable-write test cleanup failed");
   }
@@ -1240,8 +1282,8 @@ async function testTerminalWriteObserverFailurePreservesOutcome(): Promise<
 async function testLateReadinessTimeoutBlocksPublishedHost(): Promise<void> {
   const root = rootPath();
   const registry = new AppMenuRegistry();
-  const windows = eligibleBrowserWindows();
-  assert(windows.length > 0, "late readiness test has eligible windows");
+  const testWindow = await openAppMenuTestWindow();
+  const windows = [testWindow];
   const connections: AppMenuAdapterConnection[] = [];
   let renderAvailable = true;
   let host:
@@ -1261,6 +1303,7 @@ async function testLateReadinessTimeoutBlocksPublishedHost(): Promise<void> {
       undefined,
       {
         appMenuRegistryForTests: registry,
+        onlyWindowsForTests: windows,
         appMenuPublicationTimeoutMsForTests: 1_000,
       },
     );
@@ -1317,6 +1360,9 @@ async function testLateReadinessTimeoutBlocksPublishedHost(): Promise<void> {
         if (host) await host.shutdown();
       },
       ...connections.map((connection) => () => connection.dispose()),
+      () => {
+        if (!testWindow.closed) testWindow.close();
+      },
       () => IOUtils.remove(root, { recursive: true, ignoreAbsent: true }),
     ], "late readiness test cleanup failed");
   }
@@ -1496,7 +1542,7 @@ async function testGenericHostDoesNotCloseAppMenuConnection(): Promise<void> {
 }
 
 async function testMenuCleanupErrorsBlockReplacement(): Promise<void> {
-  let secondWindow: Window | null = null;
+  let windows: Window[] = [];
   const root = rootPath();
   const registry = new AppMenuRegistry();
   const connections: AppMenuAdapterConnection[] = [];
@@ -1506,15 +1552,9 @@ async function testMenuCleanupErrorsBlockReplacement(): Promise<void> {
     | Awaited<ReturnType<typeof M0FeatureHost.openHubPanelMenuForTests>>
     | null = null;
   try {
-    const testWindow = openTestBrowserWindow();
-    secondWindow = testWindow;
-    await waitForDelayedStartup(testWindow);
-    const windows = eligibleBrowserWindows();
-    assert(windows.includes(testWindow), "cleanup test window is eligible");
-    const firstWindow = windows.find((browserWindow) =>
-      browserWindow !== testWindow
-    );
-    if (!firstWindow) throw new Error("second browser window unavailable");
+    windows = await openAppMenuTestWindows(2);
+    const firstWindow = windows[0]!;
+    const secondWindow = windows[1]!;
     for (const browserWindow of windows) {
       connections.push(registry.registerAdapter(browserWindow, {
         render: () => "deferred",
@@ -1536,6 +1576,7 @@ async function testMenuCleanupErrorsBlockReplacement(): Promise<void> {
       undefined,
       {
         appMenuRegistryForTests: registry,
+        onlyWindowsForTests: windows,
         appMenuPublicationTimeoutMsForTests: 1_000,
       },
     );
@@ -1571,7 +1612,9 @@ async function testMenuCleanupErrorsBlockReplacement(): Promise<void> {
       () => host?.shutdown(),
       ...connections.map((connection) => () => connection.dispose()),
       () => {
-        if (secondWindow && !secondWindow.closed) secondWindow.close();
+        for (const browserWindow of windows) {
+          if (!browserWindow.closed) browserWindow.close();
+        }
       },
       () => IOUtils.remove(root, { recursive: true, ignoreAbsent: true }),
     ], "menu cleanup replacement test cleanup failed");
@@ -1588,10 +1631,8 @@ async function testReplacementAndDisableRemovalReasons(): Promise<void> {
     | Awaited<ReturnType<typeof M0FeatureHost.openHubPanelMenuForTests>>
     | null = null;
   try {
-    testWindow = openTestBrowserWindow();
-    await waitForDelayedStartup(testWindow);
-    const windows = eligibleBrowserWindows();
-    assert(windows.includes(testWindow), "reason test window is eligible");
+    testWindow = await openAppMenuTestWindow();
+    const windows = [testWindow];
     for (const browserWindow of windows) {
       connections.push(registry.registerAdapter(browserWindow, {
         render: () => "deferred",
@@ -1605,6 +1646,7 @@ async function testReplacementAndDisableRemovalReasons(): Promise<void> {
       undefined,
       {
         appMenuRegistryForTests: registry,
+        onlyWindowsForTests: windows,
         appMenuPublicationTimeoutMsForTests: 1_000,
       },
     );
@@ -1651,12 +1693,9 @@ async function testReplacementAndDisableRemovalReasons(): Promise<void> {
 }
 
 async function testDisconnectAndCloseCleanupFailuresAreSticky(): Promise<void> {
-  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser") as
-    | Window
-    | null;
-  if (!browserWindow) throw new Error("test requires a browser window");
   const signal = new AbortController().signal;
   for (const cleanupMode of ["disconnect", "close"] as const) {
+    const browserWindow = await openAppMenuTestWindow();
     const registry = new AppMenuRegistry();
     let claim: ReturnType<AppMenuRegistryInstance["claimHost"]> | null = null;
     let connection: AppMenuAdapterConnection | null = null;
@@ -1725,6 +1764,9 @@ async function testDisconnectAndCloseCleanupFailuresAreSticky(): Promise<void> {
         },
         () => connection?.dispose(),
         () => claim?.release(),
+        () => {
+          if (!browserWindow.closed) browserWindow.close();
+        },
       ], `${cleanupMode} test cleanup failed`);
     }
   }
