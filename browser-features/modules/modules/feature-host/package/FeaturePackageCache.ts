@@ -52,10 +52,14 @@ function fail(code: FeaturePackageCacheErrorCode): never {
 }
 
 function boundedError(error: unknown): unknown {
-  if (
-    error instanceof FeaturePackageError ||
-    error instanceof FeaturePackageCacheError
-  ) return error;
+  try {
+    if (
+      error instanceof FeaturePackageError ||
+      error instanceof FeaturePackageCacheError
+    ) return error;
+  } catch {
+    return new FeaturePackageCacheError("cache-storage");
+  }
   return new FeaturePackageCacheError("cache-storage");
 }
 
@@ -131,20 +135,40 @@ export function openFeaturePackageCache(
         return Promise.reject(new FeaturePackageCacheError("cache-capacity"));
       }
       operationCount++;
-      let operation: () => Promise<T>;
-      try {
-        operation = prepare();
-      } catch (error: unknown) {
+
+      let resolvePreparation!: (
+        preparation:
+          | { readonly operation: () => Promise<T> }
+          | { readonly error: unknown },
+      ) => void;
+      const preparation = new Promise<
+        { readonly operation: () => Promise<T> } | { readonly error: unknown }
+      >((resolve) => resolvePreparation = resolve);
+      let slotReserved = true;
+      const releaseSlot = (): void => {
+        if (!slotReserved) return;
+        slotReserved = false;
         operationCount--;
-        return Promise.reject(boundedError(error));
-      }
-      const result = queue.then(operation);
+      };
+
+      const previous = queue;
+      const result = previous.then(async () => {
+        const prepared = await preparation;
+        if ("error" in prepared) throw prepared.error;
+        return await prepared.operation();
+      });
       queue = result.then(
         () => undefined,
         () => undefined,
-      ).then(() => {
-        operationCount--;
-      });
+      ).then(releaseSlot);
+
+      try {
+        resolvePreparation({ operation: prepare() });
+      } catch (error: unknown) {
+        const safeError = boundedError(error);
+        resolvePreparation({ error: safeError });
+        return Promise.reject(safeError);
+      }
       return result.catch((error: unknown) => {
         throw boundedError(error);
       });

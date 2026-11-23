@@ -23,7 +23,7 @@ export interface MemoryCacheState {
   initializeGate?: CacheGate;
   readGate?: CacheGate;
   stagingGate?: CacheGate;
-  readStarted?: () => void;
+  readStarted?: (name: string) => void;
   stagingStarted?: () => void;
   readReplacement?: Uint8Array;
 }

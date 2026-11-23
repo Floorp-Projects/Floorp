@@ -120,11 +120,13 @@ or trust.
 
 Each root has one in-process owner reserved before initialization. Opening,
 open, and closing roots reject duplicate owners. The cache admits at most 16
-running-plus-queued operations; failed operations return their slots. close()
-stops admission synchronously and drains accepted work before releasing its
-owner. Storage checks controlled ancestors and entries for static links and
-non-directory types, uses create-only staging and a no-overwrite move, and
-re-verifies every read under the supplied current policy.
+running-plus-queued operations; failed operations return their slots. Accepted
+operations reserve their FIFO position before synchronously snapshotting caller
+inputs and policy; storage and cryptographic work begin when that position
+reaches the head. close() stops admission synchronously and drains accepted work
+before releasing its owner. Storage checks controlled ancestors and entries for
+static links and non-directory types, uses create-only staging and a
+no-overwrite move, and re-verifies every read under the supplied current policy.
 
 These checks do not prevent same-user replacement races, provide generic
 multiprocess locking, or guarantee full power-loss durability. Dynamic
