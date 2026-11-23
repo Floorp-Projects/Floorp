@@ -155,6 +155,17 @@ export const LEPTON_COMPAT_152_CSS = `
  * Loaded AFTER leptonChrome.css; equal specificity wins by source order.
  * ======================================================================= */
 
+/* Gecko 154 renamed the native tab margin consumer. Lepton still writes
+ * --tab-block-margin (including its density overrides). Forward that value
+ * only for its horizontal padding mode; native vertical spacing is separate.
+ * Do not force a number or override theme-provided !important values. */
+@media -moz-pref("userChrome.tab.lepton_like_padding") and
+  (not -moz-pref("sidebar.verticalTabs")) {
+  :root {
+    --tab-margin-block: var(--tab-block-margin);
+  }
+}
+
 /* No built-in light/dark palette override here. An earlier no-theme rule
  * set only the legacy --lwt-accent-color / --toolbar-bgcolor tokens. Gecko
  * 159 paints the selected tab, #browser and (for protonfix) #nav-bar from
