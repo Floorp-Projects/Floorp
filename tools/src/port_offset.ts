@@ -16,6 +16,66 @@ import {
   marionettePortForOffset,
 } from "#libs/shared/dev-ports/defines.ts";
 
+// ── Floorp OS-Server port (KAN-135) ────────────────────────────
+
+/**
+ * Production/packaged default of the Floorp OS-Server listening port
+ * (browser-features/modules/modules/os-server/server.sys.mts). Keep this
+ * port out of the entire shifted dev topology, including the Vite servers
+ * and Marionette, even when the installed browser is closed.
+ */
+export const OS_SERVER_PRODUCTION_DEFAULT_PORT = 58261;
+
+/** Launch-profile pref the OS-Server reads its listening port from. */
+export const OS_SERVER_PORT_PREF = "floorp.os.server.port";
+
+/**
+ * Dev-only Floorp OS-Server port (KAN-135): an unused gap inside the frozen
+ * dev table span [DEV_PORT_MIN, DEV_PORT_MAX].
+ *
+ * Deliberately NOT a `DEV_PORTS` entry: the OS server is a loopback JSON API,
+ * not a trusted dev page origin, so it must not enter the
+ * `isTrustedDevPort` allowlists (`HUB_DEV_PAGES*`). Being inside the span
+ * keeps every existing offset invariant intact — two admissible launches
+ * whose table ports (Vite + Marionette) are disjoint automatically have
+ * disjoint OS-Server ports too, and `DEV_PORT_OFFSET_MAX` still bounds the
+ * shifted port inside the valid range (5175 + 60343 = 65518 <= 65535).
+ */
+export const DEV_OS_SERVER_PORT = 5175;
+
+function usesPackagedOsServerPort(offset: number): boolean {
+  return launchPortsForOffset(offset).includes(
+    OS_SERVER_PRODUCTION_DEFAULT_PORT,
+  );
+}
+
+function launchPortOffsetError(raw: number | string): string | null {
+  const error = devPortOffsetError(raw);
+  if (error !== null) return error;
+  const offset = Number(raw);
+  if (usesPackagedOsServerPort(offset)) {
+    return `--port-offset ${offset} maps a dev port to the installed Floorp OS-Server port ${OS_SERVER_PRODUCTION_DEFAULT_PORT}; use a different offset or auto`;
+  }
+  return null;
+}
+
+/**
+ * Validated Floorp OS-Server port for a dev launch with `offset`.
+ * Uses the same offset validation as the launcher.
+ */
+export function osServerPortForOffset(offset: number): number {
+  const error = launchPortOffsetError(offset);
+  if (error !== null) {
+    throw new Error(error);
+  }
+  return DEV_OS_SERVER_PORT + offset;
+}
+
+/** Loopback base URL of the dev Floorp OS-Server for `offset`. */
+export function devOsServerBaseUrl(offset: number): string {
+  return `http://127.0.0.1:${osServerPortForOffset(offset)}`;
+}
+
 /** A parsed --port-offset argument: a validated number, or "auto". */
 export type PortOffsetSpec = number | "auto";
 
@@ -24,8 +84,8 @@ export type PortOffsetSpec = number | "auto";
  * - omitted/empty → `0` (frozen base topology; identical to main);
  * - `"auto"` → `"auto"` (probe free offsets);
  * - a decimal string → the validated offset (integer, >= 0, inside the port
- *   range, and outside the non-overlap span so concurrent launch port sets
- *   stay disjoint);
+ *   range, outside the non-overlap span unless zero, and leaves the
+ *   packaged OS-Server port available);
  * - anything else throws a user-facing error.
  */
 export function parsePortOffsetSpec(
@@ -38,7 +98,7 @@ export function parsePortOffsetSpec(
     return "auto";
   }
   if (typeof raw === "number" || /^\d+$/.test(raw.trim())) {
-    const error = devPortOffsetError(raw);
+    const error = launchPortOffsetError(raw);
     if (error === null) {
       return Number(String(raw).trim());
     }
@@ -64,22 +124,30 @@ export async function isTcpPortInUse(port: number): Promise<boolean> {
   }
 }
 
-/** All ports a launch with the given offset would bind (Vite + Marionette). */
+/**
+ * All ports a launch with the given offset would bind: the Vite/Marionette
+ * table plus the dev-only Floorp OS-Server port (KAN-135). The OS port is
+ * appended last so existing index-based consumers keep their table ports;
+ * it is also what makes the auto-offset probe and the pre-launch guard
+ * (tools/src/fdh_task.ts) check OS-Server port availability for free.
+ */
 export function launchPortsForOffset(offset: number): number[] {
-  return Object.values(DEV_PORTS).map((base) => base + offset);
+  return [
+    ...Object.values(DEV_PORTS),
+    DEV_OS_SERVER_PORT,
+  ].map((base) => base + offset);
 }
 
 /**
  * Admissible candidate offsets for `auto`: `0` first (the frozen base
- * topology), then the non-overlap ladder (`span`, `2*span`, ...). Differences
- * between any two candidates are at least the table span, so candidate port
- * sets — Marionette included — are pairwise disjoint by design.
+ * topology), then the non-overlap ladder (`span`, `2*span`, ...) excluding
+ * any topology that uses the packaged OS-Server port.
  */
 export function autoPortOffsetCandidates(): number[] {
   const candidates: number[] = [0];
   const span = DEV_PORT_NON_OVERLAP_SPAN;
   for (let offset = span; offset <= DEV_PORT_OFFSET_MAX; offset += span) {
-    candidates.push(offset);
+    if (!usesPackagedOsServerPort(offset)) candidates.push(offset);
   }
   return candidates;
 }
@@ -88,8 +156,9 @@ async function busyPortAt(
   offset: number,
   probe: DevPortProbe,
 ): Promise<number | null> {
-  for (const base of Object.values(DEV_PORTS)) {
-    const port = base + offset;
+  // launchPortsForOffset includes the dev-only Floorp OS-Server port, so the
+  // auto offset resolution skips rungs whose OS-Server port is taken too.
+  for (const port of launchPortsForOffset(offset)) {
     if (await probe(port)) {
       return port;
     }
@@ -130,6 +199,7 @@ export function describeLaunchPorts(offset: number): string {
   return [
     `port-offset=${offset}`,
     `marionette=${launchMarionettePort(offset)}`,
+    `os-server=${devOsServerBaseUrl(offset)}`,
     `pref=${DEV_PORT_OFFSET_PREF}`,
   ].join(" ");
 }

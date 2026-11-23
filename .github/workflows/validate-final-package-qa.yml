@@ -23,6 +23,26 @@ name: Validate final Floorp package regressions
         required: false
         type: boolean
         default: false
+  workflow_call:
+    inputs:
+      package_run_id:
+        required: true
+        type: string
+      floorp_head_sha:
+        required: true
+        type: string
+      bundle_artifact:
+        description: Exact JSON identity of the signed bundle assembled in this run
+        required: true
+        type: string
+      installer_artifact_ids:
+        description: Exact JSON map of installer IDs from the assembled bundle
+        required: true
+        type: string
+      alpha:
+        description: Require the Windows result for Windows-only Alpha publication
+        type: boolean
+        default: false
 
 permissions:
   actions: read
@@ -33,9 +53,9 @@ jobs:
     name: Final package QA / ${{ matrix.platform }}/${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
-    # Windows starts in shadow mode: its result and evidence are recorded, but
-    # it does not fail this workflow until the probes are proven stable there.
-    continue-on-error: ${{ matrix.platform == 'windows' }}
+    # Preserve Windows shadow for stable and standalone QA. Alpha ships
+    # Windows only, so its publisher requires the Windows result.
+    continue-on-error: ${{ matrix.platform == 'windows' && !inputs.alpha }}
     strategy:
       fail-fast: false
       matrix:
@@ -88,8 +108,11 @@ jobs:
         env:
           SOURCE_RUN_ID: ${{ inputs.package_run_id }}
           FLOORP_HEAD_SHA: ${{ inputs.floorp_head_sha }}
-          VALIDATION_ONLY: ${{ inputs.validation_only }}
-          PRE_PUBLICATION: ${{ inputs.pre_publication }}
+          VALIDATION_ONLY: ${{ inputs.validation_only == true }}
+          PRE_PUBLICATION: ${{ inputs.pre_publication == true }}
+          BUNDLE_ARTIFACT: ${{ inputs.bundle_artifact }}
+          INSTALLER_ARTIFACT_IDS: ${{ inputs.installer_artifact_ids }}
+          ALPHA: ${{ inputs.alpha == true }}
           PACKAGE_NAME: ${{ matrix.package }}
           TARGET_PLATFORM: ${{ matrix.platform }}
           TARGET_ARCH: ${{ matrix.arch }}
@@ -109,7 +132,21 @@ jobs:
             }
             const runId = Number(process.env.SOURCE_RUN_ID);
             const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: runId});
-            validateSourceIdentity(run,process.env.FLOORP_HEAD_SHA);
+            const sameRun = Boolean(process.env.BUNDLE_ARTIFACT);
+            if (sameRun) {
+              const workflow = process.env.ALPHA === 'true'
+                ? 'package_and_publish_alpha.yml' : 'package_and_publish_release.yml';
+              if (runId !== context.runId || run.id !== runId ||
+                  run.repository?.full_name !== 'Floorp-Projects/Floorp' ||
+                  run.path !== `.github/workflows/${workflow}` ||
+                  run.head_sha !== context.sha || run.head_sha !== process.env.FLOORP_HEAD_SHA ||
+                  run.head_branch !== 'main' || run.event !== 'workflow_dispatch' ||
+                  process.env.VALIDATION_ONLY !== 'false' || process.env.PRE_PUBLICATION !== 'false') {
+                throw new Error('Expected the current canonical signed package run on main');
+              }
+            } else {
+              validateSourceIdentity(run,process.env.FLOORP_HEAD_SHA);
+            }
             const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun,
               {...context.repo, run_id: runId, per_page: 100});
             for (const target of ['windows/x86_64', 'linux/x86_64', 'linuxAarch64/aarch64',
@@ -155,10 +192,26 @@ jobs:
               prePublicationEvidence = {pendingDeployments,release,
                 bundleArtifacts:artifacts.filter(artifact => artifact.name === 'floorp-release-bundle-v2')};
             }
-            const sourceEligibility = validateFinalPackageSource({run,
-              headSha:process.env.FLOORP_HEAD_SHA,jobs,
-              prePublication:process.env.PRE_PUBLICATION === 'true',
-              unsigned:process.env.VALIDATION_ONLY === 'true',...prePublicationEvidence});
+            let sourceEligibility;
+            if (sameRun) {
+              const expected = JSON.parse(process.env.BUNDLE_ARTIFACT);
+              const bundles = artifacts.filter(artifact =>
+                artifact.name === 'floorp-release-bundle-v2' && !artifact.expired);
+              if (bundles.length !== 1 || expected.name !== bundles[0].name ||
+                  !Number.isSafeInteger(expected.id) || expected.id !== bundles[0].id ||
+                  !/^sha256:[0-9a-f]{64}$/.test(expected.digest || '') ||
+                  expected.digest !== bundles[0].digest ||
+                  bundles[0].workflow_run?.id !== runId ||
+                  bundles[0].workflow_run?.head_sha !== run.head_sha) {
+                throw new Error('Expected the immutable signed bundle from this run');
+              }
+              sourceEligibility = {phase:'before-publication-approval', bundle:expected};
+            } else {
+              sourceEligibility = validateFinalPackageSource({run,
+                headSha:process.env.FLOORP_HEAD_SHA,jobs,
+                prePublication:process.env.PRE_PUBLICATION === 'true',
+                unsigned:process.env.VALIDATION_ONLY === 'true',...prePublicationEvidence});
+            }
             const packageName = process.env.PACKAGE_NAME +
               (process.env.VALIDATION_ONLY === 'true' ? '-unsigned' : '');
             const recordName = `floorp-native-verification-${process.env.TARGET_PLATFORM}-${process.env.TARGET_ARCH}-v2`;
@@ -170,6 +223,10 @@ jobs:
                 throw new Error(`Missing or ambiguous authenticated ${name}`);
               }
               const artifact = matches[0];
+              if (sameRun && kind === 'package' &&
+                  JSON.parse(process.env.INSTALLER_ARTIFACT_IDS)[process.env.TARGET_PLATFORM] !== artifact.id) {
+                throw new Error(`Package ${name} is not the installer assembled into the bundle`);
+              }
               const response = await github.rest.actions.downloadArtifact(
                 {...context.repo, artifact_id: artifact.id, archive_format: 'zip'});
               const bytes = Buffer.from(response.data);
@@ -420,8 +477,7 @@ jobs:
             if (JSON.stringify(after) !== JSON.stringify(input.sourceEligibility)) {
               throw new Error('The immutable bundle or publication approval state changed during QA');
             }
-            // This read-only attestation is not a publisher dependency or lock.
-            // The owner's existing publication approval remains a separate action.
+            // Standalone dispatch records the observed approval state.
             fs.writeFileSync(path.join(process.env.RUNNER_TEMP,'final-package-qa/source-after-qa.json'),
               JSON.stringify({sourceEligibility:after,checkedAt:new Date().toISOString()},null,2));
 
@@ -429,7 +485,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}
+          name: >-
+            final-package-qa-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.run_id }}${{
+              inputs.bundle_artifact && format('-attempt-{0}', github.run_attempt) || '' }}
           path: |
             ${{ runner.temp }}/final-package-qa/*.json
             ${{ runner.temp }}/final-package-qa/*.txt

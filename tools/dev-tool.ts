@@ -4,13 +4,14 @@
 import * as path from "@std/path";
 import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
-import { PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
+import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
   matchesDevIdentity,
   selectDevProcesses,
 } from "./src/dev_process_selection.ts";
 import {
   describeLaunchPorts,
+  OS_SERVER_PRODUCTION_DEFAULT_PORT,
   parsePortOffsetSpec,
   resolveAutoDevPortOffset,
 } from "./src/port_offset.ts";
@@ -19,6 +20,7 @@ import {
   listDevProcesses,
   readDevProcesses,
   recordDevProcess,
+  registerWindowsBrowserListenerIdentity,
   reportDevPortConflict,
   terminateDevProcesses,
 } from "./src/dev_processes.ts";
@@ -39,10 +41,11 @@ Process management:
   start                     Start feles-build dev (background)
   start --port-offset <n|auto>
                             Start with every dev/test server port (and
-                            Marionette) shifted by n ports; "auto" probes the
-                            smallest free non-overlapping offset. n must be 0
-                            or at least the non-overlap span so concurrent
-                            worktrees cannot share ports.
+                            Marionette and OS-Server) shifted by n ports.
+                            n must be 0 or at least the non-overlap span and
+                            must leave port ${OS_SERVER_PRODUCTION_DEFAULT_PORT} for installed Floorp.
+                            "auto" skips ports with TCP listeners. Windows
+                            may also exclude ports without a listener.
   stop                      Stop dev processes for this checkout
   stop --all                Stop dev processes across ALL checkouts (recovery)
   restart                   Restart dev processes
@@ -221,14 +224,10 @@ async function cmdStart() {
 
   // Resolve the optional --port-offset before spawning so the log shows the
   // actual topology and the detached feles-build inherits a concrete number.
-  let spawnCommandArgs = "";
-  const rawOffsetArg = rawPortOffsetArgument(Deno.args);
-  if (rawOffsetArg !== undefined) {
-    const spec = parsePortOffsetSpec(rawOffsetArg);
-    const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
-    console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
-    spawnCommandArgs = ` --port-offset ${offset}`;
-  }
+  const spec = parsePortOffsetSpec(rawPortOffsetArgument(Deno.args));
+  const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
+  console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
+  const spawnCommandArgs = ` --port-offset ${offset}`;
 
   const logFile = path.join(PROJECT_ROOT, "_dist", "dev-server.log");
   const marionetteFile = path.join(
@@ -306,6 +305,22 @@ async function cmdStart() {
     try {
       const port = Deno.readTextFileSync(marionetteFile).trim();
       if (port) {
+        if (PLATFORM === "windows") {
+          try {
+            await registerWindowsBrowserListenerIdentity({
+              port: Number(port),
+              expectedBinaryPath: BIN_PATH_EXE,
+              expectedProfilePath: PATHS.profile_test,
+              recordedProcesses: readDevProcesses(),
+            });
+          } catch (error) {
+            console.error(
+              "[dev-tool] Actual browser listener identity was not registered:",
+              error,
+            );
+            Deno.exit(1);
+          }
+        }
         console.log(`Browser ready! Marionette on port ${port}.`);
         console.log(`Log: ${logFile}`);
         return;

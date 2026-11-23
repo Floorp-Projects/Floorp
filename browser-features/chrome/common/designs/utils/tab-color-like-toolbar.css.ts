@@ -12,6 +12,43 @@ export const TOOLBAR_SURFACE =
  * Restores --tab-block-margin top gap (TAB_COLOR_LIKE_TOOLBAR fills .tab-content).
  */
 export const FLUERIAL_TAB_CORNER_CSS = `
+/* Container lines also live in the shrinking background. Anchor them to the
+ * tab stack so the selected content fill cannot cover them and vertical hover
+ * cannot collapse their height or move them outside the tab. Keep the native
+ * inset/identity color, without raising the background over labels/buttons. */
+#tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background {
+  position: static !important;
+  z-index: auto !important;
+}
+#tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+  position: absolute !important;
+  z-index: 1 !important;
+  margin: 0 !important;
+}
+#tabbrowser-tabs[orient="horizontal"] .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+  inset-inline: calc(var(--tab-border-radius) / 2) !important;
+  inset-block-start: 0 !important;
+  height: 2px !important;
+}
+#tabbrowser-tabs[orient="horizontal"] .tabbrowser-tab[usercontextid]:is([visuallyselected], [multiselected]) > .tab-stack > .tab-background > .tab-context-line {
+  inset-block-start: var(--tab-block-margin, 4px) !important;
+}
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+  inset-block: calc(var(--tab-border-radius) / 2) !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: var(--tab-margin-inline-inner) !important;
+  height: auto !important;
+  width: 2px !important;
+}
+/* A collapsed tab stack retains its expanded minimum width while the sidebar
+ * clips it to the icon column. Use the native collapsed background width,
+ * rather than the stack's inline end, to keep the line inside that column. */
+#tabbrowser-tabs[orient="vertical"]:not([expanded]) .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+  inset-inline-start: calc(var(--tab-margin-inline-inner) + var(--tab-collapsed-background-width) - 2px) !important;
+  inset-inline-end: auto !important;
+}
+
+
 /* The native group line lives inside .tab-background. Fluerial shrinks that
  * background on hover and paints the selected .tab-content above it. Anchor
  * the line to the stable .tab-stack instead, and let it paint above the fill

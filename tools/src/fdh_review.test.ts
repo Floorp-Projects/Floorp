@@ -227,6 +227,7 @@ Deno.test("fdh review: only receipts from trusted comment authors count", () => 
       body: marker(receipt()),
       author: "maintainer",
       authorAssociation: "MEMBER",
+      authorPermission: "write",
     },
     {
       body: marker(receipt({ reviewer: "agent-b" })),
@@ -244,6 +245,7 @@ Deno.test("fdh review: only receipts from trusted comment authors count", () => 
       body: marker(receipt({ reviewer: "agent-c" })),
       author: "collab",
       authorAssociation: "collaborator",
+      authorPermission: "admin",
     },
     { body: marker(receipt({ reviewer: "agent-d" })), author: "anon" },
   ];

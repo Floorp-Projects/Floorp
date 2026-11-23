@@ -8,6 +8,15 @@ import {
   parseDevProcessRegistry,
   parseUnixDevProcesses,
 } from "./dev_process_selection.ts";
+import {
+  captureWindowsBrowserListenerIdentity,
+  listWindowsBrowserListeners,
+  listWindowsBrowserProcesses,
+} from "./dev_browser_identity.ts";
+import type {
+  WindowsBrowserIdentityTarget,
+  WindowsBrowserListenerIdentity,
+} from "./dev_browser_identity_types.ts";
 import type {
   DevProcessIdentity,
   DevProcessInfo,
@@ -146,7 +155,8 @@ export function readDevProcesses(
 export async function recordDevProcess(
   pid: number,
   file = DEV_PROCESSES_FILE,
-): Promise<void> {
+  expected?: DevProcessIdentity,
+): Promise<boolean> {
   try {
     const process = (await listDevProcesses(pid)).find((entry) =>
       entry.pid === pid
@@ -154,12 +164,20 @@ export async function recordDevProcess(
     if (!process?.startTime) {
       throw new Error(`Cannot capture identity for PID ${pid}`);
     }
-    const entries = readDevProcesses(file).filter((entry) => entry.pid !== pid);
-    entries.push({
+    const identity: DevProcessIdentity = {
       pid,
       startTime: process.startTime,
       commandLine: process.commandLine,
-    });
+    };
+    // Reused PID detection happens before any registry write.
+    if (expected && !matchesDevIdentity(process, expected)) {
+      console.error(
+        `[dev-tool] PID ${pid} no longer matches the expected browser generation.`,
+      );
+      return false;
+    }
+    const entries = readDevProcesses(file).filter((entry) => entry.pid !== pid);
+    entries.push(identity);
     Deno.mkdirSync(path.dirname(file), { recursive: true });
     const temporary = `${file}.${Deno.pid}.tmp`;
     Deno.writeTextFileSync(
@@ -167,9 +185,31 @@ export async function recordDevProcess(
       JSON.stringify({ version: 1, processes: entries }, null, 2) + "\n",
     );
     Deno.renameSync(temporary, file);
+    return true;
   } catch (error) {
     console.error("[dev-tool] Cannot record dev process:", error);
+    return false;
   }
+}
+
+/** Register the actual Windows browser listener child before readiness. */
+export async function registerWindowsBrowserListenerIdentity(
+  target: WindowsBrowserIdentityTarget,
+): Promise<WindowsBrowserListenerIdentity> {
+  return await captureWindowsBrowserListenerIdentity(target, {
+    listListeners: listWindowsBrowserListeners,
+    listProcesses: listWindowsBrowserProcesses,
+    async recordIdentity(identity) {
+      return await recordDevProcess(
+        identity.pid,
+        DEV_PROCESSES_FILE,
+        identity,
+      );
+    },
+    async sleep(ms) {
+      await new Promise((resolve) => setTimeout(resolve, ms));
+    },
+  });
 }
 
 export async function terminateDevProcesses(

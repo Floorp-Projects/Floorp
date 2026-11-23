@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
-import { PROJECT_ROOT, PATHS } from "./defines.ts";
+import { PATHS, PROJECT_ROOT } from "./defines.ts";
 import {
   createSymlink,
   exists,
@@ -10,6 +10,7 @@ import {
   safeRemove,
 } from "./utils.ts";
 import { writeBuildid2 } from "./update.ts";
+import { packagedQaEnabled, registerPackagedQa } from "./packaged_qa_build.ts";
 
 const logger = new Logger("builder");
 
@@ -60,7 +61,9 @@ export function runInParallel(commands: CommandTuple[]): void {
   for (const res of results) {
     if (!res.success) {
       throw new Error(
-        `Build command \`${res.cmd.join(" ")}\` in \`${res.dir}\` failed\nSTDOUT:\n${res.out}\nSTDERR:\n${res.err}`,
+        `Build command \`${
+          res.cmd.join(" ")
+        }\` in \`${res.dir}\` failed\nSTDOUT:\n${res.out}\nSTDERR:\n${res.err}`,
       );
     }
   }
@@ -69,15 +72,21 @@ export function runInParallel(commands: CommandTuple[]): void {
 export async function run(mode = "dev", buildid2: string): Promise<void> {
   await Promise.resolve();
   const buildMode = mode.trim().toLowerCase();
+  const packagedQa = packagedQaEnabled(
+    buildMode,
+    Deno.env.get("FLOORP_PACKAGED_QA"),
+    Deno.env.get("FLOORP_QA_TEST_MODULES"),
+  );
+  const usePackagedAssets = buildMode === "production" || buildMode === "stage";
   logger.info(`Building features with mode=${buildMode}`);
 
   if (
     buildMode !== "dev" &&
     buildMode !== "test" &&
-    buildMode !== "production"
+    !usePackagedAssets
   ) {
     throw new Error(
-      `Unsupported build mode: ${mode}. Allowed: dev, test, production`,
+      `Unsupported build mode: ${mode}. Allowed: dev, test, stage, production`,
     );
   }
 
@@ -111,8 +120,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--base",
         "chrome://noraneko/content",
       ],
@@ -122,7 +130,12 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
 
   const prodCommands: CommandTuple[] = [
     [
-      [deno, "task", "build", "--env.MODE=production"],
+      [
+        deno,
+        "task",
+        "build",
+        `--env.MODE=${packagedQa ? "test-packaged" : buildMode}`,
+      ],
       path.join(PROJECT_ROOT, "bridge/startup"),
     ],
     [
@@ -130,8 +143,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--base",
         "chrome://noraneko/content",
       ],
@@ -144,8 +156,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -158,8 +169,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -172,8 +182,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -186,8 +195,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -200,8 +208,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -215,8 +222,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -230,8 +236,7 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         deno,
         "run",
         "-A",
-        "vite",
-        "build",
+        path.join(PROJECT_ROOT, "tools/vite-build.ts"),
         "--config",
         "vite.config.ts",
         "--base",
@@ -268,9 +273,25 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     runInParallel(devCommands);
   } else {
     runInParallel(prodCommands);
+    if (packagedQa) {
+      const loaderDirectory = path.join(PROJECT_ROOT, "bridge/loader-features");
+      runInParallel([[
+        [
+          deno,
+          "run",
+          "-A",
+          "vite",
+          "build",
+          "--config",
+          "vite.packaged-test.config.ts",
+        ],
+        loaderDirectory,
+      ]]);
+      registerPackagedQa(path.join(loaderDirectory, "_dist"));
+    }
   }
 
-  if (buildMode === "production") {
+  if (usePackagedAssets) {
     const mounts: Array<[string, string]> = [
       ["content", "bridge/loader-features/_dist"],
       ["startup", "bridge/startup/_dist"],
@@ -310,7 +331,9 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
         createSymlink(linkPath, targetPath);
       } catch (error: unknown) {
         logger.warn(
-          `Failed to create symlink ${linkPath} -> ${targetPath}: ${errorToMessage(error)}`,
+          `Failed to create symlink ${linkPath} -> ${targetPath}: ${
+            errorToMessage(error)
+          }`,
         );
       }
     }

@@ -14,6 +14,8 @@ import {
   MozillaTaskContext,
   type MozillaTaskResult,
 } from "./mochitest_compat.ts";
+import { discoverTestModules } from "./discovery.ts";
+import { assertPackagedTestSelection } from "./packaged_contract.ts";
 
 type DownloadedFirefoxPref =
   | { name: string; kind: "bool"; value: boolean }
@@ -922,7 +924,7 @@ export async function runSingleTest(
   };
 }
 
-export default async function runBrowserTests(): Promise<void> {
+export default async function runBrowserTests(packaged = false): Promise<void> {
   const control = await consumeRequestedTestControl();
   const runId = control.runId;
   const requestedTestFiles = control.requestedTestFiles;
@@ -935,24 +937,14 @@ export default async function runBrowserTests(): Promise<void> {
   try {
     publishRunState({ status: "running", results, discoveredFiles });
 
-    // Chrome layer tests (via #features-chrome alias)
-    const chromeTests = import.meta.glob(
-      "#features-chrome/**/test/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
+    const allTests: Record<string, LazyModule> = await discoverTestModules(
+      shouldLoadPagesTests(requestedTestFiles),
     );
-
-    // ESM layer tests (via #features-modules alias)
-    const esmTests = import.meta.glob(
-      "#features-modules/**/*.test.{ts,mts,tsx,js,mjs,jsx}",
-    );
-
-    const allTests: Record<string, LazyModule> = {
-      ...chromeTests,
-      ...esmTests,
-    };
-    if (shouldLoadPagesTests(requestedTestFiles)) {
-      Object.assign(
-        allTests,
-        (await import("./pages_tests.ts")).getPagesTests(),
+    if (packaged) {
+      assertPackagedTestSelection(
+        runId,
+        requestedTestFiles,
+        new Set(Object.keys(allTests).map(normalizeBrowserTestPath)),
       );
     }
 

@@ -6,8 +6,10 @@ description: Run the FDH Gate 3 local dev loop in an existing Floorp worktree wi
 # FDH local dev loop (`fdh`)
 
 `fdh` is a thin, non-interactive CLI. It does **not** run an agent loop, call an
-LLM, push a branch, open a PR, or contact GitHub. An already-running agent
-(DSH/Codex/Claude) drives the commands below and does the editing itself.
+LLM, push a branch, or open a PR. An already-running agent (DSH/Codex/Claude)
+drives the commands below and does the editing itself. The local development
+loop needs no shared services. Optional commands such as `ext poll`, `evidence
+trace` and `qa collect` read GitHub through `gh` under their separate contracts.
 
 ## When to use
 
@@ -21,8 +23,9 @@ Use this skill when:
 - you want the build/test/browser assertions recorded automatically instead of
   hand-written in a report.
 
-Do **not** use it for packaging, release qualification, PR creation, or any
-operation that needs GitHub or another shared service.
+Do **not** treat this local loop or its optional read-only evidence commands as
+packaging, release qualification, PR creation or publication approval. Optional
+shared-service operations below require their own explicit operator intent.
 
 ## Prerequisites
 
@@ -103,6 +106,140 @@ deno run -A tools/fdh.ts dev down --task-id <task-id>
 
 `deno task fdh <command>` is equivalent to `deno run -A tools/fdh.ts <command>`.
 
+## Prepared Runtime startup
+
+`task prepare` installs or verifies only the existing BrowserGlue startup patch.
+The setup result includes local patch/target byte hashes; the persisted task
+setup is a summary, not the full bootstrap receipt. These hashes are not native
+compiler, signature or authorization evidence. The unrelated full
+patcher guard remains `FLOORP_SKIP_PATCHER=1`. Incompatible, partial or conflicting
+hooks are refused; prepare does not change the supplied registry source.
+
+Host contracts retain no run/env permission using filesystem-only Git DI. The
+separate `tools/integration/prepared-runtime-bootstrap.test.ts` exercises real
+Git with `--allow-read --allow-write --allow-run=git` on existing Native Runtime
+CI runners. Browser qualification must observe automatic startup before any
+manual server-module import; an import-triggered result is a narrower claim.
+
+## OS API authentication (separate from browser verification)
+
+The TypeScript OS API verifier accepts an explicit token-file path using
+`--token-file` or `FLOORP_OS_TOKEN_FILE` (flag wins). It never discovers Home or
+profile credentials and never accepts a raw-token argument. An authenticated target
+must be a literal HTTP loopback root origin; redirects are refused and responses
+are redacted before reporting. HTTP 401 in the wrapper proves reachability only,
+not successful authentication. The Python client has token-file transport parity
+and synthetic host coverage; confirm the checked-out wrapper flags before use.
+
+Only use the verifier against an explicitly owned test browser: its main routine
+creates fixture pages and mutates browser state. Do not run it merely to typecheck
+code, or against the user's installed browser without authorization. For code-only
+validation, use the synthetic host/integration tests below instead.
+
+Dev/test HTTP-loader profiles opt into a separate token advertisement. On supported
+POSIX hosts its fixed location is `ProfD/floorp-os-server/os-server-token`.
+Windows dev-profile advertisement requires the ABI 1 native private-profile
+bridge `@floorp.app/private-profile-token;1` in the selected Debug Runtime.
+Runtimes without that capability deliberately refuse; there is no Node/Home
+fallback. A prepared-runtime receipt is selection metadata, not native behavior
+or default-publication proof. Initial refusal with no prior ownership
+performs no dirsvc/IO and never falls back to Home. If this lifecycle already owns
+a legacy advertisement or has a queued/in-flight write, refusal first awaits its
+generation-bumping cleanup using the captured owned path; this withdrawal may do
+IO and must settle before rejection. Live MCP token preference is not cleared.
+Product-default opt-out profiles retain the legacy location. POSIX preexisting-link checks are not atomic no-follow guards;
+same-user replacement races are not prevented; native packaged/default delivery remains separate.
+
+Synthetic checks (no credential files or browser are used):
+
+```sh
+deno test --allow-read --allow-write tools/src/os_server_token.test.ts tools/src/os_test_client.test.ts
+deno run --allow-net=127.0.0.1 tools/integration/os-test-client.ts
+# Only AFTER building bridge/loader-modules:
+deno test --allow-read tools/integration/os-server-token.test.ts
+```
+
+## Offline final-package evidence helpers (not qualification)
+
+`validateFinalPackageQaConsistency` checks caller-observed metadata/attestations
+against trusted expectations; it does not authenticate the API or archive bytes.
+`verifyFinalPackageQaArchive` separately hashes supplied bytes, validates a narrow
+bounded ZIP32 profile and verifies every entry. Its default signed-prepublication
+policy requires both canonical input and post-QA JSON. Explicit completed-source
+policy may return a null post-QA observation when the workflow did not create one;
+no observation or timestamp is synthesized. Its successful integrity result still
+refuses publication,
+API-authenticity, native-QA and live-approval claims. Do not override the older
+consistency result's false proof fields or wire either helper alone into publishing.
+`verifyFinalPackageQaEvidence` now composes them offline: bounded immutable JSON
+snapshots and exactly four native byte inputs are privately captured before awaiting;
+only actually verified archive JSON can supply consistency evidence. Its safe
+summaries still refuse transport/API/native-QA/live-approval/publication claims.
+
+```sh
+deno test --cached-only --frozen tools/src/fdh_final_package_qa_gate.test.ts tools/src/fdh_final_package_qa_archive.test.ts tools/src/fdh_final_package_qa_evidence.test.ts
+# Explicit historical compatibility only, after separately obtaining verified samples:
+deno run --cached-only --frozen --allow-read tools/integration/fdh-qa-archive-samples.ts
+```
+
+The historical integration never downloads data; missing samples fail rather than
+skip. It is not a new browser or QA execution. Runtime zlib output-cap support,
+strict archive limits, current-attempt API collection and protected approval remain
+separate review boundaries; no helper result is release authorization.
+
+## Read-only final-package QA collection (not publication)
+
+`fdh qa collect` lazily invokes the bounded canonical GET-only collector. Its
+eight options are mandatory; source/probe heads are independent, run IDs must
+differ, and freshness is explicit (positive, at most 86400000 ms). Unknown or
+duplicate options reject before collector import/I/O. There are no repository,
+host, URL, header, token, executable or clock overrides.
+
+The default is `--mode signed-prepublication`, preserving protected pending-source
+conditions. Explicit `--mode published-release` collects completed canonical
+package QA, not approval of an unfinished source. Unsigned collection is
+unsupported. The completed workflow may omit its prepublication-only post-QA
+entry; byte/CRC/path/size/digest verification still applies and the collector
+performs its real final API readback. All authority flags remain false.
+
+```sh
+deno task fdh qa collect --source-run-id N --source-attempt N --source-head SOURCE_SHA \
+  --qa-run-id N --qa-attempt N --qa-head PROBE_SHA \
+  --windows-policy require-success --max-age-ms 86400000
+# Least-privilege direct main invocation also needs --allow-read for existing FDH initialization:
+# deno run --cached-only --frozen --allow-read --allow-run=gh tools/fdh.ts qa collect ...
+```
+
+Exit 0 means read-only prerequisites matched, **not** publication permission; exit
+1 is not-ready/collection-failed and exit 2 is invalid arguments. Inspect the safe
+JSON stage/code, not exit 1 alone: a startup permission error is not a verified
+sourceNotReady result. All transport/API/native-QA/live-approval/publication flags
+remain false. Host-installed gh/auth/config/TLS is the TCB; no origin attestation
+or atomic collection lock is claimed. The live completed-source negative is
+verified; a real pending positive and protected workflow activation remain open.
+
+## Bounded read-only QA discovery (not a publisher gate)
+
+`fdh qa discover` derives a QA run index window from the pinned source run's
+creation time. Source and QA probe commits stay independent. Its five required
+options do not include a caller timestamp, QA head, URL, repository or transport.
+
+```sh
+deno run -A tools/fdh.ts qa discover --source-run-id N --source-attempt N --source-head SOURCE_SHA \
+  --windows-policy shadow-observation --max-age-ms 600000
+```
+
+The hard limits are three pages, 300 indexed runs and eight candidates. Every
+candidate must pass the existing collector; an incomplete, pending, ambiguous,
+unverifiable or changed window fails closed. A selected match is recollected and
+the full window re-listed; this is still a point-in-time observation, not an
+atomic GitHub transaction. Exit 0 and matches=true remain nonauthorizing.
+Production publisher wiring and real signed pending-positive proof are separate.
+
+Also run changed test groups directly with type checking enabled. A broad host
+graph can pass while a focused graph exposes Node/DOM WebCrypto type differences;
+fixture keys should use their cryptographic library returned types, not casts.
+
 ## Recording commands that ran outside fdh (IMP-2)
 
 `fdh verify build|test` only records what fdh itself spawned. When a build or
@@ -136,7 +273,7 @@ execution.
 An independent LLM review is recorded as a machine-readable receipt bound to the
 PR head commit. `fdh review record` is still local-only: it writes the receipt
 under `<worktree>/_dist/fdh/reviews/` and prints the comment body. The agent
-posts that body with `gh pr comment`, and the `fdh-review-gate` workflow
+posts that body with `gh pr comment`, and the `fdh-trusted-review-gate` workflow
 requires at least two distinct reviewer identities at the PR head.
 
 ```sh
@@ -150,32 +287,37 @@ deno run -A tools/fdh.ts review record --task-id <task-id> \
 ```
 
 Then post the printed `commentBody` (marker
-`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The gate counts receipts only
-from comment authors whose GitHub association is OWNER, MEMBER or COLLABORATOR;
-other authors' receipts are logged and ignored. A receipt for another commit is
-stale and ignored (it neither counts nor blocks). A head receipt with a
+`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The gate counts receipts from
+authors whose GitHub association is OWNER, MEMBER or COLLABORATOR and whose
+effective repository permission is write or admin (GitHub maps maintain to
+write). A receipt for another commit is stale. A head receipt with a
 `request_changes` verdict or `blocking=true` fails the gate.
 
-Posting a trusted receipt does not run the gate itself: the `rerun-on-receipt`
-job waits for the PR head's latest `review-gate` run and reruns it when it did
-not pass, so the required check updates on the PR head. The reviewer identities
-are still declared by the poster; the gate cannot tell whether two receipts from
-one trusted account came from two independent reviews.
+## Trusted receipt-check boundary
 
-Limits to know:
+GitHub loads the `pull_request_target` workflow from the PR's base on `main`.
+The `trusted-receipt-publication` job checks out that same workflow commit with
+`github.workflow_sha` and evaluates receipt comments against the event's PR
+head. It verifies the PR still targets `main` at that head before and after
+validation. The custom `fdh-trusted-receipts` Check Run carries the diagnostic
+result. The separate `pull_request` job `review-gate` runs the candidate host
+tests and build with read-only contents permission.
 
-- `MEMBER` means any member of the organisation, not write access to this
-  repository. An org member with private membership may appear as `CONTRIBUTOR`;
-  their receipts are then ignored (make the membership public or use a
-  collaborator account).
-- Only newly created comments trigger the rerun; after editing a receipt, rerun
-  the PR's `review-gate` run by hand.
-- A PR that changes `fdh-review-gate.yml` still needs one manual rerun after its
-  receipts are posted, because `issue_comment` workflows are read from the
-  default branch.
-- The gate code runs from the PR's own checkout, so a PR can change what the
-  gate checks; review edits to `.github/workflows/fdh-review-gate.yml` and
-  `tools/src/fdh_review.ts` before merging.
+The default-branch `issue_comment` job reruns trusted validation for the current
+PR head when an eligible author's receipt marker is added, edited, or removed.
+For a PR already open when the rerun workflow ships, reopen it or update it to
+start a run the comment job can find. Use the same recovery when the original
+run is outside GitHub's 30-day rerun window. Revalidation reads the full comment
+set. Reviewer identities remain declarations by the poster.
+
+Before moving all receipt enforcement to this workflow, the repo admin must
+protect the trusted job from impersonation. The binding to GitHub Actions App
+15368 identifies the App and job name. Require the trusted workflow by identity
+from a protected source in an organization ruleset where supported.
+Alternatively, enforce maintainer code-owner approvals with stale approvals
+dismissed for all workflow files, local actions, the trusted receipt checker and
+its imports, and CODEOWNERS itself. Keep the candidate test/build check required
+through rollout.
 
 ## Evidence on the PR (D-20, KAN-132)
 
@@ -193,6 +335,10 @@ deno task fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-
 gh pr comment <n> --body-file _dist/fdh/evidence-<n>.md
 deno task fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
 ```
+
+The trace evaluates receipts using the poster's current repository permission
+and the same eligibility policy as the trusted gate. If GitHub cannot verify
+permissions, the trace reports an incomplete receipt set.
 
 The comment is public. The manifest carries command output and local paths,
 and fdh's secret check only refuses known secret references; it does not find
