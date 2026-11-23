@@ -78,6 +78,52 @@ export interface ParsedFeaturePackageEnvelope {
   readonly manifest: FeaturePackageManifest;
 }
 
+export type FeaturePackageCacheErrorCode =
+  | "cache-invalid-feature-id"
+  | "cache-invalid-test-id"
+  | "cache-invalid-package-hash"
+  | "cache-policy-mismatch"
+  | "cache-owner-active"
+  | "cache-closed"
+  | "cache-storage"
+  | "cache-corrupt"
+  | "cache-missing"
+  | "cache-capacity"
+  | "cache-unsafe-layout";
+
+export type FeaturePackageCacheEntryKind =
+  | "file"
+  | "directory"
+  | "link"
+  | "other";
+
+export interface FeaturePackageCacheEntry {
+  readonly name: string;
+  readonly kind: FeaturePackageCacheEntryKind;
+}
+
+export interface FeaturePackageCacheStorage {
+  initialize(): Promise<void>;
+  inspect(name: string): Promise<FeaturePackageCacheEntry | null>;
+  read(name: string, maxBytes: number): Promise<Uint8Array>;
+  enumerate(maxEntries: number): Promise<readonly FeaturePackageCacheEntry[]>;
+  writeStaging(bytes: Uint8Array): Promise<void>;
+  moveStaging(name: string): Promise<void>;
+  removeStaging(): Promise<void>;
+}
+
+export interface FeaturePackageCache {
+  put(
+    bytes: Uint8Array,
+    policy: FeaturePackagePolicy,
+  ): Promise<VerifiedFeaturePackage>;
+  read(
+    packageSha256: string,
+    policy: FeaturePackagePolicy,
+  ): Promise<VerifiedFeaturePackage>;
+  close(): Promise<void>;
+}
+
 export type FeaturePackageErrorCode =
   | "invalid-envelope"
   | "invalid-policy"
