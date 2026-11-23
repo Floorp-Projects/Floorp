@@ -236,6 +236,37 @@ function testMatchSchemeLessPathPattern(): void {
   );
 }
 
+/**
+ * Patterns that are not domain or URL forms keep the retired tab-sleep
+ * feature's unanchored glob matching so migrated exclusions still protect.
+ */
+function testMatchLegacyGlobPatterns(): void {
+  assert(
+    matchPattern("https://example.com/", "*"),
+    "a bare wildcard should match every tab",
+  );
+  assert(
+    matchPattern("about:blank", "*"),
+    "a bare wildcard should match non-URL tabs",
+  );
+  assert(
+    matchPattern("https://m.youtube.com/", "*youtube*"),
+    "an infix wildcard should match anywhere in the URL",
+  );
+  assert(
+    !matchPattern("https://example.com/", "*youtube*"),
+    "an infix wildcard should not match an unrelated URL",
+  );
+  assert(
+    matchPattern("https://example.com/admin/panel", "/admin"),
+    "a path fragment should match anywhere in the URL",
+  );
+  assert(
+    !matchPattern("https://example.com/home", "/admin"),
+    "a missing fragment should not match",
+  );
+}
+
 /** An empty pattern matches nothing. */
 function testMatchEmptyPattern(): void {
   assert(
@@ -378,6 +409,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "scheme-less path patterns match full URLs",
       fn: testMatchSchemeLessPathPattern,
+    },
+    {
+      name: "migrated glob patterns keep legacy matching",
+      fn: testMatchLegacyGlobPatterns,
     },
     {
       name: "empty patterns match nothing",

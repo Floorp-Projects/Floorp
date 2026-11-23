@@ -278,13 +278,34 @@ export async function getTabAutoUnloadSettings(): Promise<
   }
 }
 
-/** Merges the page's settings into the stored pref JSON. */
-export async function saveTabAutoUnloadSettings(
-  settings: TabAutoUnloadSettings,
-): Promise<void> {
-  const existing = await rpc.getStringPref(TAB_AUTO_UNLOAD_PREF);
-  await rpc.setStringPref(
-    TAB_AUTO_UNLOAD_PREF,
-    mergeTabAutoUnloadSettings(existing, settings),
-  );
+/**
+ * Applies one intended edit to the stored settings.
+ *
+ * The update runs against a freshly read pref and is committed with
+ * compare-and-set, so two open performance pages cannot clobber each other's
+ * edits: a stale form only carries the key it meant to change, and a lost
+ * race retries against the newer value instead of overwriting it.
+ */
+export async function updateTabAutoUnloadSettings(
+  update: (current: TabAutoUnloadSettings) => Partial<TabAutoUnloadSettings>,
+): Promise<TabAutoUnloadSettings> {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const existing = await rpc.getStringPref(TAB_AUTO_UNLOAD_PREF);
+    const current = normalizeTabAutoUnloadSettings(parseSettingsJson(existing));
+    const patch = update(current);
+    const next = normalizeTabAutoUnloadSettings({ ...current, ...patch });
+    const merged = mergeTabAutoUnloadSettings(existing, next);
+    if (merged === existing) {
+      return next;
+    }
+    const { updated } = await rpc.compareAndSetStringPref(
+      TAB_AUTO_UNLOAD_PREF,
+      existing,
+      merged,
+    );
+    if (updated) {
+      return next;
+    }
+  }
+  throw new Error("tab auto unload settings kept changing while saving");
 }

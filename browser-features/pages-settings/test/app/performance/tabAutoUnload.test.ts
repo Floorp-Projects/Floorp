@@ -21,9 +21,9 @@ import {
   mergeTabAutoUnloadSettings,
   MIN_INACTIVE_MINUTES_MIN,
   normalizeTabAutoUnloadSettings,
-  saveTabAutoUnloadSettings,
   TAB_AUTO_UNLOAD_PREF,
   type TabAutoUnloadSettings,
+  updateTabAutoUnloadSettings,
 } from "../../../src/app/performance/dataManager.ts";
 
 declare const Services: {
@@ -241,13 +241,13 @@ async function testSaveRoundTrip(): Promise<void> {
 
   try {
     clearPref(TAB_AUTO_UNLOAD_PREF);
-    await saveTabAutoUnloadSettings(
+    await updateTabAutoUnloadSettings(() =>
       makeSettings({
         enabled: true,
         memoryThresholdMB: 4096,
         minInactiveMinutes: 20,
         excludePatterns: ["*.example.com"],
-      }),
+      })
     );
 
     const loaded = await getTabAutoUnloadSettings();
@@ -267,6 +267,50 @@ async function testSaveRoundTrip(): Promise<void> {
       "*.example.com",
       "patterns should round-trip",
     );
+  } finally {
+    if (original) {
+      Services.prefs.setStringPref(TAB_AUTO_UNLOAD_PREF, original);
+    } else {
+      clearPref(TAB_AUTO_UNLOAD_PREF);
+    }
+  }
+}
+
+/** A single-field update does not clobber edits made by another page. */
+async function testUpdatePreservesOtherFields(): Promise<void> {
+  const original = Services.prefs.getStringPref(TAB_AUTO_UNLOAD_PREF, "");
+
+  try {
+    clearPref(TAB_AUTO_UNLOAD_PREF);
+    // Another page saved an exclusion while this form was open.
+    Services.prefs.setStringPref(
+      TAB_AUTO_UNLOAD_PREF,
+      JSON.stringify({
+        enabled: false,
+        memoryThresholdMB: 1024,
+        minInactiveMinutes: 5,
+        excludePatterns: ["other.example"],
+      }),
+    );
+
+    // This stale form only meant to change the inactive time.
+    const saved = await updateTabAutoUnloadSettings(() => ({
+      minInactiveMinutes: 20,
+    }));
+    assertEquals(saved.minInactiveMinutes, 20, "the edit applies");
+
+    const loaded = await getTabAutoUnloadSettings();
+    assertEquals(
+      loaded.excludePatterns.join(","),
+      "other.example",
+      "another page's exclusion must survive",
+    );
+    assertEquals(
+      loaded.memoryThresholdMB,
+      1024,
+      "another page's threshold must survive",
+    );
+    assertEquals(loaded.enabled, false, "enabled flag must survive");
   } finally {
     if (original) {
       Services.prefs.setStringPref(TAB_AUTO_UNLOAD_PREF, original);
@@ -339,6 +383,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "settings save and reload",
       fn: testSaveRoundTrip,
+    },
+    {
+      name: "single-field updates preserve other pages' edits",
+      fn: testUpdatePreservesOtherFields,
     },
     {
       name: "tab auto unload translations exist",

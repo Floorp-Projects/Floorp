@@ -28,8 +28,8 @@ import {
   getTabAutoUnloadSettings,
   MEMORY_THRESHOLD_MB_MIN,
   MIN_INACTIVE_MINUTES_MIN,
-  saveTabAutoUnloadSettings,
   type TabAutoUnloadSettings,
+  updateTabAutoUnloadSettings,
 } from "@/app/performance/dataManager.ts";
 
 /** Performance card that edits the automatic tab unloading settings. */
@@ -57,12 +57,18 @@ export function TabAutoUnload() {
     };
   }, []);
 
-  /** Persists a settings change and reverts the UI if the write fails. */
+  /**
+   * Persists one intended edit against the live pref and reverts the UI if
+   * the write fails. The update callback sees the current stored settings,
+   * so an edit made from a stale form cannot erase another page's changes.
+   */
   const save = useCallback(
-    async (next: TabAutoUnloadSettings) => {
-      setSettings(next);
+    async (
+      update: (current: TabAutoUnloadSettings) =>
+        Partial<TabAutoUnloadSettings>,
+    ) => {
       try {
-        await saveTabAutoUnloadSettings(next);
+        setSettings(await updateTabAutoUnloadSettings(update));
         setSaveFailed(false);
       } catch (error) {
         console.error(
@@ -83,21 +89,21 @@ export function TabAutoUnload() {
       return;
     }
     setNewPattern("");
-    void save({
-      ...settings,
-      excludePatterns: [...settings.excludePatterns, trimmed],
-    });
+    void save((current) => ({
+      excludePatterns: current.excludePatterns.includes(trimmed)
+        ? current.excludePatterns
+        : [...current.excludePatterns, trimmed],
+    }));
   }, [newPattern, save, settings]);
 
   /** Saves the list without the removed pattern. */
   const removePattern = useCallback(
     (pattern: string) => {
-      void save({
-        ...settings,
-        excludePatterns: settings.excludePatterns.filter((p) => p !== pattern),
-      });
+      void save((current) => ({
+        excludePatterns: current.excludePatterns.filter((p) => p !== pattern),
+      }));
     },
-    [save, settings],
+    [save],
   );
 
   /** Adds the pattern on Enter instead of submitting a form. */
@@ -153,7 +159,7 @@ export function TabAutoUnload() {
             id="tab-auto-unload-enabled"
             checked={settings.enabled}
             onChange={(e) =>
-              void save({ ...settings, enabled: e.currentTarget.checked })}
+              void save(() => ({ enabled: e.currentTarget.checked }))}
           />
         </div>
 
@@ -165,7 +171,7 @@ export function TabAutoUnload() {
             min={MEMORY_THRESHOLD_MB_MIN}
             disabled={!settings.enabled}
             onCommit={(memoryThresholdMB) =>
-              void save({ ...settings, memoryThresholdMB })}
+              void save(() => ({ memoryThresholdMB }))}
           />
           <NumberField
             id="tab-auto-unload-min-inactive"
@@ -174,7 +180,7 @@ export function TabAutoUnload() {
             min={MIN_INACTIVE_MINUTES_MIN}
             disabled={!settings.enabled}
             onCommit={(minInactiveMinutes) =>
-              void save({ ...settings, minInactiveMinutes })}
+              void save(() => ({ minInactiveMinutes }))}
           />
         </div>
 

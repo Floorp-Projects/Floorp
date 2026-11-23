@@ -178,6 +178,24 @@ function wildcardToRegExp(pattern: string, prefix = ""): RegExp {
 }
 
 /**
+ * The matching rules of the retired tab-sleep exclusion feature: an
+ * unanchored glob over the whole URL. Migrated patterns keep this meaning so
+ * they do not silently stop protecting.
+ */
+function legacyGlobMatch(url: string, lowerPattern: string): boolean {
+  try {
+    const escaped = lowerPattern
+      .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\*/g, ".*");
+    return new RegExp(escaped, "i").test(url);
+  } catch {
+    return url.toLowerCase().includes(lowerPattern);
+  }
+}
+
+const DOMAIN_PATTERN = /^\*\.[a-z0-9][a-z0-9.-]*$|^[a-z0-9][a-z0-9.-]*$/i;
+
+/**
  * Matches a URL against one exclusion pattern.
  *
  * Supported forms:
@@ -186,7 +204,10 @@ function wildcardToRegExp(pattern: string, prefix = ""): RegExp {
  * - `https://example.com/path/*` matches a full URL with `*` wildcards
  *
  * A full URL without `*` is treated as a prefix, so
- * `https://mail.example.com` also matches paths below it.
+ * `https://mail.example.com` also matches paths below it. Anything that is
+ * not one of these forms (bare `*`, infix wildcards, path fragments) falls
+ * back to the legacy tab-sleep matching so migrated exclusions keep
+ * protecting the tabs they used to.
  */
 export function matchPattern(url: string, pattern: string): boolean {
   const trimmed = pattern.trim();
@@ -206,19 +227,26 @@ export function matchPattern(url: string, pattern: string): boolean {
       lowerPattern.includes("*") ? lowerPattern : `${lowerPattern}*`,
       prefix,
     );
-    return regex.test(url);
+    if (regex.test(url)) {
+      return true;
+    }
+    return legacyGlobMatch(url, lowerPattern);
   }
 
-  const domain = lowerPattern.startsWith("*.")
-    ? lowerPattern.slice(2)
-    : lowerPattern;
-  const hostname = getHostname(url);
-  if (hostname) {
-    return hostname === domain || hostname.endsWith(`.${domain}`);
+  if (DOMAIN_PATTERN.test(lowerPattern)) {
+    const domain = lowerPattern.startsWith("*.")
+      ? lowerPattern.slice(2)
+      : lowerPattern;
+    const hostname = getHostname(url);
+    if (hostname) {
+      return hostname === domain || hostname.endsWith(`.${domain}`);
+    }
+
+    // Non-URL strings (about:, chrome:, etc.) fall back to a substring match.
+    return url.toLowerCase().includes(lowerPattern);
   }
 
-  // Non-URL strings (about:, chrome:, etc.) fall back to a substring match.
-  return url.toLowerCase().includes(lowerPattern);
+  return legacyGlobMatch(url, lowerPattern);
 }
 
 /** Whether any exclusion pattern matches the URL. */
