@@ -2,6 +2,7 @@
 
 import {
   assertM3cAdmissionUnchanged,
+  launchM3cBrowserWithEvidence,
   matchesM3cBoundary,
   parseM3cBrowserDriverResult,
   parseM3cDurableMarker,
@@ -17,6 +18,7 @@ import { verifySignedFeaturePackage } from "../../browser-features/modules/modul
 import { waitForDurableMarker } from "./hotfix_process_recovery.ts";
 import type {
   M3cBoundaryExpectation,
+  M3cProcessLaunchFailureEvidence,
   M3cResolvedBoundaryExpectation,
 } from "./m3c_signed_process_recovery_types.ts";
 
@@ -79,6 +81,54 @@ Deno.test("M3c boundary resolves fixture ID to internal envelope hash", () => {
   assert(
     reject(() => resolveM3cBoundaryExpectation(expectation, {})),
     "unknown fixture ID is rejected",
+  );
+});
+
+Deno.test("M3c launch rejection records evidence and remains a failure", async () => {
+  const launchError = new Error("injected launch rejection");
+  const failures: M3cProcessLaunchFailureEvidence[] = [];
+  let launchCalls = 0;
+  let observedError: unknown;
+  try {
+    await launchM3cBrowserWithEvidence(
+      () => {
+        launchCalls += 1;
+        return Promise.reject(launchError);
+      },
+      {
+        launchId: 4,
+        mode: "reopen",
+        stdoutLogPath: "browser-4.stdout.log",
+        stderrLogPath: "browser-4.stderr.log",
+      },
+      (evidence) => failures.push(evidence),
+    );
+  } catch (error) {
+    observedError = error;
+  }
+  const evidence = failures[0];
+  assert(launchCalls === 1, "injected launch path is called once");
+  assert(observedError === launchError, "launch rejection is propagated");
+  assert(
+    failures.length === 1 && evidence !== undefined,
+    "failure is recorded",
+  );
+  assert(
+    evidence.launchStatus === "rejected" && evidence.launchId === 4 &&
+      evidence.mode === "reopen" &&
+      evidence.failure.includes("injected launch rejection"),
+    "launch identity and failure are preserved",
+  );
+  assert(
+    evidence.stdoutLogPath === "browser-4.stdout.log" &&
+      evidence.stderrLogPath === "browser-4.stderr.log",
+    "known log locations are preserved",
+  );
+  assert(
+    evidence.process === null &&
+      evidence.ownershipEvidence === "unavailable" &&
+      evidence.teardownEvidence === "unavailable",
+    "unavailable ownership and teardown are not claimed",
   );
 });
 

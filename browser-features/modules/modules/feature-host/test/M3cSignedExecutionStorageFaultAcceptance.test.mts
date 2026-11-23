@@ -1287,6 +1287,116 @@ async function testJournalSymlinkRejectsWithoutRewrite(): Promise<void> {
   }
 }
 
+async function testLowerSequenceConflictRejectsWithoutRewrite(): Promise<void> {
+  const id = testId();
+  const authority = await createSigningAuthority();
+  const authorization = authorizationFor(authority, featureId);
+  const firstPackage = await signedPackage({
+    authority,
+    featureId,
+    releaseSequence: 1,
+    version: "v1",
+  });
+  const equivocalPackage = await signedPackage({
+    authority,
+    featureId,
+    releaseSequence: 1,
+    version: "v1-alt",
+  });
+  const currentPackage = await signedPackage({
+    authority,
+    featureId,
+    releaseSequence: 2,
+    version: "v2",
+  });
+  let host: Host | null = null;
+  let reopened: Host | null = null;
+  let clean = false;
+  try {
+    host = await signedModule.createSignedFeatureHostForTests(
+      id,
+      featureId,
+      true,
+      authorization,
+    );
+    const first = await installAndEnable(host, id, firstPackage.bytes);
+    const equivocal = await host.stage(equivocalPackage.bytes);
+    const current = await host.stage(currentPackage.bytes);
+    const updated = await host.update(
+      `lower-sequence-conflict-${id}`,
+      revision(host),
+      current.packageSha256,
+    );
+    assertEquals(updated.status, "succeeded", "sequence two is selected");
+
+    const recordFile = journalFile(id, featureId);
+    const original = await IOUtils.read(recordFile.path);
+    const candidate = JSON.parse(new TextDecoder().decode(original)) as Record<
+      string,
+      unknown
+    >;
+    const packages = candidate.packages;
+    assert(Array.isArray(packages), "journal packages are an array");
+    if (
+      !(packages as Record<string, unknown>[]).some((entry) =>
+        entry.packageSha256 === equivocal.packageSha256
+      )
+    ) {
+      (packages as Record<string, unknown>[]).push({
+        packageSha256: equivocal.packageSha256,
+        sourceSha256: equivocal.sourceSha256,
+        version: equivocal.version,
+        releaseSequence: equivocal.releaseSequence,
+      });
+    }
+    const lifecycle = asRecord(candidate.lifecycle);
+    const healthBuild = {
+      hostBuildId: "m0-schema-2",
+      runtimeBuildId: Services.appinfo.appBuildID,
+    };
+    lifecycle.selectedVersion = first.packageSha256;
+    lifecycle.selectedDigest = first.packageSha256;
+    lifecycle.selectedHealth = "verified";
+    lifecycle.selectedHealthBuild = healthBuild;
+    lifecycle.rollbackVersion = equivocal.packageSha256;
+    lifecycle.rollbackDigest = equivocal.packageSha256;
+    lifecycle.rollbackHealthBuild = healthBuild;
+
+    const invalid = encoder.encode(JSON.stringify(candidate));
+    await host.close();
+    host = null;
+    await IOUtils.write(recordFile.path, invalid);
+    await assertReopenFacadeRejects(
+      () =>
+        signedModule.reopenSignedFeatureHostForTests(
+          id,
+          featureId,
+          true,
+          authorization,
+        ),
+      "invalid-journal",
+    );
+    assert(
+      bytesEqual(await IOUtils.read(recordFile.path), invalid),
+      "lower-sequence conflict is not rewritten",
+    );
+    await IOUtils.write(recordFile.path, original);
+    reopened = await signedModule.reopenSignedFeatureHostForTests(
+      id,
+      featureId,
+      true,
+      authorization,
+    );
+    await reopened.close();
+    reopened = null;
+    clean = true;
+  } finally {
+    if (host) await host.close();
+    if (reopened) await reopened.close();
+    if (clean) await removeTestRoots(id);
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
@@ -1329,6 +1439,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "M3c journal invalid layouts and encodings are not rewritten",
       fn: testJournalLayoutAndEncodingRejectWithoutRewrite,
+    },
+    {
+      name: "M3c journal lower-sequence conflict is rejected on read",
+      fn: testLowerSequenceConflictRejectsWithoutRewrite,
     },
   ];
   if (Services.appinfo.OS === "Linux") {

@@ -191,6 +191,13 @@ export function validateM3cSignedJournal(
     }
   }
   const references = collectLifecycleReferences(value.lifecycle, featureId);
+  const referencedBySequence = new Map<number, string>();
+  if (highWater) {
+    referencedBySequence.set(
+      highWater.releaseSequence,
+      highWater.packageSha256,
+    );
+  }
   for (const hash of references) {
     const entry = byHash.get(hash);
     if (
@@ -201,6 +208,11 @@ export function validateM3cSignedJournal(
         entry.packageSha256 !== highWater.packageSha256
       )
     ) throw new M3cJournalError("invalid-journal");
+    const sameSequenceHash = referencedBySequence.get(entry.releaseSequence);
+    if (sameSequenceHash !== undefined && sameSequenceHash !== hash) {
+      throw new M3cJournalError("invalid-journal");
+    }
+    referencedBySequence.set(entry.releaseSequence, hash);
   }
   return Object.freeze({
     schemaVersion: 1,

@@ -269,6 +269,77 @@ Deno.test("M3c journal rejects equal-sequence lifecycle equivocation", () => {
   );
 });
 
+Deno.test("M3c journal rejects lower-sequence equivocation only when referenced", () => {
+  const historical = metadata(firstHash, 1);
+  const equivocal = metadata(thirdHash, 1);
+  const current = metadata(secondHash, 2);
+  const highWater = { releaseSequence: 2, packageSha256: secondHash };
+  const historicalRollback = signedJournal(
+    [historical, equivocal, current],
+    highWater,
+    {
+      ...emptyLifecycle(),
+      desiredEnabled: true,
+      selectedVersion: secondHash,
+      selectedDigest: secondHash,
+      rollbackVersion: firstHash,
+      rollbackDigest: firstHash,
+      selectedHealth: "verified",
+      selectedHealthBuild: { hostBuildId: "host", runtimeBuildId: "runtime" },
+      rollbackHealthBuild: { hostBuildId: "host", runtimeBuildId: "runtime" },
+    },
+  );
+  assert(
+    historicalRollback.packages.length === 3,
+    "unreferenced same-sequence staged metadata remains allowed",
+  );
+  assertThrows(
+    () =>
+      signedJournal(
+        [historical, equivocal, current],
+        highWater,
+        {
+          ...emptyLifecycle(),
+          selectedVersion: firstHash,
+          selectedDigest: firstHash,
+          rollbackVersion: thirdHash,
+          rollbackDigest: thirdHash,
+        },
+      ),
+    "invalid-journal",
+  );
+  assertThrows(
+    () =>
+      signedJournal(
+        [historical, equivocal, current],
+        highWater,
+        {
+          ...emptyLifecycle(),
+          selectedVersion: secondHash,
+          selectedDigest: secondHash,
+          pending: {
+            request: { target: null },
+            before: {
+              selectedVersion: firstHash,
+              selectedDigest: firstHash,
+              rollbackVersion: null,
+              rollbackDigest: null,
+            },
+            targetVersion: secondHash,
+            targetDigest: secondHash,
+          },
+          attempt: {
+            request: { target: null },
+            targetDigest: thirdHash,
+            attemptedDigests: [],
+            rejectedDigests: [],
+          },
+        },
+      ),
+    "invalid-journal",
+  );
+});
+
 Deno.test("M3c journal serialization is bounded", () => {
   const lifecycle = { ...emptyLifecycle(), extra: "x".repeat(256 * 1024) };
   const journal = signedJournal([], null, lifecycle);

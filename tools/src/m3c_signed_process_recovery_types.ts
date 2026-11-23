@@ -76,8 +76,13 @@ export interface M3cOwnedProcessEvidence extends LinuxProcessIdentity {
 }
 
 export interface M3cProcessLaunchEvidence {
+  launchStatus: "started";
   launchId: number;
   mode: "create" | "reopen";
+  stdoutLogPath: string;
+  stderrLogPath: string;
+  ownershipEvidence: "available";
+  teardownEvidence: "available";
   process: M3cOwnedProcessEvidence;
   boundary: M3cProcessBoundary | null;
   evaluationCount: number | null;
@@ -89,13 +94,29 @@ export interface M3cProcessLaunchEvidence {
   failure?: string;
 }
 
+export interface M3cProcessLaunchFailureEvidence {
+  launchStatus: "rejected";
+  launchId: number;
+  mode: "create" | "reopen";
+  failure: string;
+  stdoutLogPath: string;
+  stderrLogPath: string;
+  ownershipEvidence: "unavailable";
+  teardownEvidence: "unavailable";
+  process: null;
+}
+
+export type M3cProcessLaunchRecord =
+  | M3cProcessLaunchEvidence
+  | M3cProcessLaunchFailureEvidence;
+
 export interface M3cProcessScenarioEvidence extends Record<string, unknown> {
   id: string;
   testId: string;
   featureId: string;
   runDirectory: string;
   profilePath: string;
-  launches: M3cProcessLaunchEvidence[];
+  launches: M3cProcessLaunchRecord[];
   failure?: string;
 }
 

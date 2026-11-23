@@ -21,6 +21,7 @@ import {
 import type { ProcessRecoveryTrace } from "./hotfix_process_recovery_types.ts";
 import {
   assertM3cAdmissionUnchanged,
+  launchM3cBrowserWithEvidence,
   matchesM3cBoundary,
   parseM3cBrowserDriverResult,
   parseM3cDurableMarker,
@@ -780,6 +781,7 @@ async function runStep(options: {
   authorization: M3cPublicAuthorization;
   packages: Record<string, string>;
   packageDigests: Record<string, string>;
+  launchEvidence: M3cProcessScenarioEvidence["launches"];
 }): Promise<{
   marker: M3cDurableMarker | null;
   result: M3cBrowserDriverResult | null;
@@ -800,12 +802,30 @@ async function runStep(options: {
     options.runDirectory,
     `error-${options.launchId}.json`,
   );
-  const launch = await launchBrowser(
-    options.profilePath,
-    options.port,
-    options.launchId,
+  const stdoutLogPath = join(
     options.runDirectory,
-    options.buildId,
+    `browser-${options.launchId}.stdout.log`,
+  );
+  const stderrLogPath = join(
+    options.runDirectory,
+    `browser-${options.launchId}.stderr.log`,
+  );
+  const launch = await launchM3cBrowserWithEvidence(
+    () =>
+      launchBrowser(
+        options.profilePath,
+        options.port,
+        options.launchId,
+        options.runDirectory,
+        options.buildId,
+      ),
+    {
+      launchId: options.launchId,
+      mode: step.mode,
+      stdoutLogPath,
+      stderrLogPath,
+    },
+    (failedLaunch) => options.launchEvidence.push(failedLaunch),
   );
   let marker: M3cDurableMarker | null = null;
   let result: M3cBrowserDriverResult | null = null;
@@ -1210,10 +1230,16 @@ export async function runM3cProcessScenario(
         authorization,
         packages,
         packageDigests,
+        launchEvidence: evidence.launches,
       });
       evidence.launches.push({
+        launchStatus: "started",
         launchId: index + 1,
         mode: step.mode,
+        stdoutLogPath: join(runDirectory, `browser-${index + 1}.stdout.log`),
+        stderrLogPath: join(runDirectory, `browser-${index + 1}.stderr.log`),
+        ownershipEvidence: "available",
+        teardownEvidence: "available",
         process: outcome.process,
         boundary: outcome.marker?.boundary ?? null,
         evaluationCount: outcome.marker?.evaluationCount ??

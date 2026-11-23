@@ -5,11 +5,35 @@ import type {
   M3cBoundaryExpectation,
   M3cBrowserDriverResult,
   M3cDurableMarker,
+  M3cProcessLaunchFailureEvidence,
   M3cResolvedBoundaryExpectation,
 } from "./m3c_signed_process_recovery_types.ts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export async function launchM3cBrowserWithEvidence<T>(
+  launch: () => Promise<T>,
+  attempt: Pick<
+    M3cProcessLaunchFailureEvidence,
+    "launchId" | "mode" | "stdoutLogPath" | "stderrLogPath"
+  >,
+  recordFailure: (evidence: M3cProcessLaunchFailureEvidence) => void,
+): Promise<T> {
+  try {
+    return await launch();
+  } catch (error) {
+    recordFailure({
+      ...attempt,
+      launchStatus: "rejected",
+      failure: String(error),
+      ownershipEvidence: "unavailable",
+      teardownEvidence: "unavailable",
+      process: null,
+    });
+    throw error;
+  }
 }
 
 export function selectM3cProcessScenarios<T extends { id: string }>(
