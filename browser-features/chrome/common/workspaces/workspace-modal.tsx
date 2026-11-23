@@ -8,7 +8,12 @@ import {
   WORKSPACE_ICON_NO_CHANGE_SENTINEL,
   type WorkspaceIcons,
 } from "./utils/workspace-icons.ts";
-import type { TWorkspace, TWorkspaceID } from "./utils/type.ts";
+import type {
+  TWorkspace,
+  TWorkspaceContainerIdentity,
+  TWorkspaceID,
+} from "./utils/type.ts";
+import { createWorkspaceContainerOptions } from "./utils/container-options.ts";
 import type { WorkspacesService } from "./workspacesService.ts";
 import ModalParent from "../modal-parent/index.ts";
 import type {
@@ -64,12 +69,6 @@ const { ContextualIdentityService } = ChromeUtils.importESModule(
   "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
 );
 
-type Container = {
-  name: string;
-  userContextId: number;
-  l10nId?: string;
-};
-
 type I18nTextValues = {
   name: string;
   namePlaceholder: string;
@@ -86,6 +85,7 @@ const translationKeys = {
   namePlaceholder: "workspaces.modal.name-placeholder",
   container: "workspaces.modal.container",
   noContainer: "workspaces.modal.no-container",
+  unavailableContainer: "workspaces.modal.unavailable-container",
   icon: "workspaces.modal.icon",
   editTitle: "workspaces.modal.edit-title",
   save: "workspaces.modal.save",
@@ -134,17 +134,8 @@ export class WorkspaceManageModal {
     }, import.meta.hot);
   }
 
-  private get containers(): Container[] {
+  private get containers(): TWorkspaceContainerIdentity[] {
     return ContextualIdentityService.getPublicIdentities();
-  }
-
-  private getContainerName(container: Container) {
-    if (container.l10nId) {
-      return ContextualIdentityService.getUserContextLabel(
-        container.userContextId,
-      );
-    }
-    return container.name;
   }
 
   private createFormConfig(
@@ -172,18 +163,16 @@ export class WorkspaceManageModal {
           disabled: containerPending,
           value: workspace.userContextId?.toString() || "0",
           required: true,
-          options: [
+          options: createWorkspaceContainerOptions(
+            this.containers,
+            workspace.userContextId ?? 0,
+            (id) => ContextualIdentityService.getUserContextLabel(id),
             {
-              value: "0",
-              label: texts.noContainer,
-              icon: "",
+              noContainer: texts.noContainer,
+              unavailableContainer: (id) =>
+                i18next.t(translationKeys.unavailableContainer, { id }),
             },
-            ...this.containers.map((container) => ({
-              value: container.userContextId.toString(),
-              label: this.getContainerName(container),
-              icon: "",
-            })),
-          ],
+          ),
         },
         createWorkspaceIconPickerFormItem(
           workspace,

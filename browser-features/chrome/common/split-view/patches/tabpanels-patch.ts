@@ -17,6 +17,7 @@ import {
   refreshActiveSplitPaneIndicator,
 } from "./active-pane-tracker.js";
 import { resetSplitPanelPresentationState } from "../utils/reset-split-panel-presentation.js";
+import { ensureSelectedPanelDeckSelected } from "../utils/sync-split-deck-selected.js";
 import { forceCleanupDragState } from "../utils/force-cleanup.js";
 import {
   ensureSplitPaneTabBrowsersAreWarmed,
@@ -321,6 +322,13 @@ export function patchTabpanels(
               true,
             );
           }
+        }
+        // Returning to a normal tab before the async tab switcher showed the
+        // split pane leaves no panel with `.deck-selected`; restore it.
+        if (ensureSelectedPanelDeckSelected(selectedPanel)) {
+          logger.debug(
+            `[patch:setSplitViewActive] restored deck-selected on ${selectedPanel?.id}`,
+          );
         }
 
         // Clean up active pane indicator

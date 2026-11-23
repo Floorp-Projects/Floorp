@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "final-package-qa",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-evidence-converter",
+      "kind": "agent",
+      "grantedBy": "authenticated-dsh-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:final-package-qa-windows-984509d2053b",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "task-owner",
+        "label": "final-package QA for windows"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:final-package-qa-windows-41736555270",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "job-owner",
+        "label": "workflow run 41736555270"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:41736555270",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:41736555270:1",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:final-package-qa-41736555270",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "session-owner",
+        "context": "final-package QA session"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:final-package-windows",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "workspace-owner",
+        "path": "final-package QA host for windows"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:publication-41736555270",
+        "issuer": "host-authorization",
+        "owner": "UNVERIFIED",
+        "ownerRole": "approver",
+        "label": "no approval is requested by this record",
+        "decision": "not-required"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:final-package-qa-windows-984509d2053b",
+        "type": "task-has-job",
+        "to": "scheduler:job:final-package-qa-windows-41736555270"
+      },
+      {
+        "from": "scheduler:job:final-package-qa-windows-41736555270",
+        "type": "job-has-run",
+        "to": "executor:run:41736555270"
+      },
+      {
+        "from": "executor:run:41736555270",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:41736555270:1"
+      },
+      {
+        "from": "executor:run:41736555270",
+        "type": "run-uses-session",
+        "to": "host:session:final-package-qa-41736555270"
+      },
+      {
+        "from": "executor:run:41736555270",
+        "type": "run-in-workspace",
+        "to": "host:workspace:final-package-windows"
+      },
+      {
+        "from": "host-authorization:approval:publication-41736555270",
+        "type": "approval-for-job",
+        "to": "scheduler:job:final-package-qa-windows-41736555270"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": null,
+      "reason": "verification.status=verified"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "windows",
+      "arch": "x86_64"
+    },
+    "build": {
+      "commit": "984509d2053be7bae9027133bda7259cd706b208",
+      "id": "20261103153232",
+      "repository": "Floorp-Projects/Floorp",
+      "workflowRun": 41736555270
+    },
+    "packageDigest": {
+      "algorithm": "sha256",
+      "value": "303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c",
+      "artifact": "noraneko-windows-x86_64-installer"
+    },
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": "984509d2053be7bae9027133bda7259cd706b208",
+        "pin": "floorp@984509d2053be7bae9027133bda7259cd706b208"
+      },
+      "runtime": {
+        "commit": "8965ffc346d426ccdf919bd18585e4d4a0c21654",
+        "pin": "floorp-runtime@8965ffc346d426ccdf919bd18585e4d4a0c21654"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:41736555270",
+      "attempt": 1,
+      "startedAt": null,
+      "endedAt": null,
+      "result": "passed",
+      "exitCode": null,
+      "logRef": "native-verification.json",
+      "notes": "Provenance verification only: no wall-clock timestamps and no process exit code are recorded."
+    }
+  ],
+  "operations": [
+    {
+      "input": "runtime artifact digest sha256:9eb4b08f2da5cdd5... (workflow run 41664957250)",
+      "target": "Floorp-Runtime build identity",
+      "order": 1,
+      "observation": "head_sha=8965ffc346d4 expected_build_id=20261103153232"
+    },
+    {
+      "input": "package artifact digest sha256:303fe630a53e2153... (noraneko-windows-x86_64-installer)",
+      "target": "shipped Floorp installer artifact",
+      "order": 2,
+      "observation": "unsigned=False"
+    },
+    {
+      "input": "native verification status and method",
+      "target": "native-verification.json",
+      "order": 3,
+      "observation": "status=verified method=full-version"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "native-verification-status",
+      "expected": "verified",
+      "actual": "verified",
+      "passed": true
+    },
+    {
+      "name": "app-build-id-binds-to-runtime-expected-build-id",
+      "expected": "20261103153232",
+      "actual": "20261103153232",
+      "passed": true
+    },
+    {
+      "name": "package-digest-format",
+      "expected": "sha256:<64 hex characters>",
+      "actual": "sha256:303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c",
+      "passed": true
+    },
+    {
+      "name": "target-key",
+      "expected": "windows",
+      "actual": "windows",
+      "passed": true
+    },
+    {
+      "name": "package-signed",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "windows x86_64 CI host comparing pinned artifact digests",
+    "network": "unknown",
+    "matchesTarget": false,
+    "deviations": [
+      "digest/provenance comparison only; no product process is executed by this record"
+    ],
+    "notes": "Environment fidelity is limited to artifact identity: the record does not observe the product running on the target machine."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "runtime-artifact:Floorp-Projects/Floorp-Runtime",
+        "sha256": "9eb4b08f2da5cdd535232edeb37ddd3866d47492e17f5921e115eb4a4f7180c6"
+      },
+      {
+        "path": "floorp-package:noraneko-windows-x86_64-installer",
+        "sha256": "303fe630a53e2153273ab10f0731ea9c59944c1907bd90d692d2c0cd0fffd06c"
+      }
+    ],
+    "unchangedDuringRun": true,
+    "deviations": [],
+    "notes": "Inputs are the immutable workflow artifacts pinned by workflow run ids and their recorded SHA-256 digests."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "not-required",
+    "notes": "The record launches no product process, so there is nothing to tear down."
+  },
+  "limitations": [
+    "Static provenance/digest verification only: no product execution, no native launch, no visual check.",
+    "DSH toolchain pin is UNVERIFIED for this record; only the Floorp and Floorp-Runtime commits are pinned.",
+    "No wall-clock attempt timestamps are recorded, so attempts carry null startedAt/endedAt.",
+    "No visual (look-and-feel) judgment was performed; visualJudge is null.",
+    "Task/Job ownership is UNVERIFIED: the record names no owner, so owners are marked UNVERIFIED.",
+    "No defect reproduction target: the record verifies package identity only."
+  ],
+  "reproduction": {
+    "result": "inconclusive",
+    "notes": "No defect reproduction target: package identity and build binding are verified, not a defect."
+  }
+}
