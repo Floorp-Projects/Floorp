@@ -1,0 +1,1105 @@
+diff --git a/.github/workflows/scripts/qa3_native_io.py b/.github/workflows/scripts/qa3_native_io.py
+index 215ada0466d..a8a231959a1 100644
+--- a/.github/workflows/scripts/qa3_native_io.py
++++ b/.github/workflows/scripts/qa3_native_io.py
+@@ -1,8 +1,10 @@
+ # SPDX-License-Identifier: MPL-2.0
+ 
++import builtins
+ import ctypes
+ import json
+ import os
++import select
+ import selectors
+ import shutil
+ import signal
+@@ -251,7 +253,7 @@ def verify_group_limits(
+     }
+ 
+ 
+-def run_owned(
++def _run_owned(
+     argv,
+     cwd,
+     env,
+@@ -265,6 +267,7 @@ def run_owned(
+     data_stdout=False,
+     io_budget=None,
+     data_limit=MAX_EXPANDED,
++    cancelled=lambda: False,
+ ):
+     safe_path(name)
+     if "/" in name or not argv or not all(isinstance(x, str) for x in argv):
+@@ -303,141 +306,420 @@ def run_owned(
+         *argv,
+     ]
+     data_bytes = 0
+-    with out.open("xb") as stdout, err.open(
+-        "xb"
+-    ) as stderr, selectors.DefaultSelector() as selector:
+-        process = subprocess.Popen(
+-            executed,
+-            cwd=cwd,
+-            env=env,
+-            stdout=subprocess.PIPE,
+-            stderr=subprocess.PIPE,
+-            start_new_session=True,
+-        )
+-        initial = _proc(process.pid)
+-        if initial:
+-            owned[process.pid] = initial[2]
+-        for pipe, sink in ((process.stdout, stdout), (process.stderr, stderr)):
+-            os.set_blocking(pipe.fileno(), False)
+-            selector.register(pipe, selectors.EVENT_READ, sink)
+-
+-        def drain(wait):
+-            nonlocal logged, data_bytes, stop
+-            for key, _ in selector.select(wait):
+-                try:
+-                    block = os.read(key.fileobj.fileno(), 65536)
+-                except BlockingIOError:
+-                    continue
+-                if not block:
+-                    selector.unregister(key.fileobj)
+-                    key.fileobj.close()
+-                    continue
+-                is_data = data_stdout and key.data is stdout
+-                remaining = data_limit - data_bytes if is_data else log_limit - logged
+-                if len(block) > remaining:
+-                    stop = stop or ("DATA_LIMIT" if is_data else "LOG_LIMIT")
+-                    block = block[: max(remaining, 0)]
+-                if block:
+-                    if minimum_free and shutil.disk_usage(
+-                        logs
+-                    ).free < minimum_free + len(block):
+-                        stop = stop or "DISK_LIMIT"
+-                        continue
+-                    if is_data and io_budget:
++    process = None
++    failure = None
++    cleanup_verified = True
++    cleanup_errors = {}
++    drain_ready = False
++
++    def remember_error(exc, phase):
++        nonlocal failure, stop
++        if failure is None:
++            failure = (exc, exc.__traceback__, phase)
++        elif phase not in cleanup_errors:
++            cleanup_errors[phase] = {
++                "type": type(exc).__name__,
++                "errno": getattr(exc, "errno", None),
++                "message": str(exc),
++            }
++        stop = stop or "PROCESS_ERROR"
++
++    def cleanup_call(operation, phase, ownership=False):
++        nonlocal cleanup_verified
++        try:
++            return operation()
++        except BaseException as exc:
++            remember_error(exc, phase)
++            if ownership:
++                cleanup_verified = False
++            return None
++
++    try:
++        with out.open("xb") as stdout, err.open(
++            "xb"
++        ) as stderr, selectors.DefaultSelector() as selector:
++            process = subprocess.Popen(
++                executed,
++                cwd=cwd,
++                env=env,
++                stdout=subprocess.PIPE,
++                stderr=subprocess.PIPE,
++                start_new_session=True,
++            )
++            phase = "INITIALIZE"
++            try:
++                initial = _proc(process.pid)
++                if initial:
++                    owned[process.pid] = initial[2]
++                for pipe, sink in ((process.stdout, stdout), (process.stderr, stderr)):
++                    os.set_blocking(pipe.fileno(), False)
++                    selector.register(pipe, selectors.EVENT_READ, sink)
++
++                def drain(wait):
++                    nonlocal logged, data_bytes, stop
++                    for key, _ in selector.select(wait):
+                         try:
+-                            io_budget.consume(len(block))
+-                        except ValueError:
+-                            stop = stop or "DISK_LIMIT"
++                            block = os.read(key.fileobj.fileno(), 65536)
++                        except BlockingIOError:
+                             continue
+-                    key.data.write(block)
+-                    if is_data:
+-                        data_bytes += len(block)
+-                    else:
+-                        logged += len(block)
+-
+-        leader_done = None
+-        try:
+-            while selector.get_map() or process.poll() is None:
+-                _descendants(owned, prior_children)
+-                if process.poll() is not None:
+-                    leader_done = leader_done or time.monotonic()
+-                    if time.monotonic() - leader_done > 1:
++                        if not block:
++                            selector.unregister(key.fileobj)
++                            key.fileobj.close()
++                            continue
++                        is_data = data_stdout and key.data is stdout
++                        remaining = (
++                            data_limit - data_bytes if is_data else log_limit - logged
++                        )
++                        if len(block) > remaining:
++                            stop = stop or ("DATA_LIMIT" if is_data else "LOG_LIMIT")
++                            block = block[: max(remaining, 0)]
++                        if block:
++                            if minimum_free and shutil.disk_usage(
++                                logs
++                            ).free < minimum_free + len(block):
++                                stop = stop or "DISK_LIMIT"
++                                continue
++                            if is_data and io_budget:
++                                try:
++                                    io_budget.consume(len(block))
++                                except ValueError:
++                                    stop = stop or "DISK_LIMIT"
++                                    continue
++                            key.data.write(block)
++                            if is_data:
++                                data_bytes += len(block)
++                            else:
++                                logged += len(block)
++
++                drain_ready = True
++                phase = "RUN"
++                leader_done = None
++                while selector.get_map() or process.poll() is None:
++                    if cancelled():
++                        stop = stop or "CANCELLED"
++                    _descendants(owned, prior_children)
++                    if process.poll() is not None:
++                        leader_done = leader_done or time.monotonic()
++                        if time.monotonic() - leader_done > 1:
++                            break
++                    if time.monotonic() - started > timeout:
++                        stop = "TIMEOUT"
++                    if minimum_free and shutil.disk_usage(logs).free < minimum_free:
++                        stop = stop or "DISK_LIMIT"
++                    drain(0.05)
++                    if stop:
+                         break
+-                if time.monotonic() - started > timeout:
+-                    stop = "TIMEOUT"
+-                if minimum_free and shutil.disk_usage(logs).free < minimum_free:
+-                    stop = stop or "DISK_LIMIT"
+-                drain(0.05)
+-                if stop:
+-                    break
+-        finally:
+-            for sig, interval in ((signal.SIGTERM, 2), (signal.SIGKILL, 2)):
+-                signaled = set()
+-                try:
+-                    leader = _proc(process.pid)
++            except BaseException as exc:
++                remember_error(exc, phase)
++                drain_ready = False
++            finally:
++
++                def cleanup_drain(wait):
++                    nonlocal drain_ready
++                    if cancelled():
++                        stop_on_cancel()
++                    if not drain_ready:
++                        time.sleep(wait)
++                        return
++                    try:
++                        drain(wait)
++                    except BaseException as exc:
++                        remember_error(exc, "CLEANUP_IO")
++                        drain_ready = False
++
++                def stop_on_cancel():
++                    nonlocal stop
++                    stop = stop or "CANCELLED"
++
++                leader = cleanup_call(
++                    lambda: _proc(process.pid), "CLEANUP_SNAPSHOT", ownership=True
++                )
++                if leader:
++                    owned.setdefault(process.pid, leader[2])
++                for sig in (signal.SIGTERM, signal.SIGKILL):
++                    signaled = set()
++                    leader = cleanup_call(
++                        lambda: _proc(process.pid), "CLEANUP_SNAPSHOT", ownership=True
++                    )
+                     if leader and leader[2] == owned.get(process.pid):
+-                        os.killpg(process.pid, sig)
+-                except ProcessLookupError:
+-                    pass
+-                deadline = time.monotonic() + interval
+-                while time.monotonic() < deadline:
+-                    _descendants(owned, prior_children)
+-                    for pid, birth in list(owned.items()):
+-                        info = _proc(pid)
+-                        if (
+-                            info
+-                            and info[2] == birth
+-                            and info[1] != "Z"
+-                            and (pid, birth) not in signaled
+-                        ):
+-                            try:
+-                                os.kill(pid, sig)
+-                                signaled.add((pid, birth))
+-                            except ProcessLookupError:
+-                                pass
+-                    drain(0.02)
+-                    process.poll()
+-                    for pid in owned_alive(owned):
+-                        if pid != process.pid:
+-                            try:
+-                                os.waitpid(pid, os.WNOHANG)
+-                            except ChildProcessError:
+-                                pass
+-                    if not owned_alive(owned):
++                        try:
++                            os.killpg(process.pid, sig)
++                        except ProcessLookupError:
++                            pass
++                        except BaseException as exc:
++                            remember_error(exc, "CLEANUP_SIGNAL")
++                    alive = None
++                    deadline = time.monotonic() + 2
++                    while time.monotonic() < deadline:
++                        cleanup_call(
++                            lambda: _descendants(owned, prior_children),
++                            "CLEANUP_DISCOVER",
++                            ownership=True,
++                        )
++                        alive = cleanup_call(
++                            lambda: owned_alive(owned),
++                            "CLEANUP_SNAPSHOT",
++                            ownership=True,
++                        )
++                        for pid, info in (alive or {}).items():
++                            if info[1] != "Z" and (pid, info[2]) not in signaled:
++                                try:
++                                    os.kill(pid, sig)
++                                    signaled.add((pid, info[2]))
++                                except ProcessLookupError:
++                                    pass
++                                except BaseException as exc:
++                                    remember_error(exc, "CLEANUP_SIGNAL")
++                            if pid != process.pid:
++                                try:
++                                    os.waitpid(pid, os.WNOHANG)
++                                except ChildProcessError:
++                                    pass
++                                except BaseException as exc:
++                                    remember_error(exc, "CLEANUP_REAP")
++                                    cleanup_verified = False
++                        cleanup_drain(0.02)
++                        cleanup_call(process.poll, "CLEANUP_REAP", ownership=True)
++                        alive = cleanup_call(
++                            lambda: owned_alive(owned),
++                            "CLEANUP_SNAPSHOT",
++                            ownership=True,
++                        )
++                        if alive == {}:
++                            break
++                    if alive == {}:
+                         break
+-                if not owned_alive(owned):
+-                    break
+-            try:
+-                process.wait(timeout=2)
+-            except subprocess.TimeoutExpired:
+-                stop = "CLEANUP_FAILED"
+-            deadline = time.monotonic() + 2
+-            while selector.get_map() and time.monotonic() < deadline:
+-                drain(0.02)
+-            for key in list(selector.get_map().values()):
+-                selector.unregister(key.fileobj)
+-                key.fileobj.close()
+-                stop = stop or "CLEANUP_FAILED"
+-    leftovers = list(owned_alive(owned))
+-    if leftovers:
++                cleanup_call(
++                    lambda: process.wait(timeout=2), "CLEANUP_REAP", ownership=True
++                )
++                if drain_ready:
++                    deadline = time.monotonic() + 2
++                    while drain_ready and time.monotonic() < deadline:
++                        pending = cleanup_call(selector.get_map, "CLEANUP_IO")
++                        if not pending:
++                            break
++                        cleanup_drain(0.02)
++                for pipe in (process.stdout, process.stderr):
++                    cleanup_call(pipe.close, "CLEANUP_PIPE")
++    except BaseException as exc:
++        remember_error(exc, "RESOURCE_CLOSE")
++    leftovers = cleanup_call(
++        lambda: list(owned_alive(owned)), "CLEANUP_SNAPSHOT", ownership=True
++    )
++    if leftovers is None or leftovers or not cleanup_verified:
+         stop = "CLEANUP_FAILED"
+     result = {
+         "name": name,
+         "argv": argv,
+-        "exit": process.returncode,
++        "exit": process.returncode if process else None,
+         "stop": stop,
+         "durationSeconds": round(time.monotonic() - started, 3),
+-        "stdoutSha256": file_digest(out),
+-        "stderrSha256": file_digest(err),
+-        "ownedCleanupComplete": not leftovers,
++        "stdoutSha256": cleanup_call(lambda: file_digest(out), "RECEIPT_HASH"),
++        "stderrSha256": cleanup_call(lambda: file_digest(err), "RECEIPT_HASH"),
++        "ownedCleanupComplete": bool(process) and cleanup_verified and leftovers == [],
+         "stdoutIsData": data_stdout,
+     }
+-    write_json(logs / (name + ".process.json"), result)
++    if cancelled():
++        stop = stop or "CANCELLED"
++        result["cancelled"] = True
++    result["stop"] = stop
++    if failure:
++        exc, _, phase = failure
++        result["stop"] = stop
++        result["error"] = {
++            "type": type(exc).__name__,
++            "errno": getattr(exc, "errno", None),
++            "message": str(exc),
++            "phase": phase,
++        }
++    if cleanup_errors:
++        result["cleanupErrors"] = cleanup_errors
++    cleanup_call(
++        lambda: write_json(logs / (name + ".process.json"), result), "RECEIPT_WRITE"
++    )
++    if failure:
++        exc, traceback, _ = failure
++        raise exc.with_traceback(traceback)
+     if stop or process.returncode != 0 and not allow_nonzero:
+         raise ValueError(f"{name} failed: {stop or 'NONZERO_EXIT'}")
+     return result
+ 
+ 
++def _wait_supervisor(pid, timeout, on_error=None):
++    deadline = time.monotonic() + timeout
++    while time.monotonic() < deadline:
++        try:
++            waited, status = os.waitpid(pid, os.WNOHANG)
++        except ChildProcessError:
++            raise
++        except BaseException as exc:
++            if on_error is None:
++                raise
++            on_error(exc)
++            waited = 0
++        if waited:
++            return status
++        time.sleep(0.02)
++    return None
++
++
++def _supervise(command, timeout, io_budget):
++    """Isolate orphan adoption; hard kill/stop recovery needs the external job scope."""
++    reader, writer = os.pipe()
++    try:
++        pid = os.fork()
++    except BaseException:
++        os.close(reader)
++        os.close(writer)
++        raise
++    if pid == 0:
++        os.close(reader)
++        cancel_requested = False
++
++        def cancelled(signum, frame):
++            nonlocal cancel_requested
++            cancel_requested = True
++
++        signal.signal(signal.SIGTERM, cancelled)
++        signal.signal(signal.SIGINT, cancelled)
++        try:
++            try:
++                result = command(lambda: cancel_requested)
++                if cancel_requested:
++                    raise InterruptedError("owned command supervisor cancelled")
++                error = None
++            except BaseException as exc:
++                result = None
++                error = {
++                    "type": type(exc).__name__,
++                    "args": list(exc.args),
++                    "errno": getattr(exc, "errno", None),
++                    "filename": getattr(exc, "filename", None),
++                    "message": str(exc),
++                }
++            reply = {
++                "result": result,
++                "error": error,
++                "budgetUsed": io_budget.used if io_budget else None,
++            }
++            data = json.dumps(reply, allow_nan=False).encode()
++            if len(data) > 128 * 1024:
++                raise ValueError("owned supervisor reply exceeds limit")
++            while data:
++                data = data[os.write(writer, data) :]
++        except BaseException:
++            os._exit(1)
++        os.close(writer)
++        os._exit(0)
++    status = None
++    failure = None
++    data = bytearray()
++    birth = None
++
++    def cleanup_error(exc):
++        nonlocal failure
++        failure = failure or (exc, exc.__traceback__)
++
++    try:
++        birth = _proc(pid)
++        os.close(writer)
++        os.set_blocking(reader, False)
++        deadline = time.monotonic() + timeout + 12
++        while time.monotonic() < deadline:
++            ready, _, _ = select.select([reader], [], [], 0.05)
++            if ready:
++                block = os.read(reader, 65536)
++                if not block:
++                    break
++                data.extend(block)
++                if len(data) > 128 * 1024:
++                    raise ValueError("owned supervisor reply exceeds limit")
++        else:
++            raise TimeoutError("owned supervisor did not finish bounded cleanup")
++        status = _wait_supervisor(pid, 1)
++    except BaseException as exc:
++        failure = (exc, exc.__traceback__)
++    finally:
++        try:
++            os.close(reader)
++        except OSError:
++            pass
++        for sig, interval in ((signal.SIGTERM, 10), (signal.SIGKILL, 2)):
++            if status is not None:
++                break
++            try:
++                current = _proc(pid)
++                if birth and current and current[2] == birth[2]:
++                    os.kill(pid, sig)
++            except ProcessLookupError:
++                pass
++            except BaseException as exc:
++                cleanup_error(exc)
++            try:
++                status = _wait_supervisor(pid, interval, cleanup_error)
++            except ChildProcessError as exc:
++                cleanup_error(exc)
++                break
++            except BaseException as exc:
++                cleanup_error(exc)
++    if failure:
++        exc, traceback = failure
++        raise exc.with_traceback(traceback)
++    if status != 0:
++        raise RuntimeError("owned supervisor failed to retain its result")
++    reply = dict(parse_rest_json(bytes(data)))
++    if io_budget:
++        used = reply["budgetUsed"]
++        if type(used) is not int or not io_budget.used <= used <= io_budget.maximum:
++            raise ValueError("owned supervisor changed the staging budget")
++        io_budget.used = used
++    if error := reply["error"]:
++        kind = getattr(builtins, error["type"], RuntimeError)
++        if not isinstance(kind, type) or not issubclass(kind, BaseException):
++            kind = RuntimeError
++        if issubclass(kind, OSError) and error["filename"] is not None:
++            raise kind(*error["args"], error["filename"])
++        raise kind(*error["args"])
++    return reply["result"]
++
++
++def run_owned(
++    argv,
++    cwd,
++    env,
++    logs,
++    name,
++    timeout,
++    memory=28 * GIB,
++    log_limit=2 * GIB,
++    allow_nonzero=False,
++    minimum_free=0,
++    data_stdout=False,
++    io_budget=None,
++    data_limit=MAX_EXPANDED,
++):
++    return _supervise(
++        lambda cancelled: _run_owned(
++            argv,
++            cwd,
++            env,
++            logs,
++            name,
++            timeout,
++            memory,
++            log_limit,
++            allow_nonzero,
++            minimum_free,
++            data_stdout,
++            io_budget,
++            data_limit,
++            cancelled,
++        ),
++        timeout,
++        io_budget,
++    )
++
++
+ def elf_identity(path):
+     if path.is_symlink() or not path.is_file() or not path.stat().st_mode & 0o111:
+         raise ValueError("missing regular executable ELF helper")
+diff --git a/.github/workflows/scripts/test_qa3_native_io.py b/.github/workflows/scripts/test_qa3_native_io.py
+index 9515f2a1cbc..fd67b6ed7fb 100644
+--- a/.github/workflows/scripts/test_qa3_native_io.py
++++ b/.github/workflows/scripts/test_qa3_native_io.py
+@@ -1,18 +1,23 @@
+ # SPDX-License-Identifier: MPL-2.0
+ 
++import ctypes
++import errno
+ import io
+ import os
+ import shutil
++import signal
+ import struct
+ import subprocess
+ import sys
+ import tarfile
+ import tempfile
++import time
+ import unittest
+ import zipfile
+ from pathlib import Path
+ from unittest import mock
+ 
++import qa3_native_io
+ from qa3_native_io import (
+     GIB,
+     ExpansionBudget,
+@@ -233,6 +238,27 @@ class NativeIOTests(unittest.TestCase):
+             read_json(self.root / "logs/fixture.process.json")["stop"], "DATA_LIMIT"
+         )
+ 
++    def test_data_budget_accounting_crosses_supervisor_boundary(self):
++        budget = IOBudget(self.root, 10)
++        self.command(
++            'import os; os.write(1,b"1234")',
++            name="first",
++            data_stdout=True,
++            io_budget=budget,
++        )
++        self.assertEqual(budget.used, 4)
++        with self.assertRaises(ValueError):
++            self.command(
++                'import os; os.write(1,b"1234567")',
++                name="second",
++                data_stdout=True,
++                io_budget=budget,
++            )
++        self.assertEqual(budget.used, 4)
++        self.assertEqual(
++            read_json(self.root / "logs/second.process.json")["stop"], "DISK_LIMIT"
++        )
++
+     def test_closed_pipes_do_not_stop_timeout_or_disk_monitoring(self):
+         with mock.patch(
+             "qa3_native_io.shutil.disk_usage",
+@@ -341,5 +367,478 @@ class NativeIOTests(unittest.TestCase):
+             child_environment(self.root / "state2", {"GITHUB_TOKEN": "fixture"})
+ 
+ 
++class ProcessFailureTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.root = Path(self.temp.name)
++        self.original_popen = subprocess.Popen
++        self.original_proc = qa3_native_io._proc
++        self.processes = []
++        self.owned = {}
++        self.prior = {
++            (int(p.name), info[2])
++            for p in Path("/proc").iterdir()
++            if p.name.isdecimal()
++            and (info := self.original_proc(int(p.name)))
++            and info[0] == os.getpid()
++        }
++        self.addCleanup(self.reap_fixture_children)
++
++    def reap_fixture_children(self):
++        deadline = time.monotonic() + 3
++        while time.monotonic() < deadline:
++            _descendants(self.owned, self.prior)
++            for pid, info in owned_alive(self.owned).items():
++                if info[1] != "Z":
++                    try:
++                        os.kill(pid, signal.SIGKILL)
++                    except ProcessLookupError:
++                        pass
++                try:
++                    os.waitpid(pid, os.WNOHANG)
++                except ChildProcessError:
++                    pass
++            for process in self.processes:
++                process.poll()
++            if not owned_alive(self.owned):
++                return
++            time.sleep(0.01)
++        self.fail("own bounded process fixture did not finish cleanup")
++
++    def spawn(self, *args, **kwargs):
++        process = self.original_popen(*args, **kwargs)
++        self.processes.append(process)
++        info = self.original_proc(process.pid)
++        if info:
++            self.owned[process.pid] = info[2]
++        deadline = time.monotonic() + 2
++        while not self.ready.exists() and time.monotonic() < deadline:
++            if process.poll() is not None:
++                self.fail("own process fixture exited before initialization")
++            time.sleep(0.005)
++        self.assertTrue(self.ready.exists(), "own process fixture was not ready")
++        if wrapper := getattr(self, "pipe_wrapper", None):
++            process.stdout = wrapper(process.stdout)
++        return process
++
++    def command(self, name="fixture", before_ready="", body="", **kwargs):
++        self.ready = self.root / (name + ".ready")
++        code = (
++            "import json,os,signal,time\nfrom pathlib import Path\n"
++            f"root=Path({str(self.root)!r})\n"
++            "def identity(name):\n"
++            "    data=Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()\n"
++            "    (root/(name+'.identity')).write_text(json.dumps("
++            "{'pid':os.getpid(),'birth':int(data[19])}))\n"
++            "signal.signal(signal.SIGTERM,signal.SIG_IGN)\n"
++            + before_ready
++            + "\nidentity('leader')\n"
++            + f"Path({str(self.ready)!r}).write_text('ready')\n"
++            + (
++                body
++                or "while True:\n"
++                "    try:\n"
++                "        os.write(1,b'stdout\\n'); os.write(2,b'stderr\\n')\n"
++                "    except OSError:\n"
++                "        pass\n"
++                "    time.sleep(0.01)\n"
++            )
++        )
++        with mock.patch("qa3_native_io.subprocess.Popen", side_effect=self.spawn):
++            return run_owned(
++                [sys.executable, "-B", "-c", code],
++                self.root,
++                {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"},
++                self.root / "logs",
++                name,
++                kwargs.pop("timeout", 1),
++                memory=128 * 1024**2,
++                log_limit=1024**2,
++                **kwargs,
++            )
++
++    def check_failure(self, failure, operation, name="fixture"):
++        with self.assertRaises(OSError) as caught:
++            operation()
++        self.assertEqual(type(caught.exception), type(failure))
++        self.assertEqual(caught.exception.args, failure.args)
++        self.assertFalse(
++            owned_alive({
++                process.pid: self.owned[process.pid] for process in self.processes
++            })
++        )
++        self.assertFalse(
++            any(
++                self.original_proc(read_json(p)["pid"])
++                for p in self.root.glob("*.identity")
++            )
++        )
++        receipt = read_json(self.root / "logs" / (name + ".process.json"))
++        self.assertTrue(receipt["ownedCleanupComplete"])
++        self.assertEqual(receipt["error"]["type"], "OSError")
++        self.assertEqual(receipt["error"]["errno"], failure.errno)
++        self.assertEqual(receipt["error"]["message"], str(failure))
++        self.assertIsNotNone(receipt["stop"])
++        return receipt
++
++    def sink_fault(self, failure, name="fixture", suffix=".stdout", when=lambda: True):
++        original_open = Path.open
++
++        class Sink:
++            def __init__(self, stream):
++                self.stream = stream
++                self.failed = False
++
++            def __getattr__(self, key):
++                return getattr(self.stream, key)
++
++            def __enter__(self):
++                return self
++
++            def __exit__(self, *args):
++                return self.stream.__exit__(*args)
++
++            def write(self, block):
++                if when():
++                    if self.failed:
++                        raise OSError(errno.EIO, "secondary cleanup sink failure")
++                    self.failed = True
++                    raise failure
++                return self.stream.write(block)
++
++        def open_file(path, *args, **kwargs):
++            stream = original_open(path, *args, **kwargs)
++            if path == self.root / "logs" / (name + suffix):
++                return Sink(stream)
++            return stream
++
++        return mock.patch.object(Path, "open", new=open_file)
++
++    def test_initial_snapshot_failure_preserves_error_and_reaps(self):
++        failure = OSError(errno.EIO, "initial process snapshot failed")
++        failed = False
++
++        def proc(pid):
++            nonlocal failed
++            if self.processes and pid == self.processes[-1].pid and not failed:
++                failed = True
++                raise failure
++            return self.original_proc(pid)
++
++        with mock.patch("qa3_native_io._proc", side_effect=proc):
++            self.check_failure(failure, self.command)
++
++    def test_pipe_setup_failure_preserves_error_and_reaps(self):
++        failure = OSError(errno.EBADF, "pipe nonblocking setup failed")
++        original = os.set_blocking
++
++        def set_blocking(fd, blocking):
++            if (
++                self.processes
++                and self.processes[-1].stdout
++                and fd
++                in {
++                    self.processes[-1].stdout.fileno(),
++                    self.processes[-1].stderr.fileno(),
++                }
++            ):
++                raise failure
++            return original(fd, blocking)
++
++        with mock.patch("qa3_native_io.os.set_blocking", side_effect=set_blocking):
++            self.check_failure(failure, self.command)
++
++    def test_selector_registration_failure_preserves_error_and_reaps(self):
++        factory = qa3_native_io.selectors.DefaultSelector
++        for index in (1, 2):
++            with self.subTest(index=index):
++                name = "register-" + str(index)
++                failure = OSError(errno.ENOMEM, "selector registration failed")
++                selector = factory()
++                self.addCleanup(selector.close)
++                register = selector.register
++                calls = 0
++
++                def fail_register(*args):
++                    nonlocal calls
++                    calls += 1
++                    if calls == index:
++                        raise failure
++                    return register(*args)
++
++                with mock.patch.object(
++                    selector, "register", side_effect=fail_register
++                ), mock.patch(
++                    "qa3_native_io.selectors.DefaultSelector", return_value=selector
++                ):
++                    self.check_failure(
++                        failure, lambda: self.command(name=name), name=name
++                    )
++
++    def test_selector_read_failure_preserves_error_and_reaps(self):
++        failure = OSError(errno.EIO, "selector read failed")
++        selector = qa3_native_io.selectors.DefaultSelector()
++        self.addCleanup(selector.close)
++        with mock.patch.object(selector, "select", side_effect=failure), mock.patch(
++            "qa3_native_io.selectors.DefaultSelector", return_value=selector
++        ):
++            self.check_failure(failure, self.command)
++
++    def test_pipe_read_failure_preserves_error_and_reaps(self):
++        failure = OSError(errno.EBADF, "pipe read failed")
++        original_read = os.read
++
++        def read(fd, size):
++            if self.processes and fd in {
++                self.processes[-1].stdout.fileno(),
++                self.processes[-1].stderr.fileno(),
++            }:
++                raise failure
++            return original_read(fd, size)
++
++        with mock.patch("qa3_native_io.os.read", side_effect=read):
++            self.check_failure(failure, self.command)
++
++    def test_pipe_close_failure_still_reaps_and_saves_first_error(self):
++        failure = OSError(errno.EIO, "initial pipe close failed")
++
++        class Pipe:
++            def __init__(self, stream):
++                self.stream = stream
++
++            def __getattr__(self, key):
++                return getattr(self.stream, key)
++
++            def close(self):
++                self.stream.close()
++                raise failure
++
++        self.pipe_wrapper = Pipe
++        receipt = self.check_failure(
++            failure,
++            lambda: self.command(body="os.close(1); os.close(2); time.sleep(30)\n"),
++        )
++        self.assertEqual(receipt["error"]["phase"], "RUN")
++
++    def test_sink_errors_preserve_initial_failure_and_reap(self):
++        for index, (code, suffix) in enumerate((
++            (errno.ENOSPC, ".stdout"),
++            (errno.EDQUOT, ".stderr"),
++        )):
++            with self.subTest(code=code):
++                name = "sink-" + str(index)
++                failure = OSError(code, "initial sink failure")
++                with self.sink_fault(failure, name=name, suffix=suffix):
++                    self.check_failure(
++                        failure, lambda: self.command(name=name), name=name
++                    )
++
++    def test_cleanup_only_sink_failure_cannot_abort_kill_and_reap(self):
++        failure = OSError(errno.ENOSPC, "cleanup sink failure")
++        marker = self.root / "term-seen"
++        handler = (
++            "def term(signum,frame):\n"
++            "    signal.signal(signal.SIGTERM,signal.SIG_IGN)\n"
++            f"    Path({str(marker)!r}).write_text('term')\n"
++            "    os.write(1,b'cleanup output\\n')\n"
++            "signal.signal(signal.SIGTERM,term)\n"
++        )
++        with self.sink_fault(failure, when=marker.exists):
++            receipt = self.check_failure(
++                failure, lambda: self.command(before_ready=handler, timeout=0.1)
++            )
++        self.assertEqual(receipt["stop"], "TIMEOUT")
++        self.assertTrue(marker.exists())
++
++    def test_sink_failure_reaps_detached_and_late_fork_children(self):
++        failure = OSError(errno.EDQUOT, "initial sink failure")
++        unrelated = self.original_popen(
++            [sys.executable, "-B", "-c", "import time; time.sleep(30)"],
++            env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"},
++            start_new_session=True,
++        )
++        self.processes.append(unrelated)
++        self.owned[unrelated.pid] = self.original_proc(unrelated.pid)[2]
++        before = (
++            "p=os.fork()\n"
++            "if p==0:\n"
++            "    os.setsid(); identity('detached')\n"
++            "    while True: time.sleep(0.01)\n"
++            "while not (root/'detached.identity').exists(): time.sleep(0.001)\n"
++            "def term(signum,frame):\n"
++            "    signal.signal(signal.SIGTERM,signal.SIG_IGN)\n"
++            "    p=os.fork()\n"
++            "    if p==0:\n"
++            "        os.setsid(); identity('late')\n"
++            "        while True: time.sleep(0.01)\n"
++            "signal.signal(signal.SIGTERM,term)\n"
++        )
++        with self.sink_fault(failure), self.assertRaises(OSError) as caught:
++            self.command(before_ready=before)
++        self.assertEqual(type(caught.exception), type(failure))
++        self.assertEqual(caught.exception.args, failure.args)
++        self.assertIsNone(unrelated.poll())
++        self.assertTrue((self.root / "late.identity").exists())
++        for path in self.root.glob("*.identity"):
++            self.assertIsNone(self.original_proc(read_json(path)["pid"]))
++        receipt = read_json(self.root / "logs/fixture.process.json")
++        self.assertTrue(receipt["ownedCleanupComplete"])
++        self.assertEqual(receipt["error"]["errno"], errno.EDQUOT)
++
++    def test_cleanup_signal_error_cannot_abort_later_kill_and_reap(self):
++        failure = OSError(errno.EMFILE, "initial cleanup signal failed")
++        original_kill = os.kill
++        failed = False
++
++        def kill(pid, sig):
++            nonlocal failed
++            if self.processes and sig == signal.SIGTERM and not failed:
++                failed = True
++                raise failure
++            return original_kill(pid, sig)
++
++        with mock.patch("qa3_native_io.os.kill", side_effect=kill):
++            receipt = self.check_failure(failure, lambda: self.command(timeout=0.1))
++        self.assertEqual(receipt["error"]["phase"], "CLEANUP_SIGNAL")
++
++    def test_expired_term_grace_still_kills_and_reaps(self):
++        failure = OSError(errno.ENOSPC, "initial sink failure")
++        original_time = time.monotonic
++        original_killpg = os.killpg
++        grace_calls = None
++
++        def killpg(pid, sig):
++            nonlocal grace_calls
++            result = original_killpg(pid, sig)
++            if self.processes and sig == signal.SIGTERM:
++                grace_calls = 0
++            return result
++
++        def clock():
++            nonlocal grace_calls
++            if grace_calls is not None:
++                grace_calls += 1
++                if grace_calls == 2:
++                    return original_time() + 3
++            return original_time()
++
++        with self.sink_fault(failure), mock.patch(
++            "qa3_native_io.os.killpg", side_effect=killpg
++        ), mock.patch("qa3_native_io.time.monotonic", side_effect=clock):
++            self.check_failure(failure, self.command)
++
++    def test_selector_close_error_does_not_replace_first_sink_failure(self):
++        failure = OSError(errno.ENOSPC, "initial sink failure")
++        selector = qa3_native_io.selectors.DefaultSelector()
++        close = selector.close
++        self.addCleanup(close)
++
++        def fail_close():
++            close()
++            raise OSError(errno.EMFILE, "secondary selector close failure")
++
++        with self.sink_fault(failure), mock.patch.object(
++            selector, "close", side_effect=fail_close
++        ), mock.patch("qa3_native_io.selectors.DefaultSelector", return_value=selector):
++            receipt = self.check_failure(failure, self.command)
++        self.assertEqual(
++            receipt["cleanupErrors"]["RESOURCE_CLOSE"]["errno"], errno.EMFILE
++        )
++
++    def test_worker_sigterm_after_leader_exit_is_not_pass(self):
++        original_kill = os.kill
++        interrupted = False
++
++        def kill(pid, sig):
++            nonlocal interrupted
++            if self.processes and sig == signal.SIGTERM and not interrupted:
++                interrupted = True
++                original_kill(os.getpid(), signal.SIGTERM)
++            return original_kill(pid, sig)
++
++        before = (
++            "p=os.fork()\n"
++            "if p==0:\n"
++            "    os.setsid(); identity('detached')\n"
++            "    while True: time.sleep(0.01)\n"
++            "while not (root/'detached.identity').exists(): time.sleep(0.001)\n"
++        )
++        with mock.patch("qa3_native_io.os.kill", side_effect=kill):
++            with self.assertRaises((ValueError, InterruptedError)):
++                self.command(before_ready=before, body="os._exit(0)\n", timeout=3)
++        receipt = read_json(self.root / "logs/fixture.process.json")
++        self.assertEqual(receipt["exit"], 0)
++        self.assertTrue(receipt["cancelled"])
++        self.assertEqual(receipt["stop"], "CANCELLED")
++        self.assertTrue(receipt["ownedCleanupComplete"])
++        for path in self.root.glob("*.identity"):
++            self.assertIsNone(self.original_proc(read_json(path)["pid"]))
++
++    def test_caller_subreaper_zero_is_not_enabled(self):
++        libc = ctypes.CDLL(None, use_errno=True)
++        original = ctypes.c_int()
++        self.assertEqual(libc.prctl(37, ctypes.byref(original), 0, 0, 0), 0)
++        self.assertEqual(libc.prctl(36, 0, 0, 0, 0), 0)
++        try:
++            self.assertEqual(self.command(body="pass\n")["exit"], 0)
++            current = ctypes.c_int()
++            self.assertEqual(libc.prctl(37, ctypes.byref(current), 0, 0, 0), 0)
++            self.assertEqual(current.value, 0)
++        finally:
++            self.reap_fixture_children()
++            self.assertEqual(libc.prctl(36, original.value, 0, 0, 0), 0)
++
++    def test_unrelated_late_adoption_and_caller_subreaper_are_preserved(self):
++        libc = ctypes.CDLL(None, use_errno=True)
++        original = ctypes.c_int()
++        self.assertEqual(libc.prctl(37, ctypes.byref(original), 0, 0, 0), 0)
++        self.assertEqual(libc.prctl(36, 1, 0, 0, 0), 0)
++        ready = self.root / "fixture.ready"
++        unrelated_code = (
++            "import json,os,signal,time\nfrom pathlib import Path\n"
++            f"root=Path({str(self.root)!r})\n"
++            f"ready=Path({str(ready)!r})\n"
++            "while not ready.exists(): time.sleep(0.005)\n"
++            "pid=os.fork()\n"
++            "if pid: os._exit(0)\n"
++            "os.setsid(); signal.signal(signal.SIGTERM,signal.SIG_IGN)\n"
++            "data=Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()\n"
++            "(root/'unrelated.json').write_text(json.dumps("
++            "{'pid':os.getpid(),'birth':int(data[19])}))\n"
++            "while True: time.sleep(0.01)\n"
++        )
++        unrelated = self.original_popen(
++            [sys.executable, "-B", "-c", unrelated_code],
++            env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"},
++            start_new_session=True,
++        )
++        self.processes.append(unrelated)
++        self.owned[unrelated.pid] = self.original_proc(unrelated.pid)[2]
++        try:
++            result = self.command(
++                body=(
++                    "while not (root/'unrelated.json').exists(): time.sleep(0.005)\n"
++                    "time.sleep(0.1)\n"
++                )
++            )
++            self.assertTrue(result["ownedCleanupComplete"])
++            self.assertEqual(result["exit"], 0)
++            info = read_json(self.root / "unrelated.json")
++            state = self.original_proc(info["pid"])
++            self.assertIsNotNone(state)
++            self.assertEqual(state[2], info["birth"])
++            self.owned[info["pid"]] = info["birth"]
++            current = ctypes.c_int()
++            self.assertEqual(libc.prctl(37, ctypes.byref(current), 0, 0, 0), 0)
++            self.assertEqual(current.value, 1)
++        finally:
++            self.reap_fixture_children()
++            self.assertEqual(libc.prctl(36, original.value, 0, 0, 0), 0)
++        current = ctypes.c_int()
++        self.assertEqual(libc.prctl(37, ctypes.byref(current), 0, 0, 0), 0)
++        self.assertEqual(current.value, original.value)
++
++
+ if __name__ == "__main__":
+     unittest.main()

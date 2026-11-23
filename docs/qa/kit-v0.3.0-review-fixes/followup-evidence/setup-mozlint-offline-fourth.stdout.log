@@ -1,0 +1,8 @@
+Creating the 'mach' site at /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/mach
+Could not install glean-sdk, so telemetry will not be collected. Continuing.
+Could not install orjson, so json operations will be slower in various tools. Continuing.
+Could not install psutil, so telemetry will be missing some data. Continuing.
+Could not install rtoml, so toml operations will be slower in various tools. Continuing.
+Could not install zstandard, so zstd archives will not be possible to extract. Continuing.
+Could not install pyyaml, so faster native loading is disabled. Continuing.
+Creating the 'lint' site at /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/lint

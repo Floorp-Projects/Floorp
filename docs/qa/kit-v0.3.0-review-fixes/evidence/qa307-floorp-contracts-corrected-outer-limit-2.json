@@ -1,0 +1,27 @@
+{
+  "check": "floorp-contracts",
+  "revision": "corrected-outer-limit-2",
+  "startedAt": "2026-10-09T12:41:02.471678+00:00",
+  "command": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tools/qa3",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "cwd": "/workspace/qa-review-v030/repos/Floorp",
+  "exitCode": 0,
+  "timedOut": false,
+  "seconds": 0.518,
+  "log": "qa307-floorp-contracts-corrected-outer-limit-2.log",
+  "logSha256": "be1e8386da0d71d768ba8c9570703216cb1308c2708b20596435b982f598b94d",
+  "networkRequired": false,
+  "browserRequired": false,
+  "outerSoftASBytes": 2147483648,
+  "outerHardASBytes": 34359738368
+}
