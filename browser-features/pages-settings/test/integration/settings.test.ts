@@ -867,6 +867,42 @@ export async function runPageTests() {
       }
     },
   });
+  tests.push({
+    name: "Design unrelated edits keep a newer stored style",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "multirow";
+        saved.globalConfigs.faviconColor = false;
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", false);
+        await route("features/design", "#favicon-color");
+        // The loaded form still shows multirow, but the stored style has
+        // meanwhile been written to horizontal (e.g. a native on/off toggle
+        // in another window). An unrelated save must keep the newer style.
+        const newer = JSON.parse(String(prefs.get(DESIGN)));
+        newer.tabbar.tabbarStyle = "horizontal";
+        prefs.set(DESIGN, JSON.stringify(newer));
+        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "horizontal",
+          "Unrelated edits must not revert a newer stored style",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
   await executeCases(tests);
 }
 

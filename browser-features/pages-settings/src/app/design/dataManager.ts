@@ -142,7 +142,11 @@ async function saveDesignSettingsUnqueued(
   // the native pref here prevents an unrelated edit from writing back a style
   // that a Firefox-side toggle already changed in another window.
   const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
-  const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
+  // Without an explicit style change the form's `style` is a stale snapshot:
+  // resolving it could revert a newer style written elsewhere.
+  const requestedStyle = hasTabStyleChanged
+    ? normalizeTabbarStyle(settings.style ?? storedStyle)
+    : storedStyle;
   const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
   const tabbarStyle =
     !hasTabStyleChanged && nativeVerticalTabs !== null
