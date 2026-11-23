@@ -1,11 +1,11 @@
 # QA3 source shadow foundation
 
-This is the first QA3-04/11 host foundation, not product qualification. The
-approved initial mode is **shadow**. Release and Alpha each call the reusable
-source job once, alongside their existing jobs. Its job-level
-`continue-on-error` preserves the current required jobs, signing, approval,
-bundle schema and publisher. The raw receipt retains FAIL/INCOMPLETE even when
-the calling workflow continues. Do not make packages depend on this job yet.
+This is the QA3-04/11 host foundation. FDH decision D-13 keeps source QA in
+**shadow** for v0.1 ([KAN-114](https://floorp-projects.atlassian.net/browse/KAN-114)).
+Release and Alpha each call the reusable source job once, in parallel with
+packaging. The job uses `continue-on-error` and is independent of signing,
+approval, and publishing. The raw receipt retains FAIL/INCOMPLETE even when
+the calling workflow continues.
 
 ## Fixed plan and execution
 
@@ -53,10 +53,12 @@ plan/runner/root-config/root-lock/host-map/host-lock/test-file digests,
 planned/executed IDs and each raw verdict. `--local` explicitly records
 dirty/local execution during development; it does not issue qualification.
 Preflight rejection also writes a FAIL receipt. CI preserves contract-test logs
-and exit codes alongside the source receipt in `source/`. Workflow artifacts are
-named with run and attempt and retained for 14 days. This initial receipt does
-not establish complete history across runs; that requires the QA3-08 trusted
-controller before required promotion.
+and exit codes alongside the source receipt in `source/`. The Actions job
+summary reports the contract-test outcome and the verdict and SHA-256 of a
+receipt matching the expected checkout, run, and attempt. Missing or invalid
+receipts are shown explicitly. The raw evidence is uploaded as
+`qa3-source-<run>-<attempt>` and retained for 14 days. Complete history across
+runs requires the QA3-08 trusted controller.
 
 Child processes receive a small environment without credentials or runner option
 injection. Each group has a 180-second timeout and a 16-MiB limit for regular
@@ -93,6 +95,83 @@ Linux pidfd dependency, `prlimit` and the source plan receipt remain Linux-only;
 the Windows port covers the Gate 2 task 2-E supervisor contract, not a Windows
 source host.
 
+macOS has no subreaper, pidfd or job object, and an orphan is reparented to
+launchd. The macOS supervisor therefore starts the command as the leader of a
+new session, which every descendant inherits unless it calls `setsid` itself
+and which no unrelated process can join. It owns two kinds of process: a child
+of an owned process whose libproc start time (birth identity) still matches,
+seen while tracking, so a descendant that later calls `setsid` stays owned;
+and a member of the command's session that belongs to the same user and was
+born no earlier than the command when a real kernel leader birth is available.
+A missing birth is never guessed from wall time; a later held-slot read installs
+the exact bound. Session-only adoption also requires a generation anchor.
+While the command's Popen has not reaped the leader (and only that Popen
+reaps it, with no external reaper), the held leader PID still holds the
+session id, so the leader anchors the session even where libproc can no longer
+describe the unreaped zombie: on macOS 15 the BSD-info call answers `ESRCH`
+for a zombie that has not been reaped. A different birth read from a held
+leader PID is rejected and fails cleanup; no further Popen signal or reap is
+attempted through a conflicting leader identity. A spawn-time identity that
+could not be read is never replaced by a synthetic one: the leader stays
+under direct Popen control, and only a real read from the held slot may fill
+its reserved identity. The scan itself lists only this user's processes
+(`proc_listpids` with `PROC_UID_ONLY`, never a global fallback). A PID the
+kernel denies during that scan (`EPERM`) is retained per scan as a bounded
+list of `(pid, errno)` (hard cap 256; a larger set fails the scan with a
+preview instead of being truncated). The list resets even on a failed scan;
+PID-list allocation is limited to 65536 slots and an empty current-UID snapshot
+fails closed because the live controller must be present. Every retained PID is examined: an
+owned PID, a member of the active owned session, or anything unprovable is
+sticky uncertainty that fails the verdict without signalling it; only a
+provably different session id with no ownership claim is ignored as noise.
+The normal executor scans before polling/reaping the leader. Callers must preserve that ordering: an
+unknown nonempty session after all anchors vanish is not adopted, and sticky
+uncertainty fails cleanup even if later scans are empty. Once the leader is
+reaped and the session has no live member, the session id is no longer matched,
+because the kernel may hand it out again. A process that
+takes a dead owned pid is judged again. Before each TERM/KILL it reads the
+target's identity again. Without pidfds a short window remains between that
+check and `kill(2)`, and macOS allocates pids sequentially, far from reuse. A
+descendant that becomes an orphan and calls `setsid` before the supervisor
+first sees it escapes both rules, and because enumeration is scoped to this
+uid so does a descendant that leaves this uid; if such a process was already
+owned, its failed re-inspection fails cleanup instead of being dropped. Other
+users' processes are not discovered by the UID-scoped scan. Already recorded
+descendants remain subject to exact-identity reinspection and OS signal
+permissions; UID scoping is not a privilege boundary. Persistent scan overflow
+or session-inspection failure can prevent descendant cleanup for that iteration
+while still failing the verdict; direct valid-leader control and bounded retries
+remain best effort. As on
+Linux, logical ownership does not replace the runner's own teardown, there is
+no kill-on-close net, and this is not a process sandbox. A survivor or
+uncertain inspection is recorded and fails the verdict. Only `ESRCH`
+confirms disappearance in single-PID inspection; permission errors and
+malformed libproc results are not treated as exit and fail closed when they
+touch an owned or session-relevant PID. `test_source_macos.py` holds the
+contract tests: an in-memory process API on any host, and the real libproc
+tests in the `macos-supervisor` jobs (Apple silicon and Intel). It also
+covers the 2-E contract only, not a macOS source host.
+
+### Mac Firefox45 verifier order
+
+[KAN-118](https://floorp-projects.atlassian.net/browse/KAN-118) carries the stage
+order check from the [investigated Runtime run](https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/41630387790)
+into the QA3 shadow contract tests. The check requires inventory after helper
+installation, before all seven target builds. Each required stage must appear
+exactly once, and the target builds and subsequent child and resource stages
+must retain their order.
+
+To check the stage order of a recovered `summary.json` after authenticating the
+run and its evidence:
+
+```sh
+python3 -B tools/qa3/mac_verifier_order.py /path/to/summary.json
+```
+
+QA3 shadow CI exercises the stage order check with synthetic summaries. The
+command checks order only. Provenance, stage results, native execution, and
+qualification require their existing verification.
+
 ## Coverage and remaining gates
 
 `coverage.json` keeps installer, MAR, DEB/PPA, Portable and stub proof plans and
@@ -120,8 +199,13 @@ repeat product evidence on Windows x64, Linux x64/ARM, Mac Intel/ARM. Keep Mac
 universal bytes bound to both native executions. Use separate real MAR, DEB,
 Portable and stub evidence. No such native execution is claimed by this change.
 
-The future publisher must perform
+The GitHub Actions publishers perform
 `bundle -> final QA -> manual approval ->
-fresh evidence revalidation -> publish`,
-authenticate exact digests and retain the existing gates. The current manual
-publication/approval flow is unchanged.
+fresh evidence revalidation -> publish`.
+The reusable QA workflow checks the same-run signed bundle and its installer
+artifact IDs. The protected publish jobs revalidate that bundle before making
+the release public. Windows remains in shadow mode for stable QA and is required
+for Windows-only Alpha. Repository administrators manage required reviewers
+for `Deploy-to-installer-release` and `Deploy-to-installer-alpha` under
+GitHub Settings → Environments. Keep administrator bypass disabled on both
+environments so every deployment requires reviewer approval.

@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: MPL-2.0 */
+#include "nsISupports.idl"
+
+/** Privileged, main-process, dev/test-only private OS token advertisement.
+ * No arbitrary destination: prepare compares the expected root with native ProfD.
+ * Cleanup always uses the captured owner, even after opt-out or profile changes.
+ */
+[scriptable, builtinclass, uuid(1aa31823-107e-4ab3-9ab0-10941bcc4ab4)]
+interface nsIFloorpPrivateProfileToken : nsISupports
+{
+  readonly attribute unsigned long protocolVersion;
+  void prepare(in AString expectedProfileRoot);
+  void write(in AUTF8String token);
+  void secure();
+  void remove();
+};

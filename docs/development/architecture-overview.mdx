@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "e157f8a04c9f9e631ebde0dfd3eea61ee51d9ce5"
+floorp_commit: "dc76113e254486b2d71afb17939bfc41698144c6"
 generated: true
 ---
 # Architecture Overview
@@ -30,7 +30,7 @@ The loader development server is configured by `bridge/loader-features/vite.conf
 
 ## Privileged Modules And Window Actors
 
-Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:561`. The current inventory lists 24 actors:
+Window Actors are registered from `browser-features/modules/modules/BrowserGlue.sys.mts:562`. The current inventory lists 24 actors:
 
 - `NRAboutPreferences`
 - `NRAppConstants`
@@ -86,9 +86,9 @@ Common chrome features are discovered from `browser-features/chrome/common/mod.t
 - `split-view`
 - `statusbar`
 - `tab`
-- `tab-auto-unload`
 - `tab-inline-edit`
 - `tab-refresh`
+- `tab-sleep-exclusion`
 - `tab-stacks`
 - `tab-strip-wheel-guard`
 - `tabbar`
@@ -135,21 +135,23 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
-- `.github/workflows/fdh-review-gate.yml` - triggers: `issue_comment`, `pull_request`
+- `.github/workflows/fdh-review-gate.yml` - triggers: `pull_request`
+- `.github/workflows/fdh-trusted-review-gate.yml` - triggers: `issue_comment`, `pull_request_target`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_dispatch`
-- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/ppa_index_check.yml` - triggers: `pull_request`, `push`
-- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/qa3-macos-supervisor.yml` - triggers: `pull_request`, `workflow_dispatch`
 - `.github/workflows/qa3-source-shadow.yml` - triggers: `pull_request`, `workflow_call`, `workflow_dispatch`
 - `.github/workflows/qa3-windows-supervisor.yml` - triggers: `pull_request`, `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
-- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
 - `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

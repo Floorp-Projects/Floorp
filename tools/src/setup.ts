@@ -16,10 +16,27 @@
  */
 
 import * as path from "@std/path";
+import { prepareRuntimeBootstrap } from "./prepared_runtime_bootstrap.ts";
+import type { PreparedRuntimeBootstrapResult } from "./prepared_runtime_bootstrap_types.ts";
 import { BRANDING, PATHS } from "./defines.ts";
 import { run as runInjector } from "./injector.ts";
 import { copyDirectoryTreeSafely } from "./runtime_archive.ts";
 import { exists, safeRemove } from "./utils.ts";
+import {
+  assertPreparedRuntimeReceiptMatchesTree,
+  buildPreparedRuntimeReceipt,
+  DEBUG_RUNTIME_MARKER_FILE,
+  normalizePreparedRuntimeSourcePath,
+  readPreparedRuntimeMarker,
+  readPreparedRuntimeReceipt,
+  runtimePathsEqual,
+  runtimePathsOverlap,
+  writePreparedRuntimeReceipt,
+} from "./prepared_runtime.ts";
+import type {
+  PreparedRuntimeMarkerIdentity,
+  PreparedRuntimeReceipt,
+} from "./prepared_runtime_types.ts";
 import {
   prepareDeps,
   type PrepareDepsOptions,
@@ -37,7 +54,7 @@ export {
   type PrepareStatus,
 } from "./setup_deps.ts";
 
-export const DEBUG_RUNTIME_MARKER_FILE = ".floorp-runtime-debug.json";
+export { DEBUG_RUNTIME_MARKER_FILE };
 export const GUARD_ENV_NAME = "FLOORP_SKIP_PATCHER";
 
 /** Marker written by the Debug FTP runtime install (`initializer.ts:142`). */
@@ -71,6 +88,10 @@ export interface PrepareRuntimeOptions {
   copy?: (sourceRoot: string, destinationRoot: string) => Promise<CopyMode>;
   /** DI relink hook: creates relative `noraneko-devdir` symlinks. */
   relink?: (binRootDir: string, projectRoot: string) => void;
+  /** Test-only bootstrap dependency; production always uses the fixed trusted patch. */
+  bootstrap?: typeof prepareRuntimeBootstrap;
+  /** DI clock for the control receipt; tests may pin it. */
+  now?: () => string;
 }
 
 export type CopyMode = "safe-copy" | "symlink-fallback";
@@ -80,7 +101,9 @@ export interface PrepareRuntimeResult {
   binRootDir: string;
   sourcePath?: string;
   marker?: RuntimeMarker;
+  receipt?: PreparedRuntimeReceipt;
   copyMode?: CopyMode;
+  bootstrap?: PreparedRuntimeBootstrapResult;
   relinked: boolean;
 }
 
@@ -292,42 +315,128 @@ export async function prepareRuntime(
 ): Promise<PrepareRuntimeResult> {
   const binRootDir = options.binRootDir ?? PATHS.bin_root;
   const projectRoot = options.projectRoot ?? PATHS.root;
+  const sourcePath = options.sourcePath;
+  const explicitSource = sourcePath
+    ? normalizePreparedRuntimeSourcePath(sourcePath)
+    : undefined;
+  const receiptState = readPreparedRuntimeReceipt(binRootDir);
 
   const existing = readRuntimeMarker(binRootDir);
+  let existingValid = false;
   if (existing) {
-    let markerValid = true;
     try {
       assertRuntimeMarker(existing);
+      existingValid = true;
     } catch {
       // Wrong platform/architecture marker: replace the tree.
-      markerValid = false;
     }
-    if (markerValid) {
+  }
+
+  let sourceMarker: PreparedRuntimeMarkerIdentity | undefined;
+  let sourceReceipt: PreparedRuntimeReceipt | undefined;
+  if (sourcePath && explicitSource) {
+    if (runtimePathsOverlap(sourcePath, binRootDir)) {
+      const adopt = runtimePathsEqual(sourcePath, binRootDir) &&
+        existingValid &&
+        receiptState.status === "present" &&
+        receiptState.receipt.sourcePath === explicitSource &&
+        receiptMatchesMarker(receiptState.receipt, existing!);
+      if (!adopt) {
+        throw new Error(
+          `Explicit Runtime source overlaps the destination ${binRootDir}: ${sourcePath}.`,
+        );
+      }
+    }
+    if (!exists(sourcePath)) {
+      throw new Error(`Runtime registry source is missing: ${sourcePath}.`);
+    }
+    const requestedMarker = readPreparedRuntimeMarker(sourcePath);
+    if (!requestedMarker) {
+      throw new Error(
+        `Runtime registry source lacks ${DEBUG_RUNTIME_MARKER_FILE}: ${sourcePath}.`,
+      );
+    }
+    sourceMarker = requestedMarker;
+    assertRuntimeMarker(sourceMarker);
+    sourceReceipt = buildPreparedRuntimeReceipt(
+      sourceMarker,
+      explicitSource,
+      options.now?.() ?? new Date().toISOString(),
+    );
+    assertPreparedRuntimeReceiptMatchesTree(
+      sourcePath,
+      sourceReceipt,
+      {
+        platform: sourceMarker.platform,
+        architecture: sourceMarker.architecture,
+      },
+    );
+  }
+
+  if (existingValid) {
+    if (!explicitSource) {
+      if (receiptState.status === "invalid") {
+        throw new Error(
+          `Invalid prepared Runtime receipt: ${receiptState.reason}.`,
+        );
+      }
       // Re-run the relink even when the tree is already present: a copied
       // runtime can carry stale absolute devdir links from another worktree.
       // A relink failure must not be mistaken for a wrong marker and delete
       // an otherwise valid runtime.
       const relink = options.relink ?? defaultRelink;
       relink(binRootDir, projectRoot);
+      const bootstrap = await (options.bootstrap ?? prepareRuntimeBootstrap)(
+        runtimeDirFor(binRootDir),
+      );
       return {
+        bootstrap,
         status: "already",
         binRootDir,
-        marker: existing,
+        marker: existing!,
         relinked: true,
       };
     }
-    safeRemove(binRootDir);
+    if (
+      receiptState.status === "present" &&
+      sourceMarker &&
+      receiptState.receipt.sourcePath === explicitSource &&
+      receiptMatchesMarker(receiptState.receipt, sourceMarker) &&
+      markerMatchesMarker(existing!, sourceMarker)
+    ) {
+      assertPreparedRuntimeReceiptMatchesTree(
+        binRootDir,
+        receiptState.receipt,
+        {
+          platform: receiptState.receipt.platform,
+          architecture: receiptState.receipt.architecture,
+        },
+      );
+      const relink = options.relink ?? defaultRelink;
+      relink(binRootDir, projectRoot);
+      const bootstrap = await (options.bootstrap ?? prepareRuntimeBootstrap)(
+        runtimeDirFor(binRootDir),
+      );
+      return {
+        bootstrap,
+        status: "already",
+        binRootDir,
+        sourcePath,
+        marker: existing!,
+        receipt: receiptState.receipt,
+        relinked: true,
+      };
+    }
+    // An explicit source identity differs from the receipt/marker, or the
+    // receipt is absent: replace only after the source was validated above.
   }
 
-  const sourcePath = options.sourcePath;
   if (!sourcePath) {
+    if (existing && !existingValid) safeRemove(binRootDir);
     return { status: "missing", binRootDir, relinked: false };
   }
-  if (!exists(sourcePath)) {
-    throw new Error(`Runtime registry source is missing: ${sourcePath}.`);
-  }
 
-  safeRemove(binRootDir);
+  if (existing) safeRemove(binRootDir);
   const copy = options.copy ?? copyRuntimeTree;
   const copyMode = await copy(sourcePath, binRootDir);
 
@@ -341,15 +450,57 @@ export async function prepareRuntime(
 
   const relink = options.relink ?? defaultRelink;
   relink(binRootDir, projectRoot);
+  const bootstrap = await (options.bootstrap ?? prepareRuntimeBootstrap)(
+    runtimeDirFor(binRootDir),
+  );
+
+  const receipt = buildPreparedRuntimeReceipt(
+    marker,
+    explicitSource!,
+    options.now?.() ?? new Date().toISOString(),
+  );
+  assertPreparedRuntimeReceiptMatchesTree(
+    binRootDir,
+    receipt,
+    {
+      platform: marker.platform,
+      architecture: marker.architecture,
+    },
+  );
+  writePreparedRuntimeReceipt(binRootDir, receipt);
 
   return {
     status: "prepared",
     binRootDir,
     sourcePath,
     marker,
+    receipt,
     copyMode,
+    bootstrap,
     relinked: true,
   };
+}
+
+function receiptMatchesMarker(
+  receipt: PreparedRuntimeReceipt,
+  marker: PreparedRuntimeMarkerIdentity,
+): boolean {
+  return receipt.identity.artifactName === marker.artifactName &&
+    receipt.identity.artifactSize === marker.artifactSize &&
+    receipt.identity.artifactSha256 === marker.artifactSha256 &&
+    receipt.identity.version === marker.version &&
+    receipt.identity.buildId === marker.buildId;
+}
+
+function markerMatchesMarker(
+  existing: RuntimeMarker,
+  requested: PreparedRuntimeMarkerIdentity,
+): boolean {
+  return existing.artifactName === requested.artifactName &&
+    existing.artifactSize === requested.artifactSize &&
+    existing.artifactSha256 === requested.artifactSha256 &&
+    existing.version === requested.version &&
+    existing.buildId === requested.buildId;
 }
 
 // ---------------------------------------------------------------------------
