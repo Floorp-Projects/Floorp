@@ -159,6 +159,18 @@ export class MacOSSupport {
         await IOUtils.readUTF8(launcher) !== bundle.launcher ||
         await IOUtils.readUTF8(plist) !== bundle.plist
       ) return false;
+      // A restored or truncated bundle can keep readable text files while its
+      // compiled artifacts drifted; those cannot be compared by content, so
+      // treat empty output as damage and rebuild.
+      for (
+        const path of [
+          executable,
+          launcher,
+          PathUtils.join(resources, "Scripts", "main.scpt"),
+        ]
+      ) {
+        if ((await IOUtils.stat(path)).size === 0) return false;
+      }
       // On Windows this function only runs in portable tests; executable mode
       // is meaningful on the platforms that provide POSIX-style permissions.
       if (Services.appinfo.OS !== "WINNT") {
@@ -167,7 +179,7 @@ export class MacOSSupport {
             Ci.nsIFile,
           );
           file.initWithPath(path);
-          if (!file.isExecutable()) return false;
+          if ((file.permissions & 0o777) !== 0o755) return false;
         }
       }
       return true;
@@ -527,18 +539,37 @@ export class MacOSSupport {
     }
     if (await IOUtils.exists(bundle.path)) {
       if (!await IOUtils.exists(markerPath)) {
-        throw new Error("[MacOSSupport] Refusing to replace an unowned bundle");
-      }
-      const owner = await IOUtils.readJSON(markerPath) as {
-        profileDir?: string;
-        integration?: string;
-        ssb?: { id?: string };
-      };
-      if (
-        owner.profileDir !== options.profileDir || owner.ssb?.id !== ssb.id ||
-        owner.integration === "app-shim"
-      ) {
-        throw new Error("[MacOSSupport] Refusing to replace an unowned bundle");
+        // A launcher install interrupted before its marker write leaves a
+        // partial bundle Floorp itself created. The plist it already wrote
+        // still proves ownership via the bundle identifier; refuse anything
+        // else as unowned.
+        let partial = false;
+        try {
+          partial = (await IOUtils.readUTF8(
+            PathUtils.join(bundle.path, "Contents", "Info.plist"),
+          )).includes(`<string>${bundle.bundleId}</string>`);
+        } catch {
+          partial = false;
+        }
+        if (!partial) {
+          throw new Error(
+            "[MacOSSupport] Refusing to replace an unowned bundle",
+          );
+        }
+      } else {
+        const owner = await IOUtils.readJSON(markerPath) as {
+          profileDir?: string;
+          integration?: string;
+          ssb?: { id?: string };
+        };
+        if (
+          owner.profileDir !== options.profileDir || owner.ssb?.id !== ssb.id ||
+          owner.integration === "app-shim"
+        ) {
+          throw new Error(
+            "[MacOSSupport] Refusing to replace an unowned bundle",
+          );
+        }
       }
     }
     // Version 4 uses a native AppleScript applet: Launch Services cannot launch
