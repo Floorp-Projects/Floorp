@@ -177,7 +177,7 @@ export async function runAllTests(): Promise<void> {
     },
     {
       name: "the remap decision follows GDK_BACKEND when it is set",
-      fn: async () => {
+      fn: () => {
         const isWaylandSession = () =>
           (LinuxSupport as unknown as {
             isWaylandSession(): boolean;

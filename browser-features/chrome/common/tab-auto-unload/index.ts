@@ -624,6 +624,21 @@ export default class TabAutoUnload extends NoraComponentBase {
 
       try {
         await tabInfo.gBrowser.prepareDiscardBrowser(tabInfo.tab);
+        // prepareDiscardBrowser yields; the feature may have been disabled or
+        // torn down and the tab's eligibility may have changed meanwhile.
+        if (this.disposed || !this.settings.enabled) {
+          return;
+        }
+        const currentUrl = this.getTabUrl(tabInfo.tab);
+        if (
+          currentUrl &&
+          shouldExcludeUrl(currentUrl, this.settings.excludePatterns)
+        ) {
+          continue;
+        }
+        if (!tabUnloader.isDiscardable(tabInfo)) {
+          continue;
+        }
         if (!tabInfo.gBrowser.discardBrowser(tabInfo.tab)) {
           continue;
         }

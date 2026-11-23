@@ -508,7 +508,24 @@ export class LinuxSupport {
   async repair(ssb: Manifest) {
     // Serialize with install()/uninstall() so a launch-time repair cannot
     // interleave with another window installing or removing the same launcher.
-    return await LinuxSupport.withMutation(() => this.repairLocked(ssb));
+    return await LinuxSupport.withMutation(async () => {
+      let current: Manifest | null = null;
+      try {
+        const { DataStoreProvider } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/DataStore.sys.mjs",
+        );
+        const store = await DataStoreProvider.getDataManager()
+          .getCurrentSsbData();
+        // A rename that committed while this repair queued in the mutation
+        // lock decides the launcher identity; a stale snapshot would rewrite
+        // the old name over the freshly renamed launcher.
+        current = Object.values(store).find((app) => app.id === ssb.id) ??
+          null;
+      } catch {
+        // The store is optional context; repair what the caller holds.
+      }
+      await this.repairLocked(current ?? ssb);
+    });
   }
 
   private async repairLocked(ssb: Manifest) {
