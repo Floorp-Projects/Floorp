@@ -68,6 +68,38 @@ function profileTestRoot(testId: string): nsIFile {
 function symlinkCreator():
   | ((targetPath: string, createPath: string) => Promise<void>)
   | undefined {
+  const linuxCreate = Services.appinfo.OS !== "Linux"
+    ? undefined
+    : (targetPath: string, createPath: string): Promise<void> => {
+      const executableFactory = Reflect.get(
+        Components.classes,
+        "@mozilla.org/file/local;1",
+      ) as { createInstance(interfaceId: unknown): nsIFile };
+      const executable = executableFactory.createInstance(
+        Components.interfaces.nsIFile,
+      );
+      executable.initWithPath("/bin/ln");
+      const processFactory = Reflect.get(
+        Components.classes,
+        "@mozilla.org/process/util;1",
+      ) as {
+        createInstance(interfaceId: unknown): {
+          init(executable: nsIFile): void;
+          run(blocking: boolean, args: string[], count: number): void;
+          readonly exitValue: number;
+        };
+      };
+      const process = processFactory.createInstance(
+        Components.interfaces.nsIProcess,
+      );
+      process.init(executable);
+      const args = ["-s", targetPath, createPath];
+      process.run(true, args, args.length);
+      if (process.exitValue !== 0) {
+        throw new Error("Could not create the controlled test symlink.");
+      }
+      return Promise.resolve();
+    };
   try {
     const module = ChromeUtils.importESModule(
       "resource://gre/modules/osfile.sys.mjs",
@@ -83,12 +115,14 @@ function symlinkCreator():
     };
     const file = module.OS?.File;
     const create = file?.unixSymLink;
-    if (typeof create !== "function" || !file) return undefined;
-    return (targetPath, createPath) =>
-      create.call(file, targetPath, createPath);
+    if (typeof create === "function" && file) {
+      return (targetPath, createPath) =>
+        create.call(file, targetPath, createPath);
+    }
   } catch {
-    return undefined;
+    return linuxCreate;
   }
+  return linuxCreate;
 }
 
 async function expectCode(
@@ -205,6 +239,23 @@ function assertProbeInert(message: string): void {
   assertEquals(Services.prefs.getBoolPref(probePref), false, message);
 }
 
+function assertBytesEqual(
+  actual: Uint8Array,
+  expected: Uint8Array,
+  message: string,
+): void {
+  if (actual.length !== expected.length) {
+    throw new Error(
+      `${message} (expected ${expected.length} bytes, got ${actual.length})`,
+    );
+  }
+  for (let index = 0; index < expected.length; index++) {
+    if (actual[index] !== expected[index]) {
+      throw new Error(`${message} (byte ${index} differs)`);
+    }
+  }
+}
+
 async function testPutReadReopenAndInertSource(): Promise<void> {
   await withCacheTestScope(async (makeTestId, openCache) => {
     const testId = makeTestId();
@@ -228,7 +279,7 @@ async function testPutReadReopenAndInertSource(): Promise<void> {
       "duplicate put is idempotent",
     );
     assertProbeInert("duplicate put does not execute package source");
-    assertEquals(
+    assertBytesEqual(
       await IOUtils.read(storedPath.path),
       storedBefore,
       "duplicate put does not replace stored bytes",
@@ -267,7 +318,7 @@ async function testCreateOnlyStagingAndCleanup(): Promise<void> {
       createRefused = true;
     }
     assert(createRefused, "adapter staging write refuses an existing file");
-    assertEquals(
+    assertBytesEqual(
       await IOUtils.read(stage.path),
       original,
       "create-only refusal preserves existing staging bytes",
@@ -300,7 +351,7 @@ async function testCreateOnlyStagingAndCleanup(): Promise<void> {
       moveRefused = true;
     }
     assert(moveRefused, "no-overwrite move refuses an existing target");
-    assertEquals(
+    assertBytesEqual(
       await IOUtils.read(existing.path),
       moveOriginal,
       "existing move target is unchanged",
@@ -370,7 +421,7 @@ async function testUnsafeLayoutsAndLinks(): Promise<void> {
     const ancestorBytes = new Uint8Array([3, 2, 1]);
     await IOUtils.write(ancestor.path, ancestorBytes, { mode: "create" });
     await expectCode(openCache(ancestorId), "cache-unsafe-layout");
-    assertEquals(
+    assertBytesEqual(
       await IOUtils.read(ancestor.path),
       ancestorBytes,
       "non-directory controlled ancestor is preserved",
@@ -389,9 +440,7 @@ async function testUnsafeLayoutsAndLinks(): Promise<void> {
       );
       return;
     }
-    console.log(
-      "[M3b] Static-link layout cases executing via OS.File.unixSymLink.",
-    );
+    console.log("[M3b] Static-link layout cases executing.");
 
     const rootLinkId = makeTestId();
     const rootTree = profileTestTree(rootLinkId);
@@ -420,7 +469,7 @@ async function testUnsafeLayoutsAndLinks(): Promise<void> {
     await createSymlink(stageTarget.path, stageLink.path);
     await expectCode(stageCache.put(bytes, policy()), "cache-unsafe-layout");
     assert(stageLink.isSymlink(), "staging link is preserved");
-    assertEquals(
+    assertBytesEqual(
       await IOUtils.read(stageTarget.path),
       stageTargetBytes,
       "staging link target is unchanged",
@@ -442,7 +491,7 @@ async function testUnsafeLayoutsAndLinks(): Promise<void> {
       "cache-unsafe-layout",
     );
     assert(destinationLink.isSymlink(), "destination link is preserved");
-    assertEquals(
+    assertBytesEqual(
       await IOUtils.read(linkTarget.path),
       linkTargetBytes,
       "destination link target is unchanged",
@@ -484,7 +533,7 @@ async function testBoundedReadAndInvalidTestId(): Promise<void> {
   });
 }
 
-export function runAllTests(): void {
+export function runAllTests(): Promise<void> {
   const tests: TestCase[] = [
     {
       name: "M3b cache put/read/reopen is inert",
@@ -501,5 +550,5 @@ export function runAllTests(): void {
       fn: testBoundedReadAndInvalidTestId,
     },
   ];
-  runTests("M3bFeaturePackageCacheAcceptance.test.mts", tests);
+  return runTests("M3bFeaturePackageCacheAcceptance.test.mts", tests);
 }
