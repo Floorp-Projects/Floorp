@@ -66,8 +66,8 @@ export interface ContextMenuItemDescriptor {
   source: ContextMenuItemSource;
   /**
    * Legacy combined capability. New consumers should use `movable` and
-   * `hideable`; this remains false for separators so older settings pages do
-   * not accidentally expose a separator visibility switch.
+   * `hideable`. This stays false for separators so older settings pages do
+   * not treat them as ordinary commands. Separator visibility uses `hideable`.
    */
   customizable: boolean;
   /** Whether the item itself may be moved by the user. */
