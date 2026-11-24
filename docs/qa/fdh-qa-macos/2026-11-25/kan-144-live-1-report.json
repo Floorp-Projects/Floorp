@@ -1,0 +1,51 @@
+{
+  "taskId": "kan-144-live-1",
+  "payload": {
+    "name": "floorp-macOS-universal.dmg",
+    "kind": "dmg",
+    "sha256": "e3520c1f553319ff704a821cbcc72dae49e544459843ba2e8fadaff8ce370629"
+  },
+  "startedAt": "2026-11-24T19:40:55.405Z",
+  "preflight": {
+    "freeBytes": 9154125824,
+    "guiSession": false,
+    "lockHolder": null,
+    "marionettePortBusy": false,
+    "osVersion": "26.6.2",
+    "ready": false,
+    "blockers": [
+      "gui-session-absent"
+    ]
+  },
+  "lock": {
+    "ok": true,
+    "acquired": true
+  },
+  "stage": {
+    "bytes": 260513224,
+    "version": "12.21.1@159.0.1"
+  },
+  "launch": {
+    "failed": true,
+    "ok": false,
+    "error": "gui-session-absent"
+  },
+  "cleanup": {
+    "residualProcesses": 0,
+    "taskDirRemoved": true,
+    "lockReleased": true,
+    "clean": true
+  },
+  "after": {
+    "freeBytes": 9153933312,
+    "guiSession": false,
+    "lockHolder": null,
+    "marionettePortBusy": false,
+    "osVersion": "26.6.2",
+    "ready": false,
+    "blockers": [
+      "gui-session-absent"
+    ]
+  },
+  "finishedAt": "2026-11-24T19:41:22.420Z"
+}

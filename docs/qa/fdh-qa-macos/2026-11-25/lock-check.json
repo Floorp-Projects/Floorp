@@ -1,0 +1,28 @@
+{
+  "acquireA": {
+    "ok": true,
+    "acquired": true
+  },
+  "reacquireA": {
+    "ok": true,
+    "acquired": false
+  },
+  "acquireB": {
+    "ok": false,
+    "error": "lock-held"
+  },
+  "preflightWhileHeld": [
+    "lock-held"
+  ],
+  "cleanupB": {
+    "ok": false,
+    "error": "lock-held"
+  },
+  "cleanupA": {
+    "residualProcesses": 0,
+    "taskDirRemoved": true,
+    "lockReleased": true,
+    "clean": true
+  },
+  "preflightAfter": []
+}
