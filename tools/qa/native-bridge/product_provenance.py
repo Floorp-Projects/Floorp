@@ -116,10 +116,14 @@ def bind(args) -> int:
             failures.append(f"{kind} package is missing or differs from the compiled identity")
     product_platform = ini(args.product_root / "platform.ini", "Build")
     product_app = ini(args.product_root / "application.ini", "App")
-    for key in ("BuildID", "SourceStamp"):
-        if identity["runtime"]["platform"].get(key) != product_platform.get(key):
-            failures.append(f"product Gecko {key} differs from the compiled Runtime")
+    # An artifact build writes its own assembly-time platform.ini BuildID, as the
+    # release package.yml path does; the Runtime BuildID lives in libxul.so.
+    runtime_build_id = identity["runtime"]["platform"].get("BuildID", "")
+    if identity["runtime"]["platform"].get("SourceStamp") != product_platform.get("SourceStamp"):
+        failures.append("product Gecko SourceStamp differs from the compiled Runtime")
     libxul = args.product_root / "libxul.so"
+    if not runtime_build_id or not libxul.is_file() or runtime_build_id.encode() not in libxul.read_bytes():
+        failures.append("product libxul.so does not carry the compiled Runtime BuildID")
     runtime_libxul = None
     if "runtime" in packages:
         with tarfile.open(args.runtime_support / packages["runtime"]["name"]) as runtime_tar:
@@ -127,10 +131,14 @@ def bind(args) -> int:
             runtime_libxul = hashlib.sha256(member.read()).hexdigest() if member else None
     if not libxul.is_file() or sha256(libxul) != runtime_libxul:
         failures.append("product libxul.so is not the compiled Runtime package libxul.so")
-    with zipfile.ZipFile(args.product_root / "browser/omni.ja") as omni:
+    with zipfile.ZipFile(args.product_root / "omni.ja") as omni:
         noraneko = sorted(n for n in omni.namelist() if n.startswith("chrome/noraneko/"))[:3]
     if not noraneko:
         failures.append("noraneko chrome is absent from the packaged product")
+    with zipfile.ZipFile(args.product_root / "browser/omni.ja") as omni:
+        xhtml = omni.read("chrome/browser/content/browser/browser.xhtml")
+    if b"chrome://noraneko-startup/content/chrome_root.js" not in xhtml:
+        failures.append("packaged browser.xhtml does not load noraneko")
     cohorts = cohort.materialize(plan, args.runtime)
     extracted = staged_hashes(args.support / "mochitest/browser", cohorts)
     for path, digest in extracted.items():
@@ -147,6 +155,7 @@ def bind(args) -> int:
                    "tree": git(args.floorp_source, "rev-parse", "HEAD^{tree}")},
         "product": {"archive": args.product_archive.name, "sha256": sha256(args.product_archive),
                     "application": product_app, "platform": product_platform,
+                    "runtime_build_id": runtime_build_id,
                     "floorp_sha256": sha256(args.product_root / "floorp"),
                     "libxul_sha256": sha256(libxul) if libxul.is_file() else None,
                     "noraneko_chrome_sample": noraneko},
