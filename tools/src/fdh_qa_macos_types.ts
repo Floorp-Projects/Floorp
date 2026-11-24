@@ -28,13 +28,14 @@ export type MacosPayloadKind = "dmg" | "tar.gz";
 export type MarionetteRequest =
   | { op: "ready"; connectTimeout?: number }
   | { op: "eval"; script: string }
-  | { op: "screenshot" }
-  | { op: "quit" };
+  | { op: "screenshot" };
 
 export interface GuestRunOutput {
   code: number;
   stdout: string;
   stderr: string;
+  /** The transport killed the local process after its timeout. */
+  timedOut?: boolean;
 }
 
 /** Runs a guest script; `stdin` streams an upload when present. */

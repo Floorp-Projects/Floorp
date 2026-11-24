@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 // Explicit live run of the macOS QA target (KAN-144): preflight, lock, stage,
-// launch + probe + screenshot when a GUI session exists, and cleanup always.
+// launch + probe + screenshot on a ready target, and cleanup always. Exits 1
+// unless every step passed and cleanup left the target clean.
 // Run:
 //   deno run --allow-read --allow-write --allow-run=ssh \
 //     tools/integration/fdh-qa-macos-live.ts --config <target.json> \
@@ -34,7 +35,12 @@ const config = parseMacosQaTargetConfig(
 const taskId = validateTaskId(arg("task-id"));
 const payload = arg("payload");
 const out = arg("out");
-const kind: MacosPayloadKind = payload.endsWith(".dmg") ? "dmg" : "tar.gz";
+const kind: MacosPayloadKind | null = payload.endsWith(".dmg")
+  ? "dmg"
+  : payload.endsWith(".tar.gz")
+  ? "tar.gz"
+  : null;
+if (kind === null) throw new Error("--payload must end in .dmg or .tar.gz");
 await Deno.mkdir(out, { recursive: true });
 
 const sha256 = encodeHex(
@@ -58,51 +64,55 @@ const step = async (name: string, fn: () => Promise<unknown>) => {
   }
 };
 
-const preflight = await target.preflight();
-report.preflight = preflight;
-let locked = false;
+let lockAttempted = false;
+let passed = false;
 try {
+  if (!await step("preflight", () => target.preflight())) {
+    throw new Error("preflight failed");
+  }
+  const preflight = report.preflight as { ready: boolean; blockers: string[] };
   if (!preflight.ready) {
     throw new Error(`target not ready: ${preflight.blockers.join(", ")}`);
   }
-  locked = await step("lock", () => target.acquire(taskId));
-  if (
-    locked &&
+  lockAttempted = true;
+  passed = await step("lock", () => target.acquire(taskId)) &&
     await step(
       "stage",
       async () =>
         target.stage(taskId, kind, (await Deno.open(payload)).readable, sha256),
-    )
-  ) {
-    if (
-      await step("launch", () => target.launch(taskId)) &&
-      await step("probe", () =>
-        target.evaluate(
-          taskId,
-          "const w = Services.wm.getMostRecentWindow('navigator:browser');" +
-            " return { app: Services.appinfo.name, version: Services.appinfo.version," +
-            " os: Services.appinfo.OS, windows: [...Services.wm.getEnumerator('navigator:browser')].length," +
-            " url: w?.gBrowser?.currentURI?.spec ?? null };",
-        ))
-    ) {
-      await step("screenshot", async () => {
-        const png = await target.screenshot(taskId);
-        const file = path.join(out, `${taskId}-macos.png`);
-        await Deno.writeFile(file, decodeBase64(png));
-        const digest = encodeHex(
-          await crypto.subtle.digest("SHA-256", await Deno.readFile(file)),
-        );
-        return { file: path.basename(file), sha256: digest };
-      });
-    }
-  }
+    ) &&
+    await step("launch", () => target.launch(taskId)) &&
+    await step("probe", () =>
+      target.evaluate(
+        taskId,
+        "const w = Services.wm.getMostRecentWindow('navigator:browser');" +
+          " return { app: Services.appinfo.name, version: Services.appinfo.version," +
+          " os: Services.appinfo.OS, windows: [...Services.wm.getEnumerator('navigator:browser')].length," +
+          " url: w?.gBrowser?.currentURI?.spec ?? null };",
+      )) &&
+    await step("screenshot", async () => {
+      const png = await target.screenshot(taskId);
+      const file = path.join(out, `${taskId}-macos.png`);
+      await Deno.writeFile(file, decodeBase64(png));
+      const digest = encodeHex(
+        await crypto.subtle.digest("SHA-256", await Deno.readFile(file)),
+      );
+      return { file: path.basename(file), sha256: digest };
+    });
 } catch (error) {
   report.refused = String(error);
 } finally {
-  if (locked) await step("cleanup", () => target.cleanup(taskId));
-  report.after = await target.preflight();
+  // A lock step may have succeeded remotely even if it failed locally.
+  if (lockAttempted) {
+    const cleaned = await step("cleanup", () => target.cleanup(taskId));
+    const cleanup = report.cleanup as { clean?: boolean };
+    passed = passed && cleaned && cleanup.clean === true;
+  }
+  await step("after", () => target.preflight());
+  report.passed = passed;
   report.finishedAt = new Date().toISOString();
   const file = path.join(out, `${taskId}-report.json`);
   await Deno.writeTextFile(file, JSON.stringify(report, null, 2) + "\n");
   console.log(JSON.stringify(report, null, 2));
 }
+Deno.exit(passed ? 0 : 1);

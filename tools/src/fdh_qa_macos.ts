@@ -122,6 +122,9 @@ export function parseMacosQaTargetConfig(value: unknown): MacosQaTargetConfig {
   }
   const testUser = record.testUser as string;
   const qaRoot = safeAbsPath(record.qaRoot, "qaRoot");
+  if (record.guestUser === testUser) {
+    throw configError("guestUser and testUser must differ");
+  }
   if (!qaRoot.startsWith(`/Users/${testUser}/`)) {
     throw configError("qaRoot must be inside /Users/<testUser>/");
   }
@@ -159,20 +162,26 @@ export function shellQuote(value: string): string {
 /** SHA-256 hex of a staged payload. */
 const SHA256 = /^[0-9a-f]{64}$/;
 
+/** Longest argv-mode host command; Windows CreateProcess caps at 32767. */
+const MAX_ARGV_COMMAND = 24_000;
+
 /**
- * Local ssh argv that runs `script` with bash inside the guest. The script is
- * base64-encoded into the command line, so the process stdin stays free for an
- * upload stream. Both remote shells (host and guest) only ever parse quoted
- * literals and a fixed `bash -c "$(... | base64 -D)"` wrapper.
+ * Local ssh argv that runs a guest script with bash. In `stdin` mode the guest
+ * runs `bash -s` and the caller writes the script to stdin. In `argv` mode
+ * (used when stdin carries an upload) the script is base64-encoded into the
+ * command line. Both remote shells (host and guest) only ever parse quoted
+ * literals and a fixed wrapper.
  */
 export function buildGuestSshArgs(
   config: MacosQaTargetConfig,
   script: string,
+  mode: "stdin" | "argv",
 ): string[] {
-  const encoded = encodeBase64(new TextEncoder().encode(script));
-  const guestCommand = `bash -c "$(printf %s ${
-    shellQuote(encoded)
-  } | base64 -D)"`;
+  const guestCommand = mode === "stdin"
+    ? "bash -s"
+    : `bash -c "$(printf %s ${
+      shellQuote(encodeBase64(new TextEncoder().encode(script)))
+    } | base64 -D)"`;
   const hostCommand = [
     "cd",
     shellQuote(config.vmDir),
@@ -192,6 +201,9 @@ export function buildGuestSshArgs(
     shellQuote(`${config.guestUser}@${config.guestAddress}`),
     shellQuote(guestCommand),
   ].join(" ");
+  if (hostCommand.length > MAX_ARGV_COMMAND) {
+    throw new Error("guest script too long for argv mode");
+  }
   return [
     "-o",
     "BatchMode=yes",
@@ -205,29 +217,47 @@ export function buildGuestSshArgs(
 }
 
 /**
+ * Root-owned lock outside the test user's tree, so the browser under test
+ * cannot forge or remove it. The lock is a symlink whose target is the owner
+ * task id: `ln -s` creates it and records the owner in one atomic step.
+ */
+const LOCK_DIR = "/private/var/db/fdh-qa";
+
+/**
  * Shared prologue. ROOT and TASK are kept apart and joined only at run time, so
  * the literal task directory never appears in this script's own argv (cleanup
- * matches processes by that path and must not match itself).
+ * matches processes by that path and must not match itself). Commands that
+ * touch the task tree run as the test user (`asu`), never as root, so a
+ * planted symlink cannot redirect a root write.
  */
 function prologue(config: MacosQaTargetConfig, taskId?: string): string {
   const lines = [
     "set -euo pipefail",
     "export LC_ALL=C",
+    "cd /",
     `ROOT=${shellQuote(config.qaRoot)}`,
     `TUSER=${shellQuote(config.testUser)}`,
     `MPORT=${config.marionettePort}`,
+    `LOCKDIR=${shellQuote(LOCK_DIR)}`,
+    'LOCK="$LOCKDIR/lock"',
     "result() { printf 'FDH_RESULT %s\\n' \"$1\"; }",
     'fail() { printf \'FDH_RESULT {"ok":false,"error":"%s"}\\n\' "$1"; exit 3; }',
     "sudo -n true 2>/dev/null || fail sudo-unavailable",
     'TUID=$(id -u "$TUSER" 2>/dev/null) || fail test-user-missing',
+    'asu() { sudo -n -u "$TUSER" "$@"; }',
     'gui_session() { sudo -n launchctl print "gui/$TUID" >/dev/null 2>&1; }',
+    // Owner task id, "-unowned" for a lock that is not a symlink, or empty.
+    'lock_owner() { if sudo -n test -L "$LOCK"; then sudo -n readlink "$LOCK" | tr -cd \'a-z0-9-\'; elif sudo -n test -e "$LOCK"; then printf %s -unowned; fi; }',
+    'port_busy() { sudo -n lsof -nP -iTCP:"$MPORT" -sTCP:LISTEN >/dev/null 2>&1; }',
   ];
   if (taskId !== undefined) {
     validateTaskId(taskId);
     lines.push(
       `TASK=${shellQuote(taskId)}`,
       'TASKDIR="$ROOT""/""$TASK"',
-      'LOCK="$ROOT/.lock"',
+      'own_lock() { [ "$(lock_owner)" = "$TASK" ] || fail lock-not-held; }',
+      // The test user owns its home; a symlinked root would redirect writes.
+      'sudo -n test -L "$ROOT" && fail qa-root-symlink',
     );
   }
   return lines.join("\n") + "\n";
@@ -238,35 +268,31 @@ export function buildPreflightScript(config: MacosQaTargetConfig): string {
   return prologue(config) + `
 FREE=$(df -k /System/Volumes/Data | awk 'NR==2 {print $4 * 1024}')
 GUI=false; gui_session && GUI=true
-HOLDER=null
-if sudo -n test -f "$ROOT/.lock/owner"; then
-  H=$(sudo -n cat "$ROOT/.lock/owner" | tr -cd 'a-z0-9-')
-  HOLDER="\\"$H\\""
-fi
-PORTBUSY=false
-if sudo -n lsof -nP -iTCP:"$MPORT" -sTCP:LISTEN >/dev/null 2>&1; then PORTBUSY=true; fi
-FOREIGN=$(sudo -n ps -axo user=,command= | R="$ROOT/" U="$TUSER" awk '$1 == ENVIRON["U"] && index($0, "/Contents/MacOS/floorp") && !index($0, ENVIRON["R"]) {n++} END {print n + 0}')
+H=$(lock_owner)
+HOLDER=null; [ -n "$H" ] && HOLDER="\\"$H\\""
+PORTBUSY=false; port_busy && PORTBUSY=true
+FOREIGN=$(sudo -n ps -axwwo user=,command= | R="$ROOT/" U="$TUSER" awk '$1 == ENVIRON["U"] && index($0, "/Contents/MacOS/floorp") && !index($0, ENVIRON["R"]) {n++} END {print n + 0}')
 OSV=$(sw_vers -productVersion | tr -cd '0-9.')
 result "{\\"ok\\":true,\\"freeBytes\\":$FREE,\\"minFreeBytes\\":${config.minFreeBytes},\\"guiSession\\":$GUI,\\"lockHolder\\":$HOLDER,\\"marionettePortBusy\\":$PORTBUSY,\\"foreignFloorp\\":$FOREIGN,\\"osVersion\\":\\"$OSV\\"}"
 `;
 }
 
-/** Atomic per-target lock (mkdir). Re-acquiring by the same task is a no-op. */
+/** Atomic per-target lock. Re-acquiring by the same task is a no-op. */
 export function buildLockScript(
   config: MacosQaTargetConfig,
   taskId: string,
 ): string {
   return prologue(config, taskId) + `
-sudo -n mkdir -p "$ROOT"
-sudo -n chown "$TUSER" "$ROOT"
-sudo -n chmod 700 "$ROOT"
-if sudo -n mkdir "$LOCK" 2>/dev/null; then
-  printf %s "$TASK" | sudo -n tee "$LOCK/owner" >/dev/null
+sudo -n mkdir -p "$LOCKDIR"
+sudo -n chown root:wheel "$LOCKDIR"
+sudo -n chmod 700 "$LOCKDIR"
+asu mkdir -p "$ROOT"
+asu chmod 700 "$ROOT"
+if sudo -n ln -s "$TASK" "$LOCK" 2>/dev/null; then
   result '{"ok":true,"acquired":true}'
   exit 0
 fi
-OWNER=$(sudo -n cat "$LOCK/owner" 2>/dev/null || true)
-if [ "$OWNER" = "$TASK" ]; then result '{"ok":true,"acquired":false}'; exit 0; fi
+if [ "$(lock_owner)" = "$TASK" ]; then result '{"ok":true,"acquired":false}'; exit 0; fi
 fail lock-held
 `;
 }
@@ -278,11 +304,11 @@ export function buildUploadScript(
   kind: MacosPayloadKind,
 ): string {
   return prologue(config, taskId) + `
-[ "$(sudo -n cat "$LOCK/owner" 2>/dev/null || true)" = "$TASK" ] || fail lock-not-held
-sudo -n mkdir -p "$TASKDIR"
-sudo -n chmod 700 "$TASKDIR"
-sudo -n sh -c 'umask 077; cat > "$1"' sh "$TASKDIR/payload.${kind}"
-BYTES=$(sudo -n stat -f %z "$TASKDIR/payload.${kind}")
+own_lock
+asu mkdir -p "$TASKDIR"
+asu chmod 700 "$TASKDIR"
+asu sh -c 'umask 077; cat > "$1"' sh "$TASKDIR/payload.${kind}"
+BYTES=$(asu stat -f %z "$TASKDIR/payload.${kind}")
 result "{\\"ok\\":true,\\"bytes\\":$BYTES}"
 `;
 }
@@ -297,33 +323,32 @@ export function buildInstallScript(
   if (!SHA256.test(sha256)) throw new Error("sha256 must be 64 lowercase hex");
   const extract = kind === "dmg"
     ? `MNT=$(mktemp -d /tmp/fdh-qa-mnt.XXXXXX)
+detach_mnt() { if [ -n "$MNT" ]; then sudo -n hdiutil detach "$MNT" >/dev/null 2>&1 || sudo -n hdiutil detach -force "$MNT" >/dev/null 2>&1 || true; rmdir "$MNT" 2>/dev/null || true; MNT=""; fi; }
+trap detach_mnt EXIT
 sudo -n hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MNT" "$P" >/dev/null || fail dmg-attach-failed
-APP_SRC=$(find "$MNT" -maxdepth 1 -name '*.app' -type d | head -n 1)
-if [ -z "$APP_SRC" ]; then sudo -n hdiutil detach "$MNT" >/dev/null 2>&1 || true; fail app-missing; fi
-sudo -n ditto "$APP_SRC" "$TASKDIR/app/Floorp.app" || { sudo -n hdiutil detach "$MNT" >/dev/null 2>&1 || true; fail copy-failed; }
-sudo -n hdiutil detach "$MNT" >/dev/null || sudo -n hdiutil detach -force "$MNT" >/dev/null
-rmdir "$MNT" 2>/dev/null || true`
-    : `sudo -n mkdir -p "$TASKDIR/extract"
-sudo -n tar -xzf "$P" -C "$TASKDIR/extract" || fail untar-failed
-APP_SRC=$(sudo -n find "$TASKDIR/extract" -maxdepth 2 -name '*.app' -type d | head -n 1)
+APP_SRC=$(find "$MNT" -maxdepth 1 -name '*.app' -type d | head -n 1) || true
 [ -n "$APP_SRC" ] || fail app-missing
-sudo -n mv "$APP_SRC" "$TASKDIR/app/Floorp.app"
-sudo -n rm -rf "$TASKDIR/extract"`;
+asu ditto "$APP_SRC" "$TASKDIR/app/Floorp.app" || fail copy-failed
+detach_mnt`
+    : `asu mkdir -p "$TASKDIR/extract"
+asu tar -xzf "$P" -C "$TASKDIR/extract" || fail untar-failed
+APP_SRC=$(asu find "$TASKDIR/extract" -maxdepth 2 -name '*.app' -type d | head -n 1) || true
+[ -n "$APP_SRC" ] || fail app-missing
+asu mv "$APP_SRC" "$TASKDIR/app/Floorp.app"
+asu rm -rf "$TASKDIR/extract"`;
   return prologue(config, taskId) + `
-[ "$(sudo -n cat "$LOCK/owner" 2>/dev/null || true)" = "$TASK" ] || fail lock-not-held
+own_lock
 P="$TASKDIR/payload.${kind}"
-sudo -n test -f "$P" || fail payload-missing
-GOT=$(sudo -n shasum -a 256 "$P" | awk '{print $1}')
+asu test -f "$P" || fail payload-missing
+GOT=$(asu shasum -a 256 "$P" | awk '{print $1}')
 [ "$GOT" = ${shellQuote(sha256)} ] || fail sha256-mismatch
-sudo -n rm -rf "$TASKDIR/app"
-sudo -n mkdir -p "$TASKDIR/app"
+asu rm -rf "$TASKDIR/app"
+asu mkdir -p "$TASKDIR/app"
 ${extract}
-sudo -n rm -f "$P"
-EXE="$TASKDIR/app/Floorp.app/Contents/MacOS/floorp"
-sudo -n test -x "$EXE" || fail executable-missing
-sudo -n xattr -dr com.apple.quarantine "$TASKDIR/app/Floorp.app" 2>/dev/null || true
-sudo -n chown -R "$TUSER" "$TASKDIR"
-VER=$(sudo -n defaults read "$TASKDIR/app/Floorp.app/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null | tr -cd 'A-Za-z0-9.@+-')
+asu rm -f "$P"
+asu test -x "$TASKDIR/app/Floorp.app/Contents/MacOS/floorp" || fail executable-missing
+asu xattr -dr com.apple.quarantine "$TASKDIR/app/Floorp.app" 2>/dev/null || true
+VER=$(asu defaults read "$TASKDIR/app/Floorp.app/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null | tr -cd 'A-Za-z0-9.@+-') || true
 result "{\\"ok\\":true,\\"version\\":\\"$VER\\"}"
 `;
 }
@@ -380,11 +405,6 @@ try:
         out["value"] = call("WebDriver:ExecuteScript", {"script": req["script"], "args": [], "newSandbox": True}).get("value")
     elif op == "screenshot":
         out["png"] = call("WebDriver:TakeScreenshot", {"full": False, "hash": False}).get("value")
-    elif op == "quit":
-        try:
-            call("Marionette:Quit", {"flags": ["eForceQuit"]})
-        except Exception:
-            pass
     print("FDH_RESULT " + json.dumps(out))
 except Exception as e:
     print("FDH_RESULT " + json.dumps({"ok": False, "error": "marionette-error", "detail": str(e)[:400]}))
@@ -397,6 +417,8 @@ function marionetteSnippet(request: MarionetteRequest): string {
   return `PY=/usr/local/bin/python3
 [ -x "$PY" ] || PY=/Library/Frameworks/Python.framework/Versions/Current/bin/python3
 [ -x "$PY" ] || fail python-missing
+CLIENT=$(mktemp /tmp/fdh-qa-mc.XXXXXX)
+trap 'rm -f "$CLIENT"' EXIT
 printf %s ${shellQuote(client)} | base64 -D > "$CLIENT"
 FDH_MPORT="$MPORT" FDH_REQ=${shellQuote(req)} "$PY" "$CLIENT"
 `;
@@ -415,15 +437,15 @@ export function buildLaunchScript(
     throw new Error("startUrl must be about:<page> or a plain http(s) URL");
   }
   return prologue(config, taskId) + `
-[ "$(sudo -n cat "$LOCK/owner" 2>/dev/null || true)" = "$TASK" ] || fail lock-not-held
+own_lock
 gui_session || fail gui-session-absent
 APP="$TASKDIR/app/Floorp.app"
-sudo -n test -x "$APP/Contents/MacOS/floorp" || fail not-installed
-if sudo -n lsof -nP -iTCP:"$MPORT" -sTCP:LISTEN >/dev/null 2>&1; then fail marionette-port-busy; fi
+asu test -x "$APP/Contents/MacOS/floorp" || fail not-installed
+port_busy && fail marionette-port-busy
 PROFILE="$TASKDIR/profile"
-sudo -n rm -rf "$PROFILE"
-sudo -n -u "$TUSER" mkdir -p "$PROFILE"
-cat <<EOF | sudo -n -u "$TUSER" tee "$PROFILE/user.js" >/dev/null
+asu rm -rf "$PROFILE"
+asu mkdir -p "$PROFILE"
+cat <<EOF | asu tee "$PROFILE/user.js" >/dev/null
 user_pref("marionette.port", $MPORT);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.page", 0);
@@ -435,8 +457,6 @@ EOF
 sudo -n launchctl asuser "$TUID" sudo -n -u "$TUSER" open -n -a "$APP" --env MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1 --args -no-remote -profile "$PROFILE" -marionette ${
     shellQuote(startUrl)
   } || fail open-failed
-CLIENT=$(mktemp /tmp/fdh-qa-mc.XXXXXX)
-trap 'rm -f "$CLIENT"' EXIT
 ${marionetteSnippet({ op: "ready", connectTimeout: 90 })}`;
 }
 
@@ -447,43 +467,34 @@ export function buildMarionetteScript(
   request: MarionetteRequest,
 ): string {
   return prologue(config, taskId) + `
-[ "$(sudo -n cat "$LOCK/owner" 2>/dev/null || true)" = "$TASK" ] || fail lock-not-held
-CLIENT=$(mktemp /tmp/fdh-qa-mc.XXXXXX)
-trap 'rm -f "$CLIENT"' EXIT
+own_lock
 ${marionetteSnippet(request)}`;
 }
 
 /**
- * Quits Floorp, stops every process that references the task directory,
- * removes the directory and releases the lock if this task holds it. Reports
- * what remained so the caller can refuse a dirty target.
+ * Stops every process that references the task directory (TERM, then KILL),
+ * removes the directory and releases the lock if this task holds it. Nothing
+ * outside the task directory is signalled. Reports what remained so the
+ * caller can refuse a dirty target.
  */
 export function buildCleanupScript(
   config: MacosQaTargetConfig,
   taskId: string,
 ): string {
   return prologue(config, taskId) + `
-OWNER=$(sudo -n cat "$LOCK/owner" 2>/dev/null || true)
+OWNER=$(lock_owner)
 if [ -n "$OWNER" ] && [ "$OWNER" != "$TASK" ]; then fail lock-held; fi
-CLIENT=$(mktemp /tmp/fdh-qa-mc.XXXXXX)
-trap 'rm -f "$CLIENT"' EXIT
-if sudo -n lsof -nP -iTCP:"$MPORT" -sTCP:LISTEN >/dev/null 2>&1; then
-  ( ${
-    marionetteSnippet({ op: "quit" }).trim().replaceAll("\n", "\n    ")
-  } ) >/dev/null 2>&1 || true
-fi
-pids() { sudo -n ps -axo pid=,command= | D="$TASKDIR" awk -v self="$$" 'index($0, ENVIRON["D"]) && $1 != self {print $1}'; }
-for _ in 1 2 3 4 5 6 7 8 9 10; do [ -z "$(pids)" ] && break; sleep 1; done
+pids() { sudo -n ps -axwwo pid=,command= | D="$TASKDIR/" awk -v self="$$" 'index($0, ENVIRON["D"]) && $1 != self {print $1}'; }
 P=$(pids); [ -n "$P" ] && sudo -n kill -TERM $P 2>/dev/null || true
-for _ in 1 2 3 4 5; do [ -z "$(pids)" ] && break; sleep 1; done
+for _ in 1 2 3 4 5 6 7 8 9 10; do [ -z "$(pids)" ] && break; sleep 1; done
 P=$(pids); [ -n "$P" ] && sudo -n kill -KILL $P 2>/dev/null || true
 sleep 1
 LEFT=$(pids | wc -l | tr -d ' ')
-sudo -n rm -rf "$TASKDIR"
+asu rm -rf "$TASKDIR" 2>/dev/null || true
 GONE=true; sudo -n test -e "$TASKDIR" && GONE=false
 RELEASED=false
 if [ "$OWNER" = "$TASK" ] && [ "$LEFT" = 0 ] && [ "$GONE" = true ]; then
-  sudo -n rm -rf "$LOCK"; RELEASED=true
+  sudo -n rm -f "$LOCK"; RELEASED=true
 fi
 result "{\\"ok\\":true,\\"residualProcesses\\":$LEFT,\\"taskDirRemoved\\":$GONE,\\"lockReleased\\":$RELEASED}"
 `;
@@ -493,6 +504,9 @@ result "{\\"ok\\":true,\\"residualProcesses\\":$LEFT,\\"taskDirRemoved\\":$GONE,
 export function parseGuestResult(
   output: GuestRunOutput,
 ): Record<string, unknown> {
+  if (output.timedOut === true) {
+    return { ok: false, error: "timeout", exitCode: output.code };
+  }
   const lines = output.stdout.split("\n").filter((line) =>
     line.startsWith("FDH_RESULT ")
   );
@@ -521,34 +535,57 @@ export function parseGuestResult(
   return record;
 }
 
-/** Real transport: the local `ssh` binary, two hops, no shell on this side. */
+/**
+ * Real transport: the local `ssh` binary, two hops, no shell on this side.
+ * Without an upload the script goes to stdin (`bash -s`); with one, the
+ * script rides in argv and stdin carries the upload. The stdin feed and the
+ * output collection run concurrently, so an early remote exit still returns
+ * the guest's result instead of a broken-pipe error. On timeout the local ssh
+ * is killed; the remote side is not guaranteed to stop.
+ */
 export function createSshTransport(
   config: MacosQaTargetConfig,
-  options: { ssh?: string; timeoutMs?: number } = {},
+  options: {
+    command?: [string, ...string[]];
+    timeoutMs?: number;
+    uploadTimeoutMs?: number;
+  } = {},
 ): MacosQaTransport {
-  const ssh = options.ssh ?? "ssh";
-  const timeoutMs = options.timeoutMs ?? 300_000;
-  return async (script, stdin) => {
-    const child = new Deno.Command(ssh, {
-      args: buildGuestSshArgs(config, script),
-      stdin: stdin ? "piped" : "null",
+  const [program, ...prefix] = options.command ?? ["ssh"];
+  return async (script, upload) => {
+    const timeoutMs = upload
+      ? options.uploadTimeoutMs ?? 1_800_000
+      : options.timeoutMs ?? 300_000;
+    const child = new Deno.Command(program, {
+      args: [
+        ...prefix,
+        ...buildGuestSshArgs(config, script, upload ? "argv" : "stdin"),
+      ],
+      stdin: "piped",
       stdout: "piped",
       stderr: "piped",
     }).spawn();
+    let timedOut = false;
     const timer = setTimeout(() => {
+      timedOut = true;
       try {
         child.kill("SIGKILL");
       } catch {
         // already exited
       }
     }, timeoutMs);
+    const source = upload ?? new Blob([script]).stream();
+    const feeding = source.pipeTo(child.stdin).catch(() => {
+      // The remote side closed early; its result is still on stdout.
+    });
     try {
-      if (stdin) await stdin.pipeTo(child.stdin);
       const out = await child.output();
+      await feeding;
       return {
         code: out.code,
         stdout: new TextDecoder().decode(out.stdout),
         stderr: new TextDecoder().decode(out.stderr),
+        timedOut,
       };
     } finally {
       clearTimeout(timer);
@@ -590,8 +627,10 @@ export class MacosQaTarget {
     if (r.guiSession !== true) blockers.push("gui-session-absent");
     if (r.lockHolder !== null) blockers.push("lock-held");
     if (r.marionettePortBusy === true) blockers.push("marionette-port-busy");
-    const foreignFloorp = Number(r.foreignFloorp ?? 0);
-    if (foreignFloorp > 0) blockers.push("foreign-floorp-running");
+    const foreignFloorp = typeof r.foreignFloorp === "number"
+      ? r.foreignFloorp
+      : Number.NaN;
+    if (!(foreignFloorp === 0)) blockers.push("foreign-floorp-running");
     return {
       freeBytes: Number(r.freeBytes),
       guiSession: r.guiSession === true,

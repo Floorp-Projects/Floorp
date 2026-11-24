@@ -17,6 +17,7 @@ import {
   buildMarionetteScript,
   buildPreflightScript,
   buildUploadScript,
+  createSshTransport,
   MacosQaError,
   MacosQaTarget,
   parseGuestResult,
@@ -74,6 +75,7 @@ Deno.test("macOS QA config: rejects unsafe or incomplete values", () => {
     [{ ...RAW, qaRoot: "/Users/floorptest" }, "qaRoot"],
     [{ ...RAW, marionettePort: 80 }, "marionettePort"],
     [{ ...RAW, minFreeBytes: -1 }, "minFreeBytes"],
+    [{ ...RAW, guestUser: "floorptest" }, "must differ"],
   ];
   for (const [value, message] of cases) {
     assertThrows(() => parseMacosQaTargetConfig(value), Error, message);
@@ -96,7 +98,7 @@ Deno.test("macOS QA shellQuote: single quotes survive", () => {
 
 Deno.test("macOS QA ssh args: two hops, credentials named on the host, script only as base64", () => {
   const script = "echo 'hello $USER'; rm -rf \"$X\"";
-  const args = buildGuestSshArgs(CONFIG, script);
+  const args = buildGuestSshArgs(CONFIG, script, "argv");
   assertEquals(args.slice(0, 6), [
     "-o",
     "BatchMode=yes",
@@ -118,6 +120,14 @@ Deno.test("macOS QA ssh args: two hops, credentials named on the host, script on
   assertStringIncludes(host, "'admin@192.168.128.2'");
   assert(!host.includes("hello"), "script text leaked into the command line");
   assertEquals(decodedGuestScript(args), script);
+  const stdinArgs = buildGuestSshArgs(CONFIG, script, "stdin");
+  assert(stdinArgs[7].endsWith(" 'bash -s'"));
+  assert(!stdinArgs[7].includes("base64"));
+  assertThrows(
+    () => buildGuestSshArgs(CONFIG, "x".repeat(20_000), "argv"),
+    Error,
+    "too long",
+  );
 });
 
 Deno.test("macOS QA scripts: the task directory never appears literally (cleanup must not match itself)", () => {
@@ -137,7 +147,13 @@ Deno.test("macOS QA scripts: the task directory never appears literally (cleanup
     assertStringIncludes(script, 'TASKDIR="$ROOT""/""$TASK"');
   }
   for (const script of scripts.slice(1, 6)) {
-    assertStringIncludes(script, "|| fail lock-not-held");
+    assertStringIncludes(script, "\nown_lock\n");
+  }
+  for (const script of scripts) {
+    assertStringIncludes(
+      script,
+      'sudo -n test -L "$ROOT" && fail qa-root-symlink',
+    );
   }
 });
 
@@ -167,7 +183,7 @@ Deno.test("macOS QA scripts: argument validation", () => {
 Deno.test("macOS QA scripts: launch uses the GUI session, a fresh profile and the configured port", () => {
   const script = buildLaunchScript(CONFIG, TASK);
   assertStringIncludes(script, "gui_session || fail gui-session-absent");
-  assertStringIncludes(script, 'sudo -n rm -rf "$PROFILE"');
+  assertStringIncludes(script, 'asu rm -rf "$PROFILE"');
   assertStringIncludes(script, "MPORT=2839");
   assertStringIncludes(
     script,
@@ -182,11 +198,28 @@ Deno.test("macOS QA scripts: install verifies the hash before extracting", () =>
   const attach = script.indexOf("hdiutil attach");
   assert(verify > 0 && attach > verify);
   assertStringIncludes(script, "-readonly -noautoopen");
+  assertStringIncludes(script, "trap detach_mnt EXIT");
+  // Files in the test user's tree are written as that user, never as root.
+  assertStringIncludes(script, 'asu ditto "$APP_SRC"');
+  assert(!/sudo -n (ditto|tar|mv|rm|tee|chown)/.test(script));
+  assert(
+    !/sudo -n (sh|mkdir|chown)/.test(buildUploadScript(CONFIG, TASK, "dmg")),
+  );
+});
+
+Deno.test("macOS QA scripts: the lock is an atomic root-owned symlink outside the test user's tree", () => {
+  const lock = buildLockScript(CONFIG, TASK);
+  assertStringIncludes(lock, "LOCKDIR='/private/var/db/fdh-qa'");
+  assertStringIncludes(lock, 'sudo -n ln -s "$TASK" "$LOCK"');
+  assertStringIncludes(lock, 'sudo -n chown root:wheel "$LOCKDIR"');
+  assertStringIncludes(buildPreflightScript(CONFIG), "printf %s -unowned");
 });
 
 Deno.test("macOS QA scripts: cleanup kills by task dir from env and releases only its own lock", () => {
   const script = buildCleanupScript(CONFIG, TASK);
-  assertStringIncludes(script, `D="$TASKDIR" awk`);
+  assertStringIncludes(script, `D="$TASKDIR/" awk`);
+  assert(!script.includes("Marionette:Quit"), "cleanup must not quit by port");
+  assert(!script.includes("FDH_REQ"), "cleanup must not talk to Marionette");
   assertStringIncludes(script, 'index($0, ENVIRON["D"])');
   assertStringIncludes(
     script,
@@ -226,18 +259,20 @@ Deno.test("macOS QA result parsing", () => {
     parseGuestResult(ok('FDH_RESULT {"ok":true}', 255)).error,
     "nonzero-exit",
   );
+  assertEquals(
+    parseGuestResult({ ...ok('FDH_RESULT {"ok":true}'), timedOut: true })
+      .error,
+    "timeout",
+  );
 });
 
-function fakeTransport(replies: string[]) {
+function fakeTransport(replies: Array<string | [string, number]>) {
   const calls: Array<{ script: string; stdin: boolean }> = [];
   const transport = (script: string, stdin?: ReadableStream<Uint8Array>) => {
     calls.push({ script, stdin: stdin !== undefined });
-    const stdout = replies.shift() ?? "";
-    return Promise.resolve({
-      code: stdout.includes('"ok":true') ? 0 : 3,
-      stdout,
-      stderr: "",
-    });
+    const reply = replies.shift() ?? "";
+    const [stdout, code] = typeof reply === "string" ? [reply, 0] : reply;
+    return Promise.resolve({ code, stdout, stderr: "" });
   };
   return { calls, transport };
 }
@@ -257,6 +292,13 @@ Deno.test("macOS QA target: preflight reports blockers", async () => {
   ]);
   assertEquals(result.foreignFloorp, 2);
   assertEquals(result.lockHolder, "other-task");
+
+  const missing = fakeTransport([
+    'FDH_RESULT {"ok":true,"freeBytes":9000000000,"guiSession":true,"lockHolder":null,"marionettePortBusy":false,"osVersion":"26.6.2"}',
+  ]);
+  const unknown = await new MacosQaTarget(CONFIG, missing.transport)
+    .preflight();
+  assertEquals(unknown.blockers, ["foreign-floorp-running"]);
 });
 
 Deno.test("macOS QA target: stage streams only the upload and fails with the step name", async () => {
@@ -270,12 +312,12 @@ Deno.test("macOS QA target: stage streams only the upload and fails with the ste
   assertEquals(calls.map((c) => c.stdin), [true, false]);
 
   const failing = fakeTransport([
-    'FDH_RESULT {"ok":false,"error":"sha256-mismatch"}',
+    ['FDH_RESULT {"ok":false,"error":"gui-session-absent"}', 3],
   ]);
   const error = await assertRejects(
     () => new MacosQaTarget(CONFIG, failing.transport).launch(TASK),
     MacosQaError,
-    "macOS QA launch failed: sha256-mismatch",
+    "macOS QA launch failed: gui-session-absent",
   );
   assertEquals(error.step, "launch");
 });
@@ -288,4 +330,114 @@ Deno.test("macOS QA target: cleanup is clean only when nothing is left", async (
   const target = new MacosQaTarget(CONFIG, transport);
   assertEquals((await target.cleanup(TASK)).clean, true);
   assertEquals((await target.cleanup(TASK)).clean, false);
+});
+
+const canRun = Deno.permissions.querySync({ name: "run" }).state === "granted";
+
+function allScripts(): string[] {
+  return [
+    buildPreflightScript(CONFIG),
+    buildLockScript(CONFIG, TASK),
+    buildUploadScript(CONFIG, TASK, "dmg"),
+    buildInstallScript(CONFIG, TASK, "dmg", SHA),
+    buildInstallScript(CONFIG, TASK, "tar.gz", SHA),
+    buildLaunchScript(CONFIG, TASK),
+    buildMarionetteScript(CONFIG, TASK, { op: "screenshot" }),
+    buildCleanupScript(CONFIG, TASK),
+  ];
+}
+
+Deno.test({
+  name:
+    "macOS QA scripts: every generated script parses with bash -n (needs --allow-run)",
+  ignore: !canRun,
+  async fn() {
+    for (const script of allScripts()) {
+      const child = new Deno.Command("bash", {
+        args: ["-n"],
+        stdin: "piped",
+        stdout: "null",
+        stderr: "piped",
+      }).spawn();
+      const writer = child.stdin.getWriter();
+      await writer.write(new TextEncoder().encode(script));
+      await writer.close();
+      const out = await child.output();
+      assertEquals(
+        out.code,
+        0,
+        new TextDecoder().decode(out.stderr) + script.slice(0, 200),
+      );
+    }
+  },
+});
+
+const STUB = [
+  "const [mode, ...args] = Deno.args;",
+  'const host = args.at(-1) ?? "";',
+  'if (mode === "early") {',
+  '  console.log(\'FDH_RESULT {"ok":false,"error":"lock-not-held"}\');',
+  "  Deno.exit(3);",
+  "}",
+  'if (mode === "hang") { setInterval(() => {}, 1000); await new Promise(() => {}); }',
+  "let bytes = 0;",
+  "for await (const chunk of Deno.stdin.readable) bytes += chunk.length;",
+  'console.log("FDH_RESULT " + JSON.stringify({ ok: true, bytes, stdinMode: host.endsWith(" \'bash -s\'") }));',
+].join("\n");
+
+async function stubTransport(mode: string, timeoutMs = 30_000) {
+  const dir = await Deno.makeTempDir();
+  const stub = `${dir}/ssh_stub.ts`;
+  await Deno.writeTextFile(stub, STUB);
+  return createSshTransport(CONFIG, {
+    command: [Deno.execPath(), "run", "--quiet", stub, mode],
+    timeoutMs,
+    uploadTimeoutMs: timeoutMs,
+  });
+}
+
+Deno.test({
+  name:
+    "macOS QA transport: an early remote exit during a large upload still returns the guest result (needs --allow-run)",
+  ignore: !canRun,
+  async fn() {
+    const transport = await stubTransport("early");
+    const big = new Blob([new Uint8Array(64 * 1024 * 1024)]).stream();
+    const result = parseGuestResult(await transport("script", big));
+    assertEquals(result.error, "lock-not-held");
+  },
+});
+
+Deno.test({
+  name:
+    "macOS QA transport: scripts go to stdin without an upload; uploads stream in full (needs --allow-run)",
+  ignore: !canRun,
+  async fn() {
+    const transport = await stubTransport("echo");
+    const script = "echo hi\n".repeat(5000);
+    const viaStdin = parseGuestResult(await transport(script));
+    assertEquals(viaStdin, {
+      ok: true,
+      bytes: new TextEncoder().encode(script).length,
+      stdinMode: true,
+    });
+    const upload = parseGuestResult(
+      await transport(
+        "echo hi",
+        new Blob([new Uint8Array(1_000_000)]).stream(),
+      ),
+    );
+    assertEquals(upload, { ok: true, bytes: 1_000_000, stdinMode: false });
+  },
+});
+
+Deno.test({
+  name:
+    "macOS QA transport: a hung remote is reported as a timeout (needs --allow-run)",
+  ignore: !canRun,
+  async fn() {
+    const transport = await stubTransport("hang", 1500);
+    const result = parseGuestResult(await transport("script"));
+    assertEquals(result.error, "timeout");
+  },
 });
