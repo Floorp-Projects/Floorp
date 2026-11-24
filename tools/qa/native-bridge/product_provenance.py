@@ -19,7 +19,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).parent))
 import product_cohort as cohort  # noqa: E402
 
-PACKAGES = ("runtime", "common", "mochitest")
+PACKAGES = ("runtime", "common", "mochitest", "condprof")
 
 
 def sha256(path: Path) -> str:
@@ -70,6 +70,7 @@ def runtime_identity(args) -> int:
         "runtime": sorted(dist.glob("floorp-*.linux-x86_64.tar.xz")),
         "common": sorted(dist.glob("floorp-*.common.tests.tar.*")),
         "mochitest": sorted(dist.glob("floorp-*.mochitest.tests.tar.*")),
+        "condprof": sorted(dist.glob("floorp-*.condprof.tests.tar.*")),
     }
     args.output.mkdir(parents=True, exist_ok=False)
     packages = {}

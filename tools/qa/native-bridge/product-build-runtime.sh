@@ -24,4 +24,13 @@ export MOZ_BUILD_DATE="$BUILD_DATE" LIBGL_ALWAYS_SOFTWARE=1
 ./mach configure
 nice -n 10 ./mach build --jobs="$(nproc)"
 ./mach package
-./mach build package-tests
+# Stock package-tests also stages jsreftest and cppunittest suites this
+# Runtime does not build; stage and archive only what the cohort consumes.
+./mach build stage-config stage-mach stage-extensions stage-mochitest
+name=$(basename obj-x86_64-pc-linux-gnu/dist/floorp-*.linux-x86_64.tar.xz .tar.xz)
+for kind in common mochitest condprof; do
+  ./mach python -m mozbuild.action.test_archive "$kind" \
+    "$PWD/obj-x86_64-pc-linux-gnu/dist/$name.$kind.tests.tar.zst"
+done
+deleted=$(git ls-files --deleted)
+[[ -z "$deleted" ]] || { echo "staging removed tracked source files: $deleted" >&2; exit 1; }

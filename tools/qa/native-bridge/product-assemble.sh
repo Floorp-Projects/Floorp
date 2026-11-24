@@ -41,7 +41,7 @@ git apply --ignore-space-change --ignore-whitespace .github/patches/packaging/*.
 ./mach configure
 MOZ_ARTIFACT_FILE="$RT_ARTIFACT" ./mach build
 DIST_ROOT="$W/obj-artifact-build-output/dist"; PT="$DIST_ROOT/bin"
-(cd noraneko && deno task feles-build build --phase after-mach
+(cd noraneko && CI=true deno task feles-build build --phase after-mach
  rsync -aL "$PT/" "$DIST_ROOT/tmp__bin"; rm -rf "$PT"; mv "$DIST_ROOT/tmp__bin" "$PT"
  for pf in ./tools/patches/*.patch; do
    case "$pf" in *.windows.patch|*.darwin.patch) continue;; esac

@@ -52,18 +52,18 @@ force-enable a test.
 required. Three jobs run in order, so no single job exceeds the hosted limit:
 
 1. `product runtime build (linux-x86_64)` builds the locked Runtime with its
-   release mozconfig (non-PGO), then `mach package` and
-   `mach build package-tests` from the same OBJDIR (`product-build-runtime.sh`).
-   `product_provenance.py
-   runtime` records the locked commit and tree,
-   `platform.ini`, `mozinfo.json`, the package digests and the staged OBJDIR
-   copy of every planned manifest and test, and rejects any difference from the
-   source.
+   release mozconfig (non-PGO), then `mach package` and the stock `test_archive`
+   common, mochitest and condprof packages from the same OBJDIR
+   (`product-build-runtime.sh`). `product_provenance.py
+   runtime` records the
+   locked commit and tree, `platform.ini`, `mozinfo.json`, the package digests
+   and the staged OBJDIR copy of every planned manifest and test, and rejects
+   any difference from the source.
 2. `product assemble (linux-x86_64)` assembles packaged Floorp with noraneko
    around that exact Runtime package along the Linux release path of
    `package.yml` (`product-assemble.sh`).
 3. `firefox-product-cohort (linux-x86_64)` fails unless both jobs succeeded,
-   extracts the product and the two test packages, and installs the packaged
+   extracts the product and the three test packages, and installs the packaged
    `config/marionette_requirements.txt`. `product_provenance.py bind` checks the
    package digests, Gecko BuildID and SourceStamp, `libxul.so`, noraneko chrome,
    `mozinfo.json` and every planned manifest and test against the compiled

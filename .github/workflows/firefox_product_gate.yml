@@ -211,11 +211,12 @@ jobs:
       - name: Extract product and same-OBJDIR test packages
         run: |
           set -euo pipefail
-          read -r COMMON MOCHITEST < <(python3 -c 'import json;p=json.load(open("runtime-support/runtime-identity.json"))["packages"];print(p["common"]["name"], p["mochitest"]["name"])')
           mkdir product support
           tar -xJf product-package/floorp-*.tar.xz -C product
-          tar -xf "runtime-support/$COMMON" -C support
-          tar -xf "runtime-support/$MOCHITEST" -C support
+          for kind in common mochitest condprof; do
+            name=$(python3 -c 'import json,sys;print(json.load(open("runtime-support/runtime-identity.json"))["packages"][sys.argv[1]]["name"])' "$kind")
+            tar --zstd -xf "runtime-support/$name" -C support
+          done
           python3 -m venv venv
           (cd support/config && ../../venv/bin/pip install --quiet -r marionette_requirements.txt)
           venv/bin/pip freeze > "$EVIDENCE/python-environment.txt"

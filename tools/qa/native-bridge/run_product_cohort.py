@@ -100,7 +100,10 @@ def classify(job: dict, raw: dict | None, exit_code: int | None) -> dict:
 def run_job(job: dict, product_root: Path, timeout: int, env: dict) -> dict:
     out = {"id": job["id"], "cases": job["cases"], "original_manifest": job["original_manifest"]}
     discovery = Path(job["discovery_argv"][job["discovery_argv"].index("--dump-tests") + 1])
-    proc = subprocess.run(job["discovery_argv"], env=env, timeout=600,
+    # Outside the packaged mochitest root so stock normalize_paths keeps the
+    # original "browser/..." paths instead of stripping them to "components/...".
+    cwd = Path(job["argv"][job["argv"].index("--log-raw") + 1]).parent
+    proc = subprocess.run(job["discovery_argv"], env=env, timeout=600, cwd=cwd,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     Path(str(discovery) + ".log").write_bytes(proc.stdout)
     out["discovery_exit"] = proc.returncode
@@ -118,7 +121,7 @@ def run_job(job: dict, product_root: Path, timeout: int, env: dict) -> dict:
     started = time.time()
     with terminal.open("wb") as sink:
         try:
-            out["exit"] = subprocess.run(job["argv"], env=env, timeout=timeout,
+            out["exit"] = subprocess.run(job["argv"], env=env, timeout=timeout, cwd=cwd,
                                          stdout=sink, stderr=subprocess.STDOUT).returncode
         except subprocess.TimeoutExpired:
             out["exit"] = "timeout"
