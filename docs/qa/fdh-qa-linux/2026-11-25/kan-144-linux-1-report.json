@@ -1,0 +1,71 @@
+{
+  "taskId": "kan-144-linux-1",
+  "image": {
+    "built": true
+  },
+  "container": {
+    "memoryMb": 2560,
+    "cpus": 2,
+    "network": "none"
+  },
+  "payload": {
+    "name": "floorp-linux-x86_64.tar.xz",
+    "kind": "tar.xz",
+    "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9"
+  },
+  "startedAt": "2026-11-24T20:23:05.558Z",
+  "preflight": {
+    "freeBytes": 173353791488,
+    "availableMemoryMb": 6543,
+    "imagePresent": false,
+    "containerHolder": null,
+    "ready": false,
+    "blockers": [
+      "image-missing"
+    ]
+  },
+  "preflightAfterImage": {
+    "freeBytes": 172010266624,
+    "availableMemoryMb": 6280,
+    "imagePresent": true,
+    "containerHolder": null,
+    "ready": true,
+    "blockers": []
+  },
+  "acquire": {
+    "ok": true,
+    "acquired": true
+  },
+  "stage": {
+    "bytes": 108174124,
+    "version": "12.21.1@159.0.1"
+  },
+  "launch": {
+    "version": "159.0.1"
+  },
+  "probe": {
+    "app": "Floorp",
+    "version": "159.0.1",
+    "os": "Linux",
+    "windows": 1,
+    "url": "about:blank"
+  },
+  "screenshot": {
+    "file": "kan-144-linux-1-linux.png",
+    "sha256": "1a39a68eae33de8fc24fc9d5d1d669f5e0ca52ceabfe9a37f580308bdec685dd"
+  },
+  "cleanup": {
+    "containerRemoved": true,
+    "clean": true
+  },
+  "after": {
+    "freeBytes": 172010135552,
+    "availableMemoryMb": 6342,
+    "imagePresent": true,
+    "containerHolder": null,
+    "ready": true,
+    "blockers": []
+  },
+  "passed": true,
+  "finishedAt": "2026-11-24T20:25:36.186Z"
+}
