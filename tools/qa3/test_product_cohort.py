@@ -53,6 +53,10 @@ class TestProductCohort(TestCase):
             self.assertNotIn("--setpref", job["argv"])
             self.assertEqual(job["argv"][-len(job["cases"]):], job["cases"])
 
+    def test_plan_is_pinned_to_locked_runtime(self):
+        lock = json.loads((cohort.PLAN.parents[3] / "floorp-runtime.lock.json").read_text(encoding="utf-8"))
+        self.assertEqual(self.plan["source_runtime"], lock["source"]["commit"])
+
     def test_changed_manifest_fails(self):
         (self.root / self.fixture["cohorts"][0]["manifest"]).write_text("")
         with self.assertRaisesRegex(ValueError, "manifest changed"):
