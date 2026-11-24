@@ -62,8 +62,8 @@ const preflight = await target.preflight();
 report.preflight = preflight;
 let locked = false;
 try {
-  if (preflight.lockHolder !== null && preflight.lockHolder !== taskId) {
-    throw new Error(`target locked by ${preflight.lockHolder}`);
+  if (!preflight.ready) {
+    throw new Error(`target not ready: ${preflight.blockers.join(", ")}`);
   }
   locked = await step("lock", () => target.acquire(taskId));
   if (
@@ -96,6 +96,8 @@ try {
       });
     }
   }
+} catch (error) {
+  report.refused = String(error);
 } finally {
   if (locked) await step("cleanup", () => target.cleanup(taskId));
   report.after = await target.preflight();

@@ -196,10 +196,9 @@ Deno.test("macOS QA scripts: cleanup kills by task dir from env and releases onl
     script,
     'if [ "$OWNER" = "$TASK" ] && [ "$LEFT" = 0 ] && [ "$GONE" = true ]; then',
   );
-  assertStringIncludes(
-    buildPreflightScript(CONFIG),
-    'minFreeBytes\\":2000000000',
-  );
+  const preflight = buildPreflightScript(CONFIG);
+  assertStringIncludes(preflight, 'minFreeBytes\\":2000000000');
+  assertStringIncludes(preflight, '!index($0, ENVIRON["R"])');
 });
 
 Deno.test("macOS QA result parsing", () => {
@@ -245,7 +244,7 @@ function fakeTransport(replies: string[]) {
 
 Deno.test("macOS QA target: preflight reports blockers", async () => {
   const { transport } = fakeTransport([
-    'FDH_RESULT {"ok":true,"freeBytes":100,"minFreeBytes":2000000000,"guiSession":false,"lockHolder":"other-task","marionettePortBusy":true,"osVersion":"26.6.2"}',
+    'FDH_RESULT {"ok":true,"freeBytes":100,"minFreeBytes":2000000000,"guiSession":false,"lockHolder":"other-task","marionettePortBusy":true,"foreignFloorp":2,"osVersion":"26.6.2"}',
   ]);
   const result = await new MacosQaTarget(CONFIG, transport).preflight();
   assertEquals(result.ready, false);
@@ -254,7 +253,9 @@ Deno.test("macOS QA target: preflight reports blockers", async () => {
     "gui-session-absent",
     "lock-held",
     "marionette-port-busy",
+    "foreign-floorp-running",
   ]);
+  assertEquals(result.foreignFloorp, 2);
   assertEquals(result.lockHolder, "other-task");
 });
 

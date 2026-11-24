@@ -245,8 +245,9 @@ if sudo -n test -f "$ROOT/.lock/owner"; then
 fi
 PORTBUSY=false
 if sudo -n lsof -nP -iTCP:"$MPORT" -sTCP:LISTEN >/dev/null 2>&1; then PORTBUSY=true; fi
+FOREIGN=$(sudo -n ps -axo user=,command= | R="$ROOT/" U="$TUSER" awk '$1 == ENVIRON["U"] && index($0, "/Contents/MacOS/floorp") && !index($0, ENVIRON["R"]) {n++} END {print n + 0}')
 OSV=$(sw_vers -productVersion | tr -cd '0-9.')
-result "{\\"ok\\":true,\\"freeBytes\\":$FREE,\\"minFreeBytes\\":${config.minFreeBytes},\\"guiSession\\":$GUI,\\"lockHolder\\":$HOLDER,\\"marionettePortBusy\\":$PORTBUSY,\\"osVersion\\":\\"$OSV\\"}"
+result "{\\"ok\\":true,\\"freeBytes\\":$FREE,\\"minFreeBytes\\":${config.minFreeBytes},\\"guiSession\\":$GUI,\\"lockHolder\\":$HOLDER,\\"marionettePortBusy\\":$PORTBUSY,\\"foreignFloorp\\":$FOREIGN,\\"osVersion\\":\\"$OSV\\"}"
 `;
 }
 
@@ -589,11 +590,14 @@ export class MacosQaTarget {
     if (r.guiSession !== true) blockers.push("gui-session-absent");
     if (r.lockHolder !== null) blockers.push("lock-held");
     if (r.marionettePortBusy === true) blockers.push("marionette-port-busy");
+    const foreignFloorp = Number(r.foreignFloorp ?? 0);
+    if (foreignFloorp > 0) blockers.push("foreign-floorp-running");
     return {
       freeBytes: Number(r.freeBytes),
       guiSession: r.guiSession === true,
       lockHolder: typeof r.lockHolder === "string" ? r.lockHolder : null,
       marionettePortBusy: r.marionettePortBusy === true,
+      foreignFloorp,
       osVersion: String(r.osVersion ?? ""),
       ready: blockers.length === 0,
       blockers,

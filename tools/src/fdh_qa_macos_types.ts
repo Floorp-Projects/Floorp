@@ -48,6 +48,8 @@ export interface MacosQaPreflight {
   guiSession: boolean;
   lockHolder: string | null;
   marionettePortBusy: boolean;
+  /** Floorp processes of the test user that this target did not start. */
+  foreignFloorp: number;
   osVersion: string;
   ready: boolean;
   blockers: string[];
