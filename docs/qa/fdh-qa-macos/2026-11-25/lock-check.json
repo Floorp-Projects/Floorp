@@ -1,0 +1,47 @@
+{
+  "acquireA": {
+    "ok": true,
+    "acquired": true
+  },
+  "reacquireA": {
+    "ok": true,
+    "acquired": false
+  },
+  "acquireB": {
+    "ok": false,
+    "error": "lock-held"
+  },
+  "preflightWhileHeld": {
+    "freeBytes": 8997187584,
+    "guiSession": true,
+    "lockHolder": "kan-144-lock-a",
+    "marionettePortBusy": false,
+    "foreignFloorp": 0,
+    "osVersion": "26.6.2",
+    "ready": false,
+    "blockers": [
+      "lock-held"
+    ]
+  },
+  "cleanupB": {
+    "ok": false,
+    "error": "lock-held"
+  },
+  "cleanupA": {
+    "residualProcesses": 0,
+    "taskDirRemoved": true,
+    "lockReleased": true,
+    "clean": true
+  },
+  "preflightAfter": {
+    "freeBytes": 8997175296,
+    "guiSession": true,
+    "lockHolder": null,
+    "marionettePortBusy": false,
+    "foreignFloorp": 0,
+    "osVersion": "26.6.2",
+    "ready": true,
+    "blockers": []
+  },
+  "passed": true
+}
