@@ -56,6 +56,7 @@ Deno.test("Linux QA config: accepts the Debian target and rejects unsafe values"
     [{ ...RAW, containerName: "nod-server" }, "containerName"],
     [{ ...RAW, containerName: "fdh-qa-$(id)" }, "containerName"],
     [{ ...RAW, memoryMb: 128 }, "memoryMb"],
+    [{ ...RAW, memoryMb: 1024 }, "memoryMb"],
     [{ ...RAW, cpus: 0.1 }, "cpus"],
     [{ ...RAW, cpus: 1.234 }, "cpus"],
     [{ ...RAW, cpus: 17 }, "cpus"],
@@ -137,7 +138,7 @@ Deno.test("Linux QA scripts: only the named, labelled container is touched", () 
   assert(!acquire.includes("--privileged"));
   assert(!/-p \d|--publish/.test(acquire), "Marionette must not be published");
   // A same-named container we did not create is reported, never removed.
-  assertStringIncludes(acquire, "printf %s -foreign");
+  assertStringIncludes(acquire, 'printf %s "${T:--foreign}"');
   const cleanup = buildCleanupScript(CONFIG, IMAGE, TASK);
   assertStringIncludes(
     cleanup,
@@ -308,18 +309,29 @@ const DOCKER_STUB = [
   '    case "$STUB" in',
   '      foreign) printf "%s\\n" "|" ;;',
   '      other) printf "%s\\n" "1|other-task" ;;',
+  '      untasked) printf "%s\\n" "1|" ;;',
+  '      own) case "${4:-}" in',
+  "        *.Id*) echo 0123abcd ;;",
+  "        *State.Running*) echo true ;;",
+  '        *"}}|{{"*) echo "1|kan-144-linux" ;;',
+  "        *) echo kan-144-linux ;;",
+  "      esac ;;",
   "      *) return 1 ;;",
   "    esac ;;",
   '  "run -d") echo "Error response from daemon: range of CPUs is from 0.01 to 4.00" >&2; return 125 ;;',
-  '  "rm -f") echo "RM-CALLED ${3:-}" >&2; return 0 ;;',
+  '  "rm -f") echo "RM-CALLED ${3:-}" >> "$RMLOG"; STUB=gone; return 0 ;;',
   "  *) return 0 ;;",
   "esac; }",
 ].join("\n");
 
 async function runWithStub(script: string, state: string) {
+  // The scripts discard docker's own output, so the stub logs removals to a
+  // file (an absolute path: the scripts `cd /` first).
+  const dir = await Deno.makeTempDir({ prefix: "fdh-qa-docker-stub-" });
   const child = new Deno.Command("bash", {
     args: ["-s"],
-    env: { STUB: state },
+    cwd: dir,
+    env: { STUB: state, RMLOG: `${dir.replaceAll("\\", "/")}/rm.log` },
     stdin: "piped",
     stdout: "piped",
     stderr: "piped",
@@ -336,7 +348,7 @@ async function runWithStub(script: string, state: string) {
       stdout: new TextDecoder().decode(out.stdout),
       stderr: "",
     }),
-    stderr: new TextDecoder().decode(out.stderr),
+    removed: await Deno.readTextFile(`${dir}/rm.log`).catch(() => ""),
   };
 }
 
@@ -352,7 +364,7 @@ Deno.test({
     // A same-named container without our label: reported, never removed.
     const foreignCleanup = await runWithStub(cleanup, "foreign");
     assertEquals(foreignCleanup.result.error, "container-held");
-    assert(!foreignCleanup.stderr.includes("RM-CALLED"));
+    assert(!foreignCleanup.removed.includes("RM-CALLED"));
     assertEquals(
       (await runWithStub(acquire, "foreign")).result.error,
       "container-held",
@@ -363,7 +375,7 @@ Deno.test({
     );
     const otherCleanup = await runWithStub(cleanup, "other");
     assertEquals(otherCleanup.result.error, "container-held");
-    assert(!otherCleanup.stderr.includes("RM-CALLED"));
+    assert(!otherCleanup.removed.includes("RM-CALLED"));
 
     // A docker run failure is not a lock problem, and keeps Docker's reason.
     const runfail = await runWithStub(acquire, "runfail");
@@ -378,6 +390,20 @@ Deno.test({
       ok: true,
       containerRemoved: true,
     });
+    // Held by this task: re-acquire is a no-op, cleanup removes by ID only.
+    assertEquals((await runWithStub(acquire, "own")).result, {
+      ok: true,
+      acquired: false,
+    });
+    const ownCleanup = await runWithStub(cleanup, "own");
+    assertEquals(ownCleanup.result, { ok: true, containerRemoved: true });
+    assertStringIncludes(ownCleanup.removed, "RM-CALLED 0123abcd");
+    assert(!ownCleanup.removed.includes("RM-CALLED fdh-qa-linux"));
+    // A labelled container without a task id is not free.
+    assertEquals(
+      (await runWithStub(preflight, "untasked")).result.containerHolder,
+      "-foreign",
+    );
     const free = (await runWithStub(preflight, "foreign")).result;
     assertEquals(free.containerHolder, "-foreign");
   },

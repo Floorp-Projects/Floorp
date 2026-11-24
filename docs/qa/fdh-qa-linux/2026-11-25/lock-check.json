@@ -13,8 +13,8 @@
     "error": "container-held"
   },
   "preflightWhileHeld": {
-    "freeBytes": 172010295296,
-    "availableMemoryMb": 6616,
+    "freeBytes": 172010250240,
+    "availableMemoryMb": 6112,
     "imagePresent": true,
     "containerHolder": "kan-144-lock-a",
     "ready": false,
@@ -31,8 +31,8 @@
     "clean": true
   },
   "preflightAfter": {
-    "freeBytes": 172010393600,
-    "availableMemoryMb": 6647,
+    "freeBytes": 172010340352,
+    "availableMemoryMb": 6250,
     "imagePresent": true,
     "containerHolder": null,
     "ready": true,

@@ -141,10 +141,10 @@ export function parseLinuxQaTargetConfig(value: unknown): LinuxQaTargetConfig {
   }
   const memoryMb = record.memoryMb;
   if (
-    !Number.isInteger(memoryMb) || (memoryMb as number) < 512 ||
+    !Number.isInteger(memoryMb) || (memoryMb as number) < 2048 ||
     (memoryMb as number) > 16384
   ) {
-    throw configError("memoryMb must be an integer in 512..16384");
+    throw configError("memoryMb must be an integer in 2048..16384");
   }
   const cpus = record.cpus;
   if (
@@ -181,7 +181,11 @@ export function parseLinuxQaTargetConfig(value: unknown): LinuxQaTargetConfig {
   });
 }
 
-/** Size of the container's writable home (a tmpfs, counted as memory). */
+/**
+ * Size of the container's writable home. It is a tmpfs, so it counts against
+ * the memory limit together with /tmp, /dev/shm and Floorp itself; hence the
+ * 2048 MiB floor on memoryMb.
+ */
 const HOME_TMPFS_MB = 1024;
 
 /** Longest argv-mode remote command; Windows CreateProcess caps at 32767. */
@@ -235,7 +239,8 @@ function prologue(config: LinuxQaTargetConfig, image: string): string {
     // Task id of our container, "-foreign" for a same-named container we did
     // not create, or empty when there is none.
     'holder() { local L; L=$(docker container inspect -f \'{{index .Config.Labels "fdh.qa"}}|{{index .Config.Labels "fdh.qa.task"}}\' "$NAME" 2>/dev/null) || return 0; ' +
-    'case "$L" in 1\\|*) printf %s "${L#1|}" | tr -cd \'a-z0-9-\' ;; *) printf %s -foreign ;; esac; }',
+    // A labelled container with no task id is treated as foreign, not free.
+    'local T; case "$L" in 1\\|*) T=$(printf %s "${L#1|}" | tr -cd \'a-z0-9-\') ;; *) T="" ;; esac; printf %s "${T:--foreign}"; }',
   ].join("\n") + "\n";
 }
 
@@ -251,7 +256,7 @@ function taskPrologue(
     // for every later command: a script that outlives a timeout can then
     // never reach a newer container that reuses the name.
     "label_task() { docker container inspect -f '{{index .Config.Labels \"fdh.qa.task\"}}' \"$1\" 2>/dev/null | tr -cd 'a-z0-9-'; }",
-    'own() { [ "$(holder)" = "$TASK" ] || fail container-not-held; CID=$(docker container inspect -f \'{{.Id}}\' "$NAME" 2>/dev/null | tr -cd \'0-9a-f\'); [ -n "$CID" ] && [ "$(label_task "$CID")" = "$TASK" ] || fail container-not-held; [ "$(docker container inspect -f \'{{.State.Running}}\' "$CID")" = true ] || fail container-not-running; }',
+    'own() { [ "$(holder)" = "$TASK" ] || fail container-not-held; CID=$(docker container inspect -f \'{{.Id}}\' "$NAME" 2>/dev/null | tr -cd \'0-9a-f\') || CID=""; [ -n "$CID" ] && [ "$(label_task "$CID")" = "$TASK" ] || fail container-not-held; [ "$(docker container inspect -f \'{{.State.Running}}\' "$CID")" = true ] || fail container-not-running; }',
     // docker exec as the unprivileged qa user, never root.
     'qx() { docker exec -u qa "$CID" "$@"; }',
   ].join("\n") + "\n";

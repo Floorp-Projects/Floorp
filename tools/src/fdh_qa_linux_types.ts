@@ -11,7 +11,10 @@ export interface LinuxQaTargetConfig {
   hostSsh: string;
   /** Container name; one container per target, so the name is the lock. */
   containerName: string;
-  /** Memory limit of the container in MiB (no swap beyond it). */
+  /**
+   * Memory limit of the container in MiB (no swap beyond it), 2048..16384.
+   * The tmpfs home (payload + extracted app + profile) counts against it.
+   */
   memoryMb: number;
   /** CPU limit of the container. */
   cpus: number;
