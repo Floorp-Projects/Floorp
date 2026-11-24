@@ -281,7 +281,7 @@ const PRE_RESTORE_GRACE_MS = 10 * 60 * 1000;
  * alone is not enough: gBrowser and SessionStore are wired during delayed
  * startup, and touching them earlier races the window's own restore.
  *
- * Every resolution path shares the same timeout and unload guard so a promise
+ * Every resolution path shares the same timeout and window-close guard so a promise
  * that never settles cannot hang the restore forever.
  */
 const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
@@ -290,8 +290,13 @@ const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
     let observer: ((subject: nsISupports | null) => void) | null = null;
     let timer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
-    const onUnload = (): void => {
-      settle(new Error("window-closed"));
+    // Not an "unload" listener: OpenBrowserWindow() returns the window while
+    // it still shows its initial about:blank document, whose unload fires as
+    // soon as browser.xhtml replaces it.
+    const closedObserver = (subject: nsISupports | null): void => {
+      if ((subject as unknown) === window) {
+        settle(new Error("window-closed"));
+      }
     };
     const cleanup = (): void => {
       if (timer !== null) {
@@ -312,7 +317,14 @@ const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
         }
         observer = null;
       }
-      window.removeEventListener("unload", onUnload);
+      try {
+        Services.obs.removeObserver(closedObserver, "domwindowclosed");
+      } catch (error) {
+        console.error(
+          "WorkspacesBackupService: failed to remove close observer",
+          error,
+        );
+      }
     };
     function settle(error?: unknown): void {
       if (settled) {
@@ -330,7 +342,7 @@ const waitForDelayedStartup = (window: DelayedStartupWindow): Promise<void> => {
     timer = globalThis.setTimeout(() => {
       settle(new Error("window-startup-timeout"));
     }, WINDOW_STARTUP_TIMEOUT_MS);
-    window.addEventListener("unload", onUnload, { once: true });
+    Services.obs.addObserver(closedObserver, "domwindowclosed");
 
     const startup = window.delayedStartupPromise ??
       window.gBrowserInit?.delayedStartupPromise;
