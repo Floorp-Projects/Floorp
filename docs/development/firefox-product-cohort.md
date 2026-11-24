@@ -64,8 +64,10 @@ required. In one job it:
    mochitest profile and a check that no product process outlives the batch.
 
 The verdict is PASS only when all 289 originals end with an expected pass and
-every batch exits zero with `suite_end`, no unexpected subtest, crash, leak
-record, unplanned test or surviving process. Otherwise the job fails, and
-`summary.json` lists every case as `pass`, `fail`, `crash`, `incomplete`,
-`unexecuted` or `preflight_rejected`. This lane is the compiled product only;
-DEV (`feles-build dev`) and STG (`feles-build stage`) are not exercised here.
+every batch exits zero with `suite_end`, no unexpected subtest, crash, leakcheck
+failure (the stock mozlog rule: missing totals, or bytes above the harness
+threshold), unplanned test or surviving process. Sub-threshold leak totals are
+kept in `summary.json` as warnings. Otherwise the job fails, and `summary.json`
+lists every case as `pass`, `fail`, `crash`, `incomplete`, `unexecuted` or
+`preflight_rejected`. This lane is the compiled product only; DEV
+(`feles-build dev`) and STG (`feles-build stage`) are not exercised here.

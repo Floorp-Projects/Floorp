@@ -61,3 +61,19 @@ class TestRunner(TestCase):
                 self.assertEqual(runner.verdict([self.batch(record, **overrides)], 2)["verdict"], "FAIL")
         self.assertEqual(runner.verdict([self.batch(record)], 3)["verdict"], "FAIL")
         self.assertEqual(runner.verdict([self.batch(None)], 2)["counts"], {"unexecuted": 2})
+
+    def test_leakcheck_mirrors_mozlog_thresholds(self):
+        cases = [*ran(JOB["cases"][0]), *ran(JOB["cases"][1])]
+        total = {"action": "mozleak_total", "process": "default", "objects": []}
+        for row, failed in (
+            ({**total, "bytes": 0, "threshold": 0}, False),
+            ({**total, "bytes": 8, "threshold": 0}, True),
+            ({**total, "bytes": 8, "threshold": 100}, False),
+            ({**total, "bytes": None, "threshold": 0}, True),
+            ({**total, "bytes": None, "threshold": 0, "induced_crash": True}, False),
+            ({**total, "bytes": None, "threshold": 0, "ignore_missing": True}, False),
+        ):
+            with self.subTest(row=row):
+                record = raw([*cases, row, {"action": "suite_end"}])
+                self.assertEqual(bool(record["leaks"]), failed)
+                self.assertEqual(bool(record["leak_warnings"]), not failed and bool(row["bytes"]))

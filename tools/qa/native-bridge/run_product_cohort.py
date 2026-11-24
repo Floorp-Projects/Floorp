@@ -41,8 +41,15 @@ def product_processes(root: Path) -> list[int]:
     return found
 
 
+def leak_failed(row: dict) -> bool:
+    """Mirror mozlog's TBPL leakcheck verdict for a mozleak_total record."""
+    if row.get("bytes") is None:
+        return not (row.get("induced_crash") or row.get("ignore_missing"))
+    return row["bytes"] > row.get("threshold", 0)
+
+
 def read_raw(path: Path) -> dict:
-    tests, unexpected, leaks, crashes, suite_end = {}, [], [], [], False
+    tests, unexpected, leaks, leak_warnings, crashes, suite_end = {}, [], [], [], [], False
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             row = json.loads(line)
@@ -59,15 +66,17 @@ def read_raw(path: Path) -> dict:
         elif action == "test_status" and "expected" in row:
             unexpected.append({"test": test, "subtest": row.get("subtest"),
                                "status": row.get("status"), "expected": row.get("expected")})
-        elif action in {"mozleak_total", "mozleak_object"}:
-            if row.get("bytes") or row.get("objects") or action == "mozleak_object":
+        elif action == "mozleak_total":
+            if leak_failed(row):
                 leaks.append(row)
+            elif row.get("bytes"):
+                leak_warnings.append(row)
         elif action == "crash":
             crashes.append({"test": row.get("test"), "signature": row.get("signature")})
         elif action == "suite_end":
             suite_end = True
     return {"tests": tests, "unexpected": unexpected, "leaks": leaks,
-            "crashes": crashes, "suite_end": suite_end}
+            "leak_warnings": leak_warnings, "crashes": crashes, "suite_end": suite_end}
 
 
 def classify(job: dict, raw: dict | None, exit_code: int | None) -> dict:
@@ -126,6 +135,7 @@ def run_job(job: dict, product_root: Path, timeout: int, env: dict) -> dict:
     out["suite_end"] = bool(raw and raw["suite_end"])
     out["unexpected"] = raw["unexpected"] if raw else []
     out["leaks"] = raw["leaks"] if raw else []
+    out["leak_warnings"] = raw["leak_warnings"] if raw else []
     out["crashes"] = raw["crashes"] if raw else []
     extra = sorted(set(raw["tests"]) - set(job["cases"])) if raw else []
     out["unplanned_tests"] = extra
