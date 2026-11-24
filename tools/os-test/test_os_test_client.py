@@ -704,6 +704,20 @@ class WrapperPortOffsetTests(unittest.TestCase):
         self.assertEqual(candidates[1], 20)
         self.assertEqual(candidates[-1], 60340)
         self.assertNotIn(1, candidates)
+        self.assertNotIn(53080, candidates)
+        self.assertIn(53100, candidates)
+
+    def test_manual_offsets_cannot_map_dev_ports_to_the_installed_port(self):
+        for base_port in wrapper.launch_ports_for_offset(0):
+            offset = 58261 - base_port
+            with self.subTest(offset=offset), self.assertRaisesRegex(
+                wrapper.OsTestConfigError, "installed Floorp OS-Server port 58261"
+            ):
+                wrapper.parse_port_offset_spec(str(offset))
+        with self.assertRaisesRegex(
+            wrapper.OsTestConfigError, "installed Floorp OS-Server port 58261"
+        ):
+            wrapper.resolve_os_verify_options(None, None, 53086, True)
 
     def test_derived_target_and_start_args(self):
         opts = wrapper.resolve_os_verify_options(None, None, None, False)

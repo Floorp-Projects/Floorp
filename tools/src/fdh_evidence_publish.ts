@@ -17,8 +17,9 @@
  * has evidence that counts and a valid receipt set.
  *
  * Trust model (until principal authentication, D-18, and a central
- * append-only store): only comments by OWNER, MEMBER or COLLABORATOR count,
- * as for receipts; the binding (repository, task, PR, commit) is what that
+ * append-only store): evidence comments need an OWNER, MEMBER or COLLABORATOR
+ * association. Receipts also require effective repository write access.
+ * The evidence binding (repository, task, PR, commit) is what that
  * author's comment says. The SHA-256 is not a signature: it catches a
  * manifest that no longer matches its marker, not an author who rewrites
  * both. An edited evidence comment (updated after it was posted) therefore
@@ -30,6 +31,7 @@ import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 import { encodeHex } from "@std/encoding/hex";
 import type { EvidenceManifest } from "../qa3/evidence/types.ts";
 import { evidenceIds, validateEvidenceManifest } from "./fdh_evidence.ts";
+import receiptPermissions from "./fdh_receipt_permissions.cjs";
 import {
   parseReceiptComments,
   type ReviewCommentInput,
@@ -39,6 +41,7 @@ import {
 } from "./fdh_review.ts";
 import {
   defaultGhRunner,
+  GhNotFound,
   type GhRunner,
   validateRepoSlug,
 } from "./fdh_ext_poll.ts";
@@ -679,16 +682,36 @@ export async function traceEvidence(
         e.state === "succeeded" && e.assertions > 0;
       return { ...e, atHead, counts };
     });
-  const { trusted, ignored } = selectTrustedReceiptComments(comments);
   const receipts: TraceReport["receipts"] = {
     atHead: 0,
     reviewers: [],
     models: [],
     stale: 0,
-    ignored: ignored.length,
+    ignored: 0,
     error: null,
   };
   try {
+    const enriched = await receiptPermissions.loadReceiptAuthorPermissions(
+      comments,
+      async (login) => {
+        try {
+          const result: { permission?: unknown } = JSON.parse(
+            await gh([
+              "api",
+              `repos/${slug}/collaborators/${
+                encodeURIComponent(login)
+              }/permission`,
+            ]),
+          );
+          return result?.permission;
+        } catch (error) {
+          if (error instanceof GhNotFound) return null;
+          throw error;
+        }
+      },
+    );
+    const { trusted, ignored } = selectTrustedReceiptComments(enriched);
+    receipts.ignored = ignored.length;
     const summary = validateReceiptSet(parseReceiptComments(trusted), headSha);
     receipts.atHead = summary.receipts.length;
     receipts.reviewers = summary.reviewers;

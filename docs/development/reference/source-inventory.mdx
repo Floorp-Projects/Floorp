@@ -1,12 +1,12 @@
 ---
 title: "Source Inventory"
 sidebar_label: "Source Inventory"
-floorp_commit: "4fcc7235d2eceb25b8669a12fbb4993363d5324f"
+floorp_commit: "ba225e0a202c592e5a26d67e4fc8c4a7835d4233"
 generated: true
 ---
 # Source Inventory
 
-Inventory generated from Floorp commit `4fcc7235d2eceb25b8669a12fbb4993363d5324f`.
+Inventory generated from Floorp commit `ba225e0a202c592e5a26d67e4fc8c4a7835d4233`.
 
 ## Source Precedence
 
@@ -65,17 +65,16 @@ Inventory generated from Floorp commit `4fcc7235d2eceb25b8669a12fbb4993363d5324f
 - `.github/workflows/collect_firefox_tests.yml` - triggers: `workflow_dispatch`
 - `.github/workflows/colocated_runner_test.yml` - triggers: `pull_request`, `push`, `workflow_dispatch`
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
-- `.github/workflows/fdh-review-gate.yml` - triggers: `issue_comment`, `pull_request`
+- `.github/workflows/fdh-review-gate.yml` - triggers: `pull_request`
 - `.github/workflows/fdh-trusted-review-gate.yml` - triggers: `issue_comment`, `pull_request_target`
-- `.github/workflows/firefox_product_gate.yml` - triggers: `pull_request`, `workflow_dispatch`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/package_and_publish_alpha.yml` - triggers: `workflow_dispatch`
-- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/package_and_publish_release.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/package.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/ppa_index_check.yml` - triggers: `pull_request`, `push`
-- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`, `workflow_dispatch`
+- `.github/workflows/publish_alpha.yml` - triggers: `workflow_call`
 - `.github/workflows/publish_ppa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/publish_release.yml` - triggers: `workflow_call`
 - `.github/workflows/purge_ppa_cache.yml` - triggers: `workflow_dispatch`
@@ -83,6 +82,6 @@ Inventory generated from Floorp commit `4fcc7235d2eceb25b8669a12fbb4993363d5324f
 - `.github/workflows/qa3-source-shadow.yml` - triggers: `pull_request`, `workflow_call`, `workflow_dispatch`
 - `.github/workflows/qa3-windows-supervisor.yml` - triggers: `pull_request`, `workflow_dispatch`
 - `.github/workflows/update_lepton.yml` - triggers: `schedule`, `workflow_dispatch`
-- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_dispatch`
+- `.github/workflows/validate-final-package-qa.yml` - triggers: `workflow_call`, `workflow_dispatch`
 - `.github/workflows/validate-runtime-provenance.yml` - triggers: `workflow_call`
 - `.github/workflows/verify-release-artifact.yml` - triggers: `workflow_call`

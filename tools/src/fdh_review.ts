@@ -13,15 +13,19 @@
  *   <!-- fdh-review-receipt:v1 {"schemaVersion":1,...} -->
  *
  * This module is local-only and deterministic: no network, no GitHub calls.
- * The workflow (`.github/workflows/fdh-review-gate.yml`) fetches comments and
- * feeds them to `parseReceiptComments` + `validateReceiptSet`.
+ * The trusted receipt workflow verifies comment authors' repository access
+ * before passing the comments to the trusted review runner.
  */
+
+import receiptPermissions from "./fdh_receipt_permissions.cjs";
+
+export const {
+  FDH_REVIEW_RECEIPT_MARKER,
+  TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS,
+} = receiptPermissions;
 
 /** Schema version of the receipt payload carried in the marker. */
 export const FDH_REVIEW_RECEIPT_SCHEMA_VERSION = 1;
-
-/** Marker prefix that identifies a receipt comment. */
-export const FDH_REVIEW_RECEIPT_MARKER = "fdh-review-receipt:v1";
 
 /** Verdicts a reviewer may record on a receipt. */
 export const REVIEW_VERDICTS = [
@@ -69,19 +73,9 @@ export interface ReviewCommentInput {
   author?: string | null;
   /** GitHub `author_association` of the comment author. */
   authorAssociation?: string | null;
+  /** Effective permission from GitHub's collaborator API. */
+  authorPermission?: string | null;
 }
-
-/**
- * Comment authors whose receipts the gate counts (X-01). Anyone can comment
- * on a public PR, so receipts from other associations (CONTRIBUTOR, NONE,
- * FIRST_TIME_CONTRIBUTOR, ...) are ignored rather than trusted or allowed to
- * fail the gate with a malformed marker.
- */
-export const TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS = [
-  "OWNER",
-  "MEMBER",
-  "COLLABORATOR",
-] as const;
 
 /** Result of splitting PR comments by whether their author is trusted. */
 export interface TrustedReceiptComments {
@@ -91,20 +85,23 @@ export interface TrustedReceiptComments {
 }
 
 /**
- * Keep the comments whose author association is trusted. Comments without a
- * receipt marker are dropped either way; untrusted receipt comments are
- * reported in `ignored` so the gate can log them.
+ * Apply the same author association and repository write-access rules in CI
+ * and evidence tracing. GitHub maps the maintain role to "write".
  */
 export function selectTrustedReceiptComments(
   comments: readonly ReviewCommentInput[],
-  trustedAssociations: readonly string[] = TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS,
 ): TrustedReceiptComments {
   const trusted: ReviewCommentInput[] = [];
   const ignored: TrustedReceiptComments["ignored"] = [];
   for (const comment of comments) {
     if (!(comment.body ?? "").includes(FDH_REVIEW_RECEIPT_MARKER)) continue;
     const association = (comment.authorAssociation ?? "").toUpperCase();
-    if (trustedAssociations.includes(association)) {
+    if (
+      comment.author &&
+      TRUSTED_RECEIPT_AUTHOR_ASSOCIATIONS.includes(association) &&
+      (comment.authorPermission === "write" ||
+        comment.authorPermission === "admin")
+    ) {
       trusted.push(comment);
     } else {
       ignored.push({

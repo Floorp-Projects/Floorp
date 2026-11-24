@@ -31,9 +31,20 @@ jobs:
           uname -m
           python3 --version
           /usr/bin/python3 --version
-      - name: Test the session supervisor contracts
+      - name: Test the session supervisor with runner and system Python
+        shell: bash
         run: |
-          python3 -B -m unittest discover -s tools/qa3 -p "test_source_macos.py" -v
-      - name: Test them again with the system Python (3.9 on macOS)
-        run: |
-          /usr/bin/python3 -B -m unittest discover -s tools/qa3 -p "test_source_macos.py" -v
+          status=0
+          for python in python3 /usr/bin/python3; do
+            echo "Running supervisor contracts with $python"
+            "$python" -B - <<'PY' || status=1
+          import unittest
+
+          suite = unittest.defaultTestLoader.discover("tools/qa3", "test_source_macos.py")
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          if not result.testsRun or result.skipped:
+              raise SystemExit("Expected the complete macOS suite without skips")
+          raise SystemExit(0 if result.wasSuccessful() else 1)
+          PY
+          done
+          exit "$status"
