@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -65,8 +66,8 @@ def materialize(plan: dict, source: Path) -> list[dict]:
 
 def commands(cohorts, source, python, product, modules, output, batch_size):
     """Return argv arrays in serial order. Qualification is the caller's job."""
-    if not 1 <= batch_size <= 32:
-        raise ValueError("batch size must be 1..32")
+    if not 3 <= batch_size <= 32:
+        raise ValueError("batch size must be 3..32")
     source = source.resolve(strict=True)
     mach = under(source, "mach")
     binary = product.resolve(strict=True)
@@ -78,24 +79,60 @@ def commands(cohorts, source, python, product, modules, output, batch_size):
     output = output.resolve()
     result = []
     for c in cohorts:
-        for offset in range(0, len(c["tests"]), batch_size):
-            batch = c["tests"][offset : offset + batch_size]
-            label = f"{c['id']}-{offset // batch_size + 1:03d}"
+        batches = [c["tests"][i : i + batch_size] for i in range(0, len(c["tests"]), batch_size)]
+        if len(batches[-1]) == 1:
+            if len(batches) == 1:
+                raise ValueError("one-case discovery can ignore the original skip condition")
+            batches[-1].insert(0, batches[-2].pop())
+        for index, batch in enumerate(batches, 1):
+            label = f"{c['id']}-{index:03d}"
+            argv = [
+                str(python.resolve(strict=True)), str(mach), "mochitest",
+                "--flavor", "browser", "--appname", str(binary),
+                "--testing-modules-dir", str(modules),
+                "--log-raw", str(output / f"{label}.jsonl"),
+                "--log-tbpl", str(output / f"{label}.tbpl"),
+            ]
             result.append(
                 {
                     "id": label,
                     "original_manifest": c["manifest"],
                     "cases": batch,
-                    "argv": [
-                        str(python.resolve(strict=True)), str(mach), "mochitest",
-                        "--flavor", "browser", "--appname", str(binary),
-                        "--testing-modules-dir", str(modules),
-                        "--log-raw", str(output / f"{label}.jsonl"),
-                        "--log-tbpl", str(output / f"{label}.tbpl"), *batch,
+                    "argv": [*argv, *batch],
+                    "discovery_argv": [
+                        *argv, "--dump-tests", str(output / f"{label}.discovery.json"), *batch,
                     ],
                 }
             )
     return result
+
+
+def validate_discovery(job: dict, document: dict) -> None:
+    """Reject any mismatch in stock --dump-tests data; matching is not a test pass."""
+    expected = job["cases"]
+    if len(expected) < 2 or len(set(expected)) != len(expected):
+        raise ValueError("discovery requires multiple distinct expected originals")
+    active = document.get("active_tests")
+    if not isinstance(active, list) or not all(isinstance(row, dict) for row in active):
+        raise ValueError("invalid native discovery")
+    original = PurePosixPath(job["original_manifest"])
+    if any(PurePosixPath(path).parent != original.parent for path in expected):
+        raise ValueError("cohort paths do not share their original manifest directory")
+    observed = Counter()
+    for row in active:
+        path = row.get("path")
+        if not isinstance(path, str):
+            raise ValueError("invalid discovered path")
+        if row.get("manifest") not in (str(original), original.name):
+            raise ValueError(f"unexpected discovered manifest: {path}")
+        if "disabled" in row or row.get("expected", "pass") != "pass":
+            raise ValueError(f"original test is disabled or not expected to pass: {path}")
+        observed[path] += 1
+    planned = Counter(expected)
+    if observed != planned:
+        missing = sorted((planned - observed).elements())
+        extra = sorted((observed - planned).elements())
+        raise ValueError(f"native discovery mismatch: missing={missing}, extra={extra}")
 
 
 def main():

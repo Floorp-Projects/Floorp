@@ -81,3 +81,35 @@ class TestProductCohort(TestCase):
                 self.fixture["cohorts"], self.root, Path(sys.executable),
                 firefox, self.modules, self.root / "evidence", 16,
             )
+
+    def test_no_singleton_batch(self):
+        cohorts = cohort.materialize(self.fixture, self.root)
+        jobs = cohort.commands(
+            cohorts, self.root, Path(sys.executable), self.product,
+            self.modules, self.root / "evidence", 14,
+        )
+        self.assertTrue(all(2 <= len(j["cases"]) <= 14 for j in jobs))
+        self.assertEqual(
+            [path for j in jobs for path in j["cases"]],
+            [path for c in cohorts for path in c["tests"]],
+        )
+        self.assertTrue(all("--dump-tests" in j["discovery_argv"] for j in jobs))
+
+    def test_stock_discovery_requires_exact_active_cases(self):
+        item = self.fixture["cohorts"][0]
+        job = {"cases": item["tests"][:2], "original_manifest": item["manifest"]}
+        active = [{"path": path, "manifest": item["manifest"], "expected": "pass"}
+                  for path in job["cases"]]
+        cohort.validate_discovery(job, {"active_tests": active[::-1]})
+        cohort.validate_discovery(job, {"active_tests": [
+            {**row, "manifest": "browser.toml"} for row in active
+        ]})
+        for records in (
+            active[:1], [active[0], active[0]],
+            [active[0], {**active[1], "disabled": "debug"}],
+            [active[0], {**active[1], "manifest": "browser_oldformat.toml"}],
+            [active[0], {**active[1], "expected": "fail"}],
+            [*active, {**active[0], "path": "unexpected.js"}],
+        ):
+            with self.subTest(records=records), self.assertRaises(ValueError):
+                cohort.validate_discovery(job, {"active_tests": records})

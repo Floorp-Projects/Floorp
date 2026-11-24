@@ -35,3 +35,11 @@ never replace them with a smaller cohort. An ordinary PR result must be
 observed before setting any required check. This increment changes no
 workflow, merge rule, public package, or acceptance threshold. The existing
 17-case receipt verifier remains independent and cannot qualify this cohort.
+
+Each job also emits the same invocation with stock `--dump-tests` for
+preflight. Call `validate_discovery(job, document)` on that JSON before
+launching the batch; wrong manifests, extra or missing cases, duplication,
+disabled cases and non-pass expectations prevent admission. Batches never
+contain a single case: this Runtime's original harness can remove the
+`disabled` entry when only one test matches. A preflight mismatch is evidence
+to record, not a reason to force-enable a test.
