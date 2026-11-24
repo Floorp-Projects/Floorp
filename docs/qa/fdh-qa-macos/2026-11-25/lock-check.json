@@ -12,7 +12,7 @@
     "error": "lock-held"
   },
   "preflightWhileHeld": {
-    "freeBytes": 8997187584,
+    "freeBytes": 9253597184,
     "guiSession": true,
     "lockHolder": "kan-144-lock-a",
     "marionettePortBusy": false,
@@ -34,7 +34,7 @@
     "clean": true
   },
   "preflightAfter": {
-    "freeBytes": 8997175296,
+    "freeBytes": 9253580800,
     "guiSession": true,
     "lockHolder": null,
     "marionettePortBusy": false,

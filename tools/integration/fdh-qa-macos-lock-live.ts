@@ -27,12 +27,16 @@ const refused = async (fn: () => Promise<unknown>) => {
   }
 };
 const out: Record<string, unknown> = {};
-out.acquireA = await target.acquire("kan-144-lock-a");
-out.reacquireA = await target.acquire("kan-144-lock-a");
-out.acquireB = await refused(() => target.acquire("kan-144-lock-b"));
-out.preflightWhileHeld = await target.preflight();
-out.cleanupB = await refused(() => target.cleanup("kan-144-lock-b"));
-out.cleanupA = await target.cleanup("kan-144-lock-a");
+try {
+  out.acquireA = await target.acquire("kan-144-lock-a");
+  out.reacquireA = await target.acquire("kan-144-lock-a");
+  out.acquireB = await refused(() => target.acquire("kan-144-lock-b"));
+  out.preflightWhileHeld = await target.preflight();
+  out.cleanupB = await refused(() => target.cleanup("kan-144-lock-b"));
+} finally {
+  // Release A's lock even when a step above threw.
+  out.cleanupA = await target.cleanup("kan-144-lock-a");
+}
 out.preflightAfter = await target.preflight();
 const lockError = (value: unknown) =>
   typeof value === "object" && value !== null &&

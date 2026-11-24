@@ -23,6 +23,7 @@ import {
   parseGuestResult,
   parseMacosQaTargetConfig,
   shellQuote,
+  wrapForStdin,
 } from "./fdh_qa_macos.ts";
 import type {
   GuestRunOutput,
@@ -198,10 +199,25 @@ Deno.test("macOS QA scripts: install verifies the hash before extracting", () =>
   const attach = script.indexOf("hdiutil attach");
   assert(verify > 0 && attach > verify);
   assertStringIncludes(script, "-readonly -noautoopen");
-  assertStringIncludes(script, "trap detach_mnt EXIT");
+  assertStringIncludes(script, "trap on_exit EXIT");
+  // Hash and attach a root-only snapshot, never the test user's file.
+  assertStringIncludes(
+    script,
+    'SNAP=$(sudo -n mktemp "$LOCKDIR/payload.XXXXXX")',
+  );
+  assertStringIncludes(script, 'GOT=$(sudo -n shasum -a 256 "$SNAP"');
+  assertStringIncludes(
+    script,
+    '-mountpoint "$MNT" "$SNAP" >/dev/null </dev/null',
+  );
+  assert(!script.includes('"$P" >/dev/null'), "attach must not read $P");
+  assertStringIncludes(
+    buildInstallScript(CONFIG, TASK, "tar.gz", SHA),
+    'sudo -n cat "$SNAP" | asu tar -xzf - -C',
+  );
   // Files in the test user's tree are written as that user, never as root.
   assertStringIncludes(script, 'asu ditto "$APP_SRC"');
-  assert(!/sudo -n (ditto|tar|mv|rm|tee|chown)/.test(script));
+  assert(!/sudo -n (ditto|tar|mv|rm|tee|chown)[^\n]*TASKDIR/.test(script));
   assert(
     !/sudo -n (sh|mkdir|chown)/.test(buildUploadScript(CONFIG, TASK, "dmg")),
   );
@@ -209,6 +225,12 @@ Deno.test("macOS QA scripts: install verifies the hash before extracting", () =>
 
 Deno.test("macOS QA scripts: the lock is an atomic root-owned symlink outside the test user's tree", () => {
   const lock = buildLockScript(CONFIG, TASK);
+  // ln -s into an existing directory succeeds, so the owner is re-checked.
+  assertStringIncludes(
+    lock,
+    'sudo -n ln -s "$TASK" "$LOCK" 2>/dev/null && [ "$(lock_owner)" = "$TASK" ]',
+  );
+  assertEquals(wrapForStdin("echo 1"), "{\necho 1\n}\n");
   assertStringIncludes(lock, "LOCKDIR='/private/var/db/fdh-qa'");
   assertStringIncludes(lock, 'sudo -n ln -s "$TASK" "$LOCK"');
   assertStringIncludes(lock, 'sudo -n chown root:wheel "$LOCKDIR"');
@@ -360,7 +382,7 @@ Deno.test({
         stderr: "piped",
       }).spawn();
       const writer = child.stdin.getWriter();
-      await writer.write(new TextEncoder().encode(script));
+      await writer.write(new TextEncoder().encode(wrapForStdin(script)));
       await writer.close();
       const out = await child.output();
       assertEquals(
@@ -386,7 +408,7 @@ const STUB = [
 ].join("\n");
 
 async function stubTransport(mode: string, timeoutMs = 30_000) {
-  const dir = await Deno.makeTempDir();
+  const dir = await Deno.makeTempDir({ prefix: "fdh-qa-stub-" });
   const stub = `${dir}/ssh_stub.ts`;
   await Deno.writeTextFile(stub, STUB);
   return createSshTransport(CONFIG, {
@@ -418,7 +440,7 @@ Deno.test({
     const viaStdin = parseGuestResult(await transport(script));
     assertEquals(viaStdin, {
       ok: true,
-      bytes: new TextEncoder().encode(script).length,
+      bytes: new TextEncoder().encode(wrapForStdin(script)).length,
       stdinMode: true,
     });
     const upload = parseGuestResult(
@@ -438,6 +460,20 @@ Deno.test({
   async fn() {
     const transport = await stubTransport("hang", 1500);
     const result = parseGuestResult(await transport("script"));
+    assertEquals(result.error, "timeout");
+  },
+});
+
+Deno.test({
+  name:
+    "macOS QA transport: a timeout returns even when the upload source stalls (needs --allow-run)",
+  ignore: !canRun,
+  async fn() {
+    const transport = await stubTransport("hang", 1500);
+    const stalled = new ReadableStream<Uint8Array>({
+      pull: () => new Promise<void>(() => {}),
+    });
+    const result = parseGuestResult(await transport("script", stalled));
     assertEquals(result.error, "timeout");
   },
 });

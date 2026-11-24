@@ -13,13 +13,13 @@ Guest keys stay on the Mac host. The operator side used only its existing SSH
 access to the host; the config names the key files inside the VM directory on
 the host. Host and guest addresses are not part of these reports.
 
-## Runs at the code in this PR (after the review fixes)
+## Runs at the code in this PR (after both review rounds)
 
 | File                         | Script                      | What it shows                                                                                                                                                                                                                                        |
 | ---------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kan-144-live-5-report.json` | `fdh-qa-macos-live.ts`      | dmg: ready preflight, lock, upload (260 MB) + hash check + install, launch in the GUI session with a fresh profile, Marionette probe (`Floorp`, `Darwin`, 1 window), screenshot, cleanup with 0 residual processes, ready target afterwards. Exit 0. |
-| `kan-144-live-6-report.json` | `fdh-qa-macos-live.ts`      | Same cycle with the `.tar.gz` payload (237 MB). Exit 0. Its screenshot was byte-identical to run 5's (same SHA-256 in both reports), so only run 5's PNG is kept.                                                                                    |
-| `kan-144-live-5-macos.png`   | —                           | Screenshot from run 5 (Marionette `WebDriver:TakeScreenshot`, chrome context). SHA-256 `136647763fcfa4202e2199fe6296524769adb99589861ab1130dde50aee11be8`.                                                                                           |
+| `kan-144-live-7-report.json` | `fdh-qa-macos-live.ts`      | dmg: ready preflight, lock, upload (260 MB) + hash check + install, launch in the GUI session with a fresh profile, Marionette probe (`Floorp`, `Darwin`, 1 window), screenshot, cleanup with 0 residual processes, ready target afterwards. Exit 0. |
+| `kan-144-live-8-report.json` | `fdh-qa-macos-live.ts`      | Same cycle with the `.tar.gz` payload (237 MB). Exit 0. Its screenshot was byte-identical to run 7's (same SHA-256 in both reports), so only run 7's PNG is kept.                                                                                    |
+| `kan-144-live-7-macos.png`   | —                           | Screenshot from run 7 (Marionette `WebDriver:TakeScreenshot`, chrome context). SHA-256 `136647763fcfa4202e2199fe6296524769adb99589861ab1130dde50aee11be8`.                                                                                           |
 | `lock-check.json`            | `fdh-qa-macos-lock-live.ts` | Lock: task A acquires and re-acquires as a no-op; task B is refused (`lock-held`) for acquire and cleanup; preflight shows A as holder; A's cleanup releases it. `passed: true`, exit 0.                                                             |
 
 ## Earlier revision

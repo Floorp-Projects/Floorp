@@ -162,6 +162,15 @@ export function shellQuote(value: string): string {
 /** SHA-256 hex of a staged payload. */
 const SHA256 = /^[0-9a-f]{64}$/;
 
+/**
+ * Script text for `bash -s`. The body is one brace group, so bash parses all
+ * of it before running anything and a child command that reads stdin (a
+ * prompting `hdiutil`, say) cannot swallow the rest of the script.
+ */
+export function wrapForStdin(script: string): string {
+  return `{\n${script}\n}\n`;
+}
+
 /** Longest argv-mode host command; Windows CreateProcess caps at 32767. */
 const MAX_ARGV_COMMAND = 24_000;
 
@@ -288,7 +297,7 @@ sudo -n chown root:wheel "$LOCKDIR"
 sudo -n chmod 700 "$LOCKDIR"
 asu mkdir -p "$ROOT"
 asu chmod 700 "$ROOT"
-if sudo -n ln -s "$TASK" "$LOCK" 2>/dev/null; then
+if sudo -n ln -s "$TASK" "$LOCK" 2>/dev/null && [ "$(lock_owner)" = "$TASK" ]; then
   result '{"ok":true,"acquired":true}'
   exit 0
 fi
@@ -313,7 +322,12 @@ result "{\\"ok\\":true,\\"bytes\\":$BYTES}"
 `;
 }
 
-/** Verifies the payload hash and installs Floorp.app into the task directory. */
+/**
+ * Verifies the payload hash and installs Floorp.app into the task directory.
+ * The payload is first copied (read as the test user) into a root-only
+ * snapshot; the hash check, the dmg attach and the tar read all use that
+ * snapshot, so the test user cannot swap the file after it was checked.
+ */
 export function buildInstallScript(
   config: MacosQaTargetConfig,
   taskId: string,
@@ -323,15 +337,13 @@ export function buildInstallScript(
   if (!SHA256.test(sha256)) throw new Error("sha256 must be 64 lowercase hex");
   const extract = kind === "dmg"
     ? `MNT=$(mktemp -d /tmp/fdh-qa-mnt.XXXXXX)
-detach_mnt() { if [ -n "$MNT" ]; then sudo -n hdiutil detach "$MNT" >/dev/null 2>&1 || sudo -n hdiutil detach -force "$MNT" >/dev/null 2>&1 || true; rmdir "$MNT" 2>/dev/null || true; MNT=""; fi; }
-trap detach_mnt EXIT
-sudo -n hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MNT" "$P" >/dev/null || fail dmg-attach-failed
+sudo -n hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MNT" "$SNAP" >/dev/null </dev/null || fail dmg-attach-failed
 APP_SRC=$(find "$MNT" -maxdepth 1 -name '*.app' -type d | head -n 1) || true
 [ -n "$APP_SRC" ] || fail app-missing
 asu ditto "$APP_SRC" "$TASKDIR/app/Floorp.app" || fail copy-failed
 detach_mnt`
     : `asu mkdir -p "$TASKDIR/extract"
-asu tar -xzf "$P" -C "$TASKDIR/extract" || fail untar-failed
+sudo -n cat "$SNAP" | asu tar -xzf - -C "$TASKDIR/extract" || fail untar-failed
 APP_SRC=$(asu find "$TASKDIR/extract" -maxdepth 2 -name '*.app' -type d | head -n 1) || true
 [ -n "$APP_SRC" ] || fail app-missing
 asu mv "$APP_SRC" "$TASKDIR/app/Floorp.app"
@@ -340,7 +352,13 @@ asu rm -rf "$TASKDIR/extract"`;
 own_lock
 P="$TASKDIR/payload.${kind}"
 asu test -f "$P" || fail payload-missing
-GOT=$(asu shasum -a 256 "$P" | awk '{print $1}')
+MNT=""; SNAP=""
+detach_mnt() { if [ -n "$MNT" ]; then sudo -n hdiutil detach "$MNT" >/dev/null 2>&1 || sudo -n hdiutil detach -force "$MNT" >/dev/null 2>&1 || true; rmdir "$MNT" 2>/dev/null || true; MNT=""; fi; }
+on_exit() { detach_mnt; if [ -n "$SNAP" ]; then sudo -n rm -f "$SNAP"; fi; }
+trap on_exit EXIT
+SNAP=$(sudo -n mktemp "$LOCKDIR/payload.XXXXXX")
+asu cat "$P" | sudo -n tee "$SNAP" >/dev/null || fail snapshot-failed
+GOT=$(sudo -n shasum -a 256 "$SNAP" | awk '{print $1}')
 [ "$GOT" = ${shellQuote(sha256)} ] || fail sha256-mismatch
 asu rm -rf "$TASKDIR/app"
 asu mkdir -p "$TASKDIR/app"
@@ -566,20 +584,27 @@ export function createSshTransport(
       stderr: "piped",
     }).spawn();
     let timedOut = false;
+    const abort = new AbortController();
     const timer = setTimeout(() => {
       timedOut = true;
+      // Stop feeding too, so a stalled upload source cannot hold us here.
+      abort.abort();
       try {
         child.kill("SIGKILL");
       } catch {
         // already exited
       }
     }, timeoutMs);
-    const source = upload ?? new Blob([script]).stream();
-    const feeding = source.pipeTo(child.stdin).catch(() => {
-      // The remote side closed early; its result is still on stdout.
-    });
+    const source = upload ?? new Blob([wrapForStdin(script)]).stream();
+    const feeding = source.pipeTo(child.stdin, { signal: abort.signal })
+      .catch(() => {
+        // The remote side closed early or we timed out; any result is still
+        // on stdout.
+      });
     try {
       const out = await child.output();
+      // The child is gone: a source that is still mid-read is abandoned.
+      abort.abort();
       await feeding;
       return {
         code: out.code,

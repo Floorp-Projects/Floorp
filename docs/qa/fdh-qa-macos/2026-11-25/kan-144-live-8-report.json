@@ -1,13 +1,13 @@
 {
-  "taskId": "kan-144-live-6",
+  "taskId": "kan-144-live-8",
   "payload": {
     "name": "floorp-macOS-universal.tar.gz",
     "kind": "tar.gz",
     "sha256": "707862b7b8608cf0de2147fd97bc62687c3950af49aa5217abcdd46f78256a2f"
   },
-  "startedAt": "2026-11-24T20:03:30.392Z",
+  "startedAt": "2026-11-24T20:09:46.619Z",
   "preflight": {
-    "freeBytes": 9251119104,
+    "freeBytes": 9293623296,
     "guiSession": true,
     "lockHolder": null,
     "marionettePortBusy": false,
@@ -35,7 +35,7 @@
     "url": "about:blank"
   },
   "screenshot": {
-    "file": "kan-144-live-6-macos.png",
+    "file": "kan-144-live-8-macos.png",
     "sha256": "136647763fcfa4202e2199fe6296524769adb99589861ab1130dde50aee11be8"
   },
   "cleanup": {
@@ -45,7 +45,7 @@
     "clean": true
   },
   "after": {
-    "freeBytes": 9248555008,
+    "freeBytes": 9292165120,
     "guiSession": true,
     "lockHolder": null,
     "marionettePortBusy": false,
@@ -55,5 +55,5 @@
     "blockers": []
   },
   "passed": true,
-  "finishedAt": "2026-11-24T20:04:06.586Z"
+  "finishedAt": "2026-11-24T20:10:24.565Z"
 }
