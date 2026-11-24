@@ -14,7 +14,7 @@ git diff --quiet HEAD -- || { echo "Runtime checkout is not clean" >&2; exit 1; 
 for patch in .github/patches/upstream/*.patch; do
   git apply --ignore-space-change --ignore-whitespace "$patch"
 done
-bash .github/workflows/scripts/setup-floorp.sh linux x86_64 false false "" "" "$BUILD_DATE"
+GITHUB_WORKSPACE="$PWD" bash .github/workflows/scripts/setup-floorp.sh linux x86_64 false false "" "" "$BUILD_DATE"
 if [[ -z "${ACTIONS_RESULTS_URL:-}" ]]; then
   sed -i "/^mk_add_options 'export SCCACHE_GHA_ENABLED=on'$/d" mozconfig
 fi
