@@ -1,0 +1,125 @@
+# Nonrequired shadow until the repository owner promotes the check.
+name: "Firefox product gate"
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firefox-product-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firefox-product-cohort:
+    name: firefox-product-cohort (linux-x86_64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      SCCACHE_GHA_ENABLED: "on"
+      SCCACHE_MAX_FRAME_LENGTH: "1048576"
+      EVIDENCE: ${{ github.workspace }}/evidence
+    steps:
+      - name: Checkout Floorp
+        uses: actions/checkout@v4
+        with:
+          path: floorp
+          persist-credentials: false
+
+      - name: Read Runtime lock
+        id: lock
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          lock = json.load(open("floorp/floorp-runtime.lock.json"))
+          print("repository=" + lock["source"]["repository"])
+          print("commit=" + lock["source"]["commit"])
+          PY
+
+      - name: Checkout locked Runtime
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.lock.outputs.repository }}
+          ref: ${{ steps.lock.outputs.commit }}
+          path: runtime
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h "$GITHUB_WORKSPACE"
+
+      - name: Host tests for the planner and aggregator
+        working-directory: floorp
+        run: python3 -B -m unittest discover -s tools/qa3 -p 'test_*product_cohort.py' -v
+
+      - uses: mozilla-actions/sccache-action@v0.0.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Runtime toolchain
+        working-directory: runtime
+        run: |
+          ./.github/workflows/scripts/setup-rust.sh linux x86_64 ""
+          ./.github/workflows/scripts/allocate-swap.sh x86_64
+
+      - name: Build Runtime with same-OBJDIR test support
+        run: |
+          floorp/tools/qa/native-bridge/product-build-runtime.sh \
+            "$GITHUB_WORKSPACE/runtime" "$GITHUB_WORKSPACE/floorp/floorp-runtime.lock.json" \
+            "$(date -u +%Y%m%d%H%M%S)"
+
+      - name: Assemble packaged Floorp
+        run: |
+          set -euo pipefail
+          RUNTIME_PACKAGE=$(ls runtime/obj-x86_64-pc-linux-gnu/dist/floorp-*.linux-x86_64.tar.xz)
+          floorp/tools/qa/native-bridge/product-assemble.sh \
+            "$GITHUB_WORKSPACE/$RUNTIME_PACKAGE" "$GITHUB_WORKSPACE/runtime" \
+            "$GITHUB_WORKSPACE/floorp" "$GITHUB_WORKSPACE/assembly"
+          mkdir -p "$EVIDENCE" product
+          PRODUCT=$(ls assembly/obj-artifact-build-output/dist/floorp-*.tar.xz)
+          tar -xJf "$PRODUCT" -C product
+          echo "RUNTIME_PACKAGE=$GITHUB_WORKSPACE/$RUNTIME_PACKAGE" >> "$GITHUB_ENV"
+          echo "PRODUCT_ARCHIVE=$GITHUB_WORKSPACE/$PRODUCT" >> "$GITHUB_ENV"
+
+      - name: Bind product provenance
+        run: |
+          python3 -B floorp/tools/qa/native-bridge/product_provenance.py \
+            --runtime runtime --objdir runtime/obj-x86_64-pc-linux-gnu \
+            --runtime-package "$RUNTIME_PACKAGE" --floorp-source floorp \
+            --product-archive "$PRODUCT_ARCHIVE" --product-root product/floorp \
+            --output "$EVIDENCE/provenance.json"
+
+      - name: Run all 289 original cases serially
+        working-directory: runtime
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get install -y openbox
+          xvfb-run -a -s "-screen 0 1600x1200x24" bash -c 'openbox & sleep 2; exec "$@"' _ python3 -B \
+            ../floorp/tools/qa/native-bridge/run_product_cohort.py \
+            --source . --python "$(command -v python3)" \
+            --floorp ../product/floorp/floorp \
+            --modules obj-x86_64-pc-linux-gnu/_tests/modules \
+            --output "$EVIDENCE/cohort"
+
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-product-cohort-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.EVIDENCE }}
+          if-no-files-found: error
+          retention-days: 30
