@@ -49,9 +49,15 @@ export type {
   LinuxQaTargetConfig,
 } from "./fdh_qa_linux_types.ts";
 
-/** Image definition. Changing either text changes the image tag. */
+/**
+ * Image definition. Changing either text changes the image tag. The base is
+ * pinned by digest and the build never pulls, so a build cannot move the
+ * host's own `debian:trixie-slim` tag. Packages still come from the Debian
+ * archive at build time, so two builds of one tag can differ in package
+ * versions.
+ */
 export const LINUX_QA_DOCKERFILE = `# SPDX-License-Identifier: MPL-2.0
-FROM debian:trixie-slim
+FROM debian:trixie-slim@sha256:8aa5a7bf5a1955bddbe7d74fcdd0b91ab30e74362a8b73af672b0481b35b44a0
 RUN apt-get update \\
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \\
       xvfb openbox dbus-x11 python3 procps xz-utils bzip2 ca-certificates \\
@@ -143,7 +149,7 @@ export function parseLinuxQaTargetConfig(value: unknown): LinuxQaTargetConfig {
   const cpus = record.cpus;
   if (
     typeof cpus !== "number" || !Number.isFinite(cpus) || cpus < 0.5 ||
-    cpus > 16 || Math.round(cpus * 100) !== cpus * 100
+    cpus > 16 || !/^\d+(\.\d{1,2})?$/.test(String(cpus))
   ) {
     throw configError("cpus must be a number in 0.5..16 (two decimals)");
   }
@@ -174,6 +180,9 @@ export function parseLinuxQaTargetConfig(value: unknown): LinuxQaTargetConfig {
     minAvailableMemoryMb: record.minAvailableMemoryMb as number,
   });
 }
+
+/** Size of the container's writable home (a tmpfs, counted as memory). */
+const HOME_TMPFS_MB = 1024;
 
 /** Longest argv-mode remote command; Windows CreateProcess caps at 32767. */
 const MAX_ARGV_COMMAND = 24_000;
@@ -219,14 +228,14 @@ function prologue(config: LinuxQaTargetConfig, image: string): string {
     `MPORT=${config.marionettePort}`,
     "result() { printf 'FDH_RESULT %s\\n' \"$1\"; }",
     'fail() { printf \'FDH_RESULT {"ok":false,"error":"%s"}\\n\' "$1"; exit 3; }',
+    // Failure with a sanitised detail (e.g. Docker's own error text).
+    'failx() { D=$(printf %s "$2" | tr -cd \'A-Za-z0-9 ._:/=-\' | tail -c 300); printf \'FDH_RESULT {"ok":false,"error":"%s","detail":"%s"}\\n\' "$1" "$D"; exit 3; }',
     "command -v docker >/dev/null 2>&1 || fail docker-missing",
     "docker info >/dev/null 2>&1 || fail docker-unavailable",
     // Task id of our container, "-foreign" for a same-named container we did
     // not create, or empty when there is none.
-    'holder() { if ! docker container inspect "$NAME" >/dev/null 2>&1; then return 0; fi; ' +
-    'if [ "$(docker container inspect -f \'{{index .Config.Labels "fdh.qa"}}\' "$NAME")" != 1 ]; then printf %s -foreign; return 0; fi; ' +
-    "docker container inspect -f '{{index .Config.Labels \"fdh.qa.task\"}}' \"$NAME\" | tr -cd 'a-z0-9-'; }",
-    'running() { [ "$(docker container inspect -f \'{{.State.Running}}\' "$NAME" 2>/dev/null)" = true ]; }',
+    'holder() { local L; L=$(docker container inspect -f \'{{index .Config.Labels "fdh.qa"}}|{{index .Config.Labels "fdh.qa.task"}}\' "$NAME" 2>/dev/null) || return 0; ' +
+    'case "$L" in 1\\|*) printf %s "${L#1|}" | tr -cd \'a-z0-9-\' ;; *) printf %s -foreign ;; esac; }',
   ].join("\n") + "\n";
 }
 
@@ -238,9 +247,13 @@ function taskPrologue(
   validateTaskId(taskId);
   return prologue(config, image) + [
     `TASK=${shellQuote(taskId)}`,
-    'own() { [ "$(holder)" = "$TASK" ] || fail container-not-held; running || fail container-not-running; }',
+    // Resolve the container ID once, after the ownership check, and use it
+    // for every later command: a script that outlives a timeout can then
+    // never reach a newer container that reuses the name.
+    "label_task() { docker container inspect -f '{{index .Config.Labels \"fdh.qa.task\"}}' \"$1\" 2>/dev/null | tr -cd 'a-z0-9-'; }",
+    'own() { [ "$(holder)" = "$TASK" ] || fail container-not-held; CID=$(docker container inspect -f \'{{.Id}}\' "$NAME" 2>/dev/null | tr -cd \'0-9a-f\'); [ -n "$CID" ] && [ "$(label_task "$CID")" = "$TASK" ] || fail container-not-held; [ "$(docker container inspect -f \'{{.State.Running}}\' "$CID")" = true ] || fail container-not-running; }',
     // docker exec as the unprivileged qa user, never root.
-    'qx() { docker exec -u qa "$NAME" "$@"; }',
+    'qx() { docker exec -u qa "$CID" "$@"; }',
   ].join("\n") + "\n";
 }
 
@@ -251,8 +264,8 @@ export function buildPreflightScript(
 ): string {
   return prologue(config, image) + `
 ROOTDIR=$(docker info -f '{{.DockerRootDir}}')
-FREE=$(df -Pk "$ROOTDIR" | awk 'NR==2 {print $4 * 1024}')
-AVAIL=$(awk '/^MemAvailable:/ {print int($2 / 1024)}' /proc/meminfo)
+FREE=$(df -Pk "$ROOTDIR" | awk 'NR==2 {print $4 * 1024}'); [ -n "$FREE" ] || FREE=0
+AVAIL=$(awk '/^MemAvailable:/ {print int($2 / 1024)}' /proc/meminfo); [ -n "$AVAIL" ] || AVAIL=0
 IMG=false; docker image inspect "$IMAGE" >/dev/null 2>&1 && IMG=true
 H=$(holder)
 HOLDER=null; [ -n "$H" ] && HOLDER="\\"$H\\""
@@ -277,9 +290,8 @@ CTX=$(mktemp -d /tmp/fdh-qa-image.XXXXXX)
 trap 'rm -rf "$CTX"' EXIT
 printf %s ${shellQuote(dockerfile)} | base64 -d > "$CTX/Dockerfile"
 printf %s ${shellQuote(entrypoint)} | base64 -d > "$CTX/entrypoint.sh"
-if ! docker build --pull -q -t "$IMAGE" --label fdh.qa.image=1 "$CTX" > "$CTX/build.log" 2>&1; then
-  tail -c 2000 "$CTX/build.log" >&2
-  fail image-build-failed
+if ! docker build -q -t "$IMAGE" --label fdh.qa.image=1 "$CTX" > "$CTX/build.log" 2>&1; then
+  failx image-build-failed "$(tail -c 600 "$CTX/build.log")"
 fi
 result '{"ok":true,"built":true}'
 `;
@@ -296,14 +308,22 @@ docker image inspect "$IMAGE" >/dev/null 2>&1 || fail image-missing
 H=$(holder)
 if [ "$H" = "$TASK" ]; then result '{"ok":true,"acquired":false}'; exit 0; fi
 [ -z "$H" ] || fail container-held
-if ! docker run -d --init --name "$NAME" \\
+if ! ERR=$(docker run -d --init --name "$NAME" \\
     --label fdh.qa=1 --label "fdh.qa.task=$TASK" \\
     --memory ${config.memoryMb}m --memory-swap ${config.memoryMb}m \\
     --cpus ${config.cpus} --pids-limit 2048 --shm-size 512m \\
+    --read-only \\
+    --tmpfs /home/qa:rw,exec,nosuid,nodev,size=${HOME_TMPFS_MB}m,uid=10001,gid=10001,mode=0700 \\
+    --tmpfs /tmp:rw,nosuid,nodev,size=256m,mode=1777 \\
     --cap-drop ALL --security-opt no-new-privileges \\
-    --network ${config.network} "$IMAGE" >/dev/null 2>&1; then
-  [ "$(holder)" = "$TASK" ] || fail container-held
+    --network ${config.network} "$IMAGE" 2>&1 >/dev/null); then
+  H=$(holder)
+  if [ "$H" != "$TASK" ]; then
+    [ -n "$H" ] && fail container-held
+    failx container-create-failed "$ERR"
+  fi
 fi
+own
 for _ in $(seq 1 50); do qx test -e /tmp/.X11-unix/X99 2>/dev/null && break; sleep 0.2; done
 qx test -e /tmp/.X11-unix/X99 || fail display-not-ready
 result '{"ok":true,"acquired":true}'
@@ -318,7 +338,7 @@ export function buildUploadScript(
 ): string {
   return taskPrologue(config, image, taskId) + `
 own
-docker exec -i -u qa "$NAME" sh -c 'umask 077; cat > /home/qa/payload'
+docker exec -i -u qa "$CID" sh -c 'umask 077; cat > /home/qa/payload'
 BYTES=$(qx stat -c %s /home/qa/payload)
 result "{\\"ok\\":true,\\"bytes\\":$BYTES}"
 `;
@@ -351,11 +371,13 @@ result "{\\"ok\\":true,\\"version\\":\\"$VER\\"}"
 
 function marionetteSnippet(request: MarionetteRequest): string {
   const { client, request: req } = marionettePayload(request);
-  return `printf %s ${
-    shellQuote(client)
-  } | base64 -d | docker exec -i -u qa -e FDH_MPORT="$MPORT" -e FDH_REQ=${
+  // The request rides in the stdin stream (printf is a builtin), so a large
+  // eval script never hits the per-argument limit of docker exec.
+  return `{ printf 'import os\\nos.environ["FDH_REQ"] = "%s"\\n' ${
     shellQuote(req)
-  } "$NAME" python3 -
+  }; printf %s ${
+    shellQuote(client)
+  } | base64 -d; } | docker exec -i -u qa -e FDH_MPORT="$MPORT" "$CID" python3 -
 `;
 }
 
@@ -375,7 +397,7 @@ qx test -x /home/qa/app/floorp/floorp || fail not-installed
 qx sh -c 'pgrep -u qa -x floorp >/dev/null' && fail already-running
 qx rm -rf /home/qa/profile
 qx mkdir -p /home/qa/profile
-docker exec -i -u qa "$NAME" sh -c 'cat > /home/qa/profile/user.js' <<EOF
+docker exec -i -u qa "$CID" sh -c 'cat > /home/qa/profile/user.js' <<EOF
 user_pref("marionette.port", $MPORT);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.page", 0);
@@ -384,7 +406,7 @@ user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("app.update.disabledForTesting", true);
 user_pref("browser.sessionstore.resume_from_crash", false);
 EOF
-docker exec -d -u qa -e DISPLAY=:99 -e MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1 "$NAME" \\
+docker exec -d -u qa -e DISPLAY=:99 -e MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1 "$CID" \\
   /home/qa/app/floorp/floorp -no-remote -profile /home/qa/profile -marionette ${
     shellQuote(startUrl)
   } || fail launch-failed
@@ -412,8 +434,15 @@ export function buildCleanupScript(
   return taskPrologue(config, image, taskId) + `
 H=$(holder)
 if [ -n "$H" ] && [ "$H" != "$TASK" ]; then fail container-held; fi
-[ -n "$H" ] && docker rm -f "$NAME" >/dev/null 2>&1 || true
-GONE=true; docker container inspect "$NAME" >/dev/null 2>&1 && GONE=false
+CID=""
+if [ -n "$H" ]; then
+  CID=$(docker container inspect -f '{{.Id}}' "$NAME" 2>/dev/null | tr -cd '0-9a-f') || true
+  if [ -n "$CID" ] && [ "$(label_task "$CID")" = "$TASK" ]; then
+    docker rm -f "$CID" >/dev/null 2>&1 || true
+  fi
+fi
+GONE=true
+if [ -n "$CID" ] && docker container inspect "$CID" >/dev/null 2>&1; then GONE=false; fi
 result "{\\"ok\\":true,\\"containerRemoved\\":$GONE}"
 `;
 }

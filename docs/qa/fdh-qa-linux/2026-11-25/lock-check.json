@@ -1,5 +1,5 @@
 {
-  "image": "fdh-qa-linux:0027e4d3b9d3",
+  "image": "fdh-qa-linux:41fc5d48b6ce",
   "acquireA": {
     "ok": true,
     "acquired": true
@@ -13,8 +13,8 @@
     "error": "container-held"
   },
   "preflightWhileHeld": {
-    "freeBytes": 172009984000,
-    "availableMemoryMb": 6315,
+    "freeBytes": 172010295296,
+    "availableMemoryMb": 6616,
     "imagePresent": true,
     "containerHolder": "kan-144-lock-a",
     "ready": false,
@@ -31,8 +31,8 @@
     "clean": true
   },
   "preflightAfter": {
-    "freeBytes": 172010479616,
-    "availableMemoryMb": 6332,
+    "freeBytes": 172010393600,
+    "availableMemoryMb": 6647,
     "imagePresent": true,
     "containerHolder": null,
     "ready": true,

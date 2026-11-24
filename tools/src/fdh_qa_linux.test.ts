@@ -25,7 +25,7 @@ import {
   LinuxQaTarget,
   parseLinuxQaTargetConfig,
 } from "./fdh_qa_linux.ts";
-import { wrapForStdin } from "./fdh_qa_remote.ts";
+import { parseGuestResult, wrapForStdin } from "./fdh_qa_remote.ts";
 import type { LinuxQaTargetConfig } from "./fdh_qa_linux_types.ts";
 
 const RAW = {
@@ -45,6 +45,10 @@ const SHA = "b".repeat(64);
 
 Deno.test("Linux QA config: accepts the Debian target and rejects unsafe values", () => {
   assertEquals(CONFIG.network, "none");
+  // Two-decimal values that are inexact in binary floating point still pass.
+  for (const cpus of [1.1, 2.3, 0.57, 4.1]) {
+    assertEquals(parseLinuxQaTargetConfig({ ...RAW, cpus }).cpus, cpus);
+  }
   assert(Object.isFrozen(CONFIG));
   const cases: Array<[Record<string, unknown>, string]> = [
     [{ ...RAW, extra: true }, "unknown key"],
@@ -54,6 +58,7 @@ Deno.test("Linux QA config: accepts the Debian target and rejects unsafe values"
     [{ ...RAW, memoryMb: 128 }, "memoryMb"],
     [{ ...RAW, cpus: 0.1 }, "cpus"],
     [{ ...RAW, cpus: 1.234 }, "cpus"],
+    [{ ...RAW, cpus: 17 }, "cpus"],
     [{ ...RAW, network: "host" }, "network"],
     [{ ...RAW, marionettePort: 22 }, "marionettePort"],
     [{ ...RAW, minAvailableMemoryMb: -1 }, "minAvailableMemoryMb"],
@@ -74,6 +79,11 @@ Deno.test("Linux QA image: tag is derived from the definition; the image runs as
   assertMatch(await linuxQaImageTag(), /^fdh-qa-linux:[0-9a-f]{12}$/);
   assertStringIncludes(LINUX_QA_DOCKERFILE, "USER qa");
   assertStringIncludes(LINUX_QA_DOCKERFILE, "procps");
+  assertMatch(
+    LINUX_QA_DOCKERFILE,
+    /^FROM debian:trixie-slim@sha256:[0-9a-f]{64}$/m,
+  );
+  assert(!buildImageScript(CONFIG, IMAGE).includes("--pull"));
   assertThrows(
     () => buildPreflightScript(CONFIG, "evil:latest"),
     Error,
@@ -118,6 +128,12 @@ Deno.test("Linux QA scripts: only the named, labelled container is touched", () 
     "--cap-drop ALL --security-opt no-new-privileges",
   );
   assertStringIncludes(acquire, "--network none");
+  assertStringIncludes(acquire, "--read-only");
+  assertStringIncludes(
+    acquire,
+    "--tmpfs /home/qa:rw,exec,nosuid,nodev,size=1024m",
+  );
+  assertStringIncludes(acquire, "--tmpfs /tmp:rw,nosuid,nodev,size=256m");
   assert(!acquire.includes("--privileged"));
   assert(!/-p \d|--publish/.test(acquire), "Marionette must not be published");
   // A same-named container we did not create is reported, never removed.
@@ -127,7 +143,8 @@ Deno.test("Linux QA scripts: only the named, labelled container is touched", () 
     cleanup,
     'if [ -n "$H" ] && [ "$H" != "$TASK" ]; then fail container-held; fi',
   );
-  assertStringIncludes(cleanup, 'docker rm -f "$NAME"');
+  assertStringIncludes(cleanup, 'docker rm -f "$CID"');
+  assert(!cleanup.includes('docker rm -f "$NAME"'));
   for (const script of [cleanup, acquire]) {
     assert(!/docker (rm|stop|kill)[^\n]*\$\(docker ps/.test(script));
     assert(!script.includes("prune"));
@@ -144,7 +161,11 @@ Deno.test("Linux QA scripts: work inside the container runs as qa, after an owne
   for (const script of scripts) {
     assertStringIncludes(script, "\nown\n");
     for (const line of script.split("\n")) {
-      if (/docker exec /.test(line)) assertStringIncludes(line, "-u qa");
+      if (/docker exec /.test(line)) {
+        assertStringIncludes(line, "-u qa");
+        // By the ID resolved in own(), never by the reusable name.
+        assertStringIncludes(line, '"$CID"');
+      }
     }
   }
   const install = buildInstallScript(CONFIG, IMAGE, TASK, "tar.xz", SHA);
@@ -178,6 +199,7 @@ Deno.test("Linux QA scripts: image build writes only a temp context and is skipp
   assertStringIncludes(script, "mktemp -d /tmp/fdh-qa-image.XXXXXX");
   assertStringIncludes(script, "trap 'rm -rf \"$CTX\"' EXIT");
   assertStringIncludes(script, '--label fdh.qa.image=1 "$CTX"');
+  assertStringIncludes(script, "failx image-build-failed");
 });
 
 function fake(replies: Array<string | [string, number]>) {
@@ -269,5 +291,94 @@ Deno.test({
       const out = await child.output();
       assertEquals(out.code, 0, new TextDecoder().decode(out.stderr));
     }
+  },
+});
+
+/**
+ * A bash `docker` stub, defined in front of a generated script. STUB selects
+ * the host state: none (no container), foreign (same name, no fdh.qa label),
+ * other (held by task "other-task"), runfail (no container; docker run fails).
+ */
+const DOCKER_STUB = [
+  'docker() { case "${1:-} ${2:-}" in',
+  '  "info -f") echo / ;;',
+  '  "info "*) return 0 ;;',
+  '  "image inspect") return 0 ;;',
+  '  "container inspect")',
+  '    case "$STUB" in',
+  '      foreign) printf "%s\\n" "|" ;;',
+  '      other) printf "%s\\n" "1|other-task" ;;',
+  "      *) return 1 ;;",
+  "    esac ;;",
+  '  "run -d") echo "Error response from daemon: range of CPUs is from 0.01 to 4.00" >&2; return 125 ;;',
+  '  "rm -f") echo "RM-CALLED ${3:-}" >&2; return 0 ;;',
+  "  *) return 0 ;;",
+  "esac; }",
+].join("\n");
+
+async function runWithStub(script: string, state: string) {
+  const child = new Deno.Command("bash", {
+    args: ["-s"],
+    env: { STUB: state },
+    stdin: "piped",
+    stdout: "piped",
+    stderr: "piped",
+  }).spawn();
+  const writer = child.stdin.getWriter();
+  await writer.write(
+    new TextEncoder().encode(DOCKER_STUB + "\n" + wrapForStdin(script)),
+  );
+  await writer.close();
+  const out = await child.output();
+  return {
+    result: parseGuestResult({
+      code: out.code,
+      stdout: new TextDecoder().decode(out.stdout),
+      stderr: "",
+    }),
+    stderr: new TextDecoder().decode(out.stderr),
+  };
+}
+
+Deno.test({
+  name:
+    "Linux QA scripts: holder, acquire and cleanup against a stub docker (needs --allow-run)",
+  ignore: Deno.permissions.querySync({ name: "run" }).state !== "granted",
+  async fn() {
+    const preflight = buildPreflightScript(CONFIG, IMAGE);
+    const acquire = buildAcquireScript(CONFIG, IMAGE, TASK);
+    const cleanup = buildCleanupScript(CONFIG, IMAGE, TASK);
+
+    // A same-named container without our label: reported, never removed.
+    const foreignCleanup = await runWithStub(cleanup, "foreign");
+    assertEquals(foreignCleanup.result.error, "container-held");
+    assert(!foreignCleanup.stderr.includes("RM-CALLED"));
+    assertEquals(
+      (await runWithStub(acquire, "foreign")).result.error,
+      "container-held",
+    );
+    assertEquals(
+      (await runWithStub(acquire, "other")).result.error,
+      "container-held",
+    );
+    const otherCleanup = await runWithStub(cleanup, "other");
+    assertEquals(otherCleanup.result.error, "container-held");
+    assert(!otherCleanup.stderr.includes("RM-CALLED"));
+
+    // A docker run failure is not a lock problem, and keeps Docker's reason.
+    const runfail = await runWithStub(acquire, "runfail");
+    assertEquals(runfail.result.error, "container-create-failed");
+    assertStringIncludes(
+      String(runfail.result.detail),
+      "range of CPUs is from 0.01 to 4.00",
+    );
+
+    // Nothing there: cleanup is a clean no-op.
+    assertEquals((await runWithStub(cleanup, "none")).result, {
+      ok: true,
+      containerRemoved: true,
+    });
+    const free = (await runWithStub(preflight, "foreign")).result;
+    assertEquals(free.containerHolder, "-foreign");
   },
 });

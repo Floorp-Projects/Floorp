@@ -82,7 +82,7 @@ try {
   }
   let preflight = report.preflight as { ready: boolean; blockers: string[] };
   if (preflight.blockers.includes("image-missing") && buildImage) {
-    if (!await step("image", () => target.ensureImage())) {
+    if (!await step("imageBuild", () => target.ensureImage())) {
       throw new Error("image build failed");
     }
     if (!await step("preflightAfterImage", () => target.preflight())) {
@@ -107,7 +107,8 @@ try {
         "const w = Services.wm.getMostRecentWindow('navigator:browser');" +
           " return { app: Services.appinfo.name, version: Services.appinfo.version," +
           " os: Services.appinfo.OS, windows: [...Services.wm.getEnumerator('navigator:browser')].length," +
-          " url: w?.gBrowser?.currentURI?.spec ?? null };",
+          " url: w?.gBrowser?.currentURI?.spec ?? null," +
+          " contentSandboxLevel: Services.prefs.getIntPref('security.sandbox.content.level', -1) };",
       )) &&
     await step("screenshot", async () => {
       const png = await target.screenshot(taskId);

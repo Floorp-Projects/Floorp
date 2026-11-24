@@ -1,8 +1,6 @@
 {
-  "taskId": "kan-144-linux-1",
-  "image": {
-    "built": true
-  },
+  "taskId": "kan-144-linux-2",
+  "image": "fdh-qa-linux:41fc5d48b6ce",
   "container": {
     "memoryMb": 2560,
     "cpus": 2,
@@ -13,10 +11,10 @@
     "kind": "tar.xz",
     "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9"
   },
-  "startedAt": "2026-11-24T20:23:05.558Z",
+  "startedAt": "2026-11-24T20:35:03.399Z",
   "preflight": {
-    "freeBytes": 173353791488,
-    "availableMemoryMb": 6543,
+    "freeBytes": 172010328064,
+    "availableMemoryMb": 6454,
     "imagePresent": false,
     "containerHolder": null,
     "ready": false,
@@ -24,9 +22,12 @@
       "image-missing"
     ]
   },
+  "imageBuild": {
+    "built": true
+  },
   "preflightAfterImage": {
-    "freeBytes": 172010266624,
-    "availableMemoryMb": 6280,
+    "freeBytes": 172010225664,
+    "availableMemoryMb": 6451,
     "imagePresent": true,
     "containerHolder": null,
     "ready": true,
@@ -48,10 +49,11 @@
     "version": "159.0.1",
     "os": "Linux",
     "windows": 1,
-    "url": "about:blank"
+    "url": "about:blank",
+    "contentSandboxLevel": 6
   },
   "screenshot": {
-    "file": "kan-144-linux-1-linux.png",
+    "file": "kan-144-linux-2-linux.png",
     "sha256": "1a39a68eae33de8fc24fc9d5d1d669f5e0ca52ceabfe9a37f580308bdec685dd"
   },
   "cleanup": {
@@ -59,13 +61,13 @@
     "clean": true
   },
   "after": {
-    "freeBytes": 172010135552,
-    "availableMemoryMb": 6342,
+    "freeBytes": 172010475520,
+    "availableMemoryMb": 6541,
     "imagePresent": true,
     "containerHolder": null,
     "ready": true,
     "blockers": []
   },
   "passed": true,
-  "finishedAt": "2026-11-24T20:25:36.186Z"
+  "finishedAt": "2026-11-24T20:35:37.334Z"
 }
