@@ -64,18 +64,22 @@ def materialize(plan: dict, source: Path) -> list[dict]:
     return cohorts
 
 
-def commands(cohorts, source, python, product, modules, output, batch_size):
-    """Return argv arrays in serial order. Qualification is the caller's job."""
+def commands(cohorts, support, python, product, output, batch_size):
+    """Return argv arrays in serial order. Qualification is the caller's job.
+
+    ``support`` is the extracted common + mochitest test packages that
+    ``mach package-tests`` produced from the compiled Runtime OBJDIR.
+    """
     if not 3 <= batch_size <= 32:
         raise ValueError("batch size must be 3..32")
-    source = source.resolve(strict=True)
-    mach = under(source, "mach")
+    support = support.resolve(strict=True)
+    harness = under(support, "mochitest/runtests.py")
     binary = product.resolve(strict=True)
     if binary.name not in {"floorp", "floorp-bin", "floorp.exe"} or not binary.is_file():
         raise ValueError("explicit Floorp executable required, not an implicit default")
-    modules = modules.resolve(strict=True)
-    if not modules.is_dir():
-        raise ValueError("explicit same-build testing-modules directory required")
+    for name in ("bin", "certs", "modules"):
+        if not (support / name).is_dir():
+            raise ValueError(f"packaged test support lacks {name}/")
     output = output.resolve()
     result = []
     for c in cohorts:
@@ -87,9 +91,12 @@ def commands(cohorts, source, python, product, modules, output, batch_size):
         for index, batch in enumerate(batches, 1):
             label = f"{c['id']}-{index:03d}"
             argv = [
-                str(python.resolve(strict=True)), str(mach), "mochitest",
+                str(python.absolute()), str(harness),
                 "--flavor", "browser", "--appname", str(binary),
-                "--testing-modules-dir", str(modules),
+                "--utility-path", str(support / "bin"),
+                "--certificate-path", str(support / "certs"),
+                "--extra-profile-file", str(support / "bin/plugins"),
+                "--testing-modules-dir", str(support / "modules"),
                 "--log-raw", str(output / f"{label}.jsonl"),
                 "--log-tbpl", str(output / f"{label}.tbpl"),
             ]
@@ -137,15 +144,14 @@ def validate_discovery(job: dict, document: dict) -> None:
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    for flag in ("source", "python", "floorp", "modules", "output"):
+    for flag in ("source", "support", "python", "floorp", "output"):
         p.add_argument(f"--{flag}", type=Path, required=True)
     p.add_argument("--batch-size", type=int, default=16)
     args = p.parse_args()
     plan = json.loads(PLAN.read_text(encoding="utf-8"))
     cohorts = materialize(plan, args.source)
     jobs = commands(
-        cohorts, args.source, args.python, args.floorp, args.modules,
-        args.output, args.batch_size,
+        cohorts, args.support, args.python, args.floorp, args.output, args.batch_size,
     )
     print(json.dumps({
         "status": "PLAN_ONLY_NOT_EXECUTED",

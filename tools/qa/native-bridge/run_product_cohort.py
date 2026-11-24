@@ -162,7 +162,7 @@ def verdict(results: list[dict], planned: int) -> dict:
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    for flag in ("source", "python", "floorp", "modules", "output"):
+    for flag in ("source", "support", "python", "floorp", "output"):
         p.add_argument(f"--{flag}", type=Path, required=True)
     p.add_argument("--batch-size", type=int, default=16)
     p.add_argument("--batch-timeout", type=int, default=5400)
@@ -170,7 +170,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=False)
     plan = json.loads(cohort.PLAN.read_text(encoding="utf-8"))
     cohorts = cohort.materialize(plan, args.source)
-    jobs = cohort.commands(cohorts, args.source, args.python, args.floorp, args.modules,
+    jobs = cohort.commands(cohorts, args.support, args.python, args.floorp,
                            args.output, args.batch_size)
     planned = sum(len(j["cases"]) for j in jobs)
     product_root = args.floorp.resolve().parent

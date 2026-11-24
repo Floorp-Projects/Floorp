@@ -30,17 +30,18 @@ class TestProductCohort(TestCase):
             raw = "".join(f'["{Path(path).name}"]\n' for path in item["tests"]).encode()
             manifest.write_bytes(raw)
             item["manifest_sha256"] = hashlib.sha256(raw).hexdigest()
-        (self.root / "mach").touch()
-        self.modules = self.root / "modules"
-        self.modules.mkdir()
+        self.support = self.root / "support"
+        for name in ("mochitest", "bin", "certs", "modules"):
+            (self.support / name).mkdir(parents=True)
+        (self.support / "mochitest/runtests.py").touch()
         self.product = self.root / "floorp"
         self.product.touch()
 
     def test_all_original_tests_once_in_serial_plan(self):
         cohorts = cohort.materialize(self.fixture, self.root)
         jobs = cohort.commands(
-            cohorts, self.root, Path(sys.executable), self.product,
-            self.modules, self.root / "evidence", 16,
+            cohorts, self.support, Path(sys.executable), self.product,
+            self.root / "evidence", 16,
         )
         cases = [case for job in jobs for case in job["cases"]]
         self.assertEqual([len(c["tests"]) for c in self.plan["cohorts"]], [127, 92, 70])
@@ -51,6 +52,8 @@ class TestProductCohort(TestCase):
         for job in jobs:
             self.assertIn(str(self.product), job["argv"])
             self.assertNotIn("--setpref", job["argv"])
+            self.assertNotIn("--timeout", job["argv"])
+            self.assertEqual(job["argv"][1], str(self.support / "mochitest/runtests.py"))
             self.assertEqual(job["argv"][-len(job["cases"]):], job["cases"])
 
     def test_plan_is_pinned_to_locked_runtime(self):
@@ -82,15 +85,15 @@ class TestProductCohort(TestCase):
         firefox.touch()
         with self.assertRaisesRegex(ValueError, "explicit Floorp"):
             cohort.commands(
-                self.fixture["cohorts"], self.root, Path(sys.executable),
-                firefox, self.modules, self.root / "evidence", 16,
+                self.fixture["cohorts"], self.support, Path(sys.executable),
+                firefox, self.root / "evidence", 16,
             )
 
     def test_no_singleton_batch(self):
         cohorts = cohort.materialize(self.fixture, self.root)
         jobs = cohort.commands(
-            cohorts, self.root, Path(sys.executable), self.product,
-            self.modules, self.root / "evidence", 14,
+            cohorts, self.support, Path(sys.executable), self.product,
+            self.root / "evidence", 14,
         )
         self.assertTrue(all(2 <= len(j["cases"]) <= 14 for j in jobs))
         self.assertEqual(

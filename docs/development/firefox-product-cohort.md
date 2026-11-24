@@ -18,9 +18,9 @@ Run the plan generator with Python 3.11+ from a provisioned checkout:
 ```sh
 python3 tools/qa/native-bridge/product_cohort.py \
   --source /absolute/matched-runtime-source \
+  --support /absolute/extracted-common-and-mochitest-test-packages \
   --python /absolute/runtime-python \
   --floorp /absolute/assembled-product/floorp \
-  --modules /absolute/same-objdir/testing-modules \
   --output /absolute/new-evidence-directory
 ```
 
@@ -49,19 +49,28 @@ force-enable a test.
 
 `.github/workflows/firefox_product_gate.yml` runs check
 `firefox-product-cohort (linux-x86_64)` on pull requests to `main`. It is not
-required. In one job it:
+required. Three jobs run in order, so no single job exceeds the hosted limit:
 
-1. builds the locked Runtime with its release mozconfig (non-PGO) and keeps the
-   compile OBJDIR (`product-build-runtime.sh`, followed by
-   `mach package-tests`);
-2. assembles packaged Floorp around that Runtime package along the Linux release
-   path of `package.yml` (`product-assemble.sh`);
-3. binds provenance (`product_provenance.py`): locked commit and tree, Gecko
-   BuildID and SourceStamp, `libxul.so` digest, noraneko chrome, staged OBJDIR
-   manifests and tests against the plan;
-4. runs all planned batches serially under Xvfb with a window manager
-   (`run_product_cohort.py`), each with stock discovery preflight, a fresh
-   mochitest profile and a check that no product process outlives the batch.
+1. `product runtime build (linux-x86_64)` builds the locked Runtime with its
+   release mozconfig (non-PGO), then `mach package` and `mach package-tests`
+   from the same OBJDIR (`product-build-runtime.sh`).
+   `product_provenance.py
+   runtime` records the locked commit and tree,
+   `platform.ini`, `mozinfo.json`, the package digests and the staged OBJDIR
+   copy of every planned manifest and test, and rejects any difference from the
+   source.
+2. `product assemble (linux-x86_64)` assembles packaged Floorp with noraneko
+   around that exact Runtime package along the Linux release path of
+   `package.yml` (`product-assemble.sh`).
+3. `firefox-product-cohort (linux-x86_64)` fails unless both jobs succeeded,
+   extracts the product and the two test packages, and installs the packaged
+   `config/marionette_requirements.txt`. `product_provenance.py bind` checks the
+   package digests, Gecko BuildID and SourceStamp, `libxul.so`, noraneko chrome,
+   `mozinfo.json` and every planned manifest and test against the compiled
+   identity. `run_product_cohort.py` then runs all planned batches serially with
+   the packaged stock `mochitest/runtests.py` under Xvfb with a window manager,
+   each with stock discovery preflight, a fresh mochitest profile and a check
+   that no product process outlives the batch.
 
 The verdict is PASS only when all 289 originals end with an expected pass and
 every batch exits zero with `suite_end`, no unexpected subtest, crash, leakcheck
