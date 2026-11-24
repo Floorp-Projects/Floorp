@@ -26,7 +26,10 @@ nice -n 10 ./mach build --jobs="$(nproc)"
 ./mach package
 # Stock package-tests also stages jsreftest and cppunittest suites this
 # Runtime does not build; stage and archive only what the cohort consumes.
-./mach build stage-config stage-mach stage-extensions stage-mochitest
+# One make run, as package-tests does: each separate run repeats
+# install-test-files and make-stage-dir, and the repeat fails on symlinked
+# support-file directories and wipes the earlier stage.
+make -C obj-x86_64-pc-linux-gnu -j1 -s stage-config stage-mach stage-extensions stage-mochitest
 name=$(basename obj-x86_64-pc-linux-gnu/dist/floorp-*.linux-x86_64.tar.xz .tar.xz)
 for kind in common mochitest condprof; do
   ./mach python -m mozbuild.action.test_archive "$kind" \
