@@ -1,7 +1,7 @@
 ---
 title: "Architecture Overview"
 sidebar_label: "Architecture"
-floorp_commit: "ce7919519c99afdea569d79db07f710e7b712106"
+floorp_commit: "4fcc7235d2eceb25b8669a12fbb4993363d5324f"
 generated: true
 ---
 # Architecture Overview
@@ -137,6 +137,7 @@ CI workflows recorded in the docs inventory:
 - `.github/workflows/docs_pipeline.yml` - triggers: `pull_request`, `push`, `schedule`, `workflow_dispatch`
 - `.github/workflows/fdh-review-gate.yml` - triggers: `issue_comment`, `pull_request`
 - `.github/workflows/fdh-trusted-review-gate.yml` - triggers: `issue_comment`, `pull_request_target`
+- `.github/workflows/firefox_product_gate.yml` - triggers: `pull_request`, `workflow_dispatch`
 - `.github/workflows/firefox_runtime_candidate.yml` - triggers: `schedule`, `workflow_dispatch`
 - `.github/workflows/moderation.yml` - triggers: `issue_comment`, `issues`, `pull_request`
 - `.github/workflows/organize_issue.yml` - triggers: `schedule`, `workflow_dispatch`
