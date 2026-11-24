@@ -24,4 +24,4 @@ export MOZ_BUILD_DATE="$BUILD_DATE" LIBGL_ALWAYS_SOFTWARE=1
 ./mach configure
 nice -n 10 ./mach build --jobs="$(nproc)"
 ./mach package
-./mach package-tests
+./mach build package-tests

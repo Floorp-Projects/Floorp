@@ -52,8 +52,8 @@ force-enable a test.
 required. Three jobs run in order, so no single job exceeds the hosted limit:
 
 1. `product runtime build (linux-x86_64)` builds the locked Runtime with its
-   release mozconfig (non-PGO), then `mach package` and `mach package-tests`
-   from the same OBJDIR (`product-build-runtime.sh`).
+   release mozconfig (non-PGO), then `mach package` and
+   `mach build package-tests` from the same OBJDIR (`product-build-runtime.sh`).
    `product_provenance.py
    runtime` records the locked commit and tree,
    `platform.ini`, `mozinfo.json`, the package digests and the staged OBJDIR
