@@ -14,6 +14,7 @@ function createPromise(): [Promise<void>, () => void, RejectFn] {
     rs = resolve;
     rj = reject;
   });
+  p.catch(() => {});
   return [p, rs!, rj!];
 }
 
