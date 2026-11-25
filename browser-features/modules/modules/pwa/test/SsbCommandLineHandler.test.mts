@@ -132,6 +132,208 @@ async function testFirstNavigationUsesCachedContainer(): Promise<void> {
   }
 }
 
+async function testLinuxLauncherRepairIgnoresRollout(): Promise<void> {
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const { LinuxSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+  ) as typeof import("../supports/Linux.sys.mts");
+  const { TaskbarExperiment } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
+  ) as typeof import("../TaskbarExperiment.sys.mts");
+
+  const originalRepair = LinuxSupport.prototype.repair;
+  const originalApply = LinuxSupport.prototype.applyOSIntegration;
+  const originalEnabled = TaskbarExperiment.isEnabledForCurrentPlatform;
+  const mutableExperiment = TaskbarExperiment as unknown as {
+    isEnabledForCurrentPlatform: () => boolean;
+  };
+  let repaired = 0;
+  let applied = 0;
+  try {
+    LinuxSupport.prototype.repair = () => {
+      repaired++;
+      return Promise.resolve();
+    };
+    LinuxSupport.prototype.applyOSIntegration = () => {
+      applied++;
+      return Promise.resolve();
+    };
+    mutableExperiment.isEnabledForCurrentPlatform = () => false;
+
+    await SsbRunnerUtils.applyOSIntegration(
+      {
+        id: "linux-launcher-repair-rollout",
+        name: "Linux Launcher Repair",
+        start_url: "https://example.com/",
+        icon: "https://example.com/icon.png",
+      },
+      {} as Window,
+    );
+
+    assertEquals(
+      repaired,
+      1,
+      "The launcher repair runs even when the rollout is disabled",
+    );
+    assertEquals(
+      applied,
+      0,
+      "Native window integration stays behind the rollout",
+    );
+  } finally {
+    LinuxSupport.prototype.repair = originalRepair;
+    LinuxSupport.prototype.applyOSIntegration = originalApply;
+    mutableExperiment.isEnabledForCurrentPlatform = originalEnabled;
+  }
+}
+
+async function testLinuxWindowsKeepDistinctLauncherClasses(): Promise<void> {
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const { TaskbarExperiment } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/TaskbarExperiment.sys.mjs",
+  ) as typeof import("../TaskbarExperiment.sys.mts");
+  const oldGate = TaskbarExperiment.isEnabledForLinux();
+  const apps = ["Alpha", "Beta"].map((name) => ({
+    id: Services.uuid.generateUUID().toString(),
+    name: `Window Class Test ${name}`,
+    start_url: "about:blank",
+    icon: "",
+  }));
+  const windows: Awaited<ReturnType<typeof SsbRunnerUtils.openSsbWindow>>[] =
+    [];
+  try {
+    for (const app of apps) {
+      const win = await SsbRunnerUtils.openSsbWindow(app);
+      windows.push(win);
+      assertEquals(
+        win.document.documentElement.getAttribute("windowclass"),
+        `floorp-${app.id.slice(1, -1)}`,
+        "Each created PWA receives its generated desktop launcher identity",
+      );
+    }
+    assert(
+      windows[0].document.documentElement.getAttribute("windowclass") !==
+        windows[1].document.documentElement.getAttribute("windowclass"),
+      "Two PWA windows in one process keep different classes",
+    );
+    assertEquals(
+      TaskbarExperiment.isEnabledForLinux(),
+      oldGate,
+      "Establishing window identity does not change the rollout gate",
+    );
+  } finally {
+    for (const win of windows) win.close();
+  }
+}
+
+async function testLinuxLegacyIdsKeepFallbackWindowClasses(): Promise<void> {
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const cases = [
+    {
+      id: undefined,
+      name: "Legacy Missing",
+      expected: "floorp-legacy-missing",
+    },
+    { id: "{}", name: "Legacy Braces", expected: "floorp-legacy-braces" },
+    { id: 123, name: "Legacy Number", expected: "floorp-legacy-number" },
+    {
+      id: { invalid: true },
+      name: "Legacy Object",
+      expected: "floorp-legacy-object",
+    },
+  ];
+  for (const { id, name, expected } of cases) {
+    // Old or malformed persisted JSON is only warning-validated by DataManager.
+    const app = {
+      id,
+      name,
+      start_url: "about:blank",
+      icon: "",
+    } as unknown as Parameters<typeof SsbRunnerUtils.openSsbWindow>[0];
+    const win = await SsbRunnerUtils.openSsbWindow(app);
+    try {
+      assertEquals(
+        win.document.documentElement.getAttribute("windowclass"),
+        expected,
+        "An unusable legacy id falls back to the existing name identity",
+      );
+    } finally {
+      win.close();
+    }
+  }
+}
+
+async function testLinuxPwaStartupKeepsOrdinaryBrowserIdentity(): Promise<
+  void
+> {
+  const { LinuxSupport } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+  ) as typeof import("../supports/Linux.sys.mts");
+  const { SsbRunnerUtils } = ChromeUtils.importESModule(
+    "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+  ) as typeof import("../SsbCommandLineHandler.sys.mts");
+  const { BrowserWindowTracker } = ChromeUtils.importESModule(
+    "resource:///modules/BrowserWindowTracker.sys.mjs",
+  );
+  const { AppConstants } = ChromeUtils.importESModule(
+    "resource://gre/modules/AppConstants.sys.mjs",
+  );
+  const category =
+    "browser-window-before-initial-xul-layout-document-preparation";
+  const entry = "resource://noraneko/modules/pwa/supports/Linux.sys.mjs";
+  let previous: string | undefined;
+  try {
+    previous = Services.catMan.getCategoryEntry(category, entry);
+  } catch {
+    // Ordinary browser-first processes have no PWA startup registration.
+  }
+  const windows: { close(): void }[] = [];
+  try {
+    LinuxSupport.registerBrowserWindowIdentity();
+    const args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    const url = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString,
+    );
+    url.data = "about:blank";
+    args.appendElement(url);
+    const browser = await BrowserWindowTracker.promiseOpenWindow({ args });
+    windows.push(browser);
+    const appInfo = Services.appinfo as typeof Services.appinfo & {
+      readonly remotingName?: string;
+    };
+    assertEquals(
+      browser.document.documentElement.getAttribute("windowclass"),
+      appInfo.remotingName || AppConstants.MOZ_APP_NAME,
+      "The pre-layout category gives ordinary windows the browser identity",
+    );
+    const app = {
+      id: Services.uuid.generateUUID().toString(),
+      name: "Browser Identity Regression",
+      start_url: "about:blank",
+      icon: "",
+    };
+    const pwa = await SsbRunnerUtils.openSsbWindow(app);
+    windows.push(pwa);
+    assertEquals(
+      pwa.document.documentElement.getAttribute("windowclass"),
+      LinuxSupport.getWindowClass(app),
+      "Browser identity preparation preserves the PWA launcher identity",
+    );
+  } finally {
+    for (const win of windows) win.close();
+    if (previous === undefined) {
+      Services.catMan.deleteCategoryEntry(category, entry, false);
+    } else {
+      Services.catMan.addCategoryEntry(category, entry, previous, false, true);
+    }
+  }
+}
 export async function runAllTests(): Promise<void> {
   if (Services.appinfo.OS !== "Linux") {
     console.info(
@@ -143,5 +345,19 @@ export async function runAllTests(): Promise<void> {
     name:
       "the first Linux PWA request uses its container before experiment initialization",
     fn: testFirstNavigationUsesCachedContainer,
+  }, {
+    name: "Linux PWA windows keep their distinct generated launcher classes",
+    fn: testLinuxWindowsKeepDistinctLauncherClasses,
+  }, {
+    name:
+      "Linux PWA legacy ids retain fallback classes without failing startup",
+    fn: testLinuxLegacyIdsKeepFallbackWindowClasses,
+  }, {
+    name:
+      "Linux PWA startup keeps ordinary browser and PWA identities separate",
+    fn: testLinuxPwaStartupKeepsOrdinaryBrowserIdentity,
+  }, {
+    name: "Linux launcher repair is not gated by the taskbar rollout",
+    fn: testLinuxLauncherRepairIgnoresRollout,
   }]);
 }

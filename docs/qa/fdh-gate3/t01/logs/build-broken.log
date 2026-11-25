@@ -1,0 +1,56 @@
+Task feles-build deno run -A tools/feles-build.ts 'build' '--phase' 'before-mach'
+[32m[symlinker] SUCCESS: Symlinks created successfully.[0m
+01a1b8e7-539c-76ac-add0-fc0884aa2fb8
+[34m[builder] INFO: Building features with mode=production[0m
+[update] Build ID written to /private/tmp/fdh-gate2/pr2b2/_dist/buildid2
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno task build --env.MODE=production` in `/private/tmp/fdh-gate2/pr2b2/bridge/startup`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --base chrome://noraneko/content` in `/private/tmp/fdh-gate2/pr2b2/bridge/loader-features`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-newtab/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-newtab`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-settings/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-settings`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-welcome/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-welcome`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-notes/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-notes`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-modal-child/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-modal-child`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-profile-manager/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-profile-manager`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno run -A vite build --config vite.config.ts --base chrome://noraneko-pages-aboutdialog/content` in `/private/tmp/fdh-gate2/pr2b2/browser-features/pages-aboutDialog`[0m
+[34m[builder] INFO: Running `/Users/user/.deno/bin/deno task build --env.__BUILDID2__=01a1b8e7-539c-76ac-add0-fc0884aa2fb8 --env.__VERSION2__=12.21.1` in `/private/tmp/fdh-gate2/pr2b2/bridge/loader-modules`[0m
+[31m[feles-build] ERROR: Unhandled error: Build command `/Users/user/.deno/bin/deno run -A vite build --base chrome://noraneko/content` in `/private/tmp/fdh-gate2/pr2b2/bridge/loader-features` failed
+STDOUT:
+vite v7.3.3 building client environment for production...
+transforming...
+✓ 341 modules transformed.
+
+STDERR:
+✗ Build failed in 601ms
+error during build:
+[swc]   x Expression expected
+    ,-[/private/tmp/fdh-gate2/pr2b2/bridge/loader-features/link-features-chrome/common/panel-sidebar/data/static-panels.ts:10:1]
+  7 | 
+  8 | /** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+  9 | const launchDevPort = launchDevPorts();
+ 10 | const qa3Broken = ;
+    :                   ^
+ 11 | function svgToDataUrl(svgContent: string): string {
+ 12 |   const svgBytes = new TextEncoder().encode(svgContent);
+ 13 |   let binString = "";
+    `----
+
+
+Caused by:
+    Syntax Error
+file: /private/tmp/fdh-gate2/pr2b2/bridge/loader-features/link-features-chrome/common/panel-sidebar/data/static-panels.ts
+Error:   x Expression expected
+    ,-[/private/tmp/fdh-gate2/pr2b2/bridge/loader-features/link-features-chrome/common/panel-sidebar/data/static-panels.ts:10:1]
+  7 | 
+  8 | /** Launch-local dev port resolver (FDH Gate 2 task 2-B). */
+  9 | const launchDevPort = launchDevPorts();
+ 10 | const qa3Broken = ;
+    :                   ^
+ 11 | function svgToDataUrl(svgContent: string): string {
+ 12 |   const svgBytes = new TextEncoder().encode(svgContent);
+ 13 |   let binString = "";
+    `----
+
+
+Caused by:
+    Syntax Error
+[0m

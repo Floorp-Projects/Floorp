@@ -1,0 +1,135 @@
+Check tools/src/notes_record.test.ts
+Check tools/src/notes_storage.test.ts
+Check tools/src/notes_ui_contract.test.ts
+running 14 tests from ./tools/src/notes_record.test.ts
+Notes remote ordering includes reserved IDs in the acknowledged base ...
+------- output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+----- output end -----
+Notes remote ordering includes reserved IDs in the acknowledged base ... ok (871µs)
+Notes wire format preserves identities, rich text, and timestamps ... ok (217µs)
+Only an explicit valid empty Notes record represents deletion ... ok (366µs)
+Remote Notes rejects absent, non-array, and unequal parallel arrays ... ok (336µs)
+Notes rejects null or incorrectly typed entries even during migration ... ok (486µs)
+Notes rejects duplicate and blank identities rather than regenerating them ... ok (139µs)
+Notes rejects negative, fractional, unsafe, and non-numeric timestamps ... ok (306µs)
+Legacy migration fills only metadata arrays that are entirely missing ... ok (179µs)
+Legacy migration still requires valid title and body arrays ... ok (129µs)
+Legacy migration rejects present but malformed metadata arrays ... ok (229µs)
+Notes base retains only the acknowledged user content and timestamp ... ok (61µs)
+Notes base preserves reserved property names as ordinary own identities ...
+------- output -------
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Notes base preserves reserved property names as ordinary own identities ... ok (149µs)
+Empty or rejected Notes bases retain a safe ordinary object prototype ... ok (82µs)
+Malformed or absent Notes bases never authorize a remote deletion ...
+------- output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- output end -----
+Malformed or absent Notes bases never authorize a remote deletion ... ok (854µs)
+running 13 tests from ./tools/src/notes_storage.test.ts
+Notes closed-page merge retains offline edits, conflicts and deletions ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+----- post-test output end -----
+Notes closed-page merge retains offline edits, conflicts and deletions ... ok (6ms)
+Notes remote-only changes converge and valid empty records delete ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Notes remote-only changes converge and valid empty records delete ... ok (993µs)
+Notes actual identical delivery acknowledges base without a pref-change event ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Notes actual identical delivery acknowledges base without a pref-change event ... ok (1ms)
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+----- post-test output end -----
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ... ok (1ms)
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- post-test output end -----
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ... ok (797µs)
+Notes failed native setters and account changes cannot acknowledge incoming state ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- post-test output end -----
+Notes failed native setters and account changes cannot acknowledge incoming state ... ok (1ms)
+Notes start-over during account lookup fences old incoming before writes ... ok (904µs)
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Account unavailable; retaining local notes. Error: FxA unavailable
+    at Object.getSignedInUser (file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:118:44)
+    at file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:95:51
+    at readAccount (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:104:6)
+    at Object.readSyncState (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:235:19)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:336:32
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+----- post-test output end -----
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ... ok (1ms)
+Notes profile shutdown removes its preference and account observers ... ok (772µs)
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ... ok (889µs)
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- post-test output end -----
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ... ok (844µs)
+Notes outgoing base write failure remains visible to native retry handling ... ok (728µs)
+Notes outgoing acknowledgement cannot cross an account epoch during lookup ... ok (702µs)
+running 1 test from ./tools/src/notes_ui_contract.test.ts
+Notes production UI exposes stable automation hooks ... ok (1ms)
+
+ok | 28 passed | 0 failed (83ms)
+

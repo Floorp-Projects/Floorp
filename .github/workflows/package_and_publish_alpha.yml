@@ -5,47 +5,24 @@ name: "(A) |α| Package and Publish Alpha"
 on:
   workflow_dispatch:
     inputs:
-      runtime_windows_artifact_workflow_run_id:
-        description: "The workflow run ID for the Windows runtime artifact"
-        required: false
+      runtime_workflow_run_id:
+        description: Successful Floorp-Runtime daily-build workflow run ID
+        required: true
         type: string
-      runtime_linux_artifact_workflow_run_id:
-        description: "The workflow run ID for the Linux runtime artifact"
-        required: false
+      runtime_manifest_artifact_id:
+        description: Immutable floorp-runtime-build-manifest-v2 artifact ID
+        required: true
         type: string
-      runtime_mac_artifact_workflow_run_id:
-        description: "The workflow run ID for the macOS runtime artifact"
-        required: false
-        type: string
+
 permissions:
+  actions: read
   contents: write
 
 jobs:
-  package-windows:
-    uses: ./.github/workflows/package.yml
+  package-and-publish:
+    uses: ./.github/workflows/package_and_publish_release.yml
     with:
-      platform: Windows-x64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_windows_artifact_workflow_run_id }}
+      alpha: true
+      runtime_workflow_run_id: ${{ inputs.runtime_workflow_run_id }}
+      runtime_manifest_artifact_id: ${{ inputs.runtime_manifest_artifact_id }}
     secrets: inherit
-
-  package-linux:
-    uses: ./.github/workflows/package.yml
-    with:
-      platform: Linux-x64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_linux_artifact_workflow_run_id }}
-    secrets: inherit
-
-  package-macos:
-    uses: ./.github/workflows/package.yml
-    with:
-      platform: macOS-x64
-      runtime_artifact_workflow_run_id: ${{ inputs.runtime_mac_artifact_workflow_run_id }}
-    secrets: inherit
-
-  publishs:
-    needs: [package-windows, package-linux, package-macos]
-    uses: ./.github/workflows/publish_alpha.yml
-    with:
-      win_runtime_artifact_workflow_call: ${{ github.run_id }}
-      linux_runtime_artifact_workflow_call: ${{ github.run_id }}
-      mac_runtime_artifact_workflow_call: ${{ github.run_id }}

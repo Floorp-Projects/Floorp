@@ -1,0 +1,8 @@
+{
+  "excludedFromArchive": [
+    ".ruff_cache/.gitignore",
+    ".ruff_cache/0.16.10/16804625295409069998",
+    ".ruff_cache/CACHEDIR.TAG"
+  ],
+  "removedGeneratedCache": true
+}

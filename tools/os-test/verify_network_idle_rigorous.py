@@ -1,6 +1,7 @@
 import argparse
 import http.server
 import json
+import os
 import socketserver
 import threading
 import time
@@ -8,7 +9,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-DEFAULT_BASE_URL = "http://127.0.0.1:58261"
+from os_test_client import resolve_base_url
 
 # Contract-focused test page:
 # - multiple delayed resources
@@ -121,10 +122,13 @@ def make_request(base_url: str, path: str, method: str = "GET", data=None, timeo
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Rigorous network idle verification")
-    parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument("--base-url")
     parser.add_argument("--port", type=int, default=0, help="Local test server port (0 = auto)")
     parser.add_argument("--timeout", type=int, default=10000, help="waitForNetworkIdle timeout(ms)")
     args = parser.parse_args(argv)
+    base_url = resolve_base_url(
+        args.base_url, os.environ.get("FLOORP_OS_BASE_URL")
+    ).rstrip("/")
 
     failures = 0
     httpd = ThreadedTCPServer(("127.0.0.1", args.port), SlowHandler)
@@ -147,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         print("Creating scraper instance...")
-        status, body = make_request(args.base_url, "/scraper/instances", "POST")
+        status, body = make_request(base_url, "/scraper/instances", "POST")
         assert_case("Create instance", status == 200 and isinstance(body, dict) and "instanceId" in body, str(body))
         if not (status == 200 and isinstance(body, dict) and "instanceId" in body):
             return 1
@@ -156,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Instance: {instance_id}")
 
         status, body = make_request(
-            args.base_url,
+            base_url,
             f"/scraper/instances/{instance_id}/navigate",
             "POST",
             {"url": test_url},
@@ -167,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
 
         # ensure async fetch chain has a chance to complete and element appears
         status, body = make_request(
-            args.base_url,
+            base_url,
             f"/scraper/instances/{instance_id}/waitForElement",
             "POST",
             {"selector": "#done", "timeout": 10000},
@@ -181,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
 
         start = time.time()
         status, body = make_request(
-            args.base_url,
+            base_url,
             f"/scraper/instances/{instance_id}/waitForNetworkIdle",
             "POST",
             {"timeout": args.timeout},
@@ -202,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
 
         start = time.time()
         status2, body2 = make_request(
-            args.base_url,
+            base_url,
             f"/scraper/instances/{instance_id}/waitForNetworkIdle",
             "POST",
             {"timeout": args.timeout},
@@ -238,7 +242,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         if "instance_id" in locals():
             print("Destroying instance...")
-            make_request(args.base_url, f"/scraper/instances/{instance_id}", "DELETE")
+            make_request(base_url, f"/scraper/instances/{instance_id}", "DELETE")
         httpd.shutdown()
         httpd.server_close()
 
