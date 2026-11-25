@@ -29,7 +29,7 @@ const BIN = "C:\\Floorp\\_dist\\bin\\floorp\\floorp.exe";
 
 Deno.test({
   name:
-    "Linux ownership ignores unrelated addresses, rejects same-address replacement and tolerates only an absent IPv6 table",
+    "Linux ownership ignores unrelated IPv6-only and different-address listeners, rejects replacement and tolerates an absent IPv6 table",
   ignore: Deno.build.os !== "linux",
   fn: async () => {
     const fixture = async () => {
@@ -130,33 +130,52 @@ Deno.test({
         } finally {
           wildcard.close();
         }
-        for (const hostname of ["127.0.0.2", "127.0.0.1"]) {
+        for (const hostname of ["::", "127.0.0.2", "127.0.0.1"]) {
+          if (hostname === "::") {
+            try {
+              await Deno.stat("/proc/net/tcp6");
+            } catch (error) {
+              if (error instanceof Deno.errors.NotFound) continue;
+              throw error;
+            }
+          }
           if (hostname === "127.0.0.1") {
             listener.close();
             listening = false;
           }
-          child = new Deno.Command(Deno.execPath(), {
-            args: [
-              "eval",
-              `const listener = Deno.listen({hostname: ${
-                JSON.stringify(hostname)
-              }, port: ${port}}); console.log("ready"); await Deno.stdin.read(new Uint8Array(1)); listener.close();`,
-            ],
-            stdin: "piped",
-            stdout: "piped",
-            stderr: "null",
-          }).spawn();
+          child = new Deno.Command(
+            hostname === "::" ? "python3" : Deno.execPath(),
+            {
+              args: hostname === "::"
+                ? [
+                  "-u",
+                  "-c",
+                  `import socket, sys; s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM); s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1); s.bind(("::", ${port})); s.listen(1); assert s.getsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY) == 1; print("ready"); sys.stdin.buffer.read(1); s.close()`,
+                ]
+                : [
+                  "eval",
+                  `const listener = Deno.listen({hostname: ${
+                    JSON.stringify(hostname)
+                  }, port: ${port}}); console.log("ready"); await Deno.stdin.read(new Uint8Array(1)); listener.close();`,
+                ],
+              stdin: "piped",
+              stdout: "piped",
+              stderr: "null",
+            },
+          ).spawn();
           reader = child.stdout.getReader();
           const ready = await reader.read();
           assertEquals(new TextDecoder().decode(ready.value).trim(), "ready");
           assertEquals(
             await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
-            hostname === "127.0.0.2",
+            hostname !== "127.0.0.1",
           );
-          assertEquals(
-            await ownsDevBrowserListener(port, [child.pid], signal, 5000),
-            hostname === "127.0.0.1",
-          );
+          if (hostname !== "::") {
+            assertEquals(
+              await ownsDevBrowserListener(port, [child.pid], signal, 5000),
+              hostname === "127.0.0.1",
+            );
+          }
           const cancelled = new AbortController();
           cancelled.abort(new Error("cancelled listener inspection"));
           await assertRejects(

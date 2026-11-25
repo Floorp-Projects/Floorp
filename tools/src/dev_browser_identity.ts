@@ -45,11 +45,10 @@ export async function ownsDevBrowserListener(
     if (PLATFORM === "windows") {
       const rows = await listWindowsBrowserListeners(port, signal, timeoutMs);
       signal.throwIfAborted();
-      return rows.length > 0 &&
-        rows.every((row) =>
-          row.localPort === port && row.state.toLowerCase() === "listen" &&
-          browserPids.includes(row.owningProcess)
-        );
+      return rows.some((row) =>
+        row.localPort === port && row.state.toLowerCase() === "listen" &&
+        browserPids.includes(row.owningProcess)
+      );
     }
     if (PLATFORM === "darwin") {
       const output = await commandOutput(
@@ -60,8 +59,7 @@ export async function ownsDevBrowserListener(
       );
       signal.throwIfAborted();
       const owners = parseDevBrowserLoopbackLsofOwners(output, port);
-      return owners.length > 0 &&
-        owners.every((pid) => browserPids.includes(pid));
+      return owners.some((pid) => browserPids.includes(pid));
     }
     const inodes = new Set<string>();
     const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
@@ -104,7 +102,7 @@ export async function ownsDevBrowserListener(
       }
     }
     signal.throwIfAborted();
-    return [...inodes].every((inode) => owned.has(inode));
+    return owned.size > 0;
   } finally {
     clearTimeout(timer);
     signal.removeEventListener("abort", abort);
