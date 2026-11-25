@@ -15,6 +15,10 @@ on:
         description: 'Exact JSON identity: {"name":string,"id":positive integer,"digest":"sha256:<64 lowercase hex>"}'
         type: string
         required: true
+      installer_artifact_ids:
+        description: "Exact installer IDs from the assembled bundle"
+        type: string
+        required: true
       publish_ppa:
         description: "Publish the release DEB through the existing PPA workflow"
         type: boolean
@@ -66,8 +70,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  final-package-qa:
+    uses: ./.github/workflows/validate-final-package-qa.yml
+    with:
+      package_run_id: ${{ inputs.source_workflow_run_id }}
+      floorp_head_sha: ${{ github.sha }}
+      bundle_artifact: ${{ inputs.bundle_artifact }}
+      installer_artifact_ids: ${{ inputs.installer_artifact_ids }}
+
   prepare_release:
     name: Validate immutable bundle and create draft release
+    needs: final-package-qa
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -80,6 +93,7 @@ jobs:
       release_tag: ${{ steps.manifest.outputs.release-tag }}
       floorp_head_sha: ${{ steps.manifest.outputs.floorp-head-sha }}
       bundle_artifact_id: ${{ steps.bundle.outputs.artifact-id }}
+      draft_release_id: ${{ steps.draft.outputs.id }}
     steps:
       - name: Revalidate the exact bundle identity through REST
         id: bundle
@@ -353,6 +367,7 @@ jobs:
             }
 
       - name: Create or update the draft GitHub release
+        id: draft
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.manifest.outputs.release-tag }}
@@ -372,13 +387,13 @@ jobs:
 
   release_check:
     name: Manual approval and public release gate
-    needs: prepare_release
+    needs: [final-package-qa, prepare_release]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: Deploy-to-installer-release
     permissions:
       actions: read
-      contents: read
+      contents: write
     steps:
       - name: Download the immutable expected bundle again by artifact ID
         uses: actions/download-artifact@v4
@@ -390,7 +405,84 @@ jobs:
           path: ${{ runner.temp }}/expected-release-bundle
           merge-multiple: true
 
-      - name: Require the exact draft to have been published manually
+      - name: Revalidate the QA-approved draft and mark it public
+        uses: actions/github-script@v7
+        env:
+          DRAFT_RELEASE_ID: ${{ needs.prepare_release.outputs.draft_release_id }}
+          RELEASE_TAG: ${{ needs.prepare_release.outputs.release_tag }}
+          FLOORP_HEAD_SHA: ${{ needs.prepare_release.outputs.floorp_head_sha }}
+          BUNDLE_ARTIFACT: ${{ inputs.bundle_artifact }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const { createHash } = require("node:crypto");
+            const expectedBundle = JSON.parse(process.env.BUNDLE_ARTIFACT);
+            const {data: artifact} = await github.rest.actions.getArtifact({
+              ...context.repo, artifact_id: expectedBundle.id,
+            });
+            if (artifact.expired || artifact.name !== expectedBundle.name ||
+                artifact.digest !== expectedBundle.digest ||
+                artifact.workflow_run?.id !== context.runId ||
+                artifact.workflow_run?.head_sha !== process.env.FLOORP_HEAD_SHA) {
+              throw new Error("The final QA bundle changed while waiting for approval");
+            }
+
+            const releaseId = Number(process.env.DRAFT_RELEASE_ID);
+            if (!Number.isSafeInteger(releaseId) || releaseId < 1) {
+              throw new Error("Missing the immutable release draft ID");
+            }
+            const {data: draft} = await github.rest.repos.getRelease({
+              ...context.repo, release_id: releaseId,
+            });
+            if (draft.prerelease || draft.tag_name !== process.env.RELEASE_TAG ||
+                draft.target_commitish !== process.env.FLOORP_HEAD_SHA) {
+              throw new Error("The exact release must still match the QA source");
+            }
+
+            const dir = path.join(process.env.RUNNER_TEMP, "expected-release-bundle");
+            const names = fs.readdirSync(dir).sort();
+            const assetNames = draft.assets.map(asset => asset.name).sort();
+            if (names.length !== 16 || JSON.stringify(assetNames) !== JSON.stringify(names)) {
+              throw new Error("Draft assets differ from the exact release bundle");
+            }
+            for (const asset of draft.assets) {
+              const file = path.join(dir, asset.name);
+              const hash = createHash("sha256");
+              for await (const chunk of fs.createReadStream(file)) hash.update(chunk);
+              if (asset.size !== fs.statSync(file).size ||
+                  asset.digest !== `sha256:${hash.digest("hex")}`) {
+                throw new Error(`Draft asset differs from the QA bundle: ${asset.name}`);
+              }
+            }
+
+            // GitHub can publish a draft against an existing tag. Check its
+            // target before changing the draft, including annotated tags.
+            let object;
+            try {
+              ({data: {object}} = await github.rest.git.getRef({
+                ...context.repo, ref: `tags/${process.env.RELEASE_TAG}`,
+              }));
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+            for (let depth = 0; object?.type === "tag"; depth += 1) {
+              if (depth >= 8) throw new Error("Release tag exceeds the annotated-tag depth limit");
+              ({data: {object}} = await github.rest.git.getTag({
+                ...context.repo, tag_sha: object.sha,
+              }));
+            }
+            if (object && (object.type !== "commit" || object.sha !== process.env.FLOORP_HEAD_SHA)) {
+              throw new Error("The release tag already points outside the QA source");
+            }
+            // A retry after successful publication still verifies the same release.
+            if (draft.draft) {
+              await github.rest.repos.updateRelease({
+                ...context.repo, release_id: releaseId, draft: false, make_latest: "true",
+              });
+            }
+
+      - name: Verify the published release identity
         uses: actions/github-script@v7
         env:
           RELEASE_TAG: ${{ needs.prepare_release.outputs.release_tag }}

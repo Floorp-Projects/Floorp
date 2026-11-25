@@ -1161,6 +1161,8 @@ class MacosSessionTests(unittest.TestCase):
             [str(marker), str(command), "20"],
         )
         self.assertTrue(marker.is_file(), "the survivor fixture never ran")
+        self.assertEqual(result["exitCode"], 0, result)
+        self.assertIsNone(result["error"], result)
         self.assertFalse(result["ownedCleanupComplete"], result)
         self.assertIn(
             "fixture keeps an owned descendant alive",

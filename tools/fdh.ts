@@ -13,6 +13,7 @@
  */
 
 import * as path from "@std/path";
+import { encodeHex } from "@std/encoding/hex";
 import { isTcpPortInUse, parsePortOffsetSpec } from "./src/port_offset.ts";
 import {
   appendEvent,
@@ -116,6 +117,13 @@ import {
   summarizeJob,
   waitForJob,
 } from "./src/fdh_job.ts";
+import type { PlatformStepOptions } from "./src/fdh_job.ts";
+import {
+  activePlatformJobs,
+  parsePlatform,
+  payloadKindFor,
+  validateStartUrl,
+} from "./src/fdh_platform_qa.ts";
 import {
   INTENT_OPS,
   type IntentOp,
@@ -188,6 +196,17 @@ Commands:
                             execution digest) and start a detached executor
                             that runs the same commands as 'verify build|test';
                             returns at once (B-02 ADR, D-23)
+  job start --task-id <id> --step platform --platform <macos|linux>
+            --target <config.json> --payload <packaged build>
+            [--eval <js> [--expect <text>]] [--start-url <url>]
+                            Cross-platform Agentic QA (KAN-145): run the
+                            packaged build on the platform's QA target
+                            ('fdh platform-qa run') as a durable job; records
+                            assertion platform-qa-<platform>. An early check,
+                            not QA3 or release qualification
+  platform-qa <run|cleanup> --help
+                            The QA run itself, and removing what a task left
+                            on a QA target after its job gave up
   job wait --task-id <id> --job-id <id> [--timeout-ms <n>]
                             Reconcile until the job is terminal or awaits
                             approval; exits 1 unless it succeeded
@@ -1129,7 +1148,7 @@ async function cmdRecord(parsed: ParsedArgs): Promise<void> {
  *
  * The CLI is still local-only: it writes the receipt JSON under
  * `<worktree>/_dist/fdh/reviews/` and prints the exact comment body. The agent
- * (or human) posts that body to the PR; the `fdh-review-gate` workflow parses
+ * (or human) posts that body to the PR; the `fdh-trusted-review-gate` workflow parses
  * the marker and checks distinct reviewers at the PR head.
  */
 async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
@@ -1567,10 +1586,55 @@ async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
   }
 }
 
+/** Platform step inputs, with the payload and target hashes fixed now. */
+async function platformStepOptions(
+  parsed: ParsedArgs,
+): Promise<PlatformStepOptions> {
+  const platform = parsePlatform(requireOption(parsed, "platform"));
+  const targetFile = path.resolve(requireOption(parsed, "target"));
+  const payloadFile = path.resolve(requireOption(parsed, "payload"));
+  payloadKindFor(platform, payloadFile);
+  const evalScript = hasOption(parsed, "eval")
+    ? requireOption(parsed, "eval")
+    : undefined;
+  const expect = hasOption(parsed, "expect")
+    ? requireOption(parsed, "expect")
+    : undefined;
+  if (expect !== undefined && evalScript === undefined) {
+    throw new Error("--expect needs --eval");
+  }
+  const sha256 = async (file: string) =>
+    encodeHex(await crypto.subtle.digest("SHA-256", await Deno.readFile(file)));
+  return {
+    platform,
+    targetFile,
+    targetSha256: await sha256(targetFile),
+    payloadFile,
+    payloadSha256: await sha256(payloadFile),
+    evalScript,
+    expect,
+    startUrl: hasOption(parsed, "start-url")
+      ? validateStartUrl(requireOption(parsed, "start-url"))
+      : undefined,
+  };
+}
+
 async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
   assertNoPositional(parsed, 2);
   const allowed: Record<JobSubcommand, string[]> = {
-    start: ["task-id", "step", "phase", "lease-ttl-ms", "max-attempts"],
+    start: [
+      "task-id",
+      "step",
+      "phase",
+      "lease-ttl-ms",
+      "max-attempts",
+      "platform",
+      "target",
+      "payload",
+      "eval",
+      "expect",
+      "start-url",
+    ],
     exec: ["task-id", "job-id", "epoch"],
     status: ["task-id", "job-id"],
     wait: ["task-id", "job-id", "timeout-ms"],
@@ -1596,10 +1660,41 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
   switch (sub) {
     case "start": {
       const step = requireOption(parsed, "step");
-      if (step !== "build" && step !== "test") {
+      if (step !== "build" && step !== "test" && step !== "platform") {
         throw new Error(
-          `--step must be build or test, got ${JSON.stringify(step)}`,
+          `--step must be build, test or platform, got ${JSON.stringify(step)}`,
         );
+      }
+      const platformOnly = [
+        "platform",
+        "target",
+        "payload",
+        "eval",
+        "expect",
+        "start-url",
+      ];
+      if (step !== "platform") {
+        const extra = platformOnly.find((name) => hasOption(parsed, name));
+        if (extra !== undefined) {
+          throw new Error(`--${extra} applies to --step platform only`);
+        }
+      }
+      const platform = step === "platform"
+        ? await platformStepOptions(parsed)
+        : undefined;
+      if (platform !== undefined) {
+        const active = activePlatformJobs(
+          state.worktree,
+          taskId,
+          platform.platform,
+        );
+        if (active.length > 0) {
+          throw new Error(
+            `platform job ${
+              active.join(", ")
+            } of this task is not finished on ${platform.platform}; wait for it or cancel it first`,
+          );
+        }
       }
       const phase = step === "build"
         ? parseBuildPhase(
@@ -1608,7 +1703,7 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
             : undefined,
         )
         : undefined;
-      if (step === "test" && hasOption(parsed, "phase")) {
+      if (step !== "build" && hasOption(parsed, "phase")) {
         throw new Error("--phase applies to --step build only");
       }
       // 3 s at least: a respawn's stop and executor start take ~1-2 s.
@@ -1636,6 +1731,7 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
         state,
         kind: step,
         phase,
+        platform,
         leaseTtlMs,
         maxAttempts,
       });
@@ -1799,6 +1895,12 @@ async function main(argv: string[]): Promise<void> {
       "./src/fdh_workspace_auth_cli.ts"
     );
     const result = await runWorkspaceAuthCli(argv);
+    console.log(result.stdout);
+    Deno.exit(result.exitCode);
+  }
+  if (argv[0] === "platform-qa") {
+    const { runPlatformQaCli } = await import("./src/fdh_platform_qa.ts");
+    const result = await runPlatformQaCli(argv.slice(1));
     console.log(result.stdout);
     Deno.exit(result.exitCode);
   }

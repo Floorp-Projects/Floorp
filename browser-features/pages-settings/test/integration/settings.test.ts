@@ -19,6 +19,7 @@ import {
   valueAt,
   writes,
 } from "../../../../libs/ui/test/page-fixture.ts";
+import i18n from "../../src/lib/i18n/i18n.ts";
 
 const DESIGN = "floorp.design.configs";
 const WORKSPACES = "floorp.workspaces.v4.config";
@@ -555,6 +556,413 @@ export async function runPageTests() {
       );
     },
   });
+  for (
+    const [locale, draft, expected] of [
+      ["ja-JP", "１２３", 123],
+      ["ja-JP", "１２３.５", 124],
+      ["ar", "١٢٣", 123],
+      ["ar", "١٢٣٫٥", 124],
+      ["de", "123,5", 124],
+      ["en-US", "123.4999", 123],
+    ] as const
+  ) {
+    tests.push({
+      name:
+        `Memory seconds parse ${locale} draft ${draft} without losing its value`,
+      fn: async () => {
+        prefs.set(
+          MEMORY,
+          JSON.stringify({
+            enabled: true,
+            idleThresholdSec: 300,
+            pollIntervalSec: 60,
+            minIntervalSec: 300,
+            minResidentMB: 400,
+          }),
+        );
+        const selector = "#idle-memory-reclaim-idle-threshold";
+        await route("features/performance", selector);
+        const originalLocale = i18n.language;
+        try {
+          await i18n.changeLanguage(locale);
+          await pause(80);
+          const target = element<HTMLInputElement>(selector);
+          await until(() => !target.disabled, "Localized field ready");
+          await input(selector, draft);
+          await pause(80);
+          assert(target.value !== "", "Accepted digits were erased");
+          assertEquals(
+            valueAt(MEMORY, "idleThresholdSec"),
+            300,
+            "Draft saved early",
+          );
+          target.blur();
+          await until(
+            () => valueAt(MEMORY, "idleThresholdSec") === expected,
+            "Localized value was not committed correctly",
+          );
+          assertEquals(
+            target.value,
+            new Intl.NumberFormat(locale, {
+              useGrouping: false,
+            }).format(expected),
+            "Committed value is formatted for the UI locale",
+          );
+        } finally {
+          element<HTMLInputElement>(selector).blur();
+          await i18n.changeLanguage(originalLocale);
+          await pause(80);
+        }
+      },
+    });
+  }
+  tests.push({
+    name: "Memory seconds keep a separately typed decimal separator",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 300,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      const setNativeValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert(setNativeValue, "Native value setter missing");
+      const type = async (value: string, data: string) => {
+        setNativeValue.call(target, value);
+        target.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            data,
+            inputType: "insertText",
+          }),
+        );
+        // Let the controlled-value watcher and deferred DOM write run.
+        await pause(80);
+      };
+      const originalLocale = i18n.language;
+      try {
+        await i18n.changeLanguage("de");
+        await pause(80);
+        await until(() => !target.disabled, "Localized field ready");
+        target.focus();
+        await type("123", "3");
+        await type("123,", ",");
+        assertEquals(target.value, "123,", "Decimal separator was dropped");
+        await type("123,5", "5");
+        assertEquals(target.value, "123,5", "Separator draft was reformatted");
+        target.blur();
+        await until(
+          () => valueAt(MEMORY, "idleThresholdSec") === 124,
+          "Localized decimal did not commit",
+        );
+      } finally {
+        target.blur();
+        await i18n.changeLanguage(originalLocale);
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
+    name: "Memory seconds step cumulatively from the visible draft",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 300,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(() => !target.disabled, "Ready");
+      const setNativeValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert(setNativeValue, "Native value setter missing");
+      const type = async (value: string, data: string) => {
+        setNativeValue.call(target, value);
+        target.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            data,
+            inputType: "insertText",
+          }),
+        );
+        await pause(80);
+      };
+      const step = async (key: string, shiftKey = false) => {
+        target.dispatchEvent(
+          new KeyboardEvent("keydown", { bubbles: true, key, shiftKey }),
+        );
+        await pause(80);
+      };
+      const trigger = (part: string) => {
+        const control = target.parentElement?.querySelector(
+          `[data-part="${part}"]`,
+        );
+        assert(control, `Stepper ${part} missing`);
+        for (const type of ["pointerdown", "pointerup", "click"]) {
+          control.dispatchEvent(
+            new MouseEvent(type, { bubbles: true, cancelable: true }),
+          );
+        }
+      };
+      try {
+        target.focus();
+        await step("ArrowUp");
+        await step("ArrowUp");
+        assertEquals(target.value, "302", "Repeated steps did not accumulate");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          302,
+          "Accumulated step not saved",
+        );
+        await type("123", "3");
+        await step("ArrowUp");
+        assertEquals(target.value, "124", "Step ignored the typed draft");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          124,
+          "Draft-based step not saved",
+        );
+        await step("ArrowDown");
+        await step("ArrowDown");
+        assertEquals(target.value, "122", "Down steps did not accumulate");
+        await step("ArrowUp", true);
+        assertEquals(target.value, "132", "Shift step was not 10 units");
+        trigger("increment-trigger");
+        await pause(80);
+        assertEquals(target.value, "133", "Plus button ignored the draft");
+        trigger("decrement-trigger");
+        await pause(80);
+        assertEquals(target.value, "132", "Minus button ignored the draft");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          132,
+          "Button step not saved",
+        );
+        await type("5", "5");
+        trigger("increment-trigger");
+        await pause(80);
+        assertEquals(
+          target.value,
+          "60",
+          "Below-minimum draft was not clamped once",
+        );
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          60,
+          "Focus steal committed twice",
+        );
+        assertEquals(
+          document.activeElement === target,
+          true,
+          "Button press stole input focus",
+        );
+        await step("ArrowUp");
+        assertEquals(target.value, "61", "Focus lost after button press");
+        target.dispatchEvent(
+          new CompositionEvent("compositionstart", { bubbles: true, data: "" }),
+        );
+        const composingArrow = new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "ArrowUp",
+        });
+        target.dispatchEvent(composingArrow);
+        await pause(80);
+        assertEquals(target.value, "61", "Composition arrow stepped the value");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          61,
+          "Composition arrow committed a step",
+        );
+        target.dispatchEvent(
+          new CompositionEvent("compositionend", { bubbles: true, data: "" }),
+        );
+        const nativeComposing = new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "ArrowUp",
+          isComposing: true,
+        });
+        target.dispatchEvent(nativeComposing);
+        await pause(80);
+        assertEquals(
+          nativeComposing.defaultPrevented,
+          false,
+          "isComposing arrow was suppressed",
+        );
+        assertEquals(target.value, "61", "isComposing arrow stepped the value");
+        const consumedByIme = new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "ArrowUp",
+          keyCode: 229,
+        });
+        target.dispatchEvent(consumedByIme);
+        await pause(80);
+        assertEquals(
+          consumedByIme.defaultPrevented,
+          false,
+          "IME-consumed arrow was suppressed",
+        );
+        assertEquals(target.value, "61", "IME-consumed arrow stepped the value");
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          61,
+          "IME-consumed arrow committed a step",
+        );
+        await step("ArrowUp");
+        assertEquals(
+          target.value,
+          "62",
+          "Step did not resume after composition",
+        );
+      } finally {
+        target.blur();
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
+    name: "Memory seconds retain composition drafts until commit or cancel",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 123,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+          reclaimOnGhostWindows: true,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(() => target.value === "123" && !target.disabled, "Ready");
+      const setNativeValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert(setNativeValue, "Native value setter missing");
+      const compose = (type: string, data: string) => {
+        target.dispatchEvent(
+          new CompositionEvent(type, { bubbles: true, data }),
+        );
+      };
+      const draft = async (value: string, caret: number, data: string) => {
+        setNativeValue.call(target, value);
+        target.setSelectionRange(caret, caret);
+        target.dispatchEvent(
+          new InputEvent("input", {
+            bubbles: true,
+            data,
+            inputType: "insertCompositionText",
+            isComposing: true,
+          }),
+        );
+        // Allow Ark's controlled-value watcher and deferred DOM write to run.
+        await pause(80);
+        assertEquals(target.value, value, "Composition text was formatted");
+        assertEquals(target.selectionStart, caret, "Composition caret moved");
+        assertEquals(valueAt(MEMORY, "idleThresholdSec"), 123, "Draft saved");
+      };
+      target.focus();
+      target.setSelectionRange(1, 1);
+      try {
+        compose("compositionstart", "");
+        await draft("1４23", 2, "４");
+        await draft("1４５23", 3, "４５");
+        await draft("14523", 3, "45");
+        compose("compositionend", "45");
+        await pause(80);
+        assertEquals(target.value, "14523", "Converted text lost");
+        assertEquals(target.selectionStart, 3, "Commit caret moved");
+        compose("compositionstart", "");
+        await draft("145６23", 4, "６");
+        await draft("14523", 3, "");
+        compose("compositionend", "");
+        await pause(80);
+        assertEquals(target.value, "14523", "Cancelled text retained");
+        assertEquals(target.selectionStart, 3, "Cancel caret moved");
+        target.blur();
+        await until(
+          () => valueAt(MEMORY, "idleThresholdSec") === 14523,
+          "Completed value not saved",
+        );
+      } finally {
+        // A failed assertion must not leave a composition active for the next case.
+        compose("compositionend", "");
+        target.blur();
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
+    name: "Memory seconds preserve caret during consecutive insertion",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 123,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+          reclaimOnGhostWindows: true,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(
+        () => target.value === "123" && !target.disabled,
+        "Seconds field not ready",
+      );
+      target.focus();
+      target.setSelectionRange(1, 1);
+      for (const digit of ["9", "8", "7"]) {
+        assert(
+          document.execCommand("insertText", false, digit),
+          "Text insertion failed",
+        );
+        await pause(80);
+      }
+      assertEquals(
+        target.value,
+        "198723",
+        "Digits remain in the intended order",
+      );
+      assertEquals(
+        target.selectionStart,
+        4,
+        "Caret remains after inserted digits",
+      );
+      target.blur();
+      await until(
+        () => valueAt(MEMORY, "idleThresholdSec") === 198723,
+        "Seconds were not committed",
+      );
+    },
+  });
   tests.push({
     name: "Memory fields commit, clamp and reload",
     fn: async () => {
@@ -676,6 +1084,233 @@ export async function runPageTests() {
       },
     });
   }
+  tests.push({
+    name: "Design style saves only sidebar.verticalTabs",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "horizontal";
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.delete("sidebar.revamp");
+        await route(
+          "features/design",
+          'input[name="style"][value="horizontal"]',
+        );
+
+        await click('input[name="style"][value="vertical"]');
+        await until(
+          () => prefs.get("sidebar.verticalTabs") === true,
+          "Vertical tabs pref was not enabled",
+        );
+        assert(
+          !prefs.has("sidebar.revamp"),
+          "Floorp must not write sidebar.revamp",
+        );
+
+        await click('input[name="style"][value="multirow"]');
+        await until(
+          () => prefs.get("sidebar.verticalTabs") === false,
+          "Multirow did not disable native vertical tabs",
+        );
+        assert(
+          !prefs.has("sidebar.revamp"),
+          "Floorp must not write sidebar.revamp for multirow",
+        );
+
+        await click('input[name="style"][value="horizontal"]');
+        await until(
+          () => prefs.get("sidebar.verticalTabs") === false,
+          "Horizontal did not disable native vertical tabs",
+        );
+        assert(
+          !prefs.has("sidebar.revamp"),
+          "Floorp must not write sidebar.revamp for horizontal",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+        prefs.delete("sidebar.revamp");
+      }
+    },
+  });
+  tests.push({
+    name: "Design reflects native vertical tabs turned off",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", false);
+        await route(
+          "features/design",
+          'input[name="style"][value="horizontal"]',
+        );
+        assert(
+          element<HTMLInputElement>('input[name="style"][value="horizontal"]')
+            .checked,
+          "The Hub must show horizontal when native vertical tabs are off",
+        );
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "vertical",
+          "Loading the page must not rewrite the stored config",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
+  tests.push({
+    name: "Design keeps vertical when the native pref is unavailable",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.delete("sidebar.verticalTabs");
+        await route("features/design", 'input[name="style"][value="vertical"]');
+        assert(
+          element<HTMLInputElement>('input[name="style"][value="vertical"]')
+            .checked,
+          "A missing native pref must fall back to the stored config",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
+  tests.push({
+    name: "Design unrelated edits leave native vertical tabs untouched",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        saved.globalConfigs.faviconColor = false;
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", true);
+        await route("features/design", "#favicon-color");
+        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
+        assertEquals(
+          prefs.get("sidebar.verticalTabs"),
+          true,
+          "Unrelated edits must not change the native vertical tabs pref",
+        );
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "vertical",
+          "Unrelated edits must keep the effective style",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
+  tests.push({
+    name: "Design unrelated edits heal a stale vertical config",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "vertical";
+        saved.globalConfigs.faviconColor = false;
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", false);
+        await route("features/design", "#favicon-color");
+        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "horizontal",
+          "Saving must persist the effective native style",
+        );
+        assertEquals(
+          prefs.get("sidebar.verticalTabs"),
+          false,
+          "Native vertical tabs must stay off",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
+  tests.push({
+    name: "Design unrelated edits keep a newer stored style",
+    fn: async () => {
+      const originalDesign = prefs.get(DESIGN);
+      const hadVerticalTabs = prefs.has("sidebar.verticalTabs");
+      const originalVerticalTabs = prefs.get("sidebar.verticalTabs");
+      try {
+        const saved = JSON.parse(String(originalDesign));
+        saved.tabbar.tabbarStyle = "multirow";
+        saved.globalConfigs.faviconColor = false;
+        prefs.set(DESIGN, JSON.stringify(saved));
+        prefs.set("sidebar.verticalTabs", false);
+        await route("features/design", "#favicon-color");
+        // The loaded form still shows multirow, but the stored style has
+        // meanwhile been written to horizontal (e.g. a native on/off toggle
+        // in another window). An unrelated save must keep the newer style.
+        const newer = JSON.parse(String(prefs.get(DESIGN)));
+        newer.tabbar.tabbarStyle = "horizontal";
+        prefs.set(DESIGN, JSON.stringify(newer));
+        await toggle("#favicon-color", DESIGN, "globalConfigs.faviconColor");
+        assertEquals(
+          valueAt(DESIGN, "tabbar.tabbarStyle"),
+          "horizontal",
+          "Unrelated edits must not revert a newer stored style",
+        );
+      } finally {
+        if (originalDesign === undefined) prefs.delete(DESIGN);
+        else prefs.set(DESIGN, originalDesign);
+        if (hadVerticalTabs && originalVerticalTabs !== undefined) {
+          prefs.set("sidebar.verticalTabs", originalVerticalTabs);
+        } else {
+          prefs.delete("sidebar.verticalTabs");
+        }
+      }
+    },
+  });
   await executeCases(tests);
 }
 

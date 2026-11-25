@@ -71,17 +71,77 @@ import {
   stopProcessTree,
 } from "./fdh_job_process.ts";
 
+import { platformAssertionName } from "./fdh_platform_qa.ts";
+import type { PlatformStepOptions } from "./fdh_platform_qa_types.ts";
+
 /** `fdh.ts`, which the detached executor runs as `job exec`. */
 const FDH_CLI = path.fromFileUrl(new URL("../fdh.ts", import.meta.url));
 
-export type StepKind = "build" | "test";
+export type StepKind = "build" | "test" | "platform";
 
-/** The commands of a step job: the same ones `verify build|test` runs. */
+export type { PlatformStepOptions } from "./fdh_platform_qa_types.ts";
+
+/** Report directory of a task's platform QA runs. */
+export function platformQaOutDir(worktree: string, taskId: string): string {
+  return path.join(worktree, "_dist", "fdh", "platform", taskId);
+}
+
+/**
+ * The commands of a step job: the same ones `verify build|test` runs, or
+ * `fdh platform-qa run` for a platform QA step.
+ */
 export function stepSpecFor(
   kind: StepKind,
   cwd: string,
   phase: BuildPhase = "all",
+  platform?: PlatformStepOptions & { taskId: string },
 ): StepSpec {
+  if (kind === "platform") {
+    if (platform === undefined) {
+      throw new Error("a platform step needs its platform options");
+    }
+    const optional: string[] = [];
+    if (platform.evalScript !== undefined) {
+      optional.push(`--eval=${platform.evalScript}`);
+    }
+    if (platform.expect !== undefined) {
+      optional.push(`--expect=${platform.expect}`);
+    }
+    if (platform.startUrl !== undefined) {
+      optional.push(`--start-url=${platform.startUrl}`);
+    }
+    const display = `fdh platform-qa run --platform ${platform.platform}` +
+      ` --payload ${path.basename(platform.payloadFile)}` +
+      ` (sha256 ${platform.payloadSha256.slice(0, 12)})` +
+      (platform.expect === undefined
+        ? ""
+        : ` --expect ${JSON.stringify(platform.expect)}`);
+    return {
+      cwd,
+      displayCommand: display,
+      commands: [{
+        argv: [
+          "deno",
+          "run",
+          "-A",
+          FDH_CLI,
+          "platform-qa",
+          "run",
+          `--platform=${platform.platform}`,
+          `--task-id=${platform.taskId}`,
+          `--target=${platform.targetFile}`,
+          `--target-sha256=${platform.targetSha256}`,
+          `--payload=${platform.payloadFile}`,
+          `--payload-sha256=${platform.payloadSha256}`,
+          `--out=${platformQaOutDir(cwd, platform.taskId)}`,
+          ...optional,
+        ],
+        displayCommand: display,
+        assertionName: platformAssertionName(platform.platform),
+        expected: `exit code 0 (QA passed on ${platform.platform})`,
+      }],
+    };
+  }
   if (kind === "test") {
     return {
       cwd,
@@ -234,6 +294,7 @@ export interface StartStepJobOptions {
   state: FdhTaskState;
   kind: StepKind;
   phase?: BuildPhase;
+  platform?: PlatformStepOptions;
   leaseTtlMs?: number;
   maxAttempts?: number;
   git?: GitRunner;
@@ -245,7 +306,14 @@ export async function startStepJob(
   options: StartStepJobOptions,
 ): Promise<JobJournal> {
   const { state } = options;
-  const step = stepSpecFor(options.kind, state.worktree, options.phase);
+  const step = stepSpecFor(
+    options.kind,
+    state.worktree,
+    options.phase,
+    options.platform === undefined
+      ? undefined
+      : { ...options.platform, taskId: state.taskId },
+  );
   const inputs = await currentInputs(state, options.git);
   const job = createJob({
     jobId: newJobId(options.kind),
