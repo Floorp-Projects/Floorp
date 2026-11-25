@@ -285,6 +285,15 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
     );
   }
   if (
+    state.assertions.some((assertion) =>
+      assertion.name.startsWith("platform-qa-")
+    )
+  ) {
+    add(
+      "Platform QA (fdh platform-qa, KAN-145) ran a packaged build on one QA target per platform (a macOS VM, a Linux container); it is an early development check, not QA3, release qualification or a visual judgment, and fdh did not verify that the payload was built from this HEAD.",
+    );
+  }
+  if (
     state.cleanup.result !== "completed" &&
     state.cleanup.result !== "not-required"
   ) {
