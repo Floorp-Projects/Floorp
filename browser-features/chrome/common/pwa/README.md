@@ -40,10 +40,13 @@ Currently, the following integration features are available on the Windows platf
 - Icon integration
 
 On macOS, launcher bundles are created in `~/Applications/Floorp Apps/`.
-Each bundle contains an executable launcher, `Info.plist`, and a 512px ICNS icon.
-The launcher passes the installing profile and SSB ID to Floorp. Bundle identity
+Each bundle contains a compiled AppleScript applet, a shell launcher resource,
+`Info.plist`, and a 512px ICNS icon. macOS generates and ad-hoc signs the applet
+locally using its built-in tools; this allows Launch Services to start it. The
+launcher passes the installing profile and SSB ID to Floorp. Bundle identity
 includes the profile, so copied SSB IDs in different profiles do not collide.
-Opening an existing PWA from Floorp also creates or repairs its launcher.
+After a normal browser startup, older owned launchers are upgraded in the
+background. Opening an existing PWA from Floorp also creates or repairs its launcher.
 Renaming or uninstalling a PWA updates or removes its owned bundle.
 
 This is launcher integration: it does not automatically pin apps to the Dock

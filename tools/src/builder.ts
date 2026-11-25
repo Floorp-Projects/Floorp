@@ -10,6 +10,7 @@ import {
   safeRemove,
 } from "./utils.ts";
 import { writeBuildid2 } from "./update.ts";
+import { packagedQaEnabled, registerPackagedQa } from "./packaged_qa_build.ts";
 
 const logger = new Logger("builder");
 
@@ -71,6 +72,11 @@ export function runInParallel(commands: CommandTuple[]): void {
 export async function run(mode = "dev", buildid2: string): Promise<void> {
   await Promise.resolve();
   const buildMode = mode.trim().toLowerCase();
+  const packagedQa = packagedQaEnabled(
+    buildMode,
+    Deno.env.get("FLOORP_PACKAGED_QA"),
+    Deno.env.get("FLOORP_QA_TEST_MODULES"),
+  );
   const usePackagedAssets = buildMode === "production" || buildMode === "stage";
   logger.info(`Building features with mode=${buildMode}`);
 
@@ -124,7 +130,12 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
 
   const prodCommands: CommandTuple[] = [
     [
-      [deno, "task", "build", `--env.MODE=${buildMode}`],
+      [
+        deno,
+        "task",
+        "build",
+        `--env.MODE=${packagedQa ? "test-packaged" : buildMode}`,
+      ],
       path.join(PROJECT_ROOT, "bridge/startup"),
     ],
     [
@@ -262,6 +273,22 @@ export async function run(mode = "dev", buildid2: string): Promise<void> {
     runInParallel(devCommands);
   } else {
     runInParallel(prodCommands);
+    if (packagedQa) {
+      const loaderDirectory = path.join(PROJECT_ROOT, "bridge/loader-features");
+      runInParallel([[
+        [
+          deno,
+          "run",
+          "-A",
+          "vite",
+          "build",
+          "--config",
+          "vite.packaged-test.config.ts",
+        ],
+        loaderDirectory,
+      ]]);
+      registerPackagedQa(path.join(loaderDirectory, "_dist"));
+    }
   }
 
   if (usePackagedAssets) {

@@ -1,0 +1,42 @@
+{
+  "image": "fdh-qa-linux:41fc5d48b6ce",
+  "acquireA": {
+    "ok": true,
+    "acquired": true
+  },
+  "reacquireA": {
+    "ok": true,
+    "acquired": false
+  },
+  "acquireB": {
+    "ok": false,
+    "error": "container-held"
+  },
+  "preflightWhileHeld": {
+    "freeBytes": 172010250240,
+    "availableMemoryMb": 6112,
+    "imagePresent": true,
+    "containerHolder": "kan-144-lock-a",
+    "ready": false,
+    "blockers": [
+      "container-held"
+    ]
+  },
+  "cleanupB": {
+    "ok": false,
+    "error": "container-held"
+  },
+  "cleanupA": {
+    "containerRemoved": true,
+    "clean": true
+  },
+  "preflightAfter": {
+    "freeBytes": 172010340352,
+    "availableMemoryMb": 6250,
+    "imagePresent": true,
+    "containerHolder": null,
+    "ready": true,
+    "blockers": []
+  },
+  "passed": true
+}

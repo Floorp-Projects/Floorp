@@ -14,6 +14,21 @@ export class NRProgressiveWebAppParent extends JSWindowActorParent {
   }
 
   sendNotifyToPageAction() {
-    Services.obs.notifyObservers({}, "nora-pwa-check-page-has-manifest");
+    const context = this.browsingContext;
+    // Subframe pageshow must not refresh the top document's install action.
+    // Ignore a queued message from a document that has already navigated away.
+    if (
+      !context || context !== context.top ||
+      this.manager !== context.currentWindowGlobal
+    ) {
+      return;
+    }
+    const browser = context.embedderElement;
+    if (browser) {
+      Services.obs.notifyObservers(
+        browser as unknown as nsISupports,
+        "nora-pwa-check-page-has-manifest",
+      );
+    }
   }
 }
