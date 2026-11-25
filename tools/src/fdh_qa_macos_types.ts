@@ -25,24 +25,14 @@ export interface MacosQaTargetConfig {
 
 export type MacosPayloadKind = "dmg" | "tar.gz";
 
-export type MarionetteRequest =
-  | { op: "ready"; connectTimeout?: number }
-  | { op: "eval"; script: string }
-  | { op: "screenshot" };
-
-export interface GuestRunOutput {
-  code: number;
-  stdout: string;
-  stderr: string;
-  /** The transport killed the local process after its timeout. */
-  timedOut?: boolean;
-}
+export type {
+  GuestRunOutput,
+  MarionetteRequest,
+} from "./fdh_qa_remote_types.ts";
+import type { QaTransport } from "./fdh_qa_remote_types.ts";
 
 /** Runs a guest script; `stdin` streams an upload when present. */
-export type MacosQaTransport = (
-  script: string,
-  stdin?: ReadableStream<Uint8Array>,
-) => Promise<GuestRunOutput>;
+export type MacosQaTransport = QaTransport;
 
 export interface MacosQaPreflight {
   freeBytes: number;
