@@ -556,6 +556,23 @@ export class WorkspacesTabManager {
   }
 
   /**
+   * Runs `fn` with the workspace-empty tab-close logic suppressed.
+   *
+   * Closing the last tab of the current workspace normally creates a
+   * replacement tab or closes the window. Restore and cleanup paths remove tabs
+   * in bulk and must not trigger that.
+   */
+  public runWithTabCloseSuppressed<T>(fn: () => T): T {
+    const wasSuppressing = this.suppressTabCloseHandling;
+    this.suppressTabCloseHandling = true;
+    try {
+      return fn();
+    } finally {
+      this.suppressTabCloseHandling = wasSuppressing;
+    }
+  }
+
+  /**
    * Remove tab by workspace id.
    * @param workspaceId The workspace id.
    * @param fallbackWorkspaceId Optional fallback workspace id used when

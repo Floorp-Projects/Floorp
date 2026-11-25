@@ -6,6 +6,7 @@ import {
   Briefcase,
   Command,
   Cpu,
+  DatabaseBackup,
   Gauge,
   Grip,
   House,
@@ -87,6 +88,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("pages.workspaces"),
       url: "/features/workspaces",
       icon: Briefcase,
+    },
+    {
+      title: t("pages.backup"),
+      url: "/features/backup",
+      icon: DatabaseBackup,
     },
     {
       title: t("pages.keyboardShortcuts"),

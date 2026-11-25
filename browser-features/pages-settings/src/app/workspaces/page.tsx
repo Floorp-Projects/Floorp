@@ -141,7 +141,6 @@ export default function Page() {
             className={styles.sections}
           >
             <BasicSettings />
-            {/* <BackupSettings /> */}
           </fieldset>
         </form>
       </FormProvider>

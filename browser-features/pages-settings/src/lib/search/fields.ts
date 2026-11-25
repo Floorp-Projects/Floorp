@@ -214,6 +214,24 @@ export const SETTING_FIELDS: SettingFieldDefinition[] = [
     "descriptionKey": "workspaces.manageOnBmsDescription",
   },
   {
+    "id": "backup-enabled",
+    "route": "/features/backup",
+    "titleKey": "backup.searchAutoEnable",
+    "descriptionKey": "backup.searchAutoEnableDescription",
+  },
+  {
+    "id": "backup-interval",
+    "route": "/features/backup",
+    "titleKey": "backup.searchInterval",
+    "descriptionKey": "backup.searchIntervalDescription",
+  },
+  {
+    "id": "backup-retention",
+    "route": "/features/backup",
+    "titleKey": "backup.searchRetention",
+    "descriptionKey": "backup.searchRetentionDescription",
+  },
+  {
     "id": "enable-shortcuts",
     "route": "/features/shortcuts",
     "titleKey": "keyboardShortcut.enable",

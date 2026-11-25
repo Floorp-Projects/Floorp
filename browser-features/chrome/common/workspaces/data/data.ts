@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import { batch, createEffect, createSignal, onCleanup } from "solid-js";
 import type { Accessor, Setter } from "solid-js";
 import {
   type TWorkspaceID,
@@ -50,15 +50,17 @@ function createWorkspacesData(): [
   Store<TWorkspacesStoreData>,
   SetStoreFunction<TWorkspacesStoreData>,
 ] {
-  const [workspacesDataStore, setWorkspacesDataStore] =
-    createStore(getDefaultStore());
+  const [workspacesDataStore, setWorkspacesDataStore] = createStore(
+    getDefaultStore(),
+  );
 
   createEffect(() => {
     trackStore(workspacesDataStore);
     Services.prefs.setStringPref(
       WORKSPACE_DATA_PREF_NAME,
-      JSON.stringify(unwrap(workspacesDataStore), (k, v) =>
-        k == "data" ? [...v] : v,
+      JSON.stringify(
+        unwrap(workspacesDataStore),
+        (k, v) => k == "data" ? [...v] : v,
       ),
     );
   });
@@ -72,12 +74,17 @@ function createWorkspacesData(): [
     );
     if (isRight(result)) {
       const _storedData = result.right;
-      setWorkspacesDataStore(
-        "data",
-        _storedData.data as unknown as TWorkspacesStoreData["data"],
-      );
-      setWorkspacesDataStore("defaultID", _storedData.defaultID);
-      setWorkspacesDataStore("order", _storedData.order);
+      // Apply all three fields atomically. Effects that run between separate
+      // writes would see e.g. new data with a stale defaultID and trigger the
+      // invalid-ID recovery (auto-created workspace, tab re-attribution).
+      batch(() => {
+        setWorkspacesDataStore(
+          "data",
+          _storedData.data as unknown as TWorkspacesStoreData["data"],
+        );
+        setWorkspacesDataStore("defaultID", _storedData.defaultID);
+        setWorkspacesDataStore("order", _storedData.order);
+      });
     }
   };
   Services.prefs.addObserver(WORKSPACE_DATA_PREF_NAME, observer);
@@ -102,8 +109,9 @@ function createSelectedWorkspaceID(): [
   Accessor<TWorkspaceID | null>,
   Setter<TWorkspaceID | null>,
 ] {
-  const [selectedWorkspaceID, setSelectedWorkspaceID] =
-    createSignal<TWorkspaceID | null>(null);
+  const [selectedWorkspaceID, setSelectedWorkspaceID] = createSignal<
+    TWorkspaceID | null
+  >(null);
   return [selectedWorkspaceID, setSelectedWorkspaceID];
 }
 

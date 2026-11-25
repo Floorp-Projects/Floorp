@@ -10,6 +10,11 @@
     "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
   },
   "setupV5": {
+    "backupTitle": "Tab and workspace backup",
+    "backupDescription": "Floorp periodically saves your open tabs and workspaces so you can restore them later. It is on by default.",
+    "backupEnable": "Back up tabs and workspaces automatically",
+    "backupDetails": "Saved data includes tab URLs, titles, pinned state, containers and history, and is stored in your profile folder (workspaces/backup). Form entries and session storage are not saved. Backups older than the retention period are deleted automatically. You can change this at any time in Settings.",
+    "backupOpenSettings": "Open backup settings",
     "back": "Πίσω",
     "supportLabels": {
       "disabled": "Do not open automatically",
