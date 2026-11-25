@@ -40,12 +40,24 @@ export interface WindowsBrowserIdentityTarget {
   recordedProcesses: readonly DevProcessIdentity[];
   retryCount?: number;
   retryDelayMs?: number;
+  signal?: AbortSignal;
+  timeoutMs?: number;
 }
 
 /** Typed dependencies keep capture tests off PowerShell and the real registry. */
 export interface WindowsBrowserIdentityDeps {
-  listListeners(port: number): Promise<DevBrowserListenerRecord[]>;
-  listProcesses(): Promise<DevBrowserProcessRecord[]>;
-  recordIdentity(identity: WindowsBrowserListenerIdentity): Promise<boolean>;
-  sleep(ms: number): Promise<void>;
+  listListeners(
+    port: number,
+    signal?: AbortSignal,
+    timeoutMs?: number,
+  ): Promise<DevBrowserListenerRecord[]>;
+  listProcesses(
+    signal?: AbortSignal,
+    timeoutMs?: number,
+  ): Promise<DevBrowserProcessRecord[]>;
+  recordIdentity(
+    identity: WindowsBrowserListenerIdentity,
+    signal?: AbortSignal,
+  ): Promise<boolean>;
+  sleep(ms: number, signal?: AbortSignal): Promise<void>;
 }

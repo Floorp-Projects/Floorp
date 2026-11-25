@@ -2,6 +2,7 @@
 
 import * as path from "@std/path";
 import { PROJECT_ROOT } from "./defines.ts";
+import type { MarionetteStage } from "./browser_connector.types.ts";
 
 const MARIONETTE_STATE_FILE = path.join(
   PROJECT_ROOT,
@@ -26,23 +27,66 @@ export class MarionetteClient {
   #byteBuffer = new Uint8Array(0);
   #encoder = new TextEncoder();
   #decoder = new TextDecoder();
-  #sessionId: string | null = null;
+  #aborted = false;
 
-  private constructor() {}
+  private constructor(
+    private readonly onStage?: (stage: MarionetteStage) => void,
+    private readonly signal?: AbortSignal,
+  ) {}
 
-  static async connect(port?: number): Promise<MarionetteClient> {
+  #stage(stage: MarionetteStage): void {
+    try {
+      this.onStage?.(stage);
+    } catch { /* Diagnostics cannot affect the connection. */ }
+  }
+
+  static async connect(
+    port?: number,
+    timeoutMs = SESSION_TIMEOUT_MS,
+    onStage?: (stage: MarionetteStage) => void,
+    signal?: AbortSignal,
+  ): Promise<MarionetteClient> {
+    signal?.throwIfAborted();
+    if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+      throw new Error("Invalid Marionette timeout");
+    }
     const actualPort = port ?? readPort();
+    const deadline = Date.now() + timeoutMs;
 
     for (let attempt = 1; attempt <= CONNECT_MAX_RETRIES; attempt++) {
       try {
-        return await MarionetteClient.#tryConnect(actualPort);
+        return await MarionetteClient.#tryConnect(
+          actualPort,
+          deadline,
+          onStage,
+          signal,
+        );
       } catch (e: unknown) {
+        signal?.throwIfAborted();
         const msg = e instanceof Error ? e.message : String(e);
-        if (attempt < CONNECT_MAX_RETRIES) {
+        if (
+          attempt < CONNECT_MAX_RETRIES &&
+          Date.now() + CONNECT_RETRY_DELAY_MS < deadline
+        ) {
           console.error(
             `[marionette] Attempt ${attempt} failed: ${msg}. Retrying in ${CONNECT_RETRY_DELAY_MS}ms...`,
           );
-          await new Promise((r) => setTimeout(r, CONNECT_RETRY_DELAY_MS));
+          await new Promise<void>((resolve, reject) => {
+            const cleanup = () => {
+              clearTimeout(timer);
+              signal?.removeEventListener("abort", cancel);
+            };
+            const cancel = () => {
+              cleanup();
+              reject(signal?.reason);
+            };
+            const timer = setTimeout(() => {
+              cleanup();
+              resolve();
+            }, CONNECT_RETRY_DELAY_MS);
+            signal?.addEventListener("abort", cancel, { once: true });
+            if (signal?.aborted) cancel();
+          });
         } else {
           throw new Error(
             `Failed to connect to Marionette after ${CONNECT_MAX_RETRIES} attempts: ${msg}`,
@@ -53,42 +97,75 @@ export class MarionetteClient {
     throw new Error("Unreachable");
   }
 
-  static async #tryConnect(port: number): Promise<MarionetteClient> {
-    const client = new MarionetteClient();
-
-    console.error(`[marionette] Connecting to port ${port}`);
-    client.#conn = await Deno.connect({
-      hostname: "127.0.0.1",
-      port,
-    });
-
-    // Read handshake
-    const handshake = await client.#readPacketWithTimeout(SESSION_TIMEOUT_MS);
-    if (handshake?.marionetteProtocol !== 3) {
-      client.#conn.close();
-      throw new Error(
-        `Unexpected Marionette protocol: ${JSON.stringify(handshake)}`,
-      );
-    }
-    console.error("[marionette] Connected (protocol v3)");
-
-    // Create session with timeout
+  static async #tryConnect(
+    port: number,
+    deadline: number,
+    onStage?: (stage: MarionetteStage) => void,
+    signal?: AbortSignal,
+  ): Promise<MarionetteClient> {
+    const client = new MarionetteClient(onStage, signal);
     try {
-      const session = await client.sendWithTimeout(
-        "WebDriver:NewSession",
-        {},
-        SESSION_TIMEOUT_MS,
-      );
-      client.#sessionId = session?.sessionId;
-      console.error(`[marionette] Session: ${client.#sessionId}`);
-    } catch {
-      client.#conn.close();
-      throw new Error(
-        "NewSession timed out — browser may be busy or BiDi conflict",
-      );
-    }
+      return await client.#withDeadline(async () => {
+        console.error(`[marionette] Connecting to port ${port}`);
+        client.#stage("connect");
+        client.#conn = await Deno.connect({
+          hostname: "127.0.0.1",
+          port,
+        }).then((conn) => {
+          if (client.#aborted) {
+            conn.close();
+            throw new Error("Marionette connection aborted");
+          }
+          return conn;
+        });
 
-    return client;
+        // Read handshake
+        client.#stage("handshake");
+        const handshake = await client.#readPacket();
+        if (handshake?.marionetteProtocol !== 3) {
+          client.#conn.close();
+          throw new Error("Unexpected Marionette protocol");
+        }
+        console.error("[marionette] Connected (protocol v3)");
+
+        // Create session with timeout
+        let session: unknown;
+        try {
+          session = await client.sendWithTimeout(
+            "WebDriver:NewSession",
+            {},
+            Math.max(1, deadline - Date.now()),
+          );
+        } catch {
+          client.#conn.close();
+          throw new Error(
+            "NewSession timed out — browser may be busy or BiDi conflict",
+          );
+        }
+
+        if (
+          typeof session !== "object" || session === null ||
+          Array.isArray(session)
+        ) {
+          throw new Error("Invalid Marionette NewSession result");
+        }
+        const result = session as Record<string, unknown>;
+        if (
+          typeof result.sessionId !== "string" || !result.sessionId.trim() ||
+          typeof result.capabilities !== "object" ||
+          result.capabilities === null ||
+          Array.isArray(result.capabilities)
+        ) {
+          throw new Error("Invalid Marionette NewSession result");
+        }
+        console.error("[marionette] Session established");
+
+        return client;
+      }, Math.max(1, deadline - Date.now()));
+    } catch (error) {
+      client.abort();
+      throw error;
+    }
   }
 
   send(
@@ -105,28 +182,51 @@ export class MarionetteClient {
     timeoutMs: number,
     // deno-lint-ignore no-explicit-any
   ): Promise<any> {
-    const id = this.#msgId++;
-    const msg = JSON.stringify([0, id, command, params]);
-    // Marionette uses byte-length prefix, not character-length
-    const msgBytes = this.#encoder.encode(msg);
-    const prefixBytes = this.#encoder.encode(`${msgBytes.length}:`);
-    const packet = new Uint8Array(prefixBytes.length + msgBytes.length);
-    packet.set(prefixBytes, 0);
-    packet.set(msgBytes, prefixBytes.length);
-    await this.#conn.write(packet);
+    this.#stage("command");
+    const response = await this.#withDeadline(async () => {
+      const id = this.#msgId++;
+      const msg = JSON.stringify([0, id, command, params]);
+      // Marionette uses byte-length prefix, not character-length
+      const msgBytes = this.#encoder.encode(msg);
+      const prefixBytes = this.#encoder.encode(`${msgBytes.length}:`);
+      const packet = new Uint8Array(prefixBytes.length + msgBytes.length);
+      packet.set(prefixBytes, 0);
+      packet.set(msgBytes, prefixBytes.length);
+      let written = 0;
+      while (written < packet.length) {
+        const count = await this.#conn.write(packet.subarray(written));
+        if (count <= 0) throw new Error("Marionette write closed");
+        written += count;
+      }
 
-    const resp = await this.#readPacketWithTimeout(timeoutMs);
-    // Response: [1, msgId, error, result]
-    if (!Array.isArray(resp) || resp[0] !== 1) {
-      throw new Error(`Invalid response: ${JSON.stringify(resp)}`);
-    }
-    if (resp[2]) {
-      const err = resp[2];
+      const resp = await this.#readPacket();
+      // Response: [1, msgId, error, result]
+      if (
+        !Array.isArray(resp) || resp.length !== 4 || resp[0] !== 1 ||
+        resp[1] !== id ||
+        (resp[2] !== null &&
+          (typeof resp[2] !== "object" || typeof resp[2]?.error !== "string" ||
+            typeof resp[2]?.message !== "string"))
+      ) {
+        throw new Error("Invalid Marionette response");
+      }
+      return resp;
+    }, timeoutMs);
+    if (response[2]) {
+      const err = response[2];
       throw new Error(
-        `Marionette error (${err.error}): ${err.message ?? JSON.stringify(err)}`,
+        `Marionette error (${err.error}): ${
+          err.message ?? JSON.stringify(err)
+        }`,
+        {
+          cause: {
+            name: String(err.error),
+            message: String(err.message ?? ""),
+          },
+        },
       );
     }
-    return resp[3];
+    return response[3];
   }
 
   async setContext(context: "chrome" | "content"): Promise<void> {
@@ -218,18 +318,51 @@ export class MarionetteClient {
     }
   }
 
-  // deno-lint-ignore no-explicit-any
-  async #readPacketWithTimeout(timeoutMs: number): Promise<any> {
-    const result = await Promise.race([
-      this.#readPacket(),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error(`Read timeout (${timeoutMs}ms)`)),
-          timeoutMs,
-        ),
-      ),
-    ]);
-    return result;
+  abort(): void {
+    this.#aborted = true;
+    try {
+      this.#conn.close();
+    } catch {
+      // ignore
+    }
+  }
+
+  async #withDeadline<T>(
+    operation: () => Promise<T>,
+    timeoutMs: number,
+  ): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const cancelled = Promise.withResolvers<never>();
+    const cancel = () => {
+      this.abort();
+      cancelled.reject(this.signal?.reason);
+    };
+    this.signal?.addEventListener("abort", cancel, { once: true });
+    try {
+      this.signal?.throwIfAborted();
+      if (this.#aborted || !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+        throw new Error("Marionette connection unavailable");
+      }
+      return await Promise.race([
+        cancelled.promise,
+        operation(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => {
+              this.#stage("timeout");
+              reject(new Error("Marionette operation timed out"));
+            },
+            timeoutMs,
+          );
+        }),
+      ]);
+    } catch (error) {
+      this.abort();
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      this.signal?.removeEventListener("abort", cancel);
+    }
   }
 
   // deno-lint-ignore no-explicit-any
@@ -242,6 +375,9 @@ export class MarionetteClient {
           this.#byteBuffer.subarray(0, colonIdx),
         );
         const len = parseInt(lenStr, 10);
+        if (!/^\d{1,8}$/.test(lenStr) || len > 16 * 1024 * 1024) {
+          throw new Error("Invalid Marionette frame length");
+        }
         const jsonStart = colonIdx + 1;
         if (!isNaN(len) && this.#byteBuffer.length >= jsonStart + len) {
           const jsonBytes = this.#byteBuffer.subarray(
@@ -254,6 +390,9 @@ export class MarionetteClient {
         }
       }
 
+      if (colonIdx === 0 || (colonIdx < 0 && this.#byteBuffer.length > 8)) {
+        throw new Error("Invalid Marionette frame prefix");
+      }
       const buf = new Uint8Array(65536);
       const n = await this.#conn.read(buf);
       if (!n) throw new Error("Marionette connection closed");
@@ -281,8 +420,9 @@ function readPort(): number {
 
 export async function withBrowser<T>(
   fn: (client: MarionetteClient) => Promise<T>,
+  onStage?: (stage: MarionetteStage) => void,
 ): Promise<T> {
-  const client = await MarionetteClient.connect();
+  const client = await MarionetteClient.connect(undefined, undefined, onStage);
   try {
     return await fn(client);
   } finally {

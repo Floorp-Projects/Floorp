@@ -470,7 +470,7 @@ function deferred(): { promise: Promise<void>; resolve(): void } {
 
 function headerFlags(headers: Map<string, string[]>): Omit<
   M3dPackageHttpsRequestObservation,
-  "origin" | "mode"
+  "origin" | "mode" | "routePath" | "featureId" | "packageSha256"
 > {
   const cookies = headers.get("cookie") ?? [];
   const authorization = headers.get("authorization") ?? [];
@@ -766,10 +766,39 @@ export async function startM3dPackageHttpsFixture(
     nextMode = "valid-streaming";
     const record = (observedMode: M3dPackageHttpsMode | "redirect-target") => {
       if (observations.length < MAX_OBSERVATIONS) {
+        const packageMatch = PACKAGE_PATH_PATTERN.exec(request.target);
+        let configuredRoute = false;
+        if (packageMatch) {
+          const configuredBytes = packages.get(packageMatch[2]);
+          if (configuredBytes) {
+            try {
+              const configuredPackage = JSON.parse(
+                new TextDecoder("utf-8", { fatal: true }).decode(
+                  configuredBytes,
+                ),
+              );
+              configuredRoute = typeof configuredPackage === "object" &&
+                configuredPackage !== null &&
+                configuredPackage.manifest?.featureId === packageMatch[1];
+            } catch {
+              configuredRoute = false;
+            }
+          }
+        }
+        const routePath = packageMatch && configuredRoute &&
+            request.target ===
+              `/floorp-feature-packages/v1/${packageMatch[1]}/${
+                packageMatch[2]
+              }.json`
+          ? request.target
+          : null;
         observations.push({
           origin,
           mode: observedMode,
           ...headerFlags(request.headers),
+          routePath,
+          featureId: routePath === null ? null : packageMatch?.[1] ?? null,
+          packageSha256: routePath === null ? null : packageMatch?.[2] ?? null,
         });
       } else observationOverflow = true;
     };

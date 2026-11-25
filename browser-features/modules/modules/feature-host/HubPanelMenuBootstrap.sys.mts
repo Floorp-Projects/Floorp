@@ -6,16 +6,33 @@ import {
   type AppMenuAdapterConnection,
   getSharedAppMenuRegistry,
 } from "./AppMenuRegistry.sys.mts";
+import {
+  HUB_MENU_FEATURE_PREF_DEFAULT,
+  HUB_MENU_MANUAL_HOST_PREF_DEFAULT,
+  selectHubPanelMenuStartupMode,
+} from "./HubPanelMenuStartupSelection.ts";
 import { isCandidateFeatureWindow } from "./WindowIdentity.sys.mts";
 
-const STARTUP_MODE = Services.prefs.getStringPref("nora.startup.mode", "");
-const HUB_MENU_SELECTED = (STARTUP_MODE === "dev" || STARTUP_MODE === "test") &&
-  Services.prefs.getBoolPref("nora.dev.hub_menu_feature", false);
+const STARTUP_SELECTION = selectHubPanelMenuStartupMode(
+  Services.prefs.getStringPref("nora.startup.mode", ""),
+  Services.prefs.getBoolPref(
+    "nora.dev.hub_menu_feature",
+    HUB_MENU_FEATURE_PREF_DEFAULT,
+  ),
+  Services.prefs.getBoolPref(
+    "nora.dev.hub_menu_manual_host",
+    HUB_MENU_MANUAL_HOST_PREF_DEFAULT,
+  ),
+);
 
 let hostStartup: Promise<void> | null = null;
 
+export function hubPanelMenuStartupSelectionForTests() {
+  return STARTUP_SELECTION;
+}
+
 export function initializeHubPanelMenuFeature(): void {
-  if (!HUB_MENU_SELECTED || hostStartup) return;
+  if (STARTUP_SELECTION !== "pinned" || hostStartup) return;
   hostStartup = M0FeatureHost.openHubPanelMenu(true).then(
     () => {},
     (error: unknown) => {
@@ -25,7 +42,7 @@ export function initializeHubPanelMenuFeature(): void {
 }
 
 export function usesExperimentalHubPanelMenu(window: Window): boolean {
-  return HUB_MENU_SELECTED && isCandidateFeatureWindow(window);
+  return STARTUP_SELECTION !== "legacy" && isCandidateFeatureWindow(window);
 }
 
 export function registerHubPanelMenuAdapter(

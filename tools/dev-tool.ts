@@ -4,6 +4,21 @@
 import * as path from "@std/path";
 import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
+import { withDevStateLock } from "./src/dev_state_lock.ts";
+import {
+  DEV_STARTUP_FINALIZE_MS,
+  DEV_STARTUP_STATUS_FILE,
+  DEV_STARTUP_TIMEOUT_MS,
+  DevStartupFailure,
+  DevStartupReadinessUnknown,
+  devStartupReady,
+  hasDevStartupReady,
+  nativeDevLogTarget,
+  pollDevStartup,
+  probeDevMarionettePort,
+  reportDevStartupFailure,
+  verifyDevStartupReady,
+} from "./src/dev_launch.ts";
 import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
   matchesDevIdentity,
@@ -17,13 +32,16 @@ import {
 } from "./src/port_offset.ts";
 import {
   DEV_PROCESSES_FILE,
+  devProcessExitConfirmed,
   listDevProcesses,
   readDevProcesses,
   recordDevProcess,
   registerWindowsBrowserListenerIdentity,
   reportDevPortConflict,
+  reportDevStartupPortConflict,
   terminateDevProcesses,
 } from "./src/dev_processes.ts";
+import { settleWithin } from "./src/async_utils.ts";
 // Lazy imports for rebuild — avoids type-checking injector.ts at dev-tool level
 async function loadBuildModules() {
   const Builder = await import("./src/builder.ts");
@@ -135,17 +153,19 @@ const context = args.context as "chrome" | "content";
 async function main() {
   switch (command) {
     case "start":
-      await cmdStart();
+      await withDevStateLock(cmdStart);
       break;
     case "stop":
-      await cmdStop(args.all);
+      await withDevStateLock(() => cmdStop(args.all));
       break;
     case "restart":
-      await cmdStop();
-      await cmdStart();
+      await withDevStateLock(async () => {
+        await cmdStop();
+        await cmdStart();
+      });
       break;
     case "rebuild":
-      await cmdRebuild();
+      await withDevStateLock(cmdRebuild);
       break;
     case "smoke":
       await cmdSmoke();
@@ -197,30 +217,159 @@ function parsePidFromOutput(output: string): string {
 }
 
 async function cmdStart() {
+  const startupDeadline = performance.now() + DEV_STARTUP_TIMEOUT_MS -
+    DEV_STARTUP_FINALIZE_MS;
+  const marionetteFile = path.join(
+    PROJECT_ROOT,
+    "_dist",
+    "marionette-port.txt",
+  );
+  const checkReadiness = (
+    signal: AbortSignal,
+    remaining: () => number,
+    priorReady?: (port: string) => Promise<boolean>,
+  ) =>
+    probeDevMarionettePort(
+      () => Deno.readTextFileSync(marionetteFile),
+      signal,
+      remaining,
+      async (port, signal, timeoutMs) => {
+        if (PLATFORM === "windows") {
+          try {
+            await registerWindowsBrowserListenerIdentity({
+              port,
+              expectedBinaryPath: BIN_PATH_EXE,
+              expectedProfilePath: PATHS.profile_test,
+              recordedProcesses: readDevProcesses(),
+              signal,
+              timeoutMs,
+            });
+          } catch (error) {
+            signal.throwIfAborted();
+            console.error(
+              "[dev-tool] Actual browser listener identity was not registered:",
+              error,
+            );
+            throw new DevStartupFailure("registration-failed");
+          }
+        }
+      },
+      undefined,
+      priorReady,
+    );
   // A stale PID file must not mistake a reused PID for this dev server.
+  let existingPid: number | null = null;
   try {
-    const pid = Number(Deno.readTextFileSync(PID_FILE).trim());
+    existingPid = Number(Deno.readTextFileSync(PID_FILE).trim());
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) throw error;
+  }
+  if (existingPid !== null) {
+    const pid = existingPid;
     const processes = await listDevProcesses();
+    const recordedProcesses = readDevProcesses();
     if (
       selectDevProcesses(processes, {
         platform: PLATFORM,
         projectRoot: PROJECT_ROOT,
         profilePath: PATHS.profile_test,
         serverPid: pid,
-        recordedProcesses: readDevProcesses(),
+        recordedProcesses,
       }).includes(pid)
     ) {
+      let confirmedInvalid = false;
+      try {
+        let readyPort = "";
+        let priorReady = false;
+        await pollDevStartup(
+          async (signal, remaining) => {
+            try {
+              readyPort = await checkReadiness(
+                signal,
+                remaining,
+                async (port) => {
+                  const status: unknown = await Deno.readTextFile(
+                    DEV_STARTUP_STATUS_FILE,
+                  ).then(JSON.parse).catch(() => null);
+                  priorReady = await verifyDevStartupReady(
+                    status,
+                    pid,
+                    PATHS.profile_test,
+                    port,
+                    signal,
+                    remaining,
+                    async (signal, timeoutMs) => {
+                      const processes = await listDevProcesses(
+                        undefined,
+                        signal,
+                        timeoutMs,
+                      );
+                      if (
+                        !await hasDevStartupReady(
+                          status,
+                          processes,
+                          pid,
+                          PATHS.profile_test,
+                          port,
+                        )
+                      ) confirmedInvalid = true;
+                      return processes;
+                    },
+                  );
+                  return priorReady;
+                },
+              );
+              return !!readyPort;
+            } catch (error) {
+              if (error instanceof DevStartupReadinessUnknown) return false;
+              throw error;
+            }
+          },
+          startupDeadline,
+        );
+        if (!priorReady) {
+          const identities = readDevProcesses().filter((identity) =>
+            processes.some((process) =>
+              matchesDevIdentity(process, identity)
+            ) || !recordedProcesses.some((previous) =>
+              previous.pid === identity.pid &&
+              previous.startTime === identity.startTime
+            )
+          );
+          await Deno.writeTextFile(
+            DEV_STARTUP_STATUS_FILE,
+            JSON.stringify(
+              await devStartupReady(
+                identities,
+                pid,
+                PATHS.profile_test,
+                readyPort,
+              ),
+            ),
+            { mode: 0o600 },
+          );
+        }
+      } catch (error) {
+        if (confirmedInvalid) {
+          await settleWithin(reportDevStartupFailure(error), 5000);
+        }
+        console.error(
+          confirmedInvalid
+            ? "Existing dev server did not prove browser readiness. Use 'dev-tool stop' or 'dev-tool restart'."
+            : "Existing browser readiness is inconclusive. Retry 'dev-tool start'.",
+        );
+        throw error;
+      }
       console.log(`Dev server already running (PID ${pid}).`);
       console.log(
         "Use 'dev-tool stop' to stop it first, or 'dev-tool restart'.",
       );
       return;
     }
-  } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) throw error;
   }
 
   console.log("Starting feles-build dev...");
+  const previousProcesses = readDevProcesses();
 
   // Resolve the optional --port-offset before spawning so the log shows the
   // actual topology and the detached feles-build inherits a concrete number.
@@ -229,15 +378,19 @@ async function cmdStart() {
   console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
   const spawnCommandArgs = ` --port-offset ${offset}`;
 
-  const logFile = path.join(PROJECT_ROOT, "_dist", "dev-server.log");
-  const marionetteFile = path.join(
-    PROJECT_ROOT,
-    "_dist",
-    "marionette-port.txt",
-  );
-
+  const nativeLaunch = !!Deno.env.get("FLOORP_M3E_LAUNCH_TOKEN");
+  const logFile = nativeLaunch
+    ? nativeDevLogTarget(PLATFORM)
+    : path.join(PROJECT_ROOT, "_dist", "dev-server.log");
+  if (nativeLaunch) {
+    await Deno.writeTextFile(
+      path.join(PROJECT_ROOT, "_dist", "dev-server.log"),
+      JSON.stringify({ omitted: "raw native browser output" }),
+      { mode: 0o600 },
+    );
+  }
   // Remove stale state files
-  for (const f of [marionetteFile, PID_FILE]) {
+  for (const f of [marionetteFile, PID_FILE, DEV_STARTUP_STATUS_FILE]) {
     try {
       Deno.removeSync(f);
     } catch {
@@ -298,47 +451,106 @@ async function cmdStart() {
   await recordDevProcess(Number(pid));
   console.log(`Started (PID ${pid}). Waiting for Marionette...`);
 
-  // Poll for marionette-port.txt
-  const maxWait = 120; // seconds
-  for (let i = 0; i < maxWait; i++) {
-    await new Promise((r) => setTimeout(r, 1000));
-    try {
-      const port = Deno.readTextFileSync(marionetteFile).trim();
-      if (port) {
-        if (PLATFORM === "windows") {
-          try {
-            await registerWindowsBrowserListenerIdentity({
-              port: Number(port),
-              expectedBinaryPath: BIN_PATH_EXE,
-              expectedProfilePath: PATHS.profile_test,
-              recordedProcesses: readDevProcesses(),
-            });
-          } catch (error) {
-            console.error(
-              "[dev-tool] Actual browser listener identity was not registered:",
-              error,
-            );
-            Deno.exit(1);
-          }
+  let readyPort = "";
+  try {
+    await pollDevStartup(async (signal, remaining, i) => {
+      const startup = await Deno.readTextFile(DEV_STARTUP_STATUS_FILE).then((
+        text,
+      ) => JSON.parse(text)).catch(() => null);
+      signal.throwIfAborted();
+      if (startup?.state === "failed") {
+        const code =
+          ["port-conflict", "registration-failed", "startup-timeout"].includes(
+              startup.code,
+            )
+            ? startup.code
+            : "startup-failed";
+        const port = Number.isInteger(startup.port) && startup.port > 0 &&
+            startup.port <= 65535
+          ? startup.port
+          : null;
+        if (code === "port-conflict") {
+          await reportDevStartupPortConflict(port, nativeLaunch);
         }
-        console.log(`Browser ready! Marionette on port ${port}.`);
-        console.log(`Log: ${logFile}`);
-        return;
+        throw new Error(
+          `Dev startup failed: ${code}; port=${port}; status=${DEV_STARTUP_STATUS_FILE}`,
+        );
       }
-    } catch {
-      // not yet
-    }
-    const log = await Deno.readTextFile(logFile).catch(() => "");
-    if (await reportDevPortConflict(log)) Deno.exit(1);
-    if (i % 5 === 4 && !(await listDevProcesses(Number(pid))).length) {
-      console.error(
-        `[dev-tool] Dev server exited before Marionette was ready. Check ${logFile}.`,
-      );
-      Deno.exit(1);
-    }
+      try {
+        const port = await checkReadiness(signal, remaining);
+        if (port) {
+          readyPort = port;
+          return true;
+        }
+      } catch (error) {
+        signal.throwIfAborted();
+        if (error instanceof DevStartupFailure) throw error;
+        // not yet
+      }
+      const log = await Deno.readTextFile(logFile).catch(() => "");
+      signal.throwIfAborted();
+      if (await reportDevPortConflict(log, signal)) {
+        signal.throwIfAborted();
+        Deno.exit(1);
+      }
+      if (
+        i % 5 === 4 &&
+        await devProcessExitConfirmed(
+          Number(pid),
+          listDevProcesses,
+          signal,
+          Math.min(5000, remaining()),
+        )
+      ) {
+        signal.throwIfAborted();
+        console.error(
+          `[dev-tool] Dev server exited before Marionette was ready. Check ${
+            nativeLaunch ? DEV_STARTUP_STATUS_FILE : logFile
+          }.`,
+        );
+        throw new DevStartupFailure("startup-failed");
+      }
+      return false;
+    }, startupDeadline);
+    const identities = readDevProcesses().filter((identity) =>
+      !previousProcesses.some((previous) =>
+        previous.pid === identity.pid &&
+        previous.startTime === identity.startTime
+      )
+    );
+    await Deno.writeTextFile(
+      DEV_STARTUP_STATUS_FILE,
+      JSON.stringify(
+        await devStartupReady(
+          identities,
+          Number(pid),
+          PATHS.profile_test,
+          readyPort,
+        ),
+      ),
+      { mode: 0o600 },
+    );
+    console.log(`Browser ready! Marionette on port ${readyPort}.`);
+    console.log(
+      `Log: ${
+        nativeLaunch
+          ? path.join(PROJECT_ROOT, "_dist", "dev-server.log")
+          : logFile
+      }`,
+    );
+    return;
+  } catch (error) {
+    if (!(error instanceof DevStartupFailure)) throw error;
+    await settleWithin(reportDevStartupFailure(error), 5000);
+    if (error.code !== "startup-timeout") Deno.exit(1);
   }
-
-  console.error(`Timed out after ${maxWait}s. Check ${logFile} for errors.`);
+  console.error(
+    `Timed out within the ${
+      DEV_STARTUP_TIMEOUT_MS / 1000
+    }s startup budget. Check ${
+      nativeLaunch ? DEV_STARTUP_STATUS_FILE : logFile
+    } for errors.`,
+  );
   Deno.exit(1);
 }
 
@@ -582,9 +794,10 @@ async function cmdConsole() {
 }
 
 async function cmdStatus() {
-  await withBrowser(async (client) => {
-    await client.setContext("chrome");
-    const info = await client.executeScript(`
+  await withBrowser(
+    async (client) => {
+      await client.setContext("chrome");
+      const info = await client.executeScript(`
       return JSON.stringify({
         title: document.title,
         url: document.documentURI,
@@ -592,13 +805,17 @@ async function cmdStatus() {
         activeTab: typeof gBrowser !== 'undefined' ? gBrowser.selectedTab.getAttribute('label') : 'N/A',
       })
     `);
-    const data = JSON.parse(info);
-    console.log("Connected to browser.");
-    console.log(`  Title: ${data.title}`);
-    console.log(`  URL: ${data.url}`);
-    console.log(`  Tabs: ${data.tabCount}`);
-    console.log(`  Active tab: ${data.activeTab}`);
-  });
+      const data = JSON.parse(info);
+      console.log("Connected to browser.");
+      console.log(`  Title: ${data.title}`);
+      console.log(`  URL: ${data.url}`);
+      console.log(`  Tabs: ${data.tabCount}`);
+      console.log(`  Active tab: ${data.activeTab}`);
+    },
+    Deno.env.get("FLOORP_M3E_STATUS_DIAGNOSTICS") === "1"
+      ? (stage) => console.error(`[m3e-status] ${stage}`)
+      : undefined,
+  );
 }
 
 async function cmdTitle() {

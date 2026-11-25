@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
 import {
   captureWindowsBrowserListenerIdentity,
+  listWindowsBrowserListeners,
+  listWindowsBrowserProcesses,
+  ownsDevBrowserListener,
+  parseDevBrowserLoopbackLsofOwners,
   parseWindowsBrowserProcessSnapshot,
   revalidateWindowsBrowserListenerIdentity,
   selectWindowsBrowserListenerIdentity,
@@ -14,9 +18,319 @@ import type {
   WindowsBrowserIdentityDeps,
   WindowsBrowserListenerSelection,
 } from "./dev_browser_identity_types.ts";
-import { readDevProcesses, recordDevProcess } from "./dev_processes.ts";
+import {
+  listDevProcesses,
+  readDevProcesses,
+  recordDevProcess,
+  registerWindowsBrowserListenerIdentity,
+} from "./dev_processes.ts";
+import { sleep } from "./async_utils.ts";
+import {
+  devStartupReady,
+  probeDevMarionettePort,
+  verifyDevStartupReady,
+} from "./dev_launch.ts";
 
 const BIN = "C:\\Floorp\\_dist\\bin\\floorp\\floorp.exe";
+
+Deno.test({
+  name:
+    "Linux ownership ignores unrelated IPv6-only and different-address listeners, rejects replacement and tolerates an absent IPv6 table",
+  ignore: Deno.build.os !== "linux",
+  fn: async () => {
+    const fixture = async () => {
+      const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
+      const port = listener.addr.port;
+      let listening = true;
+      let child: Deno.ChildProcess | undefined;
+      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+      const signal = new AbortController().signal;
+      try {
+        assertEquals(
+          await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+          true,
+        );
+        assertEquals(
+          await ownsDevBrowserListener(port, [], signal, 5000),
+          false,
+        );
+        const read = Deno.readTextFile;
+        try {
+          const table = await read("/proc/net/tcp");
+          const local = `0100007F:${
+            port.toString(16).toUpperCase().padStart(4, "0")
+          }`;
+          const row = table.split("\n").find((line) =>
+            line.trim().split(/\s+/)[1] === local
+          )!;
+          for (
+            const [address, expected] of [
+              ["00000000000000000000000000000000", false],
+              ["0000000000000000FFFF00000100007F", true],
+              ["00000000000000000000000001000000", false],
+              ["0000000000000000FFFF00000200007F", false],
+            ] as const
+          ) {
+            Deno.readTextFile = (path, options) =>
+              path === "/proc/net/tcp"
+                ? Promise.resolve("header\n")
+                : path === "/proc/net/tcp6"
+                ? Promise.resolve(
+                  `header\n${
+                    row.replace(local, `${address}:${local.split(":")[1]}`)
+                  }\n`,
+                )
+                : read(path, options);
+            assertEquals(
+              await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+              expected,
+            );
+          }
+          for (
+            const error of [
+              new Deno.errors.NotFound("IPv6 disabled"),
+              new Deno.errors.PermissionDenied("unreadable table"),
+              new Error("table I/O failure"),
+            ]
+          ) {
+            Deno.readTextFile = (path, options) =>
+              path === "/proc/net/tcp6"
+                ? Promise.reject(error)
+                : read(path, options);
+            if (error instanceof Deno.errors.NotFound) {
+              assertEquals(
+                await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+                true,
+              );
+            } else {
+              await assertRejects(
+                () => ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+                Error,
+                error.message,
+              );
+            }
+          }
+          Deno.readTextFile = (path, options) =>
+            path === "/proc/net/tcp"
+              ? Promise.reject(new Deno.errors.NotFound("missing IPv4 table"))
+              : read(path, options);
+          await assertRejects(
+            () => ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+            Deno.errors.NotFound,
+            "missing IPv4 table",
+          );
+        } finally {
+          Deno.readTextFile = read;
+        }
+        const wildcard = Deno.listen({ hostname: "0.0.0.0", port: 0 });
+        try {
+          assertEquals(
+            await ownsDevBrowserListener(
+              wildcard.addr.port,
+              [Deno.pid],
+              signal,
+              5000,
+            ),
+            true,
+          );
+        } finally {
+          wildcard.close();
+        }
+        for (const hostname of ["::", "127.0.0.2", "127.0.0.1"]) {
+          if (hostname === "::") {
+            try {
+              await Deno.stat("/proc/net/tcp6");
+            } catch (error) {
+              if (error instanceof Deno.errors.NotFound) continue;
+              throw error;
+            }
+          }
+          if (hostname === "127.0.0.1") {
+            listener.close();
+            listening = false;
+          }
+          child = new Deno.Command(
+            hostname === "::" ? "python3" : Deno.execPath(),
+            {
+              args: hostname === "::"
+                ? [
+                  "-u",
+                  "-c",
+                  `import socket, sys; s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM); s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1); s.bind(("::", ${port})); s.listen(1); assert s.getsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY) == 1; print("ready"); sys.stdin.buffer.read(1); s.close()`,
+                  "--marionette",
+                ]
+                : [
+                  "eval",
+                  `const listener = Deno.listen({hostname: ${
+                    JSON.stringify(hostname)
+                  }, port: ${port}}); console.log("ready"); await Deno.stdin.read(new Uint8Array(1)); listener.close();`,
+                ],
+              stdin: "piped",
+              stdout: "piped",
+              stderr: "null",
+            },
+          ).spawn();
+          reader = child.stdout.getReader();
+          const ready = await reader.read();
+          assertEquals(new TextDecoder().decode(ready.value).trim(), "ready");
+          assertEquals(
+            await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+            hostname !== "127.0.0.1",
+          );
+          assertEquals(
+            await ownsDevBrowserListener(port, [child.pid], signal, 5000),
+            hostname === "127.0.0.1",
+          );
+          if (hostname === "::") {
+            const serverPid = Deno.pid;
+            const browserPid = child.pid;
+            const inspect = async (signal: AbortSignal, budget: number) =>
+              (await listDevProcesses(undefined, signal, budget)).filter((
+                process,
+              ) => process.pid === serverPid || process.pid === browserPid);
+            const record = await devStartupReady(
+              await inspect(signal, 5000),
+              serverPid,
+              "/isolated",
+              String(port),
+            );
+            assertEquals(record?.state, "ready");
+            let probes = 0;
+            await assertRejects(
+              () =>
+                probeDevMarionettePort(
+                  () => String(port),
+                  signal,
+                  () => 5000,
+                  undefined,
+                  () => {
+                    probes++;
+                    return Promise.reject(
+                      new Error("foreign IPv4 listener is not Marionette"),
+                    );
+                  },
+                  (port) =>
+                    verifyDevStartupReady(
+                      record,
+                      serverPid,
+                      "/isolated",
+                      port,
+                      signal,
+                      () => 5000,
+                      inspect,
+                    ),
+                ),
+              Error,
+              "foreign IPv4 listener is not Marionette",
+            );
+            assertEquals(probes, 1);
+          }
+          const cancelled = new AbortController();
+          cancelled.abort(new Error("cancelled listener inspection"));
+          await assertRejects(
+            () =>
+              ownsDevBrowserListener(
+                port,
+                [child!.pid],
+                cancelled.signal,
+                5000,
+              ),
+            Error,
+            "cancelled listener inspection",
+          );
+          await child.stdin.close();
+          await child.status;
+          await reader.cancel();
+          reader.releaseLock();
+          child = undefined;
+          reader = undefined;
+        }
+      } finally {
+        if (listening) listener.close();
+        if (child) {
+          await child.stdin.close().catch(() => {});
+          await child.status;
+        }
+        if (reader) {
+          await reader.cancel();
+          reader.releaseLock();
+        }
+      }
+    };
+    const source =
+      `import { assertEquals, assertRejects } from "@std/assert"; import { ownsDevBrowserListener } from ${
+        JSON.stringify(
+          new URL("./dev_browser_identity.ts", import.meta.url).href,
+        )
+      }; import { devStartupReady, probeDevMarionettePort, verifyDevStartupReady } from ${
+        JSON.stringify(new URL("./dev_launch.ts", import.meta.url).href)
+      }; import { listDevProcesses } from ${
+        JSON.stringify(new URL("./dev_processes.ts", import.meta.url).href)
+      }; await (${fixture.toString()})();`;
+    const result = await new Deno.Command(Deno.execPath(), {
+      args: [
+        "eval",
+        "--config",
+        new URL("../../deno.json", import.meta.url).pathname,
+        source,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
+  },
+});
+
+Deno.test("lsof ownership selects only endpoints serving IPv4 loopback, including wildcards and mapped addresses", () => {
+  for (
+    const address of [
+      "127.0.0.1",
+      "0.0.0.0",
+      "*",
+      "[::ffff:127.0.0.1]",
+      "[::ffff:7f00:1]",
+    ]
+  ) {
+    assertEquals(
+      parseDevBrowserLoopbackLsofOwners(
+        `p11\nf3\ntIPv4\nn${address}:2828\np12\nf4\nn127.0.0.2:2828\nn[::1]:2828\nn127.0.0.1:2829\n`,
+        2828,
+      ),
+      [11],
+    );
+  }
+  assertEquals(parseDevBrowserLoopbackLsofOwners("", 2828), []);
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners("p12\nn127.0.0.2:2828\n", 2828),
+    [],
+  );
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners(
+      "p11\nf3\ntIPv4\nn*:2828\np12\nn127.0.0.1:2828\n",
+      2828,
+    ),
+    [11, 12],
+  );
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners(
+      "p11\nf3\ntIPv6\nn*:2828\nf4\nn*:2828\nf5\ntIPv6\nn[::]:2828\n",
+      2828,
+    ),
+    [],
+  );
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners(
+      "p11\nf3\ntIPv6\nn[::ffff:127.0.0.1]:2828\n",
+      2828,
+    ),
+    [11],
+  );
+  assertThrows(
+    () => parseDevBrowserLoopbackLsofOwners("n127.0.0.1:2828\n", 2828),
+    Error,
+    "no process owner",
+  );
+});
 const PROFILE = "C:\\Floorp\\_dist\\profile\\test";
 const PARENT_START = "2026-11-15T03:00:00.000Z";
 const CHILD_START = "2026-11-15T03:00:01.000Z";
@@ -88,6 +402,194 @@ function deps(
     ...overrides,
   };
 }
+
+Deno.test("Windows listener registration cancels, kills and reaps both PowerShell snapshots before returning, without retries or persistence", async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(Deno, "Command")!;
+  let spawned = 0;
+  let killed = 0;
+  let reaped = 0;
+  let stall = true;
+  let fail = false;
+  const started = Promise.withResolvers<void>();
+  class MockCommand {
+    constructor(command: string) {
+      assertEquals(command, "powershell");
+    }
+    spawn() {
+      spawned++;
+      if (spawned === 2) started.resolve();
+      const status = Promise.withResolvers<Deno.CommandStatus>();
+      const output = Promise.withResolvers<Deno.CommandOutput>();
+      const result = {
+        success: !fail,
+        code: fail ? 1 : 0,
+        signal: null,
+        stdout: new TextEncoder().encode("[]"),
+        stderr: new TextEncoder().encode("probe failed"),
+      };
+      if (!stall) {
+        status.resolve(result);
+        output.resolve(result);
+      }
+      return {
+        status: status.promise.then((value) => {
+          reaped++;
+          return value;
+        }),
+        stdout: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await output.promise).stdout);
+            controller.close();
+          },
+        }),
+        stderr: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await output.promise).stderr);
+            controller.close();
+          },
+        }),
+        kill() {
+          killed++;
+          output.resolve(result);
+          setTimeout(() => status.resolve(result), spawned % 2 === 0 ? 10 : 1);
+        },
+      };
+    }
+  }
+  try {
+    Object.defineProperty(Deno, "Command", {
+      configurable: true,
+      value: MockCommand,
+    });
+    const target = {
+      port: 5200,
+      expectedBinaryPath: BIN,
+      expectedProfilePath: PROFILE,
+      recordedProcesses: [recordedParent],
+      timeoutMs: 1000,
+    };
+    const controller = new AbortController();
+    const pending = registerWindowsBrowserListenerIdentity({
+      ...target,
+      signal: controller.signal,
+    });
+    await started.promise;
+    controller.abort(new Error("cancelled startup"));
+    await assertRejects(() => pending, Error, "cancelled startup");
+    assertEquals([spawned, killed, reaped], [2, 2, 2]);
+    await assertRejects(
+      () =>
+        registerWindowsBrowserListenerIdentity({ ...target, timeoutMs: 20 }),
+      Error,
+      "Listener registration timed out",
+    );
+    assertEquals([spawned, killed, reaped], [4, 4, 4]);
+    await assertRejects(
+      () =>
+        registerWindowsBrowserListenerIdentity({
+          ...target,
+          signal: controller.signal,
+        }),
+      Error,
+      "cancelled startup",
+    );
+    for (const timeoutMs of [0, -1, NaN, Infinity]) {
+      await assertRejects(
+        () => registerWindowsBrowserListenerIdentity({ ...target, timeoutMs }),
+        TypeError,
+        "Invalid listener registration timeout",
+      );
+    }
+    assertEquals(spawned, 4);
+    await assertRejects(
+      () => listWindowsBrowserListeners(5200, undefined, 20),
+      Error,
+      "Listener inspection timed out",
+    );
+    await assertRejects(
+      () => listWindowsBrowserProcesses(undefined, 20),
+      Error,
+      "Listener inspection timed out",
+    );
+    assertEquals([spawned, killed, reaped], [6, 6, 6]);
+    stall = false;
+    assertEquals(await listWindowsBrowserListeners(5200), []);
+    assertEquals(await listWindowsBrowserProcesses(), []);
+    fail = true;
+    await assertRejects(
+      () => listWindowsBrowserListeners(5200),
+      Error,
+      "powershell: probe failed",
+    );
+  } finally {
+    Object.defineProperty(Deno, "Command", descriptor);
+  }
+});
+
+Deno.test("listener registration forwards remaining time and cancellation through revalidation, backoff and persistence", async () => {
+  const target = {
+    port: 5200,
+    expectedBinaryPath: BIN,
+    expectedProfilePath: PROFILE,
+    recordedProcesses: [recordedParent],
+    timeoutMs: 1000,
+  };
+  const controller = new AbortController();
+  let inspections = 0;
+  let writes = 0;
+  await assertRejects(
+    () =>
+      captureWindowsBrowserListenerIdentity(
+        { ...target, signal: controller.signal },
+        deps({
+          listProcesses(signal, budget) {
+            assert(signal);
+            assert(budget! > 0 && budget! <= 1000);
+            inspections++;
+            return Promise.resolve([parent, child]);
+          },
+          recordIdentity(_identity, signal) {
+            assert(signal);
+            controller.abort(new Error("cancelled persistence"));
+            signal.throwIfAborted();
+            writes++;
+            return Promise.resolve(true);
+          },
+        }),
+      ),
+    Error,
+    "cancelled persistence",
+  );
+  assertEquals([inspections, writes], [2, 0]);
+  const retry = new AbortController();
+  let attempts = 0;
+  await assertRejects(
+    () =>
+      captureWindowsBrowserListenerIdentity(
+        { ...target, signal: retry.signal },
+        deps({
+          listListeners() {
+            attempts++;
+            return Promise.reject(new Error("not ready"));
+          },
+          sleep(ms, signal) {
+            retry.abort(new Error("cancelled backoff"));
+            return sleep(ms, signal);
+          },
+        }),
+      ),
+    Error,
+    "cancelled backoff",
+  );
+  assertEquals(attempts, 1);
+  const source =
+    (await Deno.readTextFile(new URL("./dev_processes.ts", import.meta.url)))
+      .replace(/\s/g, "");
+  assert(
+    /recordDevProcess\(identity\.pid,DEV_PROCESSES_FILE,identity,signal,?\)/
+      .test(source),
+  );
+});
 
 Deno.test("unverifiable Windows system rows do not poison the owned process snapshot", () => {
   const raw = JSON.stringify([
@@ -391,6 +893,9 @@ function withProcessSnapshot(
         stdout: new TextEncoder().encode(output()),
         stderr: new Uint8Array(),
       });
+    }
+    spawn() {
+      return { output: () => this.output(), kill() {} };
     }
   }
   Object.defineProperty(Deno, "Command", {

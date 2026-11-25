@@ -169,9 +169,27 @@ Deno.test({
         assertEquals(snapshot.observations.length, 1);
         assert(snapshot.observations.every(headersAreOnlyBooleans));
         assertEquals(snapshot.observations[0].origin, "trusted");
+        assertEquals(
+          snapshot.observations[0].routePath,
+          packagePath(expectedHash),
+        );
+        assertEquals(snapshot.observations[0].featureId, FEATURE_ID);
+        assertEquals(snapshot.observations[0].packageSha256, expectedHash);
         assertEquals(snapshot.observations[0].cookiePresent, false);
         assertEquals(snapshot.observations[0].authorizationPresent, false);
         assertEquals(snapshot.observations[0].referrerPresent, false);
+        const privateMarker = "sensitive-route-marker";
+        await request(
+          fixture,
+          client,
+          "valid-streaming",
+          `/noncanonical/${privateMarker}?token=${privateMarker}`,
+        );
+        const privacyObservation = fixture.snapshot().observations[1];
+        assertEquals(privacyObservation.routePath, null);
+        assertEquals(privacyObservation.featureId, null);
+        assertEquals(privacyObservation.packageSha256, null);
+        assert(!JSON.stringify(privacyObservation).includes(privateMarker));
         assertEquals(
           snapshot.ports.trusted === snapshot.ports.untrusted,
           false,
