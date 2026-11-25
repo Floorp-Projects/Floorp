@@ -542,7 +542,9 @@ names another commit than the comment. So:
 
 - Commit first, then run the platform step, then publish, all at the same
   HEAD. A later commit (or a run on a dirty worktree) leaves the evidence
-  `failed` until that platform is run again.
+  `failed` until that platform is run again. Keep payloads under `_dist/` or
+  outside the repository: any untracked file elsewhere makes the worktree
+  dirty.
 - Do not edit or replace `_dist/fdh/platform/<task-id>/` files: a changed file
   stops the manifest build. Run QA through `job start --step platform`, not
   `platform-qa run` directly, which overwrites the report without recording it.

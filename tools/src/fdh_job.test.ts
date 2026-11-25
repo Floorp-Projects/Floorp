@@ -1503,6 +1503,10 @@ Deno.test("fdh job: a clean worktree has the CLEAN_WORKTREE_STATE inputs", async
   }
 });
 
+/** The command's run time in these tests; the report is written inside it. */
+const RUN_FROM = "2026-11-25T10:00:00.000Z";
+const RUN_TO = "2026-11-25T10:10:00.000Z";
+
 /** Start a Linux platform job at `head` and finish it with `exitCode`. */
 async function finishedPlatformJob(
   dir: string,
@@ -1537,8 +1541,8 @@ async function finishedPlatformJob(
         index: 0,
         epoch: 1,
         exitCode,
-        startedAt: now,
-        endedAt: now,
+        startedAt: RUN_FROM,
+        endedAt: RUN_TO,
         logRef: null,
       }],
     }, now);
@@ -1549,6 +1553,7 @@ async function finishedPlatformJob(
 async function writePlatformReport(
   dir: string,
   screenshotSha256: (png: Uint8Array) => Promise<string>,
+  overrides: Record<string, unknown> = {},
 ): Promise<void> {
   const out = `${dir}/_dist/fdh/platform/t1`;
   Deno.mkdirSync(out, { recursive: true });
@@ -1568,11 +1573,14 @@ async function writePlatformReport(
         version: "12.21.1@159.0.1",
       },
       screenshot: { file: "linux.png", sha256: await screenshotSha256(png) },
+      startedAt: "2026-11-25T10:01:00.000Z",
+      finishedAt: "2026-11-25T10:09:00.000Z",
       steps: [{
         name: "preflight",
         ok: true,
         result: { details: { image: "fdh-qa-linux:41fc5d48b6ce" } },
       }],
+      ...overrides,
     }),
   );
 }
@@ -1618,10 +1626,22 @@ Deno.test("fdh job: a settled platform job pins its report and screenshot at the
 
 Deno.test("fdh job: a platform job passes only on a report that holds up", async () => {
   for (
-    const [label, exitCode, write] of [
-      ["missing report", 0, false],
-      ["screenshot hash mismatch", 0, true],
-      ["non-zero exit", 1, true],
+    const [label, exitCode, write, overrides] of [
+      ["missing report", 0, false, {}],
+      ["screenshot hash mismatch", 0, true, {}],
+      ["non-zero exit", 1, true, {}],
+      // Another run's report at the same path (a later job, or a direct run).
+      ["written after this run", 0, true, {
+        startedAt: "2026-11-25T10:11:00.000Z",
+        finishedAt: "2026-11-25T10:12:00.000Z",
+      }],
+      ["another payload", 0, true, {
+        payload: {
+          name: "other.tar.xz",
+          sha256: "f".repeat(64),
+          version: null,
+        },
+      }],
     ] as const
   ) {
     const dir = await Deno.makeTempDir();
@@ -1633,6 +1653,7 @@ Deno.test("fdh job: a platform job passes only on a report that holds up", async
           label === "screenshot hash mismatch"
             ? () => Promise.resolve("e".repeat(64))
             : hexSha256,
+          overrides,
         );
       }
       await settleJob(dir, "t1", jobId);

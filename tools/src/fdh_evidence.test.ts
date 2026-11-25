@@ -692,3 +692,26 @@ Deno.test("only the latest platform result counts, and one without a binding fai
     );
   });
 });
+
+Deno.test("a platform binding that points outside its own files fails without reading them", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    await addPlatformResult(state);
+    const record = state.assertions.at(-1)!.platform!;
+    record.attachments[0] = { ...record.attachments[0], ref: "../../etc/x" };
+    writeTaskState(state);
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+      head: PLATFORM_HEAD,
+    });
+    assertEquals(manifest.envelope.taskStatus.state, "failed");
+    assert(
+      manifest.assertions.some((a) =>
+        a.name === "platform-qa-linux-at-head" && a.actual.includes("malformed")
+      ),
+    );
+    assert(
+      !manifest.inputFidelity.inputs.some((i) => i.path.includes("etc")),
+    );
+  });
+});

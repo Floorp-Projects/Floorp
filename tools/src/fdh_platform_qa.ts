@@ -211,6 +211,56 @@ export function platformReportRef(
   return `_dist/fdh/platform/${taskId}/${platform}-report.json`;
 }
 
+/** Screenshot path of a platform step, relative to the worktree. */
+export function platformScreenshotRef(
+  taskId: string,
+  platform: QaPlatform,
+): string {
+  validateTaskId(taskId);
+  return `_dist/fdh/platform/${taskId}/${platform}.png`;
+}
+
+/** Largest platform QA report fdh reads. */
+export const MAX_PLATFORM_REPORT_BYTES = 4 * 1024 * 1024;
+/** Largest platform QA screenshot fdh reads. */
+export const MAX_PLATFORM_SCREENSHOT_BYTES = 64 * 1024 * 1024;
+
+/**
+ * Read a platform QA file under the worktree: a regular file (not a link) no
+ * larger than `max` bytes. Returns the bytes, or why it cannot be used.
+ */
+export function readPlatformFile(
+  worktree: string,
+  ref: string,
+  max: number,
+): Uint8Array | string {
+  const file = path.join(worktree, ...ref.split("/"));
+  let info: Deno.FileInfo;
+  try {
+    info = Deno.lstatSync(file);
+  } catch {
+    return `${ref} is not readable`;
+  }
+  if (!info.isFile) return `${ref} is not a regular file`;
+  if (info.size > max) return `${ref} is larger than ${max} bytes`;
+  try {
+    const bytes = Deno.readFileSync(file);
+    return bytes.length > max ? `${ref} is larger than ${max} bytes` : bytes;
+  } catch {
+    return `${ref} is not readable`;
+  }
+}
+
+/** One line of at most `max` characters, for text taken from a report. */
+function clip(value: unknown, max: number): string {
+  // deno-lint-ignore no-control-regex
+  const text = String(value).replace(/[\u0000-\u001f\u007f]/g, " ");
+  return text.length <= max ? text : `${text.slice(0, max)}...`;
+}
+
+const LINUX_IMAGE = /^fdh-qa-linux:[0-9a-f]{12}$/;
+const MACOS_VERSION = /^[0-9]{1,3}(?:\.[0-9]{1,3}){0,3}$/;
+
 async function sha256Bytes(bytes: Uint8Array): Promise<string> {
   const copy = new Uint8Array(bytes.length);
   copy.set(bytes);
@@ -232,10 +282,13 @@ function targetOf(report: Record<string, unknown>): string | null {
   const result = isRecordObject(preflight) ? preflight.result : null;
   const details = isRecordObject(result) ? result.details : null;
   if (!isRecordObject(details)) return null;
-  if (typeof details.image === "string") {
+  if (typeof details.image === "string" && LINUX_IMAGE.test(details.image)) {
     return `Linux container image ${details.image}`;
   }
-  if (typeof details.osVersion === "string") {
+  if (
+    typeof details.osVersion === "string" &&
+    MACOS_VERSION.test(details.osVersion)
+  ) {
     return `macOS VM, macOS ${details.osVersion}`;
   }
   return null;
@@ -251,6 +304,10 @@ export interface PlatformRecordInput {
   /** The job's journal inputs. */
   head: string;
   worktreeState?: string;
+  /** `--payload-sha256` of the command: the report must name this payload. */
+  payloadSha256?: string;
+  /** Start and end of the command: the report must have been written then. */
+  window?: { startedAt: string; endedAt: string };
 }
 
 /**
@@ -276,16 +333,13 @@ export async function readPlatformQaRecord(
     record.problems.push(`unexpected report path ${input.reportRef}`);
     return record;
   }
-  const read = (ref: string): Uint8Array | null => {
-    try {
-      return Deno.readFileSync(path.join(input.worktree, ...ref.split("/")));
-    } catch {
-      return null;
-    }
-  };
-  const bytes = read(input.reportRef);
-  if (bytes === null) {
-    record.problems.push(`report ${input.reportRef} is not readable`);
+  const bytes = readPlatformFile(
+    input.worktree,
+    input.reportRef,
+    MAX_PLATFORM_REPORT_BYTES,
+  );
+  if (typeof bytes === "string") {
+    record.problems.push(`report ${bytes}`);
     return record;
   }
   record.attachments.push({
@@ -308,9 +362,26 @@ export async function readPlatformQaRecord(
   }
   if (report.taskId !== input.taskId || report.platform !== input.platform) {
     record.problems.push(
-      `the report is for ${String(report.taskId)}/${String(report.platform)}`,
+      `the report is for ${clip(report.taskId, 80)}/${
+        clip(report.platform, 20)
+      }`,
     );
     return record;
+  }
+  // The report path is shared by every run of the task and platform: it
+  // must be the one this command wrote (its payload, inside its run time).
+  if (input.window !== undefined) {
+    const from = Date.parse(input.window.startedAt);
+    const to = Date.parse(input.window.endedAt);
+    const began = typeof report.startedAt === "string"
+      ? Date.parse(report.startedAt)
+      : NaN;
+    const ended = typeof report.finishedAt === "string"
+      ? Date.parse(report.finishedAt)
+      : NaN;
+    if (!(began >= from && ended <= to && began <= ended)) {
+      record.problems.push("the report was not written by this run");
+    }
   }
   const outcome = report.outcome;
   if (outcome === "passed" || outcome === "failed" || outcome === "blocked") {
@@ -324,10 +395,18 @@ export async function readPlatformQaRecord(
     typeof payload.sha256 === "string" && SHA256.test(payload.sha256)
   ) {
     record.payload = {
-      name: payload.name,
+      name: clip(payload.name, 200),
       sha256: payload.sha256,
-      version: typeof payload.version === "string" ? payload.version : null,
+      version: typeof payload.version === "string"
+        ? clip(payload.version, 100)
+        : null,
     };
+    if (
+      input.payloadSha256 !== undefined &&
+      payload.sha256 !== input.payloadSha256
+    ) {
+      record.problems.push("the report names another payload than the job");
+    }
   } else {
     record.problems.push("the report has no payload hash");
   }
@@ -339,12 +418,14 @@ export async function readPlatformQaRecord(
     if (file !== `${input.platform}.png` || typeof claimed !== "string") {
       record.problems.push("the report's screenshot entry is malformed");
     } else {
-      const ref = `${
-        input.reportRef.slice(0, input.reportRef.lastIndexOf("/"))
-      }/${file}`;
-      const png = read(ref);
-      if (png === null) {
-        record.problems.push(`screenshot ${ref} is not readable`);
+      const ref = platformScreenshotRef(input.taskId, input.platform);
+      const png = readPlatformFile(
+        input.worktree,
+        ref,
+        MAX_PLATFORM_SCREENSHOT_BYTES,
+      );
+      if (typeof png === "string") {
+        record.problems.push(`screenshot ${png}`);
       } else {
         const sha256 = await sha256Bytes(png);
         record.attachments.push({ ref, sha256, bytes: png.length });

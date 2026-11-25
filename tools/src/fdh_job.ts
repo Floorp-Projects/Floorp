@@ -433,14 +433,11 @@ export async function settleJob(
   // The whole copy runs under the journal lock with `recordedToTask` as the
   // guard, so two settlers (the executor after its ACK and a controller) do
   // not both record. Lock order: journal, then task state.
-  // A platform step's report and screenshot are hashed first (WebCrypto is
-  // async, the journal update is not). A terminal job does not change, and
-  // no other platform job of the task and platform runs meanwhile.
-  const before = readJob(worktree, taskId, jobId);
-  if (!isTerminal(before.state) || before.recordedToTask) return false;
-  const records = await platformRecordsOf(worktree, taskId, before);
-  const { value } = await updateJob(worktree, taskId, jobId, (job) => {
+  const { value } = await updateJob(worktree, taskId, jobId, async (job) => {
     if (!isTerminal(job.state) || job.recordedToTask) return false;
+    // A platform step's report and screenshot are pinned under the same
+    // lock, before the task state is read for the copy.
+    const records = await platformRecordsOf(worktree, taskId, job);
     copyResultToTask(worktree, taskId, job, records);
     markRecordedToTask(job);
     return true;
@@ -458,17 +455,29 @@ async function platformRecordsOf(
   for (const result of job.commandResults) {
     const command = job.step?.commands[result.index];
     if (command?.platformReport === undefined) continue;
-    const flag = command.argv.find((a) => a.startsWith("--platform="));
+    const option = (name: string) =>
+      command.argv.find((a) => a.startsWith(`--${name}=`))?.slice(
+        name.length + 3,
+      );
+    let platform;
+    try {
+      platform = parsePlatform(option("platform") ?? "");
+    } catch {
+      // A damaged journal: no record, so a failed "not read" assertion.
+      continue;
+    }
     records.set(
       result.index,
       await readPlatformQaRecord({
         worktree,
         taskId,
-        platform: parsePlatform(flag?.slice("--platform=".length) ?? ""),
+        platform,
         jobId: job.jobId,
         reportRef: command.platformReport,
         head: job.inputs.head,
         worktreeState: job.inputs.worktreeState,
+        payloadSha256: option("payload-sha256"),
+        window: { startedAt: result.startedAt, endedAt: result.endedAt },
       }),
     );
   }

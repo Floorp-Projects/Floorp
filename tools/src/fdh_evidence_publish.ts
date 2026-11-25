@@ -32,6 +32,7 @@ import { encodeHex } from "@std/encoding/hex";
 import type { EvidenceManifest } from "../qa3/evidence/types.ts";
 import {
   evidenceIds,
+  PLATFORM_AT_HEAD_RE,
   platformAtHeadName,
   validateEvidenceManifest,
 } from "./fdh_evidence.ts";
@@ -449,8 +450,6 @@ export interface PlatformBinding {
   passed: boolean;
 }
 
-const AT_HEAD_EXPECTED = /recorded at HEAD ([0-9a-f]{40}(?:[0-9a-f]{24})?) /;
-
 /** Platform results of a decoded manifest and the commit each is bound to. */
 export function platformBindings(
   manifest: EvidenceManifest,
@@ -458,7 +457,8 @@ export function platformBindings(
   const out: PlatformBinding[] = [];
   for (const platform of QA_PLATFORMS) {
     const name = platformAssertionName(platform);
-    if (!manifest.assertions.some((a) => a.name === name)) continue;
+    const result = manifest.assertions.filter((a) => a.name === name).at(-1);
+    if (result === undefined) continue;
     const atHead = manifest.assertions.filter((a) =>
       a.name === platformAtHeadName(platform)
     ).at(-1);
@@ -466,8 +466,8 @@ export function platformBindings(
       platform,
       boundTo: atHead === undefined
         ? null
-        : AT_HEAD_EXPECTED.exec(atHead.expected)?.[1] ?? null,
-      passed: atHead?.passed ?? false,
+        : PLATFORM_AT_HEAD_RE.exec(atHead.expected)?.[1] ?? null,
+      passed: result.passed && (atHead?.passed ?? false),
     });
   }
   return out;

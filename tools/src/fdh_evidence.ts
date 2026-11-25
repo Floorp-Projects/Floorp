@@ -30,7 +30,16 @@ import type {
 import { UNVERIFIED, validateManifest } from "../qa3/evidence/validate.ts";
 import { type FdhTaskState, taskStatePath } from "./fdh_task.ts";
 import { isBlockedBuildEvent } from "./fdh_verify.ts";
-import { platformAssertionName, QA_PLATFORMS } from "./fdh_platform_qa.ts";
+import {
+  MAX_PLATFORM_REPORT_BYTES,
+  MAX_PLATFORM_SCREENSHOT_BYTES,
+  platformAssertionName,
+  platformReportRef,
+  platformScreenshotRef,
+  QA_PLATFORMS,
+  readPlatformFile,
+} from "./fdh_platform_qa.ts";
+import type { PlatformQaRecord, QaPlatform } from "./fdh_platform_qa_types.ts";
 
 export const FDH_OWNER = "fdh-local-runner";
 export const FDH_PRINCIPAL_ID = "fdh-cli";
@@ -461,8 +470,9 @@ function buildAttempts(
     endedAt: lastTimestamp(state),
     result: attemptResultOf(state, extra),
     exitCode: null,
-    notes:
-      `fdh local loop; ${state.operations.length} command(s), ${state.assertions.length} assertion(s)`,
+    notes: `fdh local loop; ${state.operations.length} command(s), ${
+      state.assertions.length + extra.length
+    } assertion(s)`,
   }];
 }
 
@@ -548,6 +558,46 @@ export function platformAtHeadName(platform: string): string {
   return `platform-qa-${platform}-at-head`;
 }
 
+/**
+ * `expected` of a `platform-qa-<p>-at-head` assertion. `evidence trace` reads
+ * the commit back with PLATFORM_AT_HEAD_RE, so the two must change together.
+ */
+export function platformAtHeadExpected(
+  platform: string,
+  head: string | undefined,
+): string {
+  return `the ${platform} result was recorded at HEAD ${
+    head ?? "(not given)"
+  } on a clean worktree`;
+}
+
+export const PLATFORM_AT_HEAD_RE =
+  /^the [a-z]+ result was recorded at HEAD ([0-9a-f]{40}(?:[0-9a-f]{24})?) on a clean worktree$/;
+
+/** The record of a task-state assertion is well formed for this task. */
+function isRecordFor(
+  value: unknown,
+  taskId: string,
+  platform: QaPlatform,
+): value is PlatformQaRecord {
+  if (value === null || typeof value !== "object") return false;
+  const r = value as Record<string, unknown>;
+  const allowed = [
+    platformReportRef(taskId, platform),
+    platformScreenshotRef(taskId, platform),
+  ];
+  return r.platform === platform && typeof r.jobId === "string" &&
+    typeof r.head === "string" && typeof r.cleanWorktree === "boolean" &&
+    Array.isArray(r.attachments) &&
+    r.attachments.every((a: unknown) => {
+      if (a === null || typeof a !== "object") return false;
+      const x = a as Record<string, unknown>;
+      return typeof x.ref === "string" && allowed.includes(x.ref) &&
+        typeof x.sha256 === "string" && /^[0-9a-f]{64}$/.test(x.sha256) &&
+        Number.isSafeInteger(x.bytes);
+    });
+}
+
 interface PlatformEvidence {
   assertions: Assertion[];
   inputs: InputFidelityInput[];
@@ -564,6 +614,8 @@ interface PlatformEvidence {
 async function platformEvidence(
   state: FdhTaskState,
   head: string | undefined,
+  /** Inputs that come before these in inputFidelity.inputs. */
+  inputsBefore: number,
 ): Promise<PlatformEvidence> {
   const out: PlatformEvidence = { assertions: [], inputs: [], deviations: [] };
   const want = head?.trim().toLowerCase();
@@ -572,32 +624,41 @@ async function platformEvidence(
     const latest = state.assertions.filter((a) => a.name === name).at(-1);
     if (latest === undefined) continue;
     const record = latest.platform;
-    const expected = `the ${platform} result was recorded at HEAD ${
-      want ?? "(not given)"
-    } on a clean worktree`;
+    const expected = platformAtHeadExpected(platform, want);
+    if (record !== undefined && !isRecordFor(record, state.taskId, platform)) {
+      out.assertions.push({
+        name: platformAtHeadName(platform),
+        expected,
+        actual: "the recorded commit binding is malformed",
+        passed: false,
+      });
+      continue;
+    }
     if (record === undefined) {
       out.assertions.push({
         name: platformAtHeadName(platform),
         expected,
         actual:
-          "the result carries no commit binding (recorded before KAN-146, or its report was not read)",
+          "the result carries no commit binding: no report was pinned (the job did not finish, its report was not read, or it was recorded before KAN-146)",
         passed: false,
       });
       continue;
     }
     for (const attachment of record.attachments) {
       const file = path.join(state.worktree, ...attachment.ref.split("/"));
-      const at = `/inputFidelity/inputs/${out.inputs.length + 1}`;
-      let bytes: Uint8Array;
-      try {
-        bytes = Deno.readFileSync(file);
-      } catch (error) {
+      const at = `/inputFidelity/inputs/${inputsBefore + out.inputs.length}`;
+      const bytes = readPlatformFile(
+        state.worktree,
+        attachment.ref,
+        attachment.ref.endsWith(".png")
+          ? MAX_PLATFORM_SCREENSHOT_BYTES
+          : MAX_PLATFORM_REPORT_BYTES,
+      );
+      if (typeof bytes === "string") {
         throw new EvidenceValidationError([{
           code: "schema-violation",
           path: at,
-          message: `platform QA file '${attachment.ref}' is not readable: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          message: `platform QA file ${bytes}`,
         }]);
       }
       const sha256 = await sha256Hex(bytes);
@@ -645,7 +706,12 @@ export async function buildEvidenceManifest(
   const statePath = taskStatePath(state.worktree, state.taskId);
   const stateBytes = Deno.readFileSync(statePath);
   const externalInputs = await externalObservationInputs(state);
-  const platform = await platformEvidence(state, options.head);
+  // inputs[0] is the task state, then the external observation files.
+  const platform = await platformEvidence(
+    state,
+    options.head,
+    1 + externalInputs.length,
+  );
   const manifestState = manifestStateOf(state, platform.assertions);
 
   const manifest: EvidenceManifest = {
