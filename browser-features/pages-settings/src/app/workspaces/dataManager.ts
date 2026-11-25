@@ -67,7 +67,6 @@ export async function saveWorkspaceSettings(
   }
 
   const oldConfig = await getWorkspacesConfigsExcludeEnabled();
-
   const newConfigs = {
     ...oldConfig,
     manageOnBms: settings.manageOnBms,
@@ -91,7 +90,6 @@ export async function getWorkspaceSettings(): Promise<
     getWorkspacesEnabled(),
     getWorkspacesConfigsExcludeEnabled(),
   ]);
-
   if (enabled === null || configs === null) {
     return null;
   }

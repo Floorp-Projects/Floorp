@@ -22,6 +22,14 @@ export const WORKSPACE_ENABLED_PREF_NAME = "floorp.workspaces.enabled";
 
 export const WORKSPACED_CONFIG_PREF_NAME = "floorp.workspaces.v4.config";
 
+/** JSON backup configuration, kept separate from the strict v4 config codec. */
+export const WORKSPACE_BACKUP_CONFIG_PREF_NAME =
+  "floorp.workspaces.backup.config";
+
+/** Epoch milliseconds of the last automatic/manual backup run. */
+export const WORKSPACE_BACKUP_LAST_RUN_PREF_NAME =
+  "floorp.workspaces.backup.lastRun";
+
 /**
  * Observer topic used to request workspace initialization.
  */

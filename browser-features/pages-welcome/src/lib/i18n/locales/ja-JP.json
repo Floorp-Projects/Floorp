@@ -11,6 +11,11 @@
   },
   "setupV5": {
     "back": "戻る",
+    "backupTitle": "タブとワークスペースのバックアップ",
+    "backupDescription": "Floorp は開いているタブとワークスペースを定期的に保存し、後から復元できます。既定で有効です。",
+    "backupEnable": "タブとワークスペースを自動的にバックアップする",
+    "backupDetails": "保存されるのはタブの URL・タイトル・ピン留め・コンテナ・履歴で、プロファイル内の workspaces/backup に保存されます。フォームの入力内容やセッションストレージは保存されません。保持期間を過ぎたバックアップは自動的に削除されます。設定はいつでも変更できます。",
+    "backupOpenSettings": "バックアップ設定を開く",
     "supportLabels": {
       "disabled": "自動で開かない",
       "blocking": "ブロッカーの設定を維持して開く",

@@ -280,6 +280,29 @@ Deno.test("a browser pass followed by a fail keeps the browser-UNVERIFIED limita
   });
 });
 
+Deno.test("a platform QA assertion adds the early-check limitation", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    writeTaskState(state);
+    const before = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+    });
+    const marker = "Platform QA (fdh platform-qa, KAN-145)";
+    assert(!before.limitations.some((item) => item.includes(marker)));
+    addCheck(
+      state,
+      "platform-qa-linux",
+      "deno run -A tools/fdh.ts platform-qa run --platform linux",
+    );
+    writeTaskState(state);
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+    });
+    assert(manifest.limitations.some((item) => item.includes(marker)));
+    assertEquals(validateEvidenceManifest(manifest), []);
+  });
+});
+
 Deno.test("a cancelled state uses the cancel_requested transition and not-required approval", async () => {
   await withTempDir(async (dir) => {
     const state = makeState(dir);
