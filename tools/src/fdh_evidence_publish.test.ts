@@ -745,3 +745,102 @@ Deno.test("fdh evidence publish: the review copy and the comment are created tog
     await Deno.remove(dir, { recursive: true });
   }
 });
+
+/**
+ * A succeeded manifest with a Linux platform result bound to `builtAt`
+ * (KAN-146): the job ran at `builtAt` on a clean worktree, and the manifest
+ * was built for that commit.
+ */
+async function platformManifestIn(
+  dir: string,
+  builtAt: string,
+): Promise<EvidenceManifest> {
+  const state = createTaskState({
+    taskId: "ev-1",
+    worktree: dir,
+    baseCommit: "b".repeat(40),
+    portOffset: 0,
+    now: () => "2026-11-11T00:00:00.000Z",
+  });
+  const dirRef = "_dist/fdh/platform/ev-1";
+  Deno.mkdirSync(path.join(dir, ...dirRef.split("/")), { recursive: true });
+  const report = new TextEncoder().encode("{}");
+  Deno.writeFileSync(
+    path.join(dir, ...dirRef.split("/"), "linux-report.json"),
+    report,
+  );
+  const digest = Array.from(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", report)),
+    (b) => b.toString(16).padStart(2, "0"),
+  ).join("");
+  state.assertions.push({
+    name: "platform-qa-linux",
+    expected: "exit code 0 (QA passed on linux)",
+    actual: "exit code 0; outcome passed",
+    passed: true,
+    at: "2026-11-11T00:02:00.000Z",
+    platform: {
+      platform: "linux",
+      jobId: "platform-1",
+      head: builtAt,
+      cleanWorktree: true,
+      outcome: "passed",
+      payload: null,
+      target: null,
+      attachments: [{
+        ref: `${dirRef}/linux-report.json`,
+        sha256: digest,
+        bytes: report.length,
+      }],
+      problems: [],
+    },
+  });
+  writeTaskState(state);
+  return await buildEvidenceManifest(state, {
+    os: { name: "testos", version: "1", arch: "x86_64" },
+    head: builtAt,
+  });
+}
+
+Deno.test("fdh evidence trace: a platform result counts only for the commit it was bound to", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const atHead = await platformManifestIn(dir, HEAD);
+    assertEquals(atHead.envelope.taskStatus.state, "succeeded");
+    const good = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh(MERGED, [
+        trustedComment((await evidenceCommentBody(atHead, input)).body),
+        ...reviews(),
+      ]),
+    );
+    assertEquals(good.complete, true, good.problems.join("; "));
+    assertEquals(good.evidence[0].platforms, [{
+      platform: "linux",
+      boundTo: HEAD,
+      passed: true,
+    }]);
+
+    // A manifest whose platform result was taken at OLD (and that succeeded
+    // there) is posted as if it were built at the head.
+    const reused = await platformManifestIn(dir, OLD);
+    assertEquals(reused.envelope.taskStatus.state, "succeeded");
+    const bad = await traceEvidence(
+      "o/r",
+      7,
+      fakeGh(MERGED, [
+        trustedComment((await evidenceCommentBody(reused, input)).body),
+        ...reviews(),
+      ]),
+    );
+    assertEquals(bad.complete, false);
+    assertEquals(bad.evidence[0].counts, false);
+    assert(
+      bad.notes.some((n) => n.includes(`linux QA is bound to ${OLD}`)),
+      bad.notes.join("; "),
+    );
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});

@@ -29,13 +29,19 @@ import {
 import type { LinuxPayloadKind } from "./fdh_qa_linux_types.ts";
 import { QaTargetError } from "./fdh_qa_remote.ts";
 import { taskStatePath, validateTaskId } from "./fdh_task.ts";
-import { isTerminal, listJobIds, readJob } from "./fdh_executor.ts";
+import {
+  CLEAN_WORKTREE_STATE,
+  isTerminal,
+  listJobIds,
+  readJob,
+} from "./fdh_executor.ts";
 import type {
   PlatformQaCliDeps,
   PlatformQaCliResult,
   PlatformQaIo,
   PlatformQaOutcome,
   PlatformQaPreflight,
+  PlatformQaRecord,
   PlatformQaReport,
   PlatformQaRunOptions,
   PlatformQaStepRecord,
@@ -44,10 +50,12 @@ import type {
 } from "./fdh_platform_qa_types.ts";
 
 export type {
+  PlatformQaAttachment,
   PlatformQaCliDeps,
   PlatformQaCliResult,
   PlatformQaIo,
   PlatformQaOutcome,
+  PlatformQaRecord,
   PlatformQaReport,
   PlatformQaRunOptions,
   PlatformQaTarget,
@@ -192,6 +200,188 @@ export function activePlatformJobs(
         c.argv.includes(`--platform=${platform}`)
       );
   });
+}
+
+/** Report path of a platform step, relative to the worktree (KAN-146). */
+export function platformReportRef(
+  taskId: string,
+  platform: QaPlatform,
+): string {
+  validateTaskId(taskId);
+  return `_dist/fdh/platform/${taskId}/${platform}-report.json`;
+}
+
+async function sha256Bytes(bytes: Uint8Array): Promise<string> {
+  const copy = new Uint8Array(bytes.length);
+  copy.set(bytes);
+  return encodeHex(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", copy)),
+  );
+}
+
+function isRecordObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** The target as the report's preflight saw it, or null. */
+function targetOf(report: Record<string, unknown>): string | null {
+  const steps = Array.isArray(report.steps) ? report.steps : [];
+  const preflight = steps.find((s) =>
+    isRecordObject(s) && s.name === "preflight"
+  );
+  const result = isRecordObject(preflight) ? preflight.result : null;
+  const details = isRecordObject(result) ? result.details : null;
+  if (!isRecordObject(details)) return null;
+  if (typeof details.image === "string") {
+    return `Linux container image ${details.image}`;
+  }
+  if (typeof details.osVersion === "string") {
+    return `macOS VM, macOS ${details.osVersion}`;
+  }
+  return null;
+}
+
+export interface PlatformRecordInput {
+  worktree: string;
+  taskId: string;
+  platform: QaPlatform;
+  jobId: string;
+  /** `platformReportRef` of the step. */
+  reportRef: string;
+  /** The job's journal inputs. */
+  head: string;
+  worktreeState?: string;
+}
+
+/**
+ * Read a settled platform job's report and screenshot and pin them (KAN-146).
+ * Never throws: whatever does not hold up goes into `problems`, and the
+ * caller records a failed assertion for it.
+ */
+export async function readPlatformQaRecord(
+  input: PlatformRecordInput,
+): Promise<PlatformQaRecord> {
+  const record: PlatformQaRecord = {
+    platform: input.platform,
+    jobId: input.jobId,
+    head: input.head.trim().toLowerCase(),
+    cleanWorktree: input.worktreeState === CLEAN_WORKTREE_STATE,
+    outcome: null,
+    payload: null,
+    target: null,
+    attachments: [],
+    problems: [],
+  };
+  if (input.reportRef !== platformReportRef(input.taskId, input.platform)) {
+    record.problems.push(`unexpected report path ${input.reportRef}`);
+    return record;
+  }
+  const read = (ref: string): Uint8Array | null => {
+    try {
+      return Deno.readFileSync(path.join(input.worktree, ...ref.split("/")));
+    } catch {
+      return null;
+    }
+  };
+  const bytes = read(input.reportRef);
+  if (bytes === null) {
+    record.problems.push(`report ${input.reportRef} is not readable`);
+    return record;
+  }
+  record.attachments.push({
+    ref: input.reportRef,
+    sha256: await sha256Bytes(bytes),
+    bytes: bytes.length,
+  });
+  let report: unknown;
+  try {
+    report = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    record.problems.push("the report is not JSON");
+    return record;
+  }
+  if (
+    !isRecordObject(report) || report.schema !== "fdh-platform-qa-report/v1"
+  ) {
+    record.problems.push("the report is not an fdh-platform-qa-report/v1");
+    return record;
+  }
+  if (report.taskId !== input.taskId || report.platform !== input.platform) {
+    record.problems.push(
+      `the report is for ${String(report.taskId)}/${String(report.platform)}`,
+    );
+    return record;
+  }
+  const outcome = report.outcome;
+  if (outcome === "passed" || outcome === "failed" || outcome === "blocked") {
+    record.outcome = outcome;
+  } else {
+    record.problems.push("the report has no outcome");
+  }
+  const payload = report.payload;
+  if (
+    isRecordObject(payload) && typeof payload.name === "string" &&
+    typeof payload.sha256 === "string" && SHA256.test(payload.sha256)
+  ) {
+    record.payload = {
+      name: payload.name,
+      sha256: payload.sha256,
+      version: typeof payload.version === "string" ? payload.version : null,
+    };
+  } else {
+    record.problems.push("the report has no payload hash");
+  }
+  record.target = targetOf(report);
+  const shot = report.screenshot;
+  if (shot !== null && shot !== undefined) {
+    const file = isRecordObject(shot) ? shot.file : undefined;
+    const claimed = isRecordObject(shot) ? shot.sha256 : undefined;
+    if (file !== `${input.platform}.png` || typeof claimed !== "string") {
+      record.problems.push("the report's screenshot entry is malformed");
+    } else {
+      const ref = `${
+        input.reportRef.slice(0, input.reportRef.lastIndexOf("/"))
+      }/${file}`;
+      const png = read(ref);
+      if (png === null) {
+        record.problems.push(`screenshot ${ref} is not readable`);
+      } else {
+        const sha256 = await sha256Bytes(png);
+        record.attachments.push({ ref, sha256, bytes: png.length });
+        if (sha256 !== claimed) {
+          record.problems.push(
+            `screenshot ${ref} does not match the report (sha256 ${sha256})`,
+          );
+        }
+      }
+    }
+  } else if (record.outcome === "passed") {
+    record.problems.push("a passed report has no screenshot");
+  }
+  return record;
+}
+
+/** The assertion text of a settled platform step. */
+export function platformActual(
+  exitCode: number,
+  record: PlatformQaRecord,
+): string {
+  const report = record.attachments.find((a) => a.ref.endsWith("-report.json"));
+  return [
+    `exit code ${exitCode}`,
+    `outcome ${record.outcome ?? "unknown"}`,
+    `at ${record.head} (${
+      record.cleanWorktree ? "clean worktree" : "uncommitted changes"
+    })`,
+    record.payload === null
+      ? "payload unknown"
+      : `payload ${record.payload.name} sha256 ${record.payload.sha256}`,
+    `target ${record.target ?? "unknown"}`,
+    report === undefined ? "no report" : `report sha256 ${report.sha256}`,
+    ...(record.problems.length > 0
+      ? [`problems: ${record.problems.join("; ")}`]
+      : []),
+  ].join("; ");
 }
 
 function userOf(sshDestination: string): string | null {

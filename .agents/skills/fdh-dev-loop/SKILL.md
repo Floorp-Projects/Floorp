@@ -101,6 +101,8 @@ deno run -A tools/fdh.ts verify browser --task-id <task-id> \
 #     Agentic QA" below for when, and for the payload and target files). One
 #     durable job per platform; the two targets are separate machines, so
 #     start both, then wait for each. Each exits 1 unless that run passed.
+#     Commit first: a result counts in evidence only at the HEAD it ran at,
+#     on a clean worktree (KAN-146).
 deno run -A tools/fdh.ts job start --task-id <task-id> --step platform \
   --platform macos --target <macos-target.json> --payload <Floorp.dmg> \
   [--eval '<chrome-context js with return>' --expect '<text>']
@@ -491,7 +493,7 @@ records an approval for it (or a `quota approve`) since then. A confirm that
 arrives after the holder was declared lost is refused and recorded
 (`late-report`).
 
-## Cross-platform Agentic QA (KAN-142, KAN-145)
+## Cross-platform Agentic QA (KAN-142, KAN-145, KAN-146)
 
 `job start --step platform` runs a **packaged** Floorp build of the change on a
 QA target and records assertion `platform-qa-<platform>`:
@@ -529,6 +531,23 @@ for `blocked` rerun when the target is free or report the step as not run.
 One platform job per task and platform at a time: the task id is the target's
 lock identity, so `job start --step platform` is refused while an earlier job
 of the same task and platform has not finished.
+
+Evidence binding (KAN-146): when the job settles, fdh pins the report and the
+screenshot by SHA-256 and records the HEAD the job started at and whether the
+worktree was clean. `evidence` and `evidence publish` re-hash both files and
+add `platform-qa-<platform>-at-head`, which passes only when the latest result
+of that platform was recorded at the HEAD the manifest is built for, on a
+clean worktree. `evidence trace` also refuses evidence whose platform result
+names another commit than the comment. So:
+
+- Commit first, then run the platform step, then publish, all at the same
+  HEAD. A later commit (or a run on a dirty worktree) leaves the evidence
+  `failed` until that platform is run again.
+- Do not edit or replace `_dist/fdh/platform/<task-id>/` files: a changed file
+  stops the manifest build. Run QA through `job start --step platform`, not
+  `platform-qa run` directly, which overwrites the report without recording it.
+- The payload is still identified only by its SHA-256; the binding is to the
+  code under test, not to proof of where the payload was built.
 
 When to run it:
 

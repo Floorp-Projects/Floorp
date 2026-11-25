@@ -71,8 +71,17 @@ import {
   stopProcessTree,
 } from "./fdh_job_process.ts";
 
-import { platformAssertionName } from "./fdh_platform_qa.ts";
-import type { PlatformStepOptions } from "./fdh_platform_qa_types.ts";
+import {
+  parsePlatform,
+  platformActual,
+  platformAssertionName,
+  platformReportRef,
+  readPlatformQaRecord,
+} from "./fdh_platform_qa.ts";
+import type {
+  PlatformQaRecord,
+  PlatformStepOptions,
+} from "./fdh_platform_qa_types.ts";
 
 /** `fdh.ts`, which the detached executor runs as `job exec`. */
 const FDH_CLI = path.fromFileUrl(new URL("../fdh.ts", import.meta.url));
@@ -139,6 +148,7 @@ export function stepSpecFor(
         displayCommand: display,
         assertionName: platformAssertionName(platform.platform),
         expected: `exit code 0 (QA passed on ${platform.platform})`,
+        platformReport: platformReportRef(platform.taskId, platform.platform),
       }],
     };
   }
@@ -423,13 +433,46 @@ export async function settleJob(
   // The whole copy runs under the journal lock with `recordedToTask` as the
   // guard, so two settlers (the executor after its ACK and a controller) do
   // not both record. Lock order: journal, then task state.
+  // A platform step's report and screenshot are hashed first (WebCrypto is
+  // async, the journal update is not). A terminal job does not change, and
+  // no other platform job of the task and platform runs meanwhile.
+  const before = readJob(worktree, taskId, jobId);
+  if (!isTerminal(before.state) || before.recordedToTask) return false;
+  const records = await platformRecordsOf(worktree, taskId, before);
   const { value } = await updateJob(worktree, taskId, jobId, (job) => {
     if (!isTerminal(job.state) || job.recordedToTask) return false;
-    copyResultToTask(worktree, taskId, job);
+    copyResultToTask(worktree, taskId, job, records);
     markRecordedToTask(job);
     return true;
   });
   return value;
+}
+
+/** Pinned platform QA results of a job's commands, by command index. */
+async function platformRecordsOf(
+  worktree: string,
+  taskId: string,
+  job: JobJournal,
+): Promise<Map<number, PlatformQaRecord>> {
+  const records = new Map<number, PlatformQaRecord>();
+  for (const result of job.commandResults) {
+    const command = job.step?.commands[result.index];
+    if (command?.platformReport === undefined) continue;
+    const flag = command.argv.find((a) => a.startsWith("--platform="));
+    records.set(
+      result.index,
+      await readPlatformQaRecord({
+        worktree,
+        taskId,
+        platform: parsePlatform(flag?.slice("--platform=".length) ?? ""),
+        jobId: job.jobId,
+        reportRef: command.platformReport,
+        head: job.inputs.head,
+        worktreeState: job.inputs.worktreeState,
+      }),
+    );
+  }
+  return records;
 }
 
 /**
@@ -442,6 +485,7 @@ function copyResultToTask(
   worktree: string,
   taskId: string,
   job: JobJournal,
+  platformRecords: Map<number, PlatformQaRecord> = new Map(),
 ): void {
   const marker = `job result ${job.jobId}`;
   const state = readTaskState(worktree, taskId);
@@ -469,7 +513,27 @@ function copyResultToTask(
         exitCode: result.exitCode,
         output,
       });
-      if (command.assertionName !== undefined) {
+      const record = platformRecords.get(result.index);
+      if (command.assertionName !== undefined && record !== undefined) {
+        // A platform step passes only on a report that holds up (KAN-146).
+        recordAssertion(state, {
+          name: command.assertionName,
+          expected: command.expected ?? "exit code 0",
+          actual: platformActual(result.exitCode, record),
+          passed: result.exitCode === 0 && record.outcome === "passed" &&
+            record.problems.length === 0,
+          at: result.endedAt,
+          platform: record,
+        });
+      } else if (command.platformReport !== undefined) {
+        recordAssertion(state, {
+          name: command.assertionName ?? "platform-qa",
+          expected: command.expected ?? "exit code 0",
+          actual: `exit code ${result.exitCode}; the report was not read`,
+          passed: false,
+          at: result.endedAt,
+        });
+      } else if (command.assertionName !== undefined) {
         recordAssertion(state, {
           name: command.assertionName,
           expected: command.expected ?? "exit code 0",
