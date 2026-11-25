@@ -1,0 +1,12 @@
+diff --git a/browser/chrome/browser/content/browser/preferences/config/home-startup.mjs b/browser/chrome/browser/content/browser/preferences/config/home-startup.mjs
+--- ./browser/chrome/browser/content/browser/preferences/config/home-startup.mjs
++++ ./browser/chrome/browser/content/browser/preferences/config/home-startup.mjs
+@@ -593,7 +593,7 @@
+       let win = /** @type {any} */ (
+         Services.wm.getMostRecentWindow("navigator:browser")
+       );
+-      if (!win) {
++      if (!win?.gBrowser) {
+         return () => {};
+       }
+       const { tabContainer } = win.gBrowser;
