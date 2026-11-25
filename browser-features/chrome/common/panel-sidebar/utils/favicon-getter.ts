@@ -67,8 +67,9 @@ function getFallbackFavicon(panel: Panel): string {
       return getFaviconFromExtension(panel.extensionId ?? "");
     default:
       if (
-        panel.url?.startsWith("http://") ||
-        panel.url?.startsWith("https://")
+        !Cu.isInAutomation &&
+        (panel.url?.startsWith("http://") ||
+          panel.url?.startsWith("https://"))
       ) {
         return `https://www.google.com/s2/favicons?domain=${panel.url}&sz=32`;
       }
