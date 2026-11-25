@@ -50,7 +50,7 @@ export const MIN_LEASE_TTL_MS = 1_000;
 /** A safe step is given up (failed) after this many attempts were lost. */
 export const DEFAULT_MAX_ATTEMPTS = 3;
 
-export const JOB_KINDS = ["build", "test", "intent"] as const;
+export const JOB_KINDS = ["build", "test", "platform", "intent"] as const;
 export type JobKind = (typeof JOB_KINDS)[number];
 
 /** External operations an intent may stand for (same set as quota pending). */

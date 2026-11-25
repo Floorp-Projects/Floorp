@@ -10,6 +10,8 @@ LLM, push a branch, or open a PR. An already-running agent (DSH/Codex/Claude)
 drives the commands below and does the editing itself. The local development
 loop needs no shared services. Optional commands such as `ext poll`, `evidence
 trace` and `qa collect` read GitHub through `gh` under their separate contracts.
+The optional platform QA step (`job start --step platform`) reaches the FDH QA
+targets over SSH.
 
 ## When to use
 
@@ -94,6 +96,18 @@ deno run -A tools/fdh.ts verify test --task-id <task-id>
 #    change-confirmation text, e.g. the edited label).
 deno run -A tools/fdh.ts verify browser --task-id <task-id> \
   --eval 'document.title' --expect 'Floorp'
+
+# 8b. Cross-platform Agentic QA, when the change needs it (see "Cross-platform
+#     Agentic QA" below for when, and for the payload and target files). One
+#     durable job per platform; the two targets are separate machines, so
+#     start both, then wait for each. Each exits 1 unless that run passed.
+deno run -A tools/fdh.ts job start --task-id <task-id> --step platform \
+  --platform macos --target <macos-target.json> --payload <Floorp.dmg> \
+  [--eval '<chrome-context js with return>' --expect '<text>']
+deno run -A tools/fdh.ts job start --task-id <task-id> --step platform \
+  --platform linux --target <linux-target.json> \
+  --payload <floorp-linux-x86_64.tar.xz> [--eval ... --expect ...]
+deno run -A tools/fdh.ts job wait --task-id <task-id> --job-id <job-id>
 
 # 9. Build + validate EvidenceManifest v0. --out must stay under
 #    <worktree>/_dist/fdh/.
@@ -477,6 +491,74 @@ records an approval for it (or a `quota approve`) since then. A confirm that
 arrives after the holder was declared lost is refused and recorded
 (`late-report`).
 
+## Cross-platform Agentic QA (KAN-142, KAN-145)
+
+`job start --step platform` runs a **packaged** Floorp build of the change on a
+QA target and records assertion `platform-qa-<platform>`:
+
+- `macos`: the stability tart VM on the Mac Studio (GUI session, real macOS);
+  payload `.dmg` or `.tar.gz`.
+- `linux`: a fresh Docker container on the Debian host (Xvfb + openbox, no
+  network by default); payload `.tar.xz`, `.tar.bz2` or `.tar.gz`.
+
+The job runs one command, `fdh platform-qa run`: preflight, lock, upload,
+install, launch with a fresh profile, a fixed probe (app, OS, browser window,
+content-sandbox level), the optional `--eval` (chrome context; the script must
+`return` its value) with `--expect`, a screenshot, and cleanup, which always
+runs once the target was taken. Results go to
+`_dist/fdh/platform/<task-id>/<platform>-report.json` and `<platform>.png`;
+the job log ends with a one-line summary. Host addresses are redacted from both.
+
+Outcomes, in the report and the summary line:
+
+- `passed`: every step ran, the probe and `--expect` matched, cleanup was clean.
+- `failed`: the build or the run on the target went wrong (`reason` names the
+  step), or cleanup left something behind.
+- `blocked`: the target was unreachable or not ready (held by another task, low
+  disk, no GUI session, a foreign Floorp running). The change was not tested;
+  say so, and count it neither as a pass nor as a product failure.
+
+Both `failed` and `blocked` make the job (and the assertion) fail; read the
+report to tell them apart.
+
+When to run it:
+
+- Run it when the change touches browser chrome UI, pages, startup/bridge, ESM
+  modules, prefs, or anything that differs per platform (paths, file pickers,
+  native integration, fonts, shortcuts), and a packaged build of the change
+  exists for that platform. Run it whenever the user asks.
+- Skip it for `tools/`, `docs/` and CI-only changes, and state in the final
+  report that it was skipped and why.
+- The payload is the agent's input: a packaged build of this change (for
+  example a PR's CI package, or a local package build). fdh records its SHA-256
+  and version, but cannot tell which commit it was built from.
+
+Target configs are JSON files outside the repository (they name the hosts and
+key files); never commit them. Their hashes and the payload hash are fixed when
+the job starts: if either file changes, a rerun fails instead of testing
+something else.
+
+A lost executor is handled by the normal reconcile: the next attempt reruns the
+whole command, which first removes what this task left on the target. If the
+job gave up or was cancelled, free the target with:
+
+```sh
+deno run -A tools/fdh.ts platform-qa cleanup --platform <macos|linux> \
+  --task-id <task-id> --target <target.json>
+```
+
+Boundary with QA3: this step is an early check during development, on one
+machine per platform. It is not QA3, release qualification, final-package QA or
+a visual judgment; the screenshot is kept for a human to look at. Windows is not
+covered yet (KAN-147). The Linux container has no desktop session, no GPU and no
+user-namespace sandbox; see `docs/qa/fdh-qa-linux/` and `docs/qa/fdh-qa-macos/`
+for each target's limits.
+
+The QA targets are FDH development machines reached over SSH, not self-hosted
+GitHub Actions runners. D-17 (GUI self-hosted runners only when the user says
+so) still applies to runners; within the dev loop an agent may start this step
+under the rules above without asking each time.
+
 ## External GitHub / Jira operations (D-19, KAN-131)
 
 Agents change GitHub (`gh`) and Jira (Atlassian MCP) themselves; fdh calls
@@ -657,10 +739,11 @@ a pass by editing state.
 - This local loop does not prove Gate 3 qualification or release readiness; it
   only records what the local commands did.
 - `visualJudge` is `null`: no visual/look-and-feel judgment is performed.
-- Images/screenshots are outside the CLI contract; use existing tools directly
-  if a human review needs them.
+- Images/screenshots are outside the CLI contract, except the platform QA
+  screenshot, which is stored for human review and never judged; use existing
+  tools directly if a human review needs more.
 - Shared services (GitHub, PRs, CI dispatch) are not required and are never
-  called by the CLI.
+  called by the local loop. Platform QA uses SSH to the FDH QA targets only.
 - `fdh job` is one-machine fault tolerance only (no central scheduler, no
   cross-machine lease). It does not claim exactly-once: a safe step can run
   again after its executor is lost, and an old executor's local writes are not

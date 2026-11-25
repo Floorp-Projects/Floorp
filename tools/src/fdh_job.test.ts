@@ -5,6 +5,7 @@ import {
   assertEquals,
   assertNotEquals,
   assertRejects,
+  assertThrows,
 } from "@std/assert";
 import {
   cancelAndSettle,
@@ -88,6 +89,36 @@ Deno.test("fdh job: step specs run the same commands as verify build|test", () =
     "feles-build",
   ]);
   assertEquals(stepSpecFor("build", "/wt", "after-mach").commands.length, 1);
+});
+
+Deno.test("fdh job: a platform step runs one platform-qa command with fixed hashes", () => {
+  const spec = stepSpecFor("platform", "/wt", undefined, {
+    taskId: "t1",
+    platform: "macos",
+    targetFile: "/cfg/macos.json",
+    targetSha256: "c".repeat(64),
+    payloadFile: "/p/floorp-macOS-universal.dmg",
+    payloadSha256: "d".repeat(64),
+    evalScript: "return '--x';",
+    expect: "Floorp",
+  });
+  assertEquals(spec.commands.length, 1);
+  const [command] = spec.commands;
+  assertEquals(command.assertionName, "platform-qa-macos");
+  assertEquals(command.argv.slice(0, 3), ["deno", "run", "-A"]);
+  assertEquals(command.argv.slice(4, 6), ["platform-qa", "run"]);
+  // key=value, so a value that starts with "--" is never read as an option.
+  assert(command.argv.includes("--eval=return '--x';"));
+  assert(command.argv.includes(`--payload-sha256=${"d".repeat(64)}`));
+  assert(command.argv.includes(`--target-sha256=${"c".repeat(64)}`));
+  assert(
+    command.argv.some((a) =>
+      a.startsWith("--out=") && a.replaceAll("\\", "/").endsWith(
+        "_dist/fdh/platform/t1",
+      )
+    ),
+  );
+  assertThrows(() => stepSpecFor("platform", "/wt"));
 });
 
 Deno.test("fdh job: the inputs bind HEAD, guard env and the uncommitted state", async () => {

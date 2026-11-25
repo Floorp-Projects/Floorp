@@ -1,0 +1,139 @@
+{
+  "schema": "fdh-platform-qa-report/v1",
+  "taskId": "kan-145-live",
+  "platform": "macos",
+  "outcome": "passed",
+  "reason": null,
+  "payload": {
+    "name": "floorp-macOS-universal.dmg",
+    "sha256": "e3520c1f553319ff704a821cbcc72dae49e544459843ba2e8fadaff8ce370629",
+    "version": "12.21.1@159.0.1"
+  },
+  "probe": {
+    "app": "Floorp",
+    "version": "159.0.1",
+    "buildId": "20261103153232",
+    "os": "Darwin",
+    "windows": 1,
+    "url": "about:blank",
+    "contentSandboxLevel": 3
+  },
+  "eval": {
+    "script": "return Services.appinfo.name + ' ' + AppConstants.MOZ_APP_VERSION_DISPLAY;",
+    "value": "Floorp 12.21.1@159.0.1",
+    "expect": "Floorp"
+  },
+  "screenshot": {
+    "file": "macos.png",
+    "sha256": "136647763fcfa4202e2199fe6296524769adb99589861ab1130dde50aee11be8"
+  },
+  "cleanupClean": true,
+  "steps": [
+    {
+      "name": "payload",
+      "ok": true,
+      "startedAt": "2026-11-25T04:36:17.906Z",
+      "finishedAt": "2026-11-25T04:36:18.125Z",
+      "result": {
+        "sha256": "e3520c1f553319ff704a821cbcc72dae49e544459843ba2e8fadaff8ce370629"
+      }
+    },
+    {
+      "name": "preflight",
+      "ok": true,
+      "startedAt": "2026-11-25T04:36:18.125Z",
+      "finishedAt": "2026-11-25T04:36:18.809Z",
+      "result": {
+        "ready": true,
+        "blockers": [],
+        "holder": null,
+        "needsPrepare": false,
+        "details": {
+          "freeBytes": 9288060928,
+          "guiSession": true,
+          "lockHolder": null,
+          "marionettePortBusy": false,
+          "foreignFloorp": 0,
+          "osVersion": "26.6.2",
+          "ready": true,
+          "blockers": []
+        }
+      }
+    },
+    {
+      "name": "acquire",
+      "ok": true,
+      "startedAt": "2026-11-25T04:36:18.809Z",
+      "finishedAt": "2026-11-25T04:36:19.195Z",
+      "result": {
+        "ok": true,
+        "acquired": true
+      }
+    },
+    {
+      "name": "stage",
+      "ok": true,
+      "startedAt": "2026-11-25T04:36:19.195Z",
+      "finishedAt": "2026-11-25T04:37:06.031Z",
+      "result": {
+        "bytes": 260513224,
+        "version": "12.21.1@159.0.1"
+      }
+    },
+    {
+      "name": "launch",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:06.031Z",
+      "finishedAt": "2026-11-25T04:37:21.538Z",
+      "result": {
+        "version": "159.0.1"
+      }
+    },
+    {
+      "name": "probe",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:21.538Z",
+      "finishedAt": "2026-11-25T04:37:22.139Z",
+      "result": {
+        "app": "Floorp",
+        "version": "159.0.1",
+        "buildId": "20261103153232",
+        "os": "Darwin",
+        "windows": 1,
+        "url": "about:blank",
+        "contentSandboxLevel": 3
+      }
+    },
+    {
+      "name": "eval",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:22.139Z",
+      "finishedAt": "2026-11-25T04:37:22.489Z",
+      "result": "Floorp 12.21.1@159.0.1"
+    },
+    {
+      "name": "screenshot",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:22.489Z",
+      "finishedAt": "2026-11-25T04:37:22.936Z",
+      "result": {
+        "file": "macos.png",
+        "sha256": "136647763fcfa4202e2199fe6296524769adb99589861ab1130dde50aee11be8"
+      }
+    },
+    {
+      "name": "cleanup",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:22.936Z",
+      "finishedAt": "2026-11-25T04:37:24.441Z",
+      "result": {
+        "residualProcesses": 0,
+        "taskDirRemoved": true,
+        "lockReleased": true,
+        "clean": true
+      }
+    }
+  ],
+  "startedAt": "2026-11-25T04:36:17.906Z",
+  "finishedAt": "2026-11-25T04:37:24.441Z"
+}
