@@ -31,10 +31,12 @@ export const IDLE_THRESHOLD_SEC_MIN = 60;
 export const MIN_INTERVAL_SEC_MIN = 60;
 export const MIN_RESIDENT_MB_MIN = 0;
 
+/** Returns the value when it is a boolean, otherwise the fallback. */
 function readBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+/** Returns a finite number clamped to `min`, otherwise the fallback. */
 function readNumber(value: unknown, fallback: number, min: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return fallback;
@@ -74,6 +76,7 @@ export function normalizeIdleMemoryReclaimSettings(
   };
 }
 
+/** Parses stored pref JSON, tolerating empty or malformed values. */
 function parseSettingsJson(raw: string | null): Record<string, unknown> {
   if (!raw) {
     return {};
@@ -132,4 +135,181 @@ export async function saveIdleMemoryReclaimSettings(
     IDLE_MEMORY_RECLAIM_PREF,
     mergeIdleMemoryReclaimSettings(existing, settings),
   );
+}
+
+export const TAB_AUTO_UNLOAD_PREF = "floorp.tabs.autoUnload";
+export const LEGACY_TAB_SLEEP_EXCLUSION_PREF = "floorp.tabs.sleep.exclusion";
+
+export interface TabAutoUnloadSettings {
+  enabled: boolean;
+  memoryThresholdMB: number;
+  minInactiveMinutes: number;
+  excludePatterns: string[];
+}
+
+export const DEFAULT_TAB_AUTO_UNLOAD_SETTINGS: TabAutoUnloadSettings = {
+  enabled: false,
+  memoryThresholdMB: 2048,
+  minInactiveMinutes: 10,
+  excludePatterns: [],
+};
+
+export const MEMORY_THRESHOLD_MB_MIN = 0;
+export const MIN_INACTIVE_MINUTES_MIN = 1;
+
+/** Builds defaults with a fresh pattern array the caller can mutate. */
+function createDefaultTabAutoUnloadSettings(): TabAutoUnloadSettings {
+  return {
+    ...DEFAULT_TAB_AUTO_UNLOAD_SETTINGS,
+    excludePatterns: [],
+  };
+}
+
+/**
+ * Trims, drops empty entries, and removes duplicate exclusion patterns
+ * while keeping the order the user entered.
+ */
+function normalizeExcludePatterns(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const patterns: string[] = [];
+  for (const value of raw) {
+    if (typeof value !== "string") {
+      continue;
+    }
+    const trimmed = value.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    patterns.push(trimmed);
+  }
+  return patterns;
+}
+
+/** Normalizes untrusted pref JSON into the values this page exposes. */
+export function normalizeTabAutoUnloadSettings(
+  raw: unknown,
+): TabAutoUnloadSettings {
+  if (typeof raw !== "object" || raw === null) {
+    return createDefaultTabAutoUnloadSettings();
+  }
+
+  const source = raw as Record<string, unknown>;
+  return {
+    enabled: readBoolean(
+      source.enabled,
+      DEFAULT_TAB_AUTO_UNLOAD_SETTINGS.enabled,
+    ),
+    memoryThresholdMB: readNumber(
+      source.memoryThresholdMB,
+      DEFAULT_TAB_AUTO_UNLOAD_SETTINGS.memoryThresholdMB,
+      MEMORY_THRESHOLD_MB_MIN,
+    ),
+    minInactiveMinutes: readNumber(
+      source.minInactiveMinutes,
+      DEFAULT_TAB_AUTO_UNLOAD_SETTINGS.minInactiveMinutes,
+      MIN_INACTIVE_MINUTES_MIN,
+    ),
+    excludePatterns: normalizeExcludePatterns(source.excludePatterns),
+  };
+}
+
+/**
+ * Merges the exposed settings into the pref JSON.
+ *
+ * Unknown keys in the stored object are kept so a hand-edited pref is not
+ * silently reset.
+ */
+export function mergeTabAutoUnloadSettings(
+  existing: string | null,
+  settings: TabAutoUnloadSettings,
+): string {
+  const normalized = normalizeTabAutoUnloadSettings(settings);
+  return JSON.stringify({
+    ...parseSettingsJson(existing),
+    enabled: normalized.enabled,
+    memoryThresholdMB: normalized.memoryThresholdMB,
+    minInactiveMinutes: normalized.minInactiveMinutes,
+    excludePatterns: normalized.excludePatterns,
+  });
+}
+
+/**
+ * Loads the settings, falling back to the legacy pref's patterns.
+ *
+ * Nothing is written back, so the old pref stays untouched until the user
+ * saves on this page.
+ */
+export async function getTabAutoUnloadSettings(): Promise<
+  TabAutoUnloadSettings
+> {
+  try {
+    const raw = await rpc.getStringPref(TAB_AUTO_UNLOAD_PREF);
+    if (raw) {
+      return normalizeTabAutoUnloadSettings(parseSettingsJson(raw));
+    }
+
+    // Migrate the patterns from the old tab sleep exclusion pref without
+    // writing anything back. The rest of the settings keep their defaults.
+    const legacyRaw = await rpc.getStringPref(LEGACY_TAB_SLEEP_EXCLUSION_PREF);
+    if (!legacyRaw) {
+      return createDefaultTabAutoUnloadSettings();
+    }
+
+    const legacy = parseSettingsJson(legacyRaw);
+    if (!readBoolean(legacy.enabled, true)) {
+      return createDefaultTabAutoUnloadSettings();
+    }
+
+    return {
+      ...createDefaultTabAutoUnloadSettings(),
+      // The old feature matched an unanchored glob over the whole URL, so
+      // wrap each migrated rule to keep that meaning under the new matcher.
+      excludePatterns: normalizeExcludePatterns(legacy.patterns).map(
+        (pattern) => `*${pattern}*`,
+      ),
+    };
+  } catch (error) {
+    console.error(
+      "[Performance] Failed to load tab auto unload settings:",
+      error,
+    );
+    return createDefaultTabAutoUnloadSettings();
+  }
+}
+
+/**
+ * Applies one intended edit to the stored settings.
+ *
+ * The update runs against a freshly read pref and is committed with
+ * compare-and-set, so two open performance pages cannot clobber each other's
+ * edits: a stale form only carries the key it meant to change, and a lost
+ * race retries against the newer value instead of overwriting it.
+ */
+export async function updateTabAutoUnloadSettings(
+  update: (current: TabAutoUnloadSettings) => Partial<TabAutoUnloadSettings>,
+): Promise<TabAutoUnloadSettings> {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const existing = await rpc.getStringPref(TAB_AUTO_UNLOAD_PREF);
+    const current = normalizeTabAutoUnloadSettings(parseSettingsJson(existing));
+    const patch = update(current);
+    const next = normalizeTabAutoUnloadSettings({ ...current, ...patch });
+    const merged = mergeTabAutoUnloadSettings(existing, next);
+    if (merged === existing) {
+      return next;
+    }
+    const { updated } = await rpc.compareAndSetStringPref(
+      TAB_AUTO_UNLOAD_PREF,
+      existing,
+      merged,
+    );
+    if (updated) {
+      return next;
+    }
+  }
+  throw new Error("tab auto unload settings kept changing while saving");
 }

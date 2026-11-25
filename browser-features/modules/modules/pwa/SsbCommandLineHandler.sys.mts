@@ -101,6 +101,33 @@ export class SsbRunnerUtils {
       return;
     }
 
+    if (AppConstants.platform === "linux") {
+      const { LinuxSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      );
+      const linuxSupport = new LinuxSupport();
+      try {
+        // Also repairs launchers installed before the launcher carried the
+        // per-PWA app identity, so the taskbar entry is independent.
+        await linuxSupport.repair(ssb);
+      } catch (error) {
+        console.error(
+          "[SsbRunnerUtils] Failed to repair Linux launcher:",
+          error,
+        );
+      }
+      // The launcher repair above is a file-level fix and runs regardless of
+      // the rollout; only the native window integration is experimental.
+      if (!TaskbarExperiment.isEnabledForCurrentPlatform()) {
+        console.debug(
+          "[SsbRunnerUtils] PWA taskbar integration disabled by A/B test, skipping native integration",
+        );
+        return;
+      }
+      await linuxSupport.applyOSIntegration(ssb, win);
+      return;
+    }
+
     // Check A/B test before applying taskbar integration
     if (!TaskbarExperiment.isEnabledForCurrentPlatform()) {
       console.debug(
@@ -117,15 +144,6 @@ export class SsbRunnerUtils {
       await windowsSupport.applyOSIntegration(ssb, win);
       return;
     }
-
-    if (AppConstants.platform === "linux") {
-      const { LinuxSupport } = ChromeUtils.importESModule(
-        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
-      );
-      const linuxSupport = new LinuxSupport();
-      await linuxSupport.applyOSIntegration(ssb, win);
-      return;
-    }
   }
 
   private static createWindowArgs(ssb: Manifest) {
@@ -134,6 +152,18 @@ export class SsbRunnerUtils {
       Ci.nsIWritablePropertyBag2,
     );
     extraOptions.setPropertyAsAString("ssbid", ssb.id);
+    if (AppConstants.platform === "linux") {
+      const { LinuxSupport } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+      );
+      // --name only affects process startup. A window opened in an existing
+      // process still needs its own generated launcher identity. Set Gecko's
+      // window attribute during creation; leave native taskbar rollout gated.
+      extraOptions.setPropertyAsAString(
+        "taskbartabclass",
+        LinuxSupport.getWindowClass(ssb),
+      );
+    }
     // Set taskbartab attribute to leverage SessionStore's existing handling
     // This excludes PWA windows from session restore and treats them like TaskBarTabs
     extraOptions.setPropertyAsAString("taskbartab", ssb.id);
@@ -252,6 +282,15 @@ export class SSBCommandLineHandler {
   handle(cmdLine: nsICommandLine) {
     const id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
+      if (
+        AppConstants.platform === "linux" &&
+        cmdLine.state === Ci.nsICommandLine.STATE_INITIAL_LAUNCH
+      ) {
+        const { LinuxSupport } = ChromeUtils.importESModule(
+          "resource://noraneko/modules/pwa/supports/Linux.sys.mjs",
+        );
+        LinuxSupport.registerBrowserWindowIdentity();
+      }
       // Prevent default browser window from opening - PWA should launch standalone
       cmdLine.preventDefault = true;
 

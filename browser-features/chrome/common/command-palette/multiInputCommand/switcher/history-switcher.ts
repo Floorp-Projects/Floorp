@@ -133,16 +133,24 @@ export const historySwitcherCommand: PaletteCommand = {
     defaultValue: "Open a page from your browsing history",
   }),
   category: "switcher",
-  keywords: [
-    "history",
-    "browse history",
-    "recent pages",
-    "visited",
-    "open history",
-    ...getEnglishStepCommandKeywords("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
-    ...getSegmentedKeywordsFromI18nKeys("commandPalette.historySwitcher", "commandPalette.historySwitcherDescription"),
-    ...getJapaneseReadings("floorp-history-switcher"),
-  ],
+  get keywords() {
+    return [
+      "history",
+      "browse history",
+      "recent pages",
+      "visited",
+      "open history",
+      ...getEnglishStepCommandKeywords(
+        "commandPalette.historySwitcher",
+        "commandPalette.historySwitcherDescription",
+      ),
+      ...getSegmentedKeywordsFromI18nKeys(
+        "commandPalette.historySwitcher",
+        "commandPalette.historySwitcherDescription",
+      ),
+      ...getJapaneseReadings("floorp-history-switcher"),
+    ];
+  },
   steps: [
     {
       id: "history",
