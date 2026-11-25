@@ -307,6 +307,7 @@ Deno.test("platform QA CLI: bad arguments exit 2 before anything is read", async
 
 Deno.test("platform QA CLI: a changed target config fails without contacting it", async () => {
   let created = 0;
+  const { io } = memoryIo();
   const result = await runPlatformQaCli([
     "run",
     "--platform=linux",
@@ -317,6 +318,7 @@ Deno.test("platform QA CLI: a changed target config fails without contacting it"
     `--payload-sha256=${SHA}`,
     "--out=/out",
   ], {
+    io,
     readFile: () => Promise.resolve(bytes("{}")),
     createTarget: () => {
       created++;
