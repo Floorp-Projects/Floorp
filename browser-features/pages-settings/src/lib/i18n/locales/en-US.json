@@ -300,6 +300,7 @@
         "errorInvalidName": "That backup file name is not valid.",
         "errorCaptureInvalid": "The captured data was rejected by validation, so no backup was written.",
         "errorTooLarge": "The backup would exceed the size limit, so it was not written.",
+        "errorRestoreTooLarge": "That backup file exceeds the size limit, so it was not restored. Your current tabs are untouched.",
         "errorRestoreInProgress": "Another restore or backup operation is already running. Wait for it to finish, then try again.",
         "errorRestartRequired": "Workspaces were turned on without restarting Floorp, or are still starting up. Wait a moment or restart Floorp, then try the restore again.",
         "errorEmptyBackup": "That backup contains no tabs, so nothing was restored. Your current tabs are untouched.",

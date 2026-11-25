@@ -276,6 +276,7 @@ export interface RestoreTargetBrowser {
     options: {
       skipAnimation?: boolean;
       inBackground?: boolean;
+      createLazyBrowser?: boolean;
       userContextId?: number;
       triggeringPrincipal?: unknown;
     },
@@ -422,6 +423,54 @@ const attachEntryPrincipals = (
 };
 
 /**
+ * A container deleted since the backup was taken must not be recreated as an
+ * orphan cookie jar; such tabs open in the default container instead.
+ */
+const resolveRestoreUserContextId = (userContextId: number): number => {
+  if (userContextId === 0) {
+    return 0;
+  }
+  try {
+    const { ContextualIdentityService } = ChromeUtils.importESModule(
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
+    ) as {
+      ContextualIdentityService: {
+        getPublicIdentityFromId(id: number): unknown;
+      };
+    };
+    return ContextualIdentityService.getPublicIdentityFromId(userContextId)
+      ? userContextId
+      : 0;
+  } catch (error) {
+    console.error("WorkspacesSnapshot: failed to look up container", error);
+    return 0;
+  }
+};
+
+/**
+ * `about:reader?url=X` → X. A reader entry cannot get a safe triggering
+ * principal (the null principal cannot load it), so restore the article page
+ * itself rather than an empty tab.
+ */
+const unwrapReaderUrl = (url: string): string => {
+  if (toAboutPage(url) !== "about:reader") {
+    return url;
+  }
+  try {
+    const inner = new URL(url).searchParams.get("url");
+    return inner && toAboutPage(inner) !== "about:reader" &&
+        isRestorableTabUrl(inner)
+      ? inner
+      : url;
+  } catch {
+    return url;
+  }
+};
+
+/** Restored tabs between event-loop yields, so a large restore keeps the UI responsive. */
+const RESTORE_YIELD_INTERVAL = 10;
+
+/**
  * Sanitizes a stored tab state for restore and removes history entries whose
  * URL is not restorable. Returns null when no usable entry remains, so the
  * caller falls back to loading the tab URL.
@@ -439,12 +488,15 @@ const sanitizeRestoreState = (
     : [];
   const kept = entries.filter((entry) =>
     !!entry && typeof entry.url === "string" && isRestorableTabUrl(entry.url)
-  );
+  ) as Array<Record<string, unknown>>;
+  for (const entry of kept) {
+    entry.url = unwrapReaderUrl(entry.url as string);
+  }
   if (kept.length === 0) {
     return null;
   }
+  sanitized.entries = kept;
   if (kept.length !== entries.length) {
-    sanitized.entries = kept;
     const index = typeof sanitized.index === "number"
       ? sanitized.index
       : kept.length;
@@ -478,7 +530,13 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
   let targetTab: XULElement | null = null;
 
   for (let index = 0; index < tabs.length; index++) {
+    if (index > 0 && index % RESTORE_YIELD_INTERVAL === 0) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
     const tabSnapshot = tabs[index];
+    const userContextId = resolveRestoreUserContextId(
+      tabSnapshot.userContextId,
+    );
     let ok = true;
     let errorMessage: string | undefined;
 
@@ -507,10 +565,7 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       try {
         safeState = trusted
           ? structuredClone(tabSnapshot.state)
-          : sanitizeRestoreState(
-            tabSnapshot.state,
-            tabSnapshot.userContextId,
-          );
+          : sanitizeRestoreState(tabSnapshot.state, userContextId);
       } catch (error) {
         console.error(
           "WorkspacesSnapshot: failed to sanitize tab state",
@@ -519,13 +574,15 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
         safeState = null;
       }
     }
-    const loadUrl = tabSnapshot.url ?? "about:blank";
+    const loadUrl = tabSnapshot.url
+      ? unwrapReaderUrl(tabSnapshot.url)
+      : "about:blank";
 
     // Never load a file-derived web URL with the system principal; see
     // createRestorePrincipal for the per-scheme choice.
     const triggeringPrincipal = createRestorePrincipal(
       loadUrl,
-      tabSnapshot.userContextId,
+      userContextId,
       trusted,
     );
 
@@ -536,7 +593,10 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       tab = gBrowser.addTab(safeState ? "about:blank" : loadUrl, {
         skipAnimation: true,
         inBackground: true,
-        userContextId: tabSnapshot.userContextId,
+        // SessionStore restores a state into a lazy browser on first select,
+        // so hundreds of restored tabs do not each create a browser.
+        createLazyBrowser: !!safeState && !tabSnapshot.isSelected,
+        userContextId,
         triggeringPrincipal: safeState
           ? Services.scriptSecurityManager.getSystemPrincipal()
           : triggeringPrincipal,
@@ -555,7 +615,7 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       } else {
         tab.removeAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
       }
-      tab.setAttribute("usercontextid", String(tabSnapshot.userContextId));
+      tab.setAttribute("usercontextid", String(userContextId));
 
       if (workspaceId && tabSnapshot.lastShownWorkspaceId) {
         tab.setAttribute(
@@ -598,6 +658,9 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
           delete clonedState[WORKSPACE_LAST_SHOW_ID];
         }
         clonedState.attributes = attributes;
+        if ("userContextId" in clonedState) {
+          clonedState.userContextId = userContextId;
+        }
         sessionStore.setTabState(tab, JSON.stringify(clonedState));
       } catch (error) {
         recordFailure(error, "tab state");
@@ -605,7 +668,7 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
     } else if (tabSnapshot.url) {
       try {
         gBrowser.getBrowserForTab(tab).loadURI(
-          Services.io.newURI(tabSnapshot.url),
+          Services.io.newURI(loadUrl),
           { triggeringPrincipal },
         );
       } catch (error) {

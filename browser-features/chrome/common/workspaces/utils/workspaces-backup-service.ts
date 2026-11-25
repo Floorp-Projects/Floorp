@@ -478,7 +478,7 @@ export class WorkspacesBackupService {
    * this one also covers callers that bypass the actor and keeps the scheduler
    * from capturing a half-restored state.
    */
-  private restoreInFlight = false;
+  private restoreInFlight: symbol | null = null;
   private restoreStartedAt = 0;
 
   /**
@@ -701,12 +701,16 @@ export class WorkspacesBackupService {
     if (this.isRestoreInFlight()) {
       return { success: false, error: "restore-in-progress" };
     }
-    this.restoreInFlight = true;
+    // A lapsed restore that settles late must not clear a newer one's flag.
+    const token = Symbol("restore");
+    this.restoreInFlight = token;
     this.restoreStartedAt = Date.now();
     try {
       return await this.runRestore(fileName);
     } finally {
-      this.restoreInFlight = false;
+      if (this.restoreInFlight === token) {
+        this.restoreInFlight = null;
+      }
     }
   }
 
@@ -1401,6 +1405,15 @@ export class WorkspacesBackupService {
           "WorkspacesBackupService: dropping oversized tab state",
           { url: snapshotTab.url },
         );
+      }
+      // Without a state the URL is the only copy of the page; a truncated URL
+      // would be restored as a different page while the original tab is
+      // closed, so leave such a tab out of the backup (and open).
+      if (
+        boundedState === null && snapshotTab.url !== null &&
+        snapshotTab.url.length > WORKSPACE_BACKUP_LIMITS.maxUrlLength
+      ) {
+        continue;
       }
       const backupTab: WorkspaceBackupTab = {
         state: boundedState,

@@ -110,7 +110,7 @@ export const getBaseName = (path: string): string => {
 };
 
 export const isBackupFileName = (fileName: string): boolean =>
-  BACKUP_FILE_NAME_PATTERN.test(fileName);
+  parseBackupFileName(fileName) !== null;
 
 /**
  * Returns the children that look like backup files. This is only a cheap

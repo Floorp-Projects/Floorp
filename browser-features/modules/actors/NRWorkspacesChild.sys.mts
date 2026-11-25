@@ -1,3 +1,7 @@
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs",
+);
+
 import { HUB_DEV_PAGES } from "#libs/shared/dev-ports/defines.ts";
 import { launchDevPorts } from "../common/dev-port-offset.ts";
 
@@ -23,7 +27,7 @@ interface BackupBridgeResult {
 
 interface PendingBackupRequest {
   resolve: (result: BackupBridgeResult) => void;
-  timer: ReturnType<typeof globalThis.setTimeout>;
+  timer: ReturnType<typeof setTimeout>;
 }
 
 export class NRWorkspacesChild extends JSWindowActorChild {
@@ -34,7 +38,7 @@ export class NRWorkspacesChild extends JSWindowActorChild {
    */
   didDestroy() {
     for (const [requestId, pending] of this.#pendingBackupRequests) {
-      globalThis.clearTimeout(pending.timer);
+      clearTimeout(pending.timer);
       pending.resolve({ requestId, success: false, error: "actor-destroyed" });
     }
     this.#pendingBackupRequests.clear();
@@ -73,21 +77,7 @@ export class NRWorkspacesChild extends JSWindowActorChild {
       href.startsWith("chrome://noraneko-settings") ||
       href.startsWith("about:hub")
     ) {
-      Cu.exportFunction(this.backupNow.bind(this), window, {
-        defineAs: "NRWorkspacesBackupNow",
-      });
-      Cu.exportFunction(this.listBackups.bind(this), window, {
-        defineAs: "NRWorkspacesListBackups",
-      });
-      Cu.exportFunction(this.restoreBackup.bind(this), window, {
-        defineAs: "NRWorkspacesRestoreBackup",
-      });
-      Cu.exportFunction(this.deleteBackup.bind(this), window, {
-        defineAs: "NRWorkspacesDeleteBackup",
-      });
-      Cu.exportFunction(this.deleteAllBackups.bind(this), window, {
-        defineAs: "NRWorkspacesDeleteAllBackups",
-      });
+      this.exportBackupBridge(window);
     }
   }
 
@@ -133,7 +123,7 @@ export class NRWorkspacesChild extends JSWindowActorChild {
           break;
         }
         this.#pendingBackupRequests.delete(data.requestId);
-        globalThis.clearTimeout(pending.timer);
+        clearTimeout(pending.timer);
         pending.resolve(data);
         break;
       }
@@ -160,13 +150,53 @@ export class NRWorkspacesChild extends JSWindowActorChild {
     return this.sendBackupRequest("NRWorkspaces:DeleteAllBackups");
   }
 
+  /** Defines the backup functions on `target` (a content window). */
+  exportBackupBridge(target: object): void {
+    const exports: Record<string, (...args: string[]) => unknown> = {
+      NRWorkspacesBackupNow: () => this.toContent(target, this.backupNow()),
+      NRWorkspacesListBackups: () => this.toContent(target, this.listBackups()),
+      NRWorkspacesRestoreBackup: (fileName) =>
+        this.toContent(target, this.restoreBackup(fileName)),
+      NRWorkspacesDeleteBackup: (fileName) =>
+        this.toContent(target, this.deleteBackup(fileName)),
+      NRWorkspacesDeleteAllBackups: () =>
+        this.toContent(target, this.deleteAllBackups()),
+    };
+    for (const [name, fn] of Object.entries(exports)) {
+      Cu.exportFunction(fn, target, { defineAs: name });
+    }
+  }
+
+  /**
+   * Re-creates the result as a Promise of `target` holding a clone in its
+   * compartment: a chrome Promise or object is opaque to the page.
+   */
+  private toContent(
+    target: object,
+    result: Promise<BackupBridgeResult>,
+  ): Promise<unknown> {
+    const TargetPromise = (target as { Promise: PromiseConstructor }).Promise;
+    return new TargetPromise((resolve: (value: unknown) => void) => {
+      result.then(
+        (value) => resolve(Cu.cloneInto(value, target)),
+        (error: unknown) =>
+          resolve(
+            Cu.cloneInto(
+              { requestId: "", success: false, error: String(error) },
+              target,
+            ),
+          ),
+      );
+    });
+  }
+
   private sendBackupRequest(
     name: string,
     data: Record<string, unknown> = {},
   ): Promise<BackupBridgeResult> {
     const requestId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     return new Promise<BackupBridgeResult>((resolve) => {
-      const timer = globalThis.setTimeout(
+      const timer = setTimeout(
         () => {
           this.#pendingBackupRequests.delete(requestId);
           resolve({ requestId, success: false, error: "timeout" });

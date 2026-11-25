@@ -38,6 +38,17 @@ interface PrivateBrowsingUtilsModule {
   };
 }
 
+/** Errors may come from another global, where `instanceof Error` is false. */
+function describeError(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error) {
+    const { message } = error as { message: unknown };
+    if (typeof message === "string") {
+      return message;
+    }
+  }
+  return String(error);
+}
+
 export class NRWorkspacesParent extends JSWindowActorParent {
   receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
@@ -57,7 +68,7 @@ export class NRWorkspacesParent extends JSWindowActorParent {
           );
         } catch (error) {
           success = false;
-          errorMessage = error instanceof Error ? error.message : String(error);
+          errorMessage = describeError(error);
           console.error(
             "NRWorkspacesParent: failed to notify workspace initialization",
             error,
@@ -177,7 +188,7 @@ export class NRWorkspacesParent extends JSWindowActorParent {
       this.sendResult({
         requestId,
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: describeError(error),
       });
     }
   }

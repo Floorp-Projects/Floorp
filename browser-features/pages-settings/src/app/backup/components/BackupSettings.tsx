@@ -50,7 +50,8 @@ const intervalUnit = (value: number): "minutes" | "hours" =>
   value >= 60 && value % 60 === 0 ? "hours" : "minutes";
 
 const formatFileSize = (bytes: number): string => {
-  if (bytes >= 1024 * 1024) {
+  // Compare the rounded KB value so 1048575 B shows as "1.0 MB", not "1024.0 KB".
+  if (Number((bytes / 1024).toFixed(1)) >= 1024) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
   if (bytes >= 1024) {
@@ -199,7 +200,13 @@ export function BackupSettings() {
           "[Settings:backup] Backup action failed",
           result.error,
         );
-        setActionError(result.error ?? "unknown");
+        // The service reports an oversized file the same way for save and
+        // restore; the message has to say which one was refused.
+        setActionError(
+          key === "restore" && result.error === "backup-too-large"
+            ? "restore-too-large"
+            : result.error ?? "unknown",
+        );
         if (isTimeoutError(result.error)) {
           // The operation may still finish in the background; show its
           // result once it does instead of a stale list.
@@ -302,6 +309,8 @@ export function BackupSettings() {
         return t("backup.errorCaptureInvalid");
       case "backup-too-large":
         return t("backup.errorTooLarge");
+      case "restore-too-large":
+        return t("backup.errorRestoreTooLarge");
       default:
         return t("workspaces.backupActionError");
     }

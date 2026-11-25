@@ -150,23 +150,27 @@ export async function saveBackupSettings(
 
   // Only the backup config pref is written here; workspace v4 settings are
   // owned by the workspaces page.
-  await rpc.setStringPref(
-    WORKSPACES_BACKUP_CONFIG_PREF,
-    JSON.stringify({
-      ...oldConfig,
-      enabled: settings.enabled,
-      intervalMinutes: clampBackupInt(
-        settings.intervalMinutes,
-        BACKUP_LIMITS.intervalMinutes,
-        oldConfig.intervalMinutes,
-      ),
-      retentionDays: clampBackupInt(
-        settings.retentionDays,
-        BACKUP_LIMITS.retentionDays,
-        oldConfig.retentionDays,
-      ),
-    }),
-  );
+  const serialized = JSON.stringify({
+    ...oldConfig,
+    enabled: settings.enabled,
+    intervalMinutes: clampBackupInt(
+      settings.intervalMinutes,
+      BACKUP_LIMITS.intervalMinutes,
+      oldConfig.intervalMinutes,
+    ),
+    retentionDays: clampBackupInt(
+      settings.retentionDays,
+      BACKUP_LIMITS.retentionDays,
+      oldConfig.retentionDays,
+    ),
+  });
+  await rpc.setStringPref(WORKSPACES_BACKUP_CONFIG_PREF, serialized);
+  // A locked pref ignores the write without an error; report it so the UI
+  // shows the save failure instead of a value that was never stored.
+  const stored = await rpc.getStringPref(WORKSPACES_BACKUP_CONFIG_PREF);
+  if (stored !== serialized) {
+    throw new Error("backup-config-not-saved");
+  }
 }
 
 const getBackupBridge = (
