@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Hide Firefox's native single splitter when Floorp's advanced split view is active */
-#tabbrowser-tabpanels[data-floorp-split] > .split-view-splitter {
+#tabbrowser-tabpanels[data-floorp-split]:not([data-floorp-native-splitter])
+  > .split-view-splitter {
   display: none !important;
 }
 

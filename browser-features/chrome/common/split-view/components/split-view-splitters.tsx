@@ -70,8 +70,13 @@ export function clearSplitHandles(): void {
 
   const tabpanels = getTabpanels();
   if (!tabpanels) return;
+  tabpanels.removeAttribute("data-floorp-native-splitter");
+  const nativeSplitter = tabpanels.querySelector(
+    ":scope > .split-view-splitter",
+  ) as HTMLElement | null;
+  nativeSplitter?.style.removeProperty("--splitter-order");
   const handles = tabpanels.querySelectorAll(
-    ".floorp-split-handle, .floorp-grid-handle, .split-view-splitter",
+    ".floorp-split-handle, .floorp-grid-handle",
   );
   log.debug(`[clearSplitHandles] removing ${handles.length} handle(s)`);
   for (const handle of handles) {
@@ -133,18 +138,33 @@ export function insertFlexHandles(
     }]`,
   );
 
+  // Two side-by-side panes keep Firefox's keyboard-accessible splitter.
+  const useNativeSplitter = orientation === "horizontal" &&
+    orderedIds.length === 2;
+  if (useNativeSplitter) {
+    tabpanels.setAttribute("data-floorp-native-splitter", "true");
+    const nativeSplitter = tabpanels.querySelector(
+      ":scope > .split-view-splitter",
+    ) as HTMLElement | null;
+    nativeSplitter?.style.setProperty("--splitter-order", "1");
+  }
+
   for (let i = 0; i < orderedIds.length; i++) {
     const panelEl = document?.getElementById(orderedIds[i]!) as
       | HTMLElement
       | null;
     if (panelEl) {
-      panelEl.style.setProperty("flex", `${ratios[i]} 1 0%`);
+      if (!useNativeSplitter) {
+        panelEl.style.setProperty("flex", `${ratios[i]} 1 0%`);
+      }
       // DOM order of tabpanels children can stay creation order; match tabs.
       panelEl.style.setProperty("order", String(2 * i));
     } else {
       log.warn(`[insertFlexHandles] panel element not found: ${orderedIds[i]}`);
     }
   }
+
+  if (useNativeSplitter) return;
 
   for (let i = 0; i < orderedIds.length - 1; i++) {
     const panelEl = document?.getElementById(orderedIds[i]!);
