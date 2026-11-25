@@ -132,3 +132,30 @@ These checks do not prevent same-user replacement races, provide generic
 multiprocess locking, or guarantee full power-loss durability. Dynamic
 activation, durable rollback/replay state, eviction and loader integration
 remain deferred to later increments.
+
+## Native M3d transport and engine composition acceptance
+
+The native acceptance driver covers package transport and experimental signed
+M3c engine composition. It requires Linux, OpenSSL 3, NSS `certutil`, Deno, and
+an already-built browser containing `FeaturePackageDownloader.sys.mjs`. It
+refuses an existing profile and requires a new absolute
+`FLOORP_TEST_PROFILE_DIR` for each run. Only the public ephemeral CA is
+installed into that owned profile with NSS trust `C,,`.
+
+```bash
+FLOORP_TEST_PROFILE_DIR="$HOME/.cache/floorp-m3d-acceptance-$(date +%s)" deno run -A tools/src/m3d_package_acquisition_acceptance.ts
+```
+
+The run also covers three experimental composition cases that join acquisition
+to the signed M3c facade: `download-lifecycle-inert`,
+`download-lifecycle-transactions` and `close-during-download`. They use
+`createSignedFeatureHostForTests` with `excludeWindowsForTests`, so they
+exercise the lifecycle engine only: no window attachment, UI surface or
+production startup path is covered or claimed. Each case owns a fresh UUID
+journal and cache root under the owned profile, requires proven facade cleanup,
+and removes only its own roots.
+
+The composition cases exercise the signed M3c engine through a test-only facade.
+Production loader integration and automatic startup remain deferred. The
+downloader diagnostics gate is entered explicitly per observation because this
+launch is not a test-mode startup.

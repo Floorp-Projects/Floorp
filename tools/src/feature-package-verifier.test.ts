@@ -176,6 +176,24 @@ async function withUnavailableCrypto(
   }
 }
 
+function deferred<T>(): {
+  promise: Promise<T>;
+  resolve(value: T): void;
+  reject(reason?: unknown): void;
+} {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
+async function eventLoopTurn(): Promise<void> {
+  await new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
 Deno.test("signed package accepts exact UTF-8 source and returns detached immutable metadata", async () => {
   const source =
     'globalThis.__packageSourceWasRun = true;\r\nπ\r\nconst value = `quote: \\" slash: \\\\ control: \u0001`;\n';
@@ -231,6 +249,118 @@ Deno.test("signer and verifier bound unavailable and failing crypto", async () =
       Object.defineProperty(subtle, "digest", digestDescriptor);
     } else {
       Reflect.deleteProperty(subtle, "digest");
+    }
+  }
+});
+
+Deno.test("verifier drains pending crypto siblings after early rejection", async () => {
+  const bytes = await signed();
+  const subtle = globalThis.crypto.subtle;
+  const digestDescriptor = Object.getOwnPropertyDescriptor(subtle, "digest");
+  const importKeyDescriptor = Object.getOwnPropertyDescriptor(
+    subtle,
+    "importKey",
+  );
+  const pendingDigest = deferred<ArrayBuffer>();
+  const pendingImport = deferred<CryptoKey>();
+  let digestCalls = 0;
+  const patchedDigest: SubtleCrypto["digest"] = () => {
+    digestCalls++;
+    return digestCalls === 1
+      ? Promise.reject(new Error("early digest rejection"))
+      : pendingDigest.promise;
+  };
+  const patchedImport: SubtleCrypto["importKey"] = () => pendingImport.promise;
+  try {
+    Object.defineProperty(subtle, "digest", {
+      configurable: true,
+      value: patchedDigest,
+    });
+    Object.defineProperty(subtle, "importKey", {
+      configurable: true,
+      value: patchedImport,
+    });
+    const pending = verifySignedFeaturePackage(bytes, policy);
+    let settled = false;
+    void pending.then(
+      () => settled = true,
+      () => settled = true,
+    );
+    await eventLoopTurn();
+    assertEquals(digestCalls, 2);
+    assertEquals(settled, false);
+    pendingDigest.resolve(new ArrayBuffer(32));
+    await eventLoopTurn();
+    assertEquals(settled, false);
+    pendingImport.resolve(keyPair.publicKey);
+    await rejectsWith(pending, "unsupported-crypto");
+    assertEquals(settled, true);
+  } finally {
+    if (digestDescriptor) {
+      Object.defineProperty(subtle, "digest", digestDescriptor);
+    } else {
+      Reflect.deleteProperty(subtle, "digest");
+    }
+    if (importKeyDescriptor) {
+      Object.defineProperty(subtle, "importKey", importKeyDescriptor);
+    } else {
+      Reflect.deleteProperty(subtle, "importKey");
+    }
+  }
+});
+
+Deno.test("verifier drains started crypto when a later launch throws synchronously", async () => {
+  const bytes = await signed();
+  const subtle = globalThis.crypto.subtle;
+  const digestDescriptor = Object.getOwnPropertyDescriptor(subtle, "digest");
+  const importKeyDescriptor = Object.getOwnPropertyDescriptor(
+    subtle,
+    "importKey",
+  );
+  const pendingDigests = [deferred<ArrayBuffer>(), deferred<ArrayBuffer>()];
+  let digestCalls = 0;
+  const patchedDigest: SubtleCrypto["digest"] = () => {
+    const deferredDigest = pendingDigests[digestCalls++];
+    assert(deferredDigest, "both digest operations started before importKey");
+    return deferredDigest.promise;
+  };
+  const patchedImport: SubtleCrypto["importKey"] = () => {
+    throw new Error("synchronous import failure");
+  };
+  try {
+    Object.defineProperty(subtle, "digest", {
+      configurable: true,
+      value: patchedDigest,
+    });
+    Object.defineProperty(subtle, "importKey", {
+      configurable: true,
+      value: patchedImport,
+    });
+    const pending = verifySignedFeaturePackage(bytes, policy);
+    let settled = false;
+    void pending.then(
+      () => settled = true,
+      () => settled = true,
+    );
+    assertEquals(digestCalls, 2);
+    await eventLoopTurn();
+    assertEquals(settled, false);
+    pendingDigests[0].resolve(new ArrayBuffer(32));
+    await eventLoopTurn();
+    assertEquals(settled, false);
+    pendingDigests[1].resolve(new ArrayBuffer(32));
+    await rejectsWith(pending, "unsupported-crypto");
+    assertEquals(settled, true);
+  } finally {
+    if (digestDescriptor) {
+      Object.defineProperty(subtle, "digest", digestDescriptor);
+    } else {
+      Reflect.deleteProperty(subtle, "digest");
+    }
+    if (importKeyDescriptor) {
+      Object.defineProperty(subtle, "importKey", importKeyDescriptor);
+    } else {
+      Reflect.deleteProperty(subtle, "importKey");
     }
   }
 });

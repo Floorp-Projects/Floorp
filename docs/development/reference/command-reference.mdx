@@ -276,7 +276,7 @@ Source: `deno.json:86`
 deno task test:host
 ```
 
-Implementation: `deno test --allow-read --allow-write tools/src/ tools/design-matrix/`
+Implementation: `deno test --allow-read --allow-write --allow-run=openssl --allow-net=127.0.0.1 tools/src/ tools/design-matrix/`
 
 Source: `deno.json:87`
 

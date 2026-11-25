@@ -5,6 +5,7 @@ import * as path from "@std/path";
 import {
   appendEvent,
   createTaskState,
+  devUpStreamOptions,
   type FdhTaskState,
   type GitRunner,
   readTaskState,
@@ -140,6 +141,79 @@ Deno.test("runRecordedCommand records operation, event and assertion", async () 
     assertEquals(loaded.operations[0].displayCommand, "deno task test:host");
     assertEquals(loaded.assertions.length, 1);
   });
+});
+
+Deno.test("dev up launches with its prepared profile and guard environment", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    const preparedProfile = path.join(dir, "prepared-profile");
+    state.setup = {
+      guardEnv: { FLOORP_SKIP_PATCHER: "1" },
+      runtimeSource: path.join(dir, "runtime"),
+      profilePath: preparedProfile,
+      viteClearedAt: null,
+      commands: [],
+    };
+    const inheritedStreamEnv = {
+      FLOORP_TEST_PROFILE_DIR: path.join(dir, "caller-profile"),
+      OTHER_TEST_VALUE: "preserved",
+    };
+    const stream = devUpStreamOptions(state.setup, {
+      env: inheritedStreamEnv,
+    });
+    let childEnv: Record<string, string> | undefined;
+
+    const result = await runRecordedCommand(
+      state,
+      {
+        command: "/fake/deno",
+        args: [
+          "run",
+          "-A",
+          "tools/dev-tool.ts",
+          "start",
+          "--port-offset",
+          "20",
+        ],
+        cwd: dir,
+        displayCommand: "deno run -A tools/dev-tool.ts start --port-offset 20",
+        stream,
+      },
+      (_command, _args, _cwd, options) => {
+        childEnv = options?.env;
+        return okRunner();
+      },
+    );
+
+    assertEquals(result.code, 0);
+    assertEquals(childEnv, {
+      FLOORP_TEST_PROFILE_DIR: preparedProfile,
+      FLOORP_SKIP_PATCHER: "1",
+      OTHER_TEST_VALUE: "preserved",
+    });
+    assertEquals(
+      childEnv?.FLOORP_TEST_PROFILE_DIR === path.join(
+        Deno.cwd(),
+        "_dist",
+        "profile",
+        "test",
+      ),
+      false,
+    );
+  });
+});
+
+Deno.test("dev up keeps the prepared default profile path", () => {
+  const defaultProfile = path.join(Deno.cwd(), "_dist", "profile", "test");
+  const stream = devUpStreamOptions({
+    guardEnv: {},
+    runtimeSource: Deno.cwd(),
+    profilePath: defaultProfile,
+    viteClearedAt: null,
+    commands: [],
+  });
+
+  assertEquals(stream.env?.FLOORP_TEST_PROFILE_DIR, defaultProfile);
 });
 
 Deno.test("a failing command records a failed assertion", async () => {
