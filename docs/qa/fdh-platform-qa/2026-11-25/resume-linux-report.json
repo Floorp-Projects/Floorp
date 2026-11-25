@@ -1,0 +1,160 @@
+{
+  "schema": "fdh-platform-qa-report/v1",
+  "taskId": "kan-145-resume",
+  "platform": "linux",
+  "outcome": "passed",
+  "reason": null,
+  "payload": {
+    "name": "floorp-linux-x86_64.tar.xz",
+    "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9",
+    "version": "12.21.1@159.0.1"
+  },
+  "probe": {
+    "app": "Floorp",
+    "version": "159.0.1",
+    "buildId": "20261103153232",
+    "os": "Linux",
+    "windows": 1,
+    "url": "about:blank",
+    "contentSandboxLevel": 6
+  },
+  "eval": null,
+  "screenshot": {
+    "file": "linux.png",
+    "sha256": "1a39a68eae33de8fc24fc9d5d1d669f5e0ca52ceabfe9a37f580308bdec685dd"
+  },
+  "cleanupClean": true,
+  "steps": [
+    {
+      "name": "payload",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:43.238Z",
+      "finishedAt": "2026-11-25T04:38:43.324Z",
+      "result": {
+        "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9"
+      }
+    },
+    {
+      "name": "preflight",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:43.324Z",
+      "finishedAt": "2026-11-25T04:38:44.182Z",
+      "result": {
+        "ready": false,
+        "blockers": [
+          "container-held"
+        ],
+        "holder": "kan-145-resume",
+        "needsPrepare": false,
+        "details": {
+          "freeBytes": 172104355840,
+          "availableMemoryMb": 6069,
+          "imagePresent": true,
+          "containerHolder": "kan-145-resume",
+          "ready": false,
+          "blockers": [
+            "container-held"
+          ],
+          "image": "fdh-qa-linux:41fc5d48b6ce"
+        }
+      }
+    },
+    {
+      "name": "reset",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:44.182Z",
+      "finishedAt": "2026-11-25T04:38:44.655Z",
+      "result": {
+        "containerRemoved": true,
+        "clean": true
+      }
+    },
+    {
+      "name": "preflight",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:44.655Z",
+      "finishedAt": "2026-11-25T04:38:44.997Z",
+      "result": {
+        "ready": true,
+        "blockers": [],
+        "holder": null,
+        "needsPrepare": false,
+        "details": {
+          "freeBytes": 172104462336,
+          "availableMemoryMb": 6194,
+          "imagePresent": true,
+          "containerHolder": null,
+          "ready": true,
+          "blockers": [],
+          "image": "fdh-qa-linux:41fc5d48b6ce"
+        }
+      }
+    },
+    {
+      "name": "acquire",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:44.997Z",
+      "finishedAt": "2026-11-25T04:38:45.862Z",
+      "result": {
+        "ok": true,
+        "acquired": true
+      }
+    },
+    {
+      "name": "stage",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:45.862Z",
+      "finishedAt": "2026-11-25T04:39:04.455Z",
+      "result": {
+        "bytes": 108174124,
+        "version": "12.21.1@159.0.1"
+      }
+    },
+    {
+      "name": "launch",
+      "ok": true,
+      "startedAt": "2026-11-25T04:39:04.455Z",
+      "finishedAt": "2026-11-25T04:39:09.384Z",
+      "result": {
+        "version": "159.0.1"
+      }
+    },
+    {
+      "name": "probe",
+      "ok": true,
+      "startedAt": "2026-11-25T04:39:09.384Z",
+      "finishedAt": "2026-11-25T04:39:10.009Z",
+      "result": {
+        "app": "Floorp",
+        "version": "159.0.1",
+        "buildId": "20261103153232",
+        "os": "Linux",
+        "windows": 1,
+        "url": "about:blank",
+        "contentSandboxLevel": 6
+      }
+    },
+    {
+      "name": "screenshot",
+      "ok": true,
+      "startedAt": "2026-11-25T04:39:10.009Z",
+      "finishedAt": "2026-11-25T04:39:10.505Z",
+      "result": {
+        "file": "linux.png",
+        "sha256": "1a39a68eae33de8fc24fc9d5d1d669f5e0ca52ceabfe9a37f580308bdec685dd"
+      }
+    },
+    {
+      "name": "cleanup",
+      "ok": true,
+      "startedAt": "2026-11-25T04:39:10.505Z",
+      "finishedAt": "2026-11-25T04:39:11.055Z",
+      "result": {
+        "containerRemoved": true,
+        "clean": true
+      }
+    }
+  ],
+  "startedAt": "2026-11-25T04:38:43.238Z",
+  "finishedAt": "2026-11-25T04:39:11.055Z"
+}

@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import {
+  chooseNewTabContainer,
   setupWorkspaceContainers,
   workspaceContainerNeedsReopen,
 } from "../workspace-container-ui.ts";
@@ -139,6 +140,36 @@ function assertEquals(actual: unknown, expected: unknown): void {
 
 export async function runAllTests(): Promise<void> {
   await runTests("workspaceContainerSetup.test.ts", [
+    {
+      name:
+        "opening a new tab while setup is pending requires an explicit choice",
+      fn: () => {
+        const pref = "privacy.userContext.enabled";
+        const previous = Services.prefs.prefHasUserValue(pref)
+          ? Services.prefs.getBoolPref(pref)
+          : null;
+        const f = fixture("confirmation");
+        try {
+          Services.prefs.setBoolPref(pref, true);
+          f.bindings.isReady = () => false;
+          f.setChoice(null);
+          assertEquals(chooseNewTabContainer(f.bindings, f.prompt), null);
+          f.setChoice(0);
+          assertEquals(chooseNewTabContainer(f.bindings, f.prompt), 0);
+          f.setChoice(1);
+          assertEquals(chooseNewTabContainer(f.bindings, f.prompt), 9);
+          f.prompt.select = () => {
+            f.bindings.listLocalContainers = () => [];
+            return 1;
+          };
+          assertEquals(chooseNewTabContainer(f.bindings, f.prompt), null);
+          assertEquals(f.events.join(","), "select,select,select");
+        } finally {
+          if (previous === null) Services.prefs.clearUserPref(pref);
+          else Services.prefs.setBoolPref(pref, previous);
+        }
+      },
+    },
     {
       name:
         "legacy assignments require explicit scope and target instead of silently using none",

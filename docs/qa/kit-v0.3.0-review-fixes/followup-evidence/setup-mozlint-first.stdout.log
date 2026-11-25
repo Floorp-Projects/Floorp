@@ -1,0 +1,4 @@
+Creating global state directory from environment variable: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state
+The "MACH_USE_SYSTEM_PYTHON" environment variable is deprecated, please unset it or replace it with either "MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=system" or "MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none"
+Creating local state directory: /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6
+Creating the 'lint' site at /workspace/qa-review-v030/fix-qa309/evidence/setup-mozbuild-state/srcdirs/Runtime-shadow-fixes-342eb95298c6/_virtualenvs/lint

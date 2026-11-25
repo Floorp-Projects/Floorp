@@ -400,8 +400,10 @@ def main():
                 report["status"] = "failed"
             report["hostExitCode"] = host.returncode
             report["cleanupRequestedSignal"] = host.requested_signal
+            # Windows reports exit code 1 after a requested TerminateProcess.
+            report["cleanupPlatform"] = platform.system()
             report["ownedHostPid"] = host.pid
-            if host.returncode not in (0, -int(host.requested_signal or 0)):
+            if not host.is_requested_exit(host.returncode):
                 report["hostCleanupError"] = f"Missing or abnormal browser exit: {host.returncode}"
                 report["status"] = "failed"
         (output / "report.json").write_text(json.dumps(report, indent=2) + "\n")

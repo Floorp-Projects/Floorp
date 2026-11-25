@@ -883,6 +883,25 @@
             "minResident": "Only reclaim when memory usage exceeds (MB)",
             "cost": "Video playback, calls, and screen sharing do not prevent reclamation. Reclamation can pause the browser, including when you resume using it. Shorter intervals increase its frequency.",
             "saveFailed": "Could not save this setting. The previous value has been restored."
+        },
+        "tabAutoUnload": {
+            "title": "Tab Auto Unload",
+            "description": "Automatically unload inactive tabs when the browser's memory usage exceeds the threshold. Unloaded tabs reload when you select them again.",
+            "enable": "Enable tab auto unload",
+            "memoryThreshold": "Unload when memory usage exceeds (MB)",
+            "minInactive": "Only unload tabs inactive for (minutes)",
+            "exclusionsTitle": "URLs excluded from unloading",
+            "exclusionsDescription": "Tabs matching these patterns are never unloaded automatically. They are also excluded from Firefox's built-in tab unloading.",
+            "patternPlaceholder": "Enter URL pattern (e.g., example.com, *.google.com)",
+            "add": "Add",
+            "remove": "Remove",
+            "examples": "Pattern examples",
+            "exampleDomain": "Matches any URL containing this domain.",
+            "exampleWildcard": "Matches the domain and its subdomains.",
+            "exampleFullUrl": "Matches URLs starting with this path.",
+            "noPatterns": "No excluded URLs yet.",
+            "cost": "Selected tabs, pinned tabs, tabs playing audio, Picture-in-Picture, WebRTC calls, and private browsing tabs are not unloaded. A tab with an unsaved form or beforeunload prompt may refuse to unload.",
+            "saveFailed": "Could not save this setting. The previous value was restored."
         }
     },
     "ui": {

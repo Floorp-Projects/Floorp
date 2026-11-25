@@ -161,6 +161,14 @@ export const useKeyboardShortcutConfig = () => {
 };
 
 /**
+ * Strips the browser KeyboardEvent.code prefix (Key/Digit/Arrow) and
+ * uppercases the result so "KeyA" → "A", "Digit1" → "1", "ArrowUp" → "UP".
+ */
+export function formatShortcutKey(code: string): string {
+  return code.replace(/^(Key|Digit|Arrow)/, "").toUpperCase();
+}
+
+/**
  * Formats a ShortcutConfig into a human-readable string (e.g. "Alt+Ctrl+F2").
  * Mirrors the chrome-side `shortcutToString` so the settings UI can display
  * the same key combination the browser will actually react to.
@@ -171,5 +179,5 @@ export function shortcutToString(shortcut: ShortcutConfig): string {
   if (shortcut.modifiers.ctrl) modifiers.push("Ctrl");
   if (shortcut.modifiers.meta) modifiers.push("Meta");
   if (shortcut.modifiers.shift) modifiers.push("Shift");
-  return [...modifiers, shortcut.key.toUpperCase()].join("+");
+  return [...modifiers, formatShortcutKey(shortcut.key)].join("+");
 }

@@ -1,0 +1,439 @@
+// SPDX-License-Identifier: MPL-2.0
+
+import * as path from "@std/path/windows";
+import {
+  matchesDevIdentity,
+  normalizeDevPath,
+  splitDevCommandLine,
+} from "./dev_process_selection.ts";
+import type { DevProcessIdentity } from "./dev_process_types.ts";
+import type {
+  DevBrowserListenerRecord,
+  DevBrowserProcessRecord,
+  WindowsBrowserIdentityDeps,
+  WindowsBrowserIdentityTarget,
+  WindowsBrowserListenerIdentity,
+  WindowsBrowserListenerSelection,
+} from "./dev_browser_identity_types.ts";
+
+const DEFAULT_RETRY_COUNT = 10;
+const DEFAULT_RETRY_DELAY_MS = 100;
+
+const WINDOWS_LISTENER_SNAPSHOT_SCRIPT = String.raw`
+$ErrorActionPreference = 'Stop'
+$port = 0
+if (-not [int]::TryParse($env:DEV_BROWSER_LISTENER_PORT, [ref]$port)) {
+  throw 'DEV_BROWSER_LISTENER_PORT must be an integer'
+}
+if ($port -lt 1 -or $port -gt 65535) {
+  throw 'DEV_BROWSER_LISTENER_PORT is outside the TCP port range'
+}
+$rows = @(
+  Get-NetTCPConnection -State Listen -ErrorAction Stop |
+    Where-Object { [int]$_.LocalPort -eq $port } |
+    ForEach-Object {
+      [pscustomobject]@{
+        localPort = [int]$_.LocalPort
+        state = [string]$_.State
+        owningProcess = [int]$_.OwningProcess
+      }
+    }
+)
+ConvertTo-Json -InputObject $rows -Compress -Depth 3
+`.trim();
+
+const WINDOWS_PROCESS_SNAPSHOT_SCRIPT = String.raw`
+$ErrorActionPreference = 'Stop'
+$rows = @(
+  Get-CimInstance Win32_Process |
+    ForEach-Object {
+      [pscustomobject]@{
+        pid = [int]$_.ProcessId
+        ppid = [int]$_.ParentProcessId
+        name = [string]$_.Name
+        executablePath = if ($null -eq $_.ExecutablePath) { $null } else { [string]$_.ExecutablePath }
+        commandLine = if ($null -eq $_.CommandLine) { $null } else { [string]$_.CommandLine }
+        startTime = if ($null -eq $_.CreationDate) { '' } else { [string]$_.CreationDate.ToUniversalTime().ToString('o') }
+      }
+    }
+)
+ConvertTo-Json -InputObject $rows -Compress -Depth 3
+`.trim();
+
+async function runPowerShellJson(
+  script: string,
+  environment: Record<string, string> = {},
+): Promise<string> {
+  const output = await new Deno.Command("powershell", {
+    args: ["-NoProfile", "-NonInteractive", "-Command", script],
+    env: environment,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  if (!output.success) {
+    throw new Error(
+      "PowerShell inspection failed: " +
+        new TextDecoder().decode(output.stderr).trim(),
+    );
+  }
+  return new TextDecoder().decode(output.stdout);
+}
+
+function objectRows(raw: string, label: string): Record<string, unknown>[] {
+  const trimmed = raw.trim();
+  if (!trimmed) throw new Error(`${label} returned an empty response`);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed.replace(/^\uFEFF/, ""));
+  } catch {
+    throw new Error(`${label} returned invalid JSON`);
+  }
+  if (parsed === null) throw new Error(`${label} returned null`);
+  const rows = Array.isArray(parsed) ? parsed : [parsed];
+  return rows.map((row: unknown, index: number) => {
+    if (typeof row !== "object" || row === null || Array.isArray(row)) {
+      throw new Error(`${label} row ${index} is not an object`);
+    }
+    return row as Record<string, unknown>;
+  });
+}
+
+function integerProperty(
+  row: Record<string, unknown>,
+  name: string,
+  label: string,
+  minimum: number,
+): number {
+  const value = row[name];
+  if (!Number.isInteger(value) || (value as number) < minimum) {
+    throw new Error(`${label}.${name} must be an integer >= ${minimum}`);
+  }
+  return value as number;
+}
+
+function stringProperty(
+  row: Record<string, unknown>,
+  name: string,
+  label: string,
+): string {
+  const value = row[name];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`${label}.${name} must be a non-empty string`);
+  }
+  return value;
+}
+
+function nullableStringProperty(
+  row: Record<string, unknown>,
+  name: string,
+  label: string,
+): string | null {
+  const value = row[name];
+  if (value === null) return null;
+  if (typeof value !== "string") {
+    throw new Error(`${label}.${name} must be a string or null`);
+  }
+  return value;
+}
+
+export function parseWindowsBrowserListenerSnapshot(
+  raw: string,
+): DevBrowserListenerRecord[] {
+  return objectRows(raw, "TCP listener snapshot").map((row, index) => ({
+    localPort: integerProperty(
+      row,
+      "localPort",
+      `TCP listener row ${index}`,
+      1,
+    ),
+    state: stringProperty(row, "state", `TCP listener row ${index}`),
+    owningProcess: integerProperty(
+      row,
+      "owningProcess",
+      `TCP listener row ${index}`,
+      1,
+    ),
+  }));
+}
+
+export function parseWindowsBrowserProcessSnapshot(
+  raw: string,
+): DevBrowserProcessRecord[] {
+  // System/idle rows without a lifetime can never establish ownership.
+  return objectRows(raw, "Win32_Process snapshot")
+    .filter((row) => row.pid !== 0 && row.startTime !== "")
+    .map((row, index) => ({
+      pid: integerProperty(row, "pid", `Win32_Process row ${index}`, 1),
+      ppid: integerProperty(
+        row,
+        "ppid",
+        `Win32_Process row ${index}`,
+        0,
+      ),
+      name: stringProperty(row, "name", `Win32_Process row ${index}`),
+      executablePath: nullableStringProperty(
+        row,
+        "executablePath",
+        `Win32_Process row ${index}`,
+      ),
+      commandLine: nullableStringProperty(
+        row,
+        "commandLine",
+        `Win32_Process row ${index}`,
+      ),
+      startTime: stringProperty(
+        row,
+        "startTime",
+        `Win32_Process row ${index}`,
+      ),
+    }));
+}
+
+export async function listWindowsBrowserListeners(
+  port: number,
+): Promise<DevBrowserListenerRecord[]> {
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("Listener port must be an integer in 1..65535");
+  }
+  return parseWindowsBrowserListenerSnapshot(
+    await runPowerShellJson(WINDOWS_LISTENER_SNAPSHOT_SCRIPT, {
+      DEV_BROWSER_LISTENER_PORT: String(port),
+    }),
+  );
+}
+
+export async function listWindowsBrowserProcesses(): Promise<
+  DevBrowserProcessRecord[]
+> {
+  return parseWindowsBrowserProcessSnapshot(
+    await runPowerShellJson(WINDOWS_PROCESS_SNAPSHOT_SCRIPT),
+  );
+}
+
+function processIndex(
+  processes: readonly DevBrowserProcessRecord[],
+): Map<number, DevBrowserProcessRecord> {
+  const result = new Map<number, DevBrowserProcessRecord>();
+  for (const process of processes) {
+    if (result.has(process.pid)) {
+      throw new Error(
+        `Win32_Process snapshot contains duplicate PID ${process.pid}`,
+      );
+    }
+    result.set(process.pid, process);
+  }
+  return result;
+}
+
+function sameExecutablePath(actual: string | null, expected: string): boolean {
+  return actual !== null &&
+    normalizeDevPath(actual, "windows") ===
+      normalizeDevPath(expected, "windows");
+}
+
+function hasExactProfileArgument(
+  commandLine: string,
+  expectedProfilePath: string,
+): boolean {
+  const expected = normalizeDevPath(expectedProfilePath, "windows");
+  if (!path.isAbsolute(expectedProfilePath)) return false;
+  const argv = splitDevCommandLine(commandLine, "windows");
+  const profiles = argv.flatMap((arg, index) => {
+    const value = arg === "--profile"
+      ? argv[index + 1]
+      : arg.startsWith("--profile=")
+      ? arg.slice(10)
+      : undefined;
+    return value === undefined ? [] : [value];
+  });
+  return profiles.length === 1 && path.isAbsolute(profiles[0]) &&
+    normalizeDevPath(profiles[0], "windows") === expected;
+}
+
+function isContentProcess(commandLine: string): boolean {
+  return /(?:^|\s)["']?-contentproc["']?(?:\s|$)/i.test(commandLine);
+}
+
+function matchesRecordedIdentity(
+  process: DevBrowserProcessRecord,
+  identity: DevProcessIdentity,
+): boolean {
+  return matchesDevIdentity({
+    pid: process.pid,
+    ppid: process.ppid,
+    name: process.name,
+    commandLine: process.commandLine ?? "",
+    startTime: process.startTime,
+  }, identity);
+}
+
+function captureIdentity(
+  process: DevBrowserProcessRecord,
+): WindowsBrowserListenerIdentity {
+  if (!process.startTime) {
+    throw new Error(`TCP listener root PID ${process.pid} has no start time`);
+  }
+  if (!process.executablePath) {
+    throw new Error(
+      `TCP listener root PID ${process.pid} has no executable path`,
+    );
+  }
+  return {
+    pid: process.pid,
+    startTime: process.startTime,
+    commandLine: process.commandLine ?? "",
+    executablePath: process.executablePath,
+  };
+}
+
+/** Select the unique actual browser listener root from one Windows snapshot. */
+export function selectWindowsBrowserListenerIdentity(
+  selection: WindowsBrowserListenerSelection,
+): WindowsBrowserListenerIdentity {
+  if (
+    !Number.isInteger(selection.port) || selection.port < 1 ||
+    selection.port > 65535
+  ) {
+    throw new Error("Listener port must be an integer in 1..65535");
+  }
+  if (!path.isAbsolute(selection.expectedBinaryPath)) {
+    throw new Error("Expected browser executable must be absolute");
+  }
+  if (!path.isAbsolute(selection.expectedProfilePath)) {
+    throw new Error("Expected owned profile must be absolute");
+  }
+  const listenRows = selection.listeners.filter((listener) =>
+    listener.localPort === selection.port &&
+    listener.state.toLowerCase() === "listen"
+  );
+  const owners = new Set(listenRows.map((listener) => listener.owningProcess));
+  if (owners.size !== 1) {
+    throw new Error(
+      `Expected exactly one owner for TCP port ${selection.port}; found ${owners.size}`,
+    );
+  }
+  const ownerPid = owners.values().next().value as number;
+  const byPid = processIndex(selection.processes);
+  const owner = byPid.get(ownerPid);
+  if (!owner) {
+    throw new Error(
+      `TCP port ${selection.port} owner PID ${ownerPid} was not found`,
+    );
+  }
+  if (!sameExecutablePath(owner.executablePath, selection.expectedBinaryPath)) {
+    throw new Error(
+      `TCP port ${selection.port} owner PID ${ownerPid} is not the expected browser executable`,
+    );
+  }
+  if (owner.commandLine === null) {
+    throw new Error(
+      `TCP port ${selection.port} owner PID ${ownerPid} has no command line`,
+    );
+  }
+  if (isContentProcess(owner.commandLine)) {
+    throw new Error(`TCP port ${selection.port} is owned by a content process`);
+  }
+  if (
+    !hasExactProfileArgument(owner.commandLine, selection.expectedProfilePath)
+  ) {
+    throw new Error(
+      `TCP port ${selection.port} owner PID ${ownerPid} does not use the exact owned profile`,
+    );
+  }
+  const identity = captureIdentity(owner);
+  const recorded = selection.recordedProcesses.find((entry) =>
+    entry.pid === ownerPid
+  );
+  if (recorded && matchesRecordedIdentity(owner, recorded)) return identity;
+  if (owner.ppid <= 0) {
+    throw new Error(`TCP listener root PID ${ownerPid} has no direct parent`);
+  }
+  const parent = byPid.get(owner.ppid);
+  if (!parent) {
+    throw new Error(
+      `TCP listener root PID ${ownerPid} parent ${owner.ppid} is not live`,
+    );
+  }
+  const recordedParent = selection.recordedProcesses.find((entry) =>
+    entry.pid === parent.pid
+  );
+  if (!recordedParent || !matchesRecordedIdentity(parent, recordedParent)) {
+    throw new Error(
+      `TCP listener root PID ${ownerPid} parent ${parent.pid} does not match a recorded generation`,
+    );
+  }
+  const parentStart = Date.parse(parent.startTime);
+  const childStart = Date.parse(identity.startTime);
+  if (!Number.isFinite(parentStart) || !Number.isFinite(childStart)) {
+    throw new Error("Listener parent and child need parseable start times");
+  }
+  if (childStart < parentStart) {
+    throw new Error(
+      `TCP listener root PID ${ownerPid} predates its recorded parent`,
+    );
+  }
+  return identity;
+}
+
+/** Recheck the candidate against a fresh snapshot before any registry write. */
+export function revalidateWindowsBrowserListenerIdentity(
+  identity: WindowsBrowserListenerIdentity,
+  current: DevBrowserProcessRecord | undefined,
+): boolean {
+  return current !== undefined && current.pid === identity.pid &&
+    current.startTime === identity.startTime &&
+    (current.commandLine ?? "") === identity.commandLine &&
+    sameExecutablePath(current.executablePath, identity.executablePath);
+}
+
+/** Bounded capture/registration of the actual Windows listener root. */
+export async function captureWindowsBrowserListenerIdentity(
+  target: WindowsBrowserIdentityTarget,
+  deps: WindowsBrowserIdentityDeps,
+): Promise<WindowsBrowserListenerIdentity> {
+  const retryCount = target.retryCount ?? DEFAULT_RETRY_COUNT;
+  const retryDelayMs = target.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
+  if (
+    !Number.isInteger(retryCount) || retryCount < 1 || retryCount > 100 ||
+    !Number.isInteger(retryDelayMs) || retryDelayMs < 0 || retryDelayMs > 5000
+  ) {
+    throw new Error("Listener retry budget must be finite and bounded");
+  }
+  let lastError: unknown;
+  for (let attempt = 0; attempt < retryCount; attempt++) {
+    try {
+      const [listeners, processes] = await Promise.all([
+        deps.listListeners(target.port),
+        deps.listProcesses(),
+      ]);
+      const identity = selectWindowsBrowserListenerIdentity({
+        port: target.port,
+        expectedBinaryPath: target.expectedBinaryPath,
+        expectedProfilePath: target.expectedProfilePath,
+        recordedProcesses: target.recordedProcesses,
+        listeners,
+        processes,
+      });
+      const fresh = await deps.listProcesses();
+      const current = fresh.find((process) => process.pid === identity.pid);
+      if (!revalidateWindowsBrowserListenerIdentity(identity, current)) {
+        throw new Error(
+          "Listener candidate identity changed before persistence",
+        );
+      }
+      const alreadyRegistered = target.recordedProcesses.find((entry) =>
+        entry.pid === identity.pid && matchesRecordedIdentity(current!, entry)
+      );
+      if (!alreadyRegistered && !(await deps.recordIdentity(identity))) {
+        throw new Error("Listener identity could not be recorded");
+      }
+      return identity;
+    } catch (error) {
+      lastError = error;
+      if (attempt + 1 < retryCount) await deps.sleep(retryDelayMs);
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Windows browser listener identity capture failed");
+}

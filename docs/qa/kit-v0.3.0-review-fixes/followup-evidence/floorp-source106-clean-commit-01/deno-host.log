@@ -1,0 +1,66 @@
+[0m[38;5;245mrunning 12 tests from ./tools/src/smoke_runner.test.ts[0m
+resolveMode returns 'all' when value is undefined ... [0m[32mok[0m [0m[38;5;245m(446µs)[0m
+resolveMode returns 'all' for empty string ... [0m[32mok[0m [0m[38;5;245m(48µs)[0m
+resolveMode accepts 'all' ... [0m[32mok[0m [0m[38;5;245m(31µs)[0m
+resolveMode accepts 'unit' ... [0m[32mok[0m [0m[38;5;245m(28µs)[0m
+resolveMode accepts 'runtime' ... [0m[32mok[0m [0m[38;5;245m(52µs)[0m
+resolveMode is case-insensitive ... [0m[32mok[0m [0m[38;5;245m(64µs)[0m
+resolveMode maps 'browser' to 'runtime' for backward compatibility ... [0m[32mok[0m [0m[38;5;245m(53µs)[0m
+resolveMode throws on invalid value ... [0m[32mok[0m [0m[38;5;245m(444µs)[0m
+createSmokeSteps('unit') returns only unit steps ... [0m[32mok[0m [0m[38;5;245m(264µs)[0m
+createSmokeSteps('runtime') returns only runtime steps ... [0m[32mok[0m [0m[38;5;245m(80µs)[0m
+createSmokeSteps('all') returns both unit and runtime steps ... [0m[32mok[0m [0m[38;5;245m(43µs)[0m
+createSmokeSteps steps have non-empty name and args ... [0m[32mok[0m [0m[38;5;245m(50µs)[0m
+[0m[38;5;245mrunning 7 tests from ./tools/src/utils.test.ts[0m
+resolveFromRoot returns absolute path under PROJECT_ROOT ... [0m[32mok[0m [0m[38;5;245m(290µs)[0m
+resolveFromRoot with nested path ... [0m[32mok[0m [0m[38;5;245m(49µs)[0m
+platform returns a valid value ... [0m[32mok[0m [0m[38;5;245m(52µs)[0m
+arch returns a valid value ... [0m[32mok[0m [0m[38;5;245m(36µs)[0m
+exists returns true for existing file ... [0m[32mok[0m [0m[38;5;245m(509µs)[0m
+exists returns false for non-existing file ... [0m[32mok[0m [0m[38;5;245m(440µs)[0m
+PROJECT_ROOT is a valid directory ... [0m[32mok[0m [0m[38;5;245m(58µs)[0m
+[0m[38;5;245mrunning 41 tests from ./tools/src/colocated_test_runner.test.ts[0m
+browser detection uses the abort-bounded TCP reachability helper ... [0m[32mok[0m [0m[38;5;245m(1ms)[0m
+isTestFile detects supported test patterns ... [0m[32mok[0m [0m[38;5;245m(176µs)[0m
+isTestFile ignores non-test and excluded paths ... [0m[32mok[0m [0m[38;5;245m(65µs)[0m
+detectLayer resolves known layer roots ... [0m[32mok[0m [0m[38;5;245m(163µs)[0m
+detectLayer returns null for unknown paths ... [0m[32mok[0m [0m[38;5;245m(96µs)[0m
+parseLayer accepts aliases and rejects invalid values ... [0m[32mok[0m [0m[38;5;245m(478µs)[0m
+escapeRegExp escapes regex control characters ... [0m[32mok[0m [0m[38;5;245m(101µs)[0m
+normalizeBrowserResultPath maps known aliases and prefixes ... [0m[32mok[0m [0m[38;5;245m(118µs)[0m
+isResultMatchTarget matches normalized browser paths ... [0m[32mok[0m [0m[38;5;245m(79µs)[0m
+parseOptions applies default timeout values ... [0m[32mok[0m [0m[38;5;245m(893µs)[0m
+parseOptions accepts explicit timeout and startup values ... [0m[32mok[0m [0m[38;5;245m(366µs)[0m
+parseOptions rejects unknown options ... [0m[32mok[0m [0m[38;5;245m(324µs)[0m
+parseOptions rejects invalid timeout values ... [0m[32mok[0m [0m[38;5;245m(525µs)[0m
+parseOptions rejects --near with positional path ... [0m[32mok[0m [0m[38;5;245m(290µs)[0m
+parseOptions supports help mode ... [0m[32mok[0m [0m[38;5;245m(142µs)[0m
+browser test control is versioned, expiring, and cleared by owner ... [0m[32mok[0m [0m[38;5;245m(7ms)[0m
+host cleanup removes its control file even when prefs cleanup fails ... [0m[32mok[0m [0m[38;5;245m(797µs)[0m
+Windows snapshot parsers accept singleton and array JSON shapes ... [0m[32mok[0m [0m[38;5;245m(360µs)[0m
+Windows snapshot parsers fail closed on blank, null, and missing fields ... [0m[32mok[0m [0m[38;5;245m(495µs)[0m
+Windows preflight rejects the exact test executable only ... [0m[32mok[0m [0m[38;5;245m(375µs)[0m
+Windows Deno capture requires path, opaque creation date, and task marker ... [0m[32mok[0m [0m[38;5;245m(380µs)[0m
+Windows listener ownership accepts dual-stack rows for one verified root ... [0m[32mok[0m [0m[38;5;245m(396µs)[0m
+Windows listener ownership rejects multiple owners and content roots ... [0m[32mok[0m [0m[38;5;245m(363µs)[0m
+Windows listener ownership accepts only a previously captured reparented root ... [0m[32mok[0m [0m[38;5;245m(405µs)[0m
+Windows readiness preserves the verified launcher ancestor of the listener root ... [0m[32mok[0m [0m[38;5;245m(476µs)[0m
+Windows readiness owns an exact-path sibling currently descended from verified Deno ... [0m[32mok[0m [0m[38;5;245m(211µs)[0m
+Windows readiness blocks a present previously-owned identity mismatch ... [0m[32mok[0m [0m[38;5;245m(545µs)[0m
+Windows ownership expands exact-path children by ancestry and -parentPid ... [0m[32mok[0m [0m[38;5;245m(240µs)[0m
+Windows ownership treats a second root outside the listener tree as ambiguous ... [0m[32mok[0m [0m[38;5;245m(169µs)[0m
+Windows ownership never grants a new child through a stale -parentPid ... [0m[32mok[0m [0m[38;5;245m(268µs)[0m
+Windows teardown always cleans verified survivors after diagnostic root taskkill ... [0m[32mok[0m [0m[38;5;245m(890µs)[0m
+Windows teardown records but never kills an unlinked exact-path process ... [0m[32mok[0m [0m[38;5;245m(2ms)[0m
+Windows teardown disables Deno tree kill when a sibling is ambiguous ... [0m[32mok[0m [0m[38;5;245m(526µs)[0m
+Windows teardown revalidates Floorp identity immediately before taskkill ... [0m[32mok[0m [0m[38;5;245m(338µs)[0m
+Windows teardown revalidates the captured Deno command line before taskkill ... [0m[32mok[0m [0m[38;5;245m(297µs)[0m
+Windows teardown fails when the captured port remains reachable ... [0m[32mok[0m [0m[38;5;245m(210µs)[0m
+Windows teardown detects an IPv6 listener even when IPv4 connect fails ... [0m[32mok[0m [0m[38;5;245m(203µs)[0m
+Windows teardown fails closed when the final listener query fails ... [0m[32mok[0m [0m[38;5;245m(323µs)[0m
+Windows root-only fallback uses the spawned child control ... [0m[32mok[0m [0m[38;5;245m(141µs)[0m
+Windows verified teardown failure invokes root-only child fallback and stays failed ... [0m[32mok[0m [0m[38;5;245m(344µs)[0m
+Windows verified teardown combines root-only fallback failure ... [0m[32mok[0m [0m[38;5;245m(396µs)[0m
+
+[0m[32mok[0m | 60 passed | 0 failed [0m[38;5;245m(228ms)[0m
+
