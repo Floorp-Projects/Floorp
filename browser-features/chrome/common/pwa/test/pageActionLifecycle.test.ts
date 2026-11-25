@@ -219,7 +219,9 @@ async function testManifestNotificationBelongsToSelectedBrowser(): Promise<
     );
     assertEquals(checks, initial + 1, "the selected browser still refreshes");
     const switched = new Promise<void>((resolve) =>
-      window.addEventListener("TabSwitchDone", () => resolve(), { once: true })
+      globalThis.addEventListener("TabSwitchDone", () => resolve(), {
+        once: true,
+      })
     );
     gBrowser.selectedTab = background;
     await switched;
