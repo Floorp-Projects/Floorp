@@ -289,6 +289,34 @@ async function testHoverAndPin(): Promise<void> {
   });
 }
 
+async function testHoverAcrossWindowFocusChanges(): Promise<void> {
+  await withSidebar(async () => {
+    native.lastOpenedId = "viewBookmarksSidebar";
+    await setModes(true, true);
+    focusContent();
+    hover(true);
+    await waitFor(
+      () => native.isOpen && Boolean(firefoxSidebarOverlay?.expanded),
+      "edge hover must open the panel",
+    );
+    await settle();
+
+    globalThis.dispatchEvent(new FocusEvent("blur"));
+    await new Promise((resolve) => setTimeout(resolve, 450));
+    assert(
+      firefoxSidebarOverlay?.expanded,
+      "changing focus while hovered must preserve the sidebar",
+    );
+
+    globalThis.dispatchEvent(new Event("deactivate"));
+    await waitFor(
+      () => !firefoxSidebarOverlay?.expanded,
+      "deactivating the top-level window must collapse the hover panel",
+    );
+    assert(native.isOpen, "collapsing must preserve the sidebar document");
+  });
+}
+
 async function testRetentionAndFullscreen(): Promise<void> {
   await withSidebar(async () => {
     await setModes(true, true);
@@ -721,6 +749,10 @@ export async function runAllTests(): Promise<void> {
       name:
         "native edge hover, pin and keyboard control preserve the selected document",
       fn: testHoverAndPin,
+    },
+    {
+      name: "hover survives focus changes and clears on window deactivation",
+      fn: testHoverAcrossWindowFocusChanges,
     },
     {
       name:

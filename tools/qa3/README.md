@@ -152,6 +152,26 @@ contract tests: an in-memory process API on any host, and the real libproc
 tests in the `macos-supervisor` jobs (Apple silicon and Intel). It also
 covers the 2-E contract only, not a macOS source host.
 
+### Mac Firefox45 verifier order
+
+[KAN-118](https://floorp-projects.atlassian.net/browse/KAN-118) carries the stage
+order check from the [investigated Runtime run](https://github.com/Floorp-Projects/Floorp-Runtime/actions/runs/41630387790)
+into the QA3 shadow contract tests. The check requires inventory after helper
+installation, before all seven target builds. Each required stage must appear
+exactly once, and the target builds and subsequent child and resource stages
+must retain their order.
+
+To check the stage order of a recovered `summary.json` after authenticating the
+run and its evidence:
+
+```sh
+python3 -B tools/qa3/mac_verifier_order.py /path/to/summary.json
+```
+
+QA3 shadow CI exercises the stage order check with synthetic summaries. The
+command checks order only. Provenance, stage results, native execution, and
+qualification require their existing verification.
+
 ## Coverage and remaining gates
 
 `coverage.json` keeps installer, MAR, DEB/PPA, Portable and stub proof plans and

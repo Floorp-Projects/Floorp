@@ -49,12 +49,12 @@ const COMMON_FEATURE_CATEGORIES: CommonFeatureCategory[] = [
     title: "Tabs & Workspaces",
     sidebarLabel: "Tabs & Workspaces",
     summary:
-      "Tab, tab strip, workspace, split-view, closed-tab, and tab-sleep related chrome features.",
+      "Tab, tab strip, workspace, split-view, closed-tab, and tab-unloading related chrome features.",
     names: [
       "split-view",
       "tab",
       "tab-refresh",
-      "tab-sleep-exclusion",
+      "tab-auto-unload",
       "tabbar",
       "undo-closed-tab",
       "workspaces",
