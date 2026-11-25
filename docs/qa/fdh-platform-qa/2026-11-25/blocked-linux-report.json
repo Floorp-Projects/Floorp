@@ -1,0 +1,54 @@
+{
+  "schema": "fdh-platform-qa-report/v1",
+  "taskId": "kan-145-other",
+  "platform": "linux",
+  "outcome": "blocked",
+  "reason": "blocked: container-held",
+  "payload": {
+    "name": "floorp-linux-x86_64.tar.xz",
+    "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9",
+    "version": null
+  },
+  "probe": null,
+  "eval": null,
+  "screenshot": null,
+  "cleanupClean": null,
+  "steps": [
+    {
+      "name": "payload",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:50.440Z",
+      "finishedAt": "2026-11-25T04:37:50.522Z",
+      "result": {
+        "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9"
+      }
+    },
+    {
+      "name": "preflight",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:50.522Z",
+      "finishedAt": "2026-11-25T04:37:51.318Z",
+      "result": {
+        "ready": false,
+        "blockers": [
+          "container-held"
+        ],
+        "holder": "kan-145-fail",
+        "needsPrepare": false,
+        "details": {
+          "freeBytes": 172104417280,
+          "availableMemoryMb": 6247,
+          "imagePresent": true,
+          "containerHolder": "kan-145-fail",
+          "ready": false,
+          "blockers": [
+            "container-held"
+          ],
+          "image": "fdh-qa-linux:41fc5d48b6ce"
+        }
+      }
+    }
+  ],
+  "startedAt": "2026-11-25T04:37:50.440Z",
+  "finishedAt": "2026-11-25T04:37:51.318Z"
+}

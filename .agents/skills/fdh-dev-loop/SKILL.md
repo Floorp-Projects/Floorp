@@ -6,8 +6,12 @@ description: Run the FDH Gate 3 local dev loop in an existing Floorp worktree wi
 # FDH local dev loop (`fdh`)
 
 `fdh` is a thin, non-interactive CLI. It does **not** run an agent loop, call an
-LLM, push a branch, open a PR, or contact GitHub. An already-running agent
-(DSH/Codex/Claude) drives the commands below and does the editing itself.
+LLM, push a branch, or open a PR. An already-running agent (DSH/Codex/Claude)
+drives the commands below and does the editing itself. The local development
+loop needs no shared services. Optional commands such as `ext poll`, `evidence
+trace` and `qa collect` read GitHub through `gh` under their separate contracts.
+The optional platform QA step (`job start --step platform`) reaches the FDH QA
+targets over SSH.
 
 ## When to use
 
@@ -21,8 +25,9 @@ Use this skill when:
 - you want the build/test/browser assertions recorded automatically instead of
   hand-written in a report.
 
-Do **not** use it for packaging, release qualification, PR creation, or any
-operation that needs GitHub or another shared service.
+Do **not** treat this local loop or its optional read-only evidence commands as
+packaging, release qualification, PR creation or publication approval. Optional
+shared-service operations below require their own explicit operator intent.
 
 ## Prerequisites
 
@@ -92,6 +97,18 @@ deno run -A tools/fdh.ts verify test --task-id <task-id>
 deno run -A tools/fdh.ts verify browser --task-id <task-id> \
   --eval 'document.title' --expect 'Floorp'
 
+# 8b. Cross-platform Agentic QA, when the change needs it (see "Cross-platform
+#     Agentic QA" below for when, and for the payload and target files). One
+#     durable job per platform; the two targets are separate machines, so
+#     start both, then wait for each. Each exits 1 unless that run passed.
+deno run -A tools/fdh.ts job start --task-id <task-id> --step platform \
+  --platform macos --target <macos-target.json> --payload <Floorp.dmg> \
+  [--eval '<chrome-context js with return>' --expect '<text>']
+deno run -A tools/fdh.ts job start --task-id <task-id> --step platform \
+  --platform linux --target <linux-target.json> \
+  --payload <floorp-linux-x86_64.tar.xz> [--eval ... --expect ...]
+deno run -A tools/fdh.ts job wait --task-id <task-id> --job-id <job-id>
+
 # 9. Build + validate EvidenceManifest v0. --out must stay under
 #    <worktree>/_dist/fdh/.
 deno run -A tools/fdh.ts evidence --task-id <task-id> \
@@ -102,6 +119,140 @@ deno run -A tools/fdh.ts dev down --task-id <task-id>
 ```
 
 `deno task fdh <command>` is equivalent to `deno run -A tools/fdh.ts <command>`.
+
+## Prepared Runtime startup
+
+`task prepare` installs or verifies only the existing BrowserGlue startup patch.
+The setup result includes local patch/target byte hashes; the persisted task
+setup is a summary, not the full bootstrap receipt. These hashes are not native
+compiler, signature or authorization evidence. The unrelated full
+patcher guard remains `FLOORP_SKIP_PATCHER=1`. Incompatible, partial or conflicting
+hooks are refused; prepare does not change the supplied registry source.
+
+Host contracts retain no run/env permission using filesystem-only Git DI. The
+separate `tools/integration/prepared-runtime-bootstrap.test.ts` exercises real
+Git with `--allow-read --allow-write --allow-run=git` on existing Native Runtime
+CI runners. Browser qualification must observe automatic startup before any
+manual server-module import; an import-triggered result is a narrower claim.
+
+## OS API authentication (separate from browser verification)
+
+The TypeScript OS API verifier accepts an explicit token-file path using
+`--token-file` or `FLOORP_OS_TOKEN_FILE` (flag wins). It never discovers Home or
+profile credentials and never accepts a raw-token argument. An authenticated target
+must be a literal HTTP loopback root origin; redirects are refused and responses
+are redacted before reporting. HTTP 401 in the wrapper proves reachability only,
+not successful authentication. The Python client has token-file transport parity
+and synthetic host coverage; confirm the checked-out wrapper flags before use.
+
+Only use the verifier against an explicitly owned test browser: its main routine
+creates fixture pages and mutates browser state. Do not run it merely to typecheck
+code, or against the user's installed browser without authorization. For code-only
+validation, use the synthetic host/integration tests below instead.
+
+Dev/test HTTP-loader profiles opt into a separate token advertisement. On supported
+POSIX hosts its fixed location is `ProfD/floorp-os-server/os-server-token`.
+Windows dev-profile advertisement requires the ABI 1 native private-profile
+bridge `@floorp.app/private-profile-token;1` in the selected Debug Runtime.
+Runtimes without that capability deliberately refuse; there is no Node/Home
+fallback. A prepared-runtime receipt is selection metadata, not native behavior
+or default-publication proof. Initial refusal with no prior ownership
+performs no dirsvc/IO and never falls back to Home. If this lifecycle already owns
+a legacy advertisement or has a queued/in-flight write, refusal first awaits its
+generation-bumping cleanup using the captured owned path; this withdrawal may do
+IO and must settle before rejection. Live MCP token preference is not cleared.
+Product-default opt-out profiles retain the legacy location. POSIX preexisting-link checks are not atomic no-follow guards;
+same-user replacement races are not prevented; native packaged/default delivery remains separate.
+
+Synthetic checks (no credential files or browser are used):
+
+```sh
+deno test --allow-read --allow-write tools/src/os_server_token.test.ts tools/src/os_test_client.test.ts
+deno run --allow-net=127.0.0.1 tools/integration/os-test-client.ts
+# Only AFTER building bridge/loader-modules:
+deno test --allow-read tools/integration/os-server-token.test.ts
+```
+
+## Offline final-package evidence helpers (not qualification)
+
+`validateFinalPackageQaConsistency` checks caller-observed metadata/attestations
+against trusted expectations; it does not authenticate the API or archive bytes.
+`verifyFinalPackageQaArchive` separately hashes supplied bytes, validates a narrow
+bounded ZIP32 profile and verifies every entry. Its default signed-prepublication
+policy requires both canonical input and post-QA JSON. Explicit completed-source
+policy may return a null post-QA observation when the workflow did not create one;
+no observation or timestamp is synthesized. Its successful integrity result still
+refuses publication,
+API-authenticity, native-QA and live-approval claims. Do not override the older
+consistency result's false proof fields or wire either helper alone into publishing.
+`verifyFinalPackageQaEvidence` now composes them offline: bounded immutable JSON
+snapshots and exactly four native byte inputs are privately captured before awaiting;
+only actually verified archive JSON can supply consistency evidence. Its safe
+summaries still refuse transport/API/native-QA/live-approval/publication claims.
+
+```sh
+deno test --cached-only --frozen tools/src/fdh_final_package_qa_gate.test.ts tools/src/fdh_final_package_qa_archive.test.ts tools/src/fdh_final_package_qa_evidence.test.ts
+# Explicit historical compatibility only, after separately obtaining verified samples:
+deno run --cached-only --frozen --allow-read tools/integration/fdh-qa-archive-samples.ts
+```
+
+The historical integration never downloads data; missing samples fail rather than
+skip. It is not a new browser or QA execution. Runtime zlib output-cap support,
+strict archive limits, current-attempt API collection and protected approval remain
+separate review boundaries; no helper result is release authorization.
+
+## Read-only final-package QA collection (not publication)
+
+`fdh qa collect` lazily invokes the bounded canonical GET-only collector. Its
+eight options are mandatory; source/probe heads are independent, run IDs must
+differ, and freshness is explicit (positive, at most 86400000 ms). Unknown or
+duplicate options reject before collector import/I/O. There are no repository,
+host, URL, header, token, executable or clock overrides.
+
+The default is `--mode signed-prepublication`, preserving protected pending-source
+conditions. Explicit `--mode published-release` collects completed canonical
+package QA, not approval of an unfinished source. Unsigned collection is
+unsupported. The completed workflow may omit its prepublication-only post-QA
+entry; byte/CRC/path/size/digest verification still applies and the collector
+performs its real final API readback. All authority flags remain false.
+
+```sh
+deno task fdh qa collect --source-run-id N --source-attempt N --source-head SOURCE_SHA \
+  --qa-run-id N --qa-attempt N --qa-head PROBE_SHA \
+  --windows-policy require-success --max-age-ms 86400000
+# Least-privilege direct main invocation also needs --allow-read for existing FDH initialization:
+# deno run --cached-only --frozen --allow-read --allow-run=gh tools/fdh.ts qa collect ...
+```
+
+Exit 0 means read-only prerequisites matched, **not** publication permission; exit
+1 is not-ready/collection-failed and exit 2 is invalid arguments. Inspect the safe
+JSON stage/code, not exit 1 alone: a startup permission error is not a verified
+sourceNotReady result. All transport/API/native-QA/live-approval/publication flags
+remain false. Host-installed gh/auth/config/TLS is the TCB; no origin attestation
+or atomic collection lock is claimed. The live completed-source negative is
+verified; a real pending positive and protected workflow activation remain open.
+
+## Bounded read-only QA discovery (not a publisher gate)
+
+`fdh qa discover` derives a QA run index window from the pinned source run's
+creation time. Source and QA probe commits stay independent. Its five required
+options do not include a caller timestamp, QA head, URL, repository or transport.
+
+```sh
+deno run -A tools/fdh.ts qa discover --source-run-id N --source-attempt N --source-head SOURCE_SHA \
+  --windows-policy shadow-observation --max-age-ms 600000
+```
+
+The hard limits are three pages, 300 indexed runs and eight candidates. Every
+candidate must pass the existing collector; an incomplete, pending, ambiguous,
+unverifiable or changed window fails closed. A selected match is recollected and
+the full window re-listed; this is still a point-in-time observation, not an
+atomic GitHub transaction. Exit 0 and matches=true remain nonauthorizing.
+Production publisher wiring and real signed pending-positive proof are separate.
+
+Also run changed test groups directly with type checking enabled. A broad host
+graph can pass while a focused graph exposes Node/DOM WebCrypto type differences;
+fixture keys should use their cryptographic library returned types, not casts.
 
 ## Recording commands that ran outside fdh (IMP-2)
 
@@ -136,7 +287,7 @@ execution.
 An independent LLM review is recorded as a machine-readable receipt bound to the
 PR head commit. `fdh review record` is still local-only: it writes the receipt
 under `<worktree>/_dist/fdh/reviews/` and prints the comment body. The agent
-posts that body with `gh pr comment`, and the `fdh-review-gate` workflow
+posts that body with `gh pr comment`, and the `fdh-trusted-review-gate` workflow
 requires at least two distinct reviewer identities at the PR head.
 
 ```sh
@@ -150,32 +301,103 @@ deno run -A tools/fdh.ts review record --task-id <task-id> \
 ```
 
 Then post the printed `commentBody` (marker
-`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The gate counts receipts only
-from comment authors whose GitHub association is OWNER, MEMBER or COLLABORATOR;
-other authors' receipts are logged and ignored. A receipt for another commit is
-stale and ignored (it neither counts nor blocks). A head receipt with a
+`<!-- fdh-review-receipt:v1 {...} -->`) to the PR. The gate counts receipts from
+authors whose GitHub association is OWNER, MEMBER or COLLABORATOR and whose
+effective repository permission is write or admin (GitHub maps maintain to
+write). A receipt for another commit is stale. A head receipt with a
 `request_changes` verdict or `blocking=true` fails the gate.
 
-Posting a trusted receipt does not run the gate itself: the `rerun-on-receipt`
-job waits for the PR head's latest `review-gate` run and reruns it when it did
-not pass, so the required check updates on the PR head. The reviewer identities
-are still declared by the poster; the gate cannot tell whether two receipts from
-one trusted account came from two independent reviews.
+## Trusted receipt-check boundary
 
-Limits to know:
+GitHub loads the `pull_request_target` workflow from the PR's base on `main`.
+The `trusted-receipt-publication` job checks out that same workflow commit with
+`github.workflow_sha` and evaluates receipt comments against the event's PR
+head. It verifies the PR still targets `main` at that head before and after
+validation. The custom `fdh-trusted-receipts` Check Run carries the diagnostic
+result. The separate `pull_request` job `review-gate` runs the candidate host
+tests and build with read-only contents permission.
 
-- `MEMBER` means any member of the organisation, not write access to this
-  repository. An org member with private membership may appear as `CONTRIBUTOR`;
-  their receipts are then ignored (make the membership public or use a
-  collaborator account).
-- Only newly created comments trigger the rerun; after editing a receipt, rerun
-  the PR's `review-gate` run by hand.
-- A PR that changes `fdh-review-gate.yml` still needs one manual rerun after its
-  receipts are posted, because `issue_comment` workflows are read from the
-  default branch.
-- The gate code runs from the PR's own checkout, so a PR can change what the
-  gate checks; review edits to `.github/workflows/fdh-review-gate.yml` and
-  `tools/src/fdh_review.ts` before merging.
+The default-branch `issue_comment` job reruns trusted validation for the current
+PR head when an eligible author's receipt marker is added, edited, or removed.
+For a PR already open when the rerun workflow ships, reopen it or update it to
+start a run the comment job can find. Use the same recovery when the original
+run is outside GitHub's 30-day rerun window. Revalidation reads the full comment
+set. Reviewer identities remain declarations by the poster.
+
+Before moving all receipt enforcement to this workflow, the repo admin must
+protect the trusted job from impersonation. The binding to GitHub Actions App
+15368 identifies the App and job name. Require the trusted workflow by identity
+from a protected source in an organization ruleset where supported.
+Alternatively, enforce maintainer code-owner approvals with stale approvals
+dismissed for all workflow files, local actions, the trusted receipt checker and
+its imports, and CODEOWNERS itself. Keep the candidate test/build check required
+through rollout.
+
+## Evidence on the PR (D-20, KAN-132)
+
+A manifest lives only in this worktree's `_dist/fdh/`. To keep it with the
+change, post it on the PR as a comment.
+
+Post it after the last commit, from a clean worktree, so that it is bound to
+the PR's final head.
+
+```sh
+deno task fdh evidence publish --task-id <id> --pr <n> --out _dist/fdh/evidence-<n>.md
+# Read _dist/fdh/evidence-<n>.md.manifest.json (the same manifest, in plain
+# JSON) before posting. Do not post it if it holds anything sensitive.
+# Neither file may exist yet: a new head needs a new --out name.
+gh pr comment <n> --body-file _dist/fdh/evidence-<n>.md
+deno task fdh evidence trace --pr <n> [--require-merged true]   # exit 1 if incomplete
+```
+
+The trace evaluates receipts using the poster's current repository permission
+and the same eligibility policy as the trusted gate. If GitHub cannot verify
+permissions, the trace reports an incomplete receipt set.
+
+The comment is public. The manifest carries command output and local paths,
+and fdh's secret check only refuses known secret references; it does not find
+arbitrary credentials or personal data. That is why the plain copy has to be
+read first.
+
+What the comment holds:
+
+- The whole manifest, as gzip+base64. It is never embedded as JSON, because
+  `gh api` rewrites JSON-escaped control characters, such as the ANSI colours in
+  command output, when it prints a comment. A manifest that does not fit in one
+  comment is refused.
+- A marker that binds it to the repository, the task, the PR, the HEAD commit,
+  and whether the worktree had uncommitted changes. Uncommitted changes are not
+  hashed; the manifest's limitations say so.
+- The SHA-256 and the size of the manifest text.
+
+Evidence counts for `evidence trace` only if all of these hold:
+
+- **Author.** It is by a trusted author: OWNER, MEMBER or COLLABORATOR, as for
+  receipts.
+- **Not edited.** It has not been edited since it was posted.
+- **Intact.** It decodes and matches its size and SHA-256, the manifest schema
+  accepts it, and the manifest is for the bound task.
+- **Binding.** It is bound to this repository (names compared
+  case-insensitively), this PR and the PR's final head.
+- **Clean build.** It was built without uncommitted changes.
+- **Verdict.** The manifest records at least one assertion, and its own state
+  is `succeeded`. The state takes the latest assertion of each name, so a
+  failure fixed later still succeeds; a failed or cancelled task never does.
+
+The trace is complete when such evidence exists and the D-14 receipts are valid
+at that head. With `--require-merged true`, the PR must also be merged.
+Comments that do not count are listed as notes; they never make a trace
+incomplete.
+
+How far this can be trusted:
+
+- The binding is what the trusted author's comment says.
+- The SHA-256 is not a signature. It catches a manifest that no longer matches
+  its marker, not an author who rewrites both. That is why an edited comment
+  does not count.
+- A PR comment stays with the PR. CI artifacts expire, so they are not the
+  record.
+- A central append-only store, with authenticated principals, waits for D-18.
 
 ## Quota and approval ledger (Gate 4 4-D / 4-C)
 
@@ -236,11 +458,16 @@ deno run -A tools/fdh.ts job cancel --task-id <task-id> --job-id <job-id>
 
 Reconcile (`job wait|status|reconcile`, `task resume`) does exactly one of:
 reconnect to a live executor; apply a result left in the outbox (no rerun); stop
-the lost attempt's step process tree (identity-checked) and start the next epoch
-from the checkpoint (build commands already completed are not rerun); fail the
-job when its inputs (HEAD, uncommitted state, guard env) changed or
-`--max-attempts` (default 3) attempts were lost. Each terminal result is copied
-into the task state once (operations, assertions, a `job result <id>` event).
+the lost attempt's step process tree (identity-checked; on Linux/macOS also the
+members of its process group, so children that outlived the root are found)
+and start the next epoch from the checkpoint (build commands already completed
+are not rerun); fail the
+job when its inputs (HEAD, tracked diff, untracked file contents, guard env)
+changed or `--max-attempts` (default 3) attempts were lost. Each terminal result
+is copied into the task state once (operations, assertions, a `job result <id>`
+event). A build that still has to compile source is held, not respawned, while
+this worktree's dev server runs (the W-04 guard; reconcile reports `held`, and
+no attempt is used up): run `dev down`, then `job wait`.
 
 Non-idempotent operations (push, PR, release, other external writes) are never
 run by fdh. Record the intent before you perform it, and the outcome after:
@@ -257,8 +484,168 @@ If the session ends between the two, `task resume` puts the intent into
 `awaiting-approval` and the quota ledger's pending list. Do not retry it: a
 human checks the external state and runs
 `job resolve --resolution succeeded|failed|retry [--agent <name>]`, which also
-approves the pending entry. A confirm that arrives after the holder was declared
-lost is refused and recorded (`late-report`).
+approves the pending entry. If the ledger update fails, run the same
+`job resolve` again: it only repeats the ledger step. Reconcile puts a missing
+pending entry back while the job still awaits approval, unless the ledger
+records an approval for it (or a `quota approve`) since then. A confirm that
+arrives after the holder was declared lost is refused and recorded
+(`late-report`).
+
+## Cross-platform Agentic QA (KAN-142, KAN-145)
+
+`job start --step platform` runs a **packaged** Floorp build of the change on a
+QA target and records assertion `platform-qa-<platform>`:
+
+- `macos`: the stability tart VM on the Mac Studio (GUI session, real macOS);
+  payload `.dmg` or `.tar.gz`.
+- `linux`: a fresh Docker container on the Debian host (Xvfb + openbox, no
+  network by default); payload `.tar.xz`, `.tar.bz2` or `.tar.gz`.
+
+The job runs one command, `fdh platform-qa run`: preflight, lock, upload,
+install, launch with a fresh profile, a fixed probe (app, OS, browser window,
+content-sandbox level), the optional `--eval` (chrome context; the script must
+`return` its value) with `--expect`, a screenshot, and cleanup, which always
+runs once the target was taken. Results go to
+`_dist/fdh/platform/<task-id>/<platform>-report.json` and `<platform>.png`;
+the job log ends with a one-line summary. Host names, SSH users, the VM
+directory, key-file names, any IPv4 address and the local payload path are
+redacted from both; an
+`--eval` value is recorded as it is.
+
+Outcomes, in the report and the summary line:
+
+- `passed`: every step ran, the probe and `--expect` matched, cleanup was clean.
+- `failed`: the build or the run on the target went wrong (`reason` names the
+  step), or cleanup left something behind.
+- `blocked`: the target was unreachable or not ready (held by another task, low
+  disk, no GUI session, a foreign Floorp running). The change was not tested;
+  say so, and count it neither as a pass nor as a product failure.
+
+Both `failed` and `blocked` make the job fail and record a failed
+`platform-qa-<platform>` assertion, so the evidence state stays `failed` until
+a later run of that platform passes. Read the report to tell them apart, and
+for `blocked` rerun when the target is free or report the step as not run.
+
+One platform job per task and platform at a time: the task id is the target's
+lock identity, so `job start --step platform` is refused while an earlier job
+of the same task and platform has not finished.
+
+When to run it:
+
+- Run it when the change touches browser chrome UI, pages, startup/bridge, ESM
+  modules, prefs, or anything that differs per platform (paths, file pickers,
+  native integration, fonts, shortcuts), and a packaged build of the change
+  exists for that platform. Run it whenever the user asks.
+- Skip it for `tools/`, `docs/` and CI-only changes, and state in the final
+  report that it was skipped and why.
+- The payload is the agent's input: a packaged build of this change from this
+  repository's own CI (never a build from a fork's PR) or a local package
+  build. The macOS VM is shared and not reset between runs, so do not run
+  builds of unknown origin there. fdh records the SHA-256 and version, but
+  cannot tell which commit it was built from.
+
+`--eval` runs arbitrary code with chrome privileges as the target's test user.
+Use it only for read-only probes of the change (a pref, a label, a DOM state):
+no spawning processes, writing files, network access, or reading environment
+variables, files or credentials. Its value goes into the report verbatim, and
+reports may be committed. Cleanup on macOS stops only processes under the task
+directory; anything an eval started elsewhere would survive it.
+
+Target configs are JSON files outside the repository (they name the hosts and
+key files); never commit them. Their hashes and the payload hash are fixed when
+the job starts: if either file changes, a rerun fails instead of testing
+something else.
+
+A lost executor is handled by the normal reconcile: the next attempt reruns the
+whole command, which first removes what this task left on the target. If the
+job gave up or was cancelled, free the target with the command below. Run it
+from the task's worktree root (it is refused where that task has no state) and
+not while a platform job of that task and
+platform is still unfinished (cancel it first with `fdh job cancel`).
+
+```sh
+deno run -A tools/fdh.ts platform-qa cleanup --platform <macos|linux> \
+  --task-id <task-id> --target <target.json>
+```
+
+Boundary with QA3: this step is an early check during development, on one
+machine per platform. It is not QA3, release qualification, final-package QA or
+a visual judgment; the screenshot is kept for a human to look at. Windows is not
+covered yet (KAN-147). The Linux container has no desktop session, no GPU and no
+user-namespace sandbox; see `docs/qa/fdh-qa-linux/` and `docs/qa/fdh-qa-macos/`
+for each target's limits.
+
+The QA targets are FDH development machines reached over SSH, not self-hosted
+GitHub Actions runners. D-17 (GUI self-hosted runners only when the user says
+so) still applies to runners; within the dev loop an agent may start this step
+under the rules above without asking each time.
+
+## External GitHub / Jira operations (D-19, KAN-131)
+
+Agents change GitHub (`gh`) and Jira (Atlassian MCP) themselves; fdh calls
+neither API. fdh keeps a link table, the observations an agent polled, and
+keyed operations, under `<worktree>/_dist/fdh/ext/<task-id>.json`. There is
+no webhook: run `ext observe` for each value you poll, then `ext plan`.
+
+```sh
+deno task fdh ext link --task-id <id> --jira KAN-131 --pr 3200 --branch fdh/external-ops
+# GitHub: read every linked PR (state, URL, the head's check runs) with gh.
+# A PR that cannot be read is an error (exit 1), never a deletion.
+deno task fdh ext poll --task-id <id> [--repo <owner/name>]
+# Jira (Atlassian MCP), or any value you read yourself, with the object's
+# API update time as --version:
+deno task fdh ext observe --task-id <id> --ref jira:KAN-131 --field status \
+  --value 進行中 --version <jira updated>
+deno task fdh ext plan --task-id <id>      # actions, holds, inSync, keptEdits, fields
+# For each action: start its key, perform the write, then record the outcome.
+deno task fdh ext start --task-id <id> --key '<action.key>' --agent <name>
+deno task fdh ext done --task-id <id> --key '<action.key>' --epoch <n> --agent <name> \
+  --outcome succeeded
+# Then poll the mirror again (ext observe) before the next plan.
+```
+
+The field table (I-04; the code is `FIELD_RULES` in
+`tools/src/fdh_ext.ts`):
+
+| Field (owner) | Mirror | Rule |
+| --- | --- | --- |
+| `pr.url` (GitHub) | Jira `pr-link-comment` | one fdh comment with the PR's URL, once per URL (Atlassian MCP cannot create remote links) |
+| `pr.state` (GitHub) | Jira `status` | draft/open/merged → 進行中/レビュー中/完了, closed → nothing; never moves the status back |
+| `ci.result` (GitHub), `<sha>:<success\|failure>` | Jira `ci-comment` | one fdh comment per head and result; pending is not posted |
+| `pr.review-receipts` (GitHub) | none | the D-14 gate reads them on the PR |
+| `jira.sprint`, `jira.assignee`, `jira.priority`, `jira.qa-state` (Jira) | none | not copied to GitHub |
+| titles, descriptions, comments | none | no full-text copying |
+
+Which version to pass:
+
+- **PR fields:** the PR's `updated_at`.
+- **`ci.result`:** the check run's `completed_at` (`started_at` while pending). A PR's `updated_at` does not move when checks finish.
+- **Jira fields:** the issue's `updated`.
+- **A deletion** (a 404): the poll time.
+
+How observations behave:
+
+- **Duplicates.** A repeated event id for the same field, or the same value at the same version, is a `duplicate`. It refreshes the poll time.
+- **Stale values.** An older version than the stored one is `stale`; this is how an ordering inversion is caught.
+- **Conflicts.** The same version with another value is a `conflict` and is not taken.
+- **Deletions.** Observe the field `object` with `--deleted true` when an object is gone. Nothing more is written to it or because of it, and a later observation does not bring it back. A deletion older than the newest observation of the object is `stale`.
+
+How the plan treats writes:
+
+- **Concurrent edits.** fdh never overwrites a mirror that changed since fdh last wrote it (no compare-and-set is assumed).
+  - If the owner changed too, the field is held (`concurrent-edit`). An approver settles it with `fdh ext resolve --link <KEY-n> --field <f> --keep <mirror|owner>`.
+  - If only the mirror changed, the person's edit is kept (`keptEdits`).
+- **After a write.** The field waits (`awaiting-poll`) for a poll made after `ext done`.
+- **Before the first write.** A status is not written before Jira's current status has been polled (`mirror-unobserved`).
+
+Keyed operations:
+
+- **Key forms.** An action's key is `<KEY-n>:<field>:<value>#<generation>`; the generation moves each time a baseline is recorded or resolved. A comment's key is `<KEY-n>:ci.result:<sha>:<result>`. `ext start` refuses a field key that is not an action of the current plan; run `ext plan` again and use the key it gives.
+- **An unreadable job journal** keeps its operation in flight, so its field stays held. Repair the journal under `_dist/fdh/jobs/<task-id>/`; if you know the operation never ran, remove the journal and the operation ends as failed.
+- **What `ext start` records.** It stores what a planned action writes. When the operation succeeds, that becomes the field's baseline. This holds both after `ext done` and after an approver's `job resolve`, which `ext plan` picks up.
+- **A key that succeeded** is `already-done`. Use one key per PR you create (`github:pr-create:<branch>`), so no second PR is made.
+- **A key with no outcome yet** is refused.
+- **A key that failed** may be started again. Report `failed` only when you know the write did not happen. If you do not know, do not confirm: once your lease runs out, `task resume` moves the operation to `awaiting-approval`. An approver then checks GitHub or Jira and resolves it.
 
 ## GUI desktop lease and secret-reference denial (Gate 4 4-A)
 
@@ -373,10 +760,11 @@ a pass by editing state.
 - This local loop does not prove Gate 3 qualification or release readiness; it
   only records what the local commands did.
 - `visualJudge` is `null`: no visual/look-and-feel judgment is performed.
-- Images/screenshots are outside the CLI contract; use existing tools directly
-  if a human review needs them.
+- Images/screenshots are outside the CLI contract, except the platform QA
+  screenshot, which is stored for human review and never judged; use existing
+  tools directly if a human review needs more.
 - Shared services (GitHub, PRs, CI dispatch) are not required and are never
-  called by the CLI.
+  called by the local loop. Platform QA uses SSH to the FDH QA targets only.
 - `fdh job` is one-machine fault tolerance only (no central scheduler, no
   cross-machine lease). It does not claim exactly-once: a safe step can run
   again after its executor is lost, and an old executor's local writes are not

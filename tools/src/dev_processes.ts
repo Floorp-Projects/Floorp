@@ -8,6 +8,15 @@ import {
   parseDevProcessRegistry,
   parseUnixDevProcesses,
 } from "./dev_process_selection.ts";
+import {
+  captureWindowsBrowserListenerIdentity,
+  listWindowsBrowserListeners,
+  listWindowsBrowserProcesses,
+} from "./dev_browser_identity.ts";
+import type {
+  WindowsBrowserIdentityTarget,
+  WindowsBrowserListenerIdentity,
+} from "./dev_browser_identity_types.ts";
 import type {
   DevProcessIdentity,
   DevProcessInfo,
@@ -92,7 +101,7 @@ export async function listDevProcesses(
   const output = await commandOutput("ps", [
     ...selector,
     "-o",
-    "pid=,ppid=,lstart=,args=",
+    "pid=,ppid=,pgid=,lstart=,args=",
   ]);
   const names = await commandOutput("ps", [...selector, "-o", "pid=,comm="]);
   const byPid = new Map(
@@ -103,7 +112,7 @@ export async function listDevProcesses(
         : [];
     }),
   );
-  const processes = parseUnixDevProcesses(output).filter((process) =>
+  const processes = parseUnixDevProcesses(output, true).filter((process) =>
     pid === undefined || process.pid === pid
   );
   for (const process of processes) {
@@ -114,7 +123,10 @@ export async function listDevProcesses(
           .split("\0").filter(Boolean);
         // Include boot ID and kernel start ticks for sub-second PID identity.
         const stat = await Deno.readTextFile(`/proc/${process.pid}/stat`);
-        const ticks = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
+        const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
+        const ticks = fields[19];
+        // The group id from the same read as the start time.
+        process.pgid = Number(fields[2]);
         const boot =
           (await Deno.readTextFile("/proc/sys/kernel/random/boot_id")).trim();
         process.startTime = `${boot}:${ticks}`;
@@ -143,7 +155,8 @@ export function readDevProcesses(
 export async function recordDevProcess(
   pid: number,
   file = DEV_PROCESSES_FILE,
-): Promise<void> {
+  expected?: DevProcessIdentity,
+): Promise<boolean> {
   try {
     const process = (await listDevProcesses(pid)).find((entry) =>
       entry.pid === pid
@@ -151,12 +164,20 @@ export async function recordDevProcess(
     if (!process?.startTime) {
       throw new Error(`Cannot capture identity for PID ${pid}`);
     }
-    const entries = readDevProcesses(file).filter((entry) => entry.pid !== pid);
-    entries.push({
+    const identity: DevProcessIdentity = {
       pid,
       startTime: process.startTime,
       commandLine: process.commandLine,
-    });
+    };
+    // Reused PID detection happens before any registry write.
+    if (expected && !matchesDevIdentity(process, expected)) {
+      console.error(
+        `[dev-tool] PID ${pid} no longer matches the expected browser generation.`,
+      );
+      return false;
+    }
+    const entries = readDevProcesses(file).filter((entry) => entry.pid !== pid);
+    entries.push(identity);
     Deno.mkdirSync(path.dirname(file), { recursive: true });
     const temporary = `${file}.${Deno.pid}.tmp`;
     Deno.writeTextFileSync(
@@ -164,9 +185,31 @@ export async function recordDevProcess(
       JSON.stringify({ version: 1, processes: entries }, null, 2) + "\n",
     );
     Deno.renameSync(temporary, file);
+    return true;
   } catch (error) {
     console.error("[dev-tool] Cannot record dev process:", error);
+    return false;
   }
+}
+
+/** Register the actual Windows browser listener child before readiness. */
+export async function registerWindowsBrowserListenerIdentity(
+  target: WindowsBrowserIdentityTarget,
+): Promise<WindowsBrowserListenerIdentity> {
+  return await captureWindowsBrowserListenerIdentity(target, {
+    listListeners: listWindowsBrowserListeners,
+    listProcesses: listWindowsBrowserProcesses,
+    async recordIdentity(identity) {
+      return await recordDevProcess(
+        identity.pid,
+        DEV_PROCESSES_FILE,
+        identity,
+      );
+    },
+    async sleep(ms) {
+      await new Promise((resolve) => setTimeout(resolve, ms));
+    },
+  });
 }
 
 export async function terminateDevProcesses(

@@ -17,6 +17,7 @@ import {
   searchCommands,
 } from "../command-registry.ts";
 import { getHighlightSegments } from "../utils/highlight.ts";
+import { getJapaneseReadings } from "../utils/getJapaneseReadings.ts";
 import { openUrlCommand } from "../multiInputCommand/open-url.ts";
 import {
   loadSearchEngines,
@@ -400,7 +401,115 @@ function testEnglishKeywordScoreLowerThanLabel(): void {
   );
 }
 
+async function testJapaneseReadingsSurviveTranslationReplacement(): Promise<
+  void
+> {
+  await withI18nextLanguage("ja-JP", () => {
+    const original: unknown = i18next.getResourceBundle(
+      "ja-JP",
+      I18N_NAMESPACE,
+    );
+    assert(
+      typeof original === "object" && original !== null,
+      "Japanese resources should be loaded",
+    );
+    try {
+      for (let round = 0; round < 2; round++) {
+        i18next.addResourceBundle(
+          "ja-JP",
+          I18N_NAMESPACE,
+          {
+            ...original,
+            commandPaletteReadings: {},
+          },
+          false,
+          true,
+        );
+        invalidateCache();
+        assertEquals(
+          getJapaneseReadings("gecko-back").join(","),
+          "もどる",
+          "Readings should survive translation replacement",
+        );
+        assert(
+          searchCommands("もどる").some((command) =>
+            command.id === "gecko-back"
+          ),
+          "Japanese reading should find Back after translation replacement",
+        );
+        assert(
+          searchCommands("こんてなでひらきなおす").some((command) =>
+            command.id === "floorp-reopen-in-container"
+          ),
+          "Step commands should retain Japanese reading keywords",
+        );
+      }
+    } finally {
+      i18next.removeResourceBundle("ja-JP", I18N_NAMESPACE);
+      i18next.addResourceBundle("ja-JP", I18N_NAMESPACE, original);
+      invalidateCache();
+    }
+  });
+}
+
+async function testJapaneseReadingLocales(): Promise<void> {
+  const originalLanguage = i18next.language;
+  try {
+    for (const locale of ["ja", "ja-JP", "ja-JP-mac"]) {
+      await i18next.changeLanguage(locale);
+      assertEquals(
+        getJapaneseReadings("gecko-back").join(","),
+        "もどる",
+        `${locale} should use Japanese readings`,
+      );
+      assertEquals(
+        getJapaneseReadings("__proto__").length,
+        0,
+        "Unknown IDs should not read inherited properties",
+      );
+      assert(
+        getCommand("floorp-reopen-in-container")?.keywords.includes(
+          "こんてなでひらきなおす",
+        ),
+        `${locale} should refresh step keywords after language initialization`,
+      );
+      const copy = getJapaneseReadings("gecko-back");
+      copy.length = 0;
+      assertEquals(
+        getJapaneseReadings("gecko-back").join(","),
+        "もどる",
+        "Callers should not mutate the reading dictionary",
+      );
+    }
+    for (const locale of ["en-US", "fr-FR"]) {
+      await i18next.changeLanguage(locale);
+      assertEquals(
+        getJapaneseReadings("gecko-back").length,
+        0,
+        `${locale} should not add Japanese readings`,
+      );
+      assert(
+        !getCommand("floorp-reopen-in-container")?.keywords.includes(
+          "こんてなでひらきなおす",
+        ),
+        `${locale} should not retain Japanese step keywords after a locale change`,
+      );
+    }
+  } finally {
+    await i18next.changeLanguage(originalLanguage || "en-US");
+    invalidateCache();
+  }
+}
+
 const rawTests: TestCase[] = [
+  {
+    name: "Japanese readings survive repeated translated resource replacement",
+    fn: testJapaneseReadingsSurviveTranslationReplacement,
+  },
+  {
+    name: "Japanese readings cover Japanese locale variants only",
+    fn: testJapaneseReadingLocales,
+  },
   // --- Fuzzy Search ---
   {
     name: "fuzzyScore: exact prefix match scores highest",

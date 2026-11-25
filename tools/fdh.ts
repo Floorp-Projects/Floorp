@@ -4,18 +4,21 @@
 /**
  * `fdh` — thin CLI for the FDH Gate 3 local loop (KAN-113).
  *
- * This is not an agent loop: it has no interactive conversation, no LLM calls
- * and no GitHub/network operations. It only records task state and runs the
+ * This is not an agent loop: it has no interactive conversation or LLM calls.
+ * Local commands record task state and run the
  * existing Floorp tools (dev-tool, feles-build, host tests) so an already
  * running agent (DSH/Codex/Claude) can drive: task -> edit -> build -> test ->
- * browser confirmation -> evidence.
+ * browser confirmation -> evidence. The separate qa collect route performs
+ * bounded read-only GitHub collection and never authorizes publication.
  */
 
 import * as path from "@std/path";
+import { encodeHex } from "@std/encoding/hex";
 import { isTcpPortInUse, parsePortOffsetSpec } from "./src/port_offset.ts";
 import {
   appendEvent,
   createTaskState,
+  defaultGitRunner,
   fdhDir,
   nowIso,
   readTaskState,
@@ -114,6 +117,13 @@ import {
   summarizeJob,
   waitForJob,
 } from "./src/fdh_job.ts";
+import type { PlatformStepOptions } from "./src/fdh_job.ts";
+import {
+  activePlatformJobs,
+  parsePlatform,
+  payloadKindFor,
+  validateStartUrl,
+} from "./src/fdh_platform_qa.ts";
 import {
   INTENT_OPS,
   type IntentOp,
@@ -122,12 +132,40 @@ import {
   type Resolution,
   validateJobId,
 } from "./src/fdh_executor.ts";
+import {
+  FIELD_RULES,
+  finishExtOp,
+  ingestObservation,
+  parseRef,
+  planExt,
+  resolveField,
+  startExtOp,
+  upsertLink,
+  validateObservation,
+  withExtLedger,
+} from "./src/fdh_ext.ts";
+import {
+  pollAndIngest,
+  repoSlugFromRemote,
+  validateRepoSlug,
+} from "./src/fdh_ext_poll.ts";
+import {
+  assertNotPublishOutput,
+  evidenceCommentBody,
+  manifestText,
+  resolveEvidenceOut,
+  traceEvidence,
+  writeEvidenceOutputs,
+} from "./src/fdh_evidence_publish.ts";
 import type { ValidationError } from "./qa3/evidence/types.ts";
 
 const HELP = `
 Usage: deno run -A tools/fdh.ts <command> [options]
 
 Commands:
+  auth probe --help         Explicit Google Workspace OAuth code/refresh/logout probe (memory-only; not an AS/MCP grant)
+  qa collect --help         Read-only QA collection (explicit pinned IDs/heads/policy)
+  qa discover --help        Bounded read-only QA discovery (no publication authority)
   task start --task-id <id> --worktree <abs-dir> [--port-offset <n|auto>] [--base <sha>]
                             Create the local task state under
                             <worktree>/_dist/fdh/tasks/<id>.json
@@ -158,6 +196,17 @@ Commands:
                             execution digest) and start a detached executor
                             that runs the same commands as 'verify build|test';
                             returns at once (B-02 ADR, D-23)
+  job start --task-id <id> --step platform --platform <macos|linux>
+            --target <config.json> --payload <packaged build>
+            [--eval <js> [--expect <text>]] [--start-url <url>]
+                            Cross-platform Agentic QA (KAN-145): run the
+                            packaged build on the platform's QA target
+                            ('fdh platform-qa run') as a durable job; records
+                            assertion platform-qa-<platform>. An early check,
+                            not QA3 or release qualification
+  platform-qa <run|cleanup> --help
+                            The QA run itself, and removing what a task left
+                            on a QA target after its job gave up
   job wait --task-id <id> --job-id <id> [--timeout-ms <n>]
                             Reconcile until the job is terminal or awaits
                             approval; exits 1 unless it succeeded
@@ -178,10 +227,50 @@ Commands:
                             also approves its quota pending entry
   job cancel --task-id <id> --job-id <id> [--reason <text>]
                             Cancel; a running step stops at its next heartbeat
+  ext link --task-id <id> --jira <KEY-n> [--pr <n>] [--branch <name>]
+                            Link a Jira issue to its GitHub PR (D-19, KAN-131)
+  ext observe --task-id <id> --ref <github:pr/<n>|jira:<KEY-n>> --field <f>
+              --value <v> --version <iso> [--event-id <id>] [--deleted true]
+                            Feed one polled value: applied, duplicate, stale
+                            (older version), conflict or deleted
+  ext poll --task-id <id> [--repo <owner/name>]
+                            Read each linked PR with 'gh api' (state, URL, the
+                            head's check runs) and take them as observations;
+                            Jira is observed by the agent ('ext observe')
+  ext plan --task-id <id>   Sync actions to perform, holds (concurrent edit,
+                            deletion, in flight, awaiting a poll, mirror not
+                            polled yet), kept edits and the I-04 field table;
+                            first brings operations up to date with their jobs
+  ext start --task-id <id> --key <k> --agent <name> [--op <push|pr|release|external>]
+            [--target <text>]
+                            Start a keyed external operation (an intent):
+                            already-done if the key succeeded, refused while
+                            one is in flight; a planned action's key also
+                            stores what it writes
+  ext done --task-id <id> --key <k> --epoch <n> --agent <name>
+           --outcome <succeeded|failed>
+                            Record its outcome; a succeeded planned action
+                            becomes the field's baseline
+  ext resolve --task-id <id> --link <KEY-n> --field <f> --keep <mirror|owner>
+                            Settle a concurrent edit: keep the mirror's value,
+                            or write the owner's value again
   verify browser --task-id <id> [--eval <js>] [--expect <text>]
                             Check dev-tool browser status; --eval output is
                             recorded verbatim, and --expect turns it into an
                             honest contains-check assertion
+  evidence publish --task-id <id> --pr <n> --out <path> [--repo <owner/name>]
+                            Build the manifest and render a PR comment that
+                            carries it, bound to the repository, task, PR and
+                            HEAD commit with its SHA-256. Neither <path> nor
+                            the plain copy <path>.manifest.json may exist yet.
+                            Read the plain copy, then post the comment with
+                            'gh pr comment <n> --body-file <path>'
+  evidence trace --pr <n> [--repo <owner/name>] [--require-merged true]
+                            From a (merged) PR to its evidence and receipts.
+                            Exits 1 unless the final head has evidence that
+                            counts (trusted author, not edited, intact, this
+                            repo/PR/head, no uncommitted changes, assertions
+                            all passed) and a valid receipt set
   evidence --task-id <id> --out <path>
                             Build + validate the EvidenceManifest v0
                             (--out must stay under <worktree>/_dist/fdh)
@@ -1059,7 +1148,7 @@ async function cmdRecord(parsed: ParsedArgs): Promise<void> {
  *
  * The CLI is still local-only: it writes the receipt JSON under
  * `<worktree>/_dist/fdh/reviews/` and prints the exact comment body. The agent
- * (or human) posts that body to the PR; the `fdh-review-gate` workflow parses
+ * (or human) posts that body to the PR; the `fdh-trusted-review-gate` workflow parses
  * the marker and checks distinct reviewers at the PR head.
  */
 async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
@@ -1143,27 +1232,99 @@ async function cmdReviewRecord(parsed: ParsedArgs): Promise<void> {
   }));
 }
 
-function resolveEvidenceOut(state: FdhTaskState, raw: string): string {
-  const root = path.resolve(fdhDir(state.worktree));
-  const resolved = path.isAbsolute(raw)
-    ? path.resolve(raw)
-    : path.resolve(state.worktree, raw);
-  const relative = path.relative(root, resolved);
-  if (
-    relative === "" || relative.startsWith("..") || path.isAbsolute(relative)
-  ) {
-    throw new Error(
-      `--out must be inside ${root} (the fdh evidence root), got ${resolved}`,
-    );
+async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["task-id", "pr", "out", "repo"]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  const pr = requireInteger(parsed, "pr", 1);
+  const repoOption = hasOption(parsed, "repo")
+    ? validateRepoSlug(requireOption(parsed, "repo"))
+    : undefined;
+  const state = await loadStateForCwd(taskId);
+  const repo = repoOption ?? repoSlugFromRemote(
+    await defaultGitRunner(state.worktree, ["remote", "get-url", "origin"]),
+  );
+  const outPath = resolveEvidenceOut(
+    fdhDir(state.worktree),
+    state.worktree,
+    requireOption(parsed, "out"),
+  );
+  assertNoSecretReferences(state);
+  let manifest;
+  try {
+    manifest = await buildEvidenceManifest(state);
+  } catch (error) {
+    if (error instanceof EvidenceValidationError) {
+      printValidationErrors(error.errors);
+      Deno.exit(1);
+    }
+    throw error;
   }
-  if (relative.startsWith(path.join("tasks"))) {
-    throw new Error(
-      `--out must not overwrite the task state under ${
-        path.join(root, "tasks")
-      }, got ${resolved}`,
-    );
+  const errors = validateEvidenceManifest(manifest);
+  if (errors.length > 0) {
+    printValidationErrors(errors);
+    Deno.exit(1);
   }
-  return resolved;
+  const commit = (await defaultGitRunner(state.worktree, ["rev-parse", "HEAD"]))
+    .trim();
+  const uncommitted = (await defaultGitRunner(state.worktree, [
+    "status",
+    "--porcelain",
+  ])).trim() !== "";
+  const { body, binding } = await evidenceCommentBody(manifest, {
+    repo,
+    taskId,
+    pr,
+    commit,
+    uncommitted,
+    builtAt: nowIso(),
+  });
+  // The comment carries the manifest as base64; the plain copy next to it
+  // is what the agent reads before posting.
+  const reviewPath = await writeEvidenceOutputs(
+    outPath,
+    manifestText(manifest),
+    body,
+  );
+  appendEvent(state, {
+    timestamp: nowIso(),
+    command: "evidence publish",
+    note: `PR #${pr} at ${commit}: ${outPath} (sha256 ${binding.sha256})`,
+    exitCode: 0,
+  });
+  writeTaskState(state);
+  console.log(JSON.stringify({
+    ...binding,
+    out: outPath,
+    review: reviewPath,
+    chars: body.length,
+    next:
+      `read ${reviewPath}; if it holds nothing sensitive: gh pr comment ${pr} --body-file ${outPath}`,
+  }));
+}
+
+async function cmdEvidenceTrace(parsed: ParsedArgs): Promise<void> {
+  assertNoPositional(parsed, 2);
+  assertAllowedOptions(parsed, ["pr", "repo", "require-merged"]);
+  const pr = requireInteger(parsed, "pr", 1);
+  const requireMergedRaw = hasOption(parsed, "require-merged")
+    ? requireOption(parsed, "require-merged")
+    : undefined;
+  if (requireMergedRaw !== undefined && requireMergedRaw !== "true") {
+    throw new Error("--require-merged takes only the value true");
+  }
+  const repo = hasOption(parsed, "repo")
+    ? validateRepoSlug(requireOption(parsed, "repo"))
+    : repoSlugFromRemote(
+      await defaultGitRunner(Deno.cwd(), ["remote", "get-url", "origin"]),
+    );
+  const report = await traceEvidence(repo, pr, undefined, {
+    requireMerged: requireMergedRaw === "true",
+  });
+  console.log(JSON.stringify(report));
+  if (!report.complete) {
+    throw new Error(`PR #${pr}: ${report.problems.join("; ")}`);
+  }
 }
 
 async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
@@ -1171,7 +1332,12 @@ async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
   assertAllowedOptions(parsed, ["task-id", "out"]);
   const taskId = validateTaskId(requireOption(parsed, "task-id"));
   const state = await loadStateForCwd(taskId);
-  const outPath = resolveEvidenceOut(state, requireOption(parsed, "out"));
+  const outPath = resolveEvidenceOut(
+    fdhDir(state.worktree),
+    state.worktree,
+    requireOption(parsed, "out"),
+  );
+  assertNotPublishOutput(outPath);
 
   assertNoSecretReferences(state);
 
@@ -1247,10 +1413,228 @@ const JOB_SUBCOMMANDS = [
 ] as const;
 type JobSubcommand = (typeof JOB_SUBCOMMANDS)[number];
 
+type ExtSubcommand =
+  | "link"
+  | "observe"
+  | "plan"
+  | "start"
+  | "done"
+  | "resolve"
+  | "poll";
+
+async function cmdExt(parsed: ParsedArgs, sub: ExtSubcommand): Promise<void> {
+  assertNoPositional(parsed, 2);
+  const allowed: Record<ExtSubcommand, string[]> = {
+    link: ["task-id", "jira", "pr", "branch"],
+    observe: [
+      "task-id",
+      "ref",
+      "field",
+      "value",
+      "version",
+      "event-id",
+      "deleted",
+    ],
+    plan: ["task-id"],
+    start: ["task-id", "key", "agent", "op", "target"],
+    done: ["task-id", "key", "epoch", "agent", "outcome"],
+    resolve: ["task-id", "link", "field", "keep"],
+    poll: ["task-id", "repo"],
+  };
+  assertAllowedOptions(parsed, allowed[sub]);
+  const taskId = validateTaskId(requireOption(parsed, "task-id"));
+  // Validate every option before anything is read or written.
+  const optional = (name: string) =>
+    hasOption(parsed, name) ? requireOption(parsed, name) : undefined;
+  switch (sub) {
+    case "link": {
+      const jira = requireOption(parsed, "jira");
+      parseRef(`jira:${jira}`);
+      const pr = optionalInteger(parsed, "pr", 1);
+      const branch = optional("branch");
+      const state = await loadStateForCwd(taskId);
+      const link = await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => upsertLink(ledger, jira, pr, branch),
+      );
+      console.log(JSON.stringify({ link }));
+      return;
+    }
+    case "observe": {
+      const deletedRaw = optional("deleted");
+      if (deletedRaw !== undefined && deletedRaw !== "true") {
+        throw new Error("--deleted takes only the value true");
+      }
+      const deleted = deletedRaw === "true";
+      if (deleted && hasOption(parsed, "value")) {
+        throw new Error("--deleted true takes no --value");
+      }
+      if (!deleted && !hasOption(parsed, "value")) {
+        throw new Error("--value is required unless --deleted true");
+      }
+      const input = {
+        ref: requireOption(parsed, "ref"),
+        field: requireOption(parsed, "field"),
+        value: deleted ? null : requireOption(parsed, "value"),
+        version: requireOption(parsed, "version"),
+        eventId: optional("event-id"),
+        deleted,
+      };
+      validateObservation(input);
+      const state = await loadStateForCwd(taskId);
+      const result = await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => ingestObservation(ledger, input),
+      );
+      console.log(
+        JSON.stringify({ ref: input.ref, field: input.field, result }),
+      );
+      return;
+    }
+    case "plan": {
+      const state = await loadStateForCwd(taskId);
+      console.log(JSON.stringify({
+        plan: await planExt(state.worktree, taskId),
+        fields: FIELD_RULES.map((r) => ({
+          field: r.field,
+          owner: r.owner,
+          mirror: r.mirror,
+          order: r.order,
+          retry: r.retry,
+          note: r.note,
+        })),
+      }));
+      return;
+    }
+    case "start": {
+      const key = requireOption(parsed, "key");
+      const agent = requireOption(parsed, "agent");
+      const op = optional("op") ?? "external";
+      if (!INTENT_OPS.includes(op as IntentOp)) {
+        throw new Error(`--op must be one of ${INTENT_OPS.join("|")}`);
+      }
+      const target = optional("target");
+      const state = await loadStateForCwd(taskId);
+      const result = await startExtOp(
+        state,
+        key,
+        agent,
+        op as IntentOp,
+        target,
+      );
+      console.log(JSON.stringify(result));
+      return;
+    }
+    case "done": {
+      const key = requireOption(parsed, "key");
+      const epoch = requireInteger(parsed, "epoch", 1);
+      const agent = requireOption(parsed, "agent");
+      const outcome = requireOption(parsed, "outcome");
+      if (outcome !== "succeeded" && outcome !== "failed") {
+        throw new Error("--outcome must be succeeded or failed");
+      }
+      const state = await loadStateForCwd(taskId);
+      const op = await finishExtOp(state, { key, epoch, agent, outcome });
+      console.log(JSON.stringify({ op }));
+      return;
+    }
+    case "poll": {
+      const repo = optional("repo");
+      if (repo !== undefined) validateRepoSlug(repo);
+      const state = await loadStateForCwd(taskId);
+      const slug = repo ??
+        repoSlugFromRemote(
+          await defaultGitRunner(state.worktree, [
+            "remote",
+            "get-url",
+            "origin",
+          ]),
+        );
+      const { observed, errors } = await pollAndIngest(
+        state.worktree,
+        taskId,
+        slug,
+      );
+      console.log(JSON.stringify({ repo: slug, observed, errors }));
+      if (errors.length > 0) {
+        throw new Error(
+          `${errors.length} linked PR(s) could not be polled: ${
+            errors.map((e) => `${e.ref}: ${e.error}`).join("; ")
+          }`,
+        );
+      }
+      return;
+    }
+    case "resolve": {
+      const link = requireOption(parsed, "link");
+      const field = requireOption(parsed, "field");
+      const keep = requireOption(parsed, "keep");
+      if (keep !== "mirror" && keep !== "owner") {
+        throw new Error("--keep must be mirror or owner");
+      }
+      const state = await loadStateForCwd(taskId);
+      await withExtLedger(
+        state.worktree,
+        taskId,
+        (ledger) => resolveField(ledger, link, field, keep),
+      );
+      console.log(JSON.stringify({ link, field, kept: keep }));
+      return;
+    }
+  }
+}
+
+/** Platform step inputs, with the payload and target hashes fixed now. */
+async function platformStepOptions(
+  parsed: ParsedArgs,
+): Promise<PlatformStepOptions> {
+  const platform = parsePlatform(requireOption(parsed, "platform"));
+  const targetFile = path.resolve(requireOption(parsed, "target"));
+  const payloadFile = path.resolve(requireOption(parsed, "payload"));
+  payloadKindFor(platform, payloadFile);
+  const evalScript = hasOption(parsed, "eval")
+    ? requireOption(parsed, "eval")
+    : undefined;
+  const expect = hasOption(parsed, "expect")
+    ? requireOption(parsed, "expect")
+    : undefined;
+  if (expect !== undefined && evalScript === undefined) {
+    throw new Error("--expect needs --eval");
+  }
+  const sha256 = async (file: string) =>
+    encodeHex(await crypto.subtle.digest("SHA-256", await Deno.readFile(file)));
+  return {
+    platform,
+    targetFile,
+    targetSha256: await sha256(targetFile),
+    payloadFile,
+    payloadSha256: await sha256(payloadFile),
+    evalScript,
+    expect,
+    startUrl: hasOption(parsed, "start-url")
+      ? validateStartUrl(requireOption(parsed, "start-url"))
+      : undefined,
+  };
+}
+
 async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
   assertNoPositional(parsed, 2);
   const allowed: Record<JobSubcommand, string[]> = {
-    start: ["task-id", "step", "phase", "lease-ttl-ms", "max-attempts"],
+    start: [
+      "task-id",
+      "step",
+      "phase",
+      "lease-ttl-ms",
+      "max-attempts",
+      "platform",
+      "target",
+      "payload",
+      "eval",
+      "expect",
+      "start-url",
+    ],
     exec: ["task-id", "job-id", "epoch"],
     status: ["task-id", "job-id"],
     wait: ["task-id", "job-id", "timeout-ms"],
@@ -1276,10 +1660,41 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
   switch (sub) {
     case "start": {
       const step = requireOption(parsed, "step");
-      if (step !== "build" && step !== "test") {
+      if (step !== "build" && step !== "test" && step !== "platform") {
         throw new Error(
-          `--step must be build or test, got ${JSON.stringify(step)}`,
+          `--step must be build, test or platform, got ${JSON.stringify(step)}`,
         );
+      }
+      const platformOnly = [
+        "platform",
+        "target",
+        "payload",
+        "eval",
+        "expect",
+        "start-url",
+      ];
+      if (step !== "platform") {
+        const extra = platformOnly.find((name) => hasOption(parsed, name));
+        if (extra !== undefined) {
+          throw new Error(`--${extra} applies to --step platform only`);
+        }
+      }
+      const platform = step === "platform"
+        ? await platformStepOptions(parsed)
+        : undefined;
+      if (platform !== undefined) {
+        const active = activePlatformJobs(
+          state.worktree,
+          taskId,
+          platform.platform,
+        );
+        if (active.length > 0) {
+          throw new Error(
+            `platform job ${
+              active.join(", ")
+            } of this task is not finished on ${platform.platform}; wait for it or cancel it first`,
+          );
+        }
       }
       const phase = step === "build"
         ? parseBuildPhase(
@@ -1288,7 +1703,7 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
             : undefined,
         )
         : undefined;
-      if (step === "test" && hasOption(parsed, "phase")) {
+      if (step !== "build" && hasOption(parsed, "phase")) {
         throw new Error("--phase applies to --step build only");
       }
       // 3 s at least: a respawn's stop and executor start take ~1-2 s.
@@ -1316,6 +1731,7 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
         state,
         kind: step,
         phase,
+        platform,
         leaseTtlMs,
         maxAttempts,
       });
@@ -1454,14 +1870,46 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
       const reason = hasOption(parsed, "reason")
         ? requireOption(parsed, "reason")
         : "";
-      const job = await cancelAndSettle(state, jobId!, reason);
-      console.log(JSON.stringify(summarizeJob(job)));
+      const { job, reports } = await cancelAndSettle(state, jobId!, reason);
+      console.log(
+        JSON.stringify({ ...summarizeJob(job), reconciled: reports }),
+      );
+      const failed = reports.filter((r) => r.error !== undefined);
+      if (failed.length > 0) {
+        throw new Error(
+          `job ${jobId} is ${job.state}, but reconciling it failed: ${
+            failed.map((r) => r.error).join("; ")
+          }`,
+        );
+      }
       return;
     }
   }
 }
 
 async function main(argv: string[]): Promise<void> {
+  // Intercept RAW argv: the generic parser below collapses duplicate options.
+  // Neither this module nor the QA CLI imports the collector for help/invalid.
+  if (argv[0] === "auth") {
+    const { runWorkspaceAuthCli } = await import(
+      "./src/fdh_workspace_auth_cli.ts"
+    );
+    const result = await runWorkspaceAuthCli(argv);
+    console.log(result.stdout);
+    Deno.exit(result.exitCode);
+  }
+  if (argv[0] === "platform-qa") {
+    const { runPlatformQaCli } = await import("./src/fdh_platform_qa.ts");
+    const result = await runPlatformQaCli(argv.slice(1));
+    console.log(result.stdout);
+    Deno.exit(result.exitCode);
+  }
+  if (argv[0] === "qa") {
+    const { runQaCli } = await import("./src/fdh_qa_cli.ts");
+    const result = await runQaCli(argv);
+    console.log(result.stdout);
+    Deno.exit(result.exitCode);
+  }
   const parsed = parseArgv(argv);
   if (
     parsed.flags.has("help") || parsed.positional.length === 0 ||
@@ -1488,6 +1936,8 @@ async function main(argv: string[]): Promise<void> {
       if (sub === "browser") return await cmdVerifyBrowser(parsed);
       throw new Error(`unknown verify command ${JSON.stringify(sub ?? "")}`);
     case "evidence":
+      if (sub === "publish") return await cmdEvidencePublish(parsed);
+      if (sub === "trace") return await cmdEvidenceTrace(parsed);
       assertNoPositional(parsed, 1);
       return await cmdEvidence(parsed);
     case "record":
@@ -1516,6 +1966,15 @@ async function main(argv: string[]): Promise<void> {
         return await cmdJob(parsed, sub as JobSubcommand);
       }
       throw new Error(`unknown job command ${JSON.stringify(sub ?? "")}`);
+    case "ext":
+      if (
+        sub === "link" || sub === "observe" || sub === "plan" ||
+        sub === "start" || sub === "done" || sub === "resolve" ||
+        sub === "poll"
+      ) {
+        return await cmdExt(parsed, sub);
+      }
+      throw new Error(`unknown ext command ${JSON.stringify(sub ?? "")}`);
     case "review":
       if (sub === "record") return await cmdReviewRecord(parsed);
       throw new Error(`unknown review command ${JSON.stringify(sub ?? "")}`);

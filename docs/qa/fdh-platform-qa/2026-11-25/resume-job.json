@@ -1,0 +1,58 @@
+{
+  "jobId": "platform-20261125t043820z-ae0377",
+  "state": "succeeded",
+  "attempts": [
+    {
+      "attempt": 1,
+      "epoch": 1,
+      "result": "lost",
+      "exitCode": null
+    },
+    {
+      "attempt": 2,
+      "epoch": 2,
+      "result": "succeeded",
+      "exitCode": 0
+    }
+  ],
+  "events": [
+    {
+      "kind": "lease-expired",
+      "epoch": 1,
+      "at": "2026-11-25T04:38:42.044Z",
+      "note": "holder executor-63336-62325a lost"
+    },
+    {
+      "kind": "lost-step-stopped",
+      "epoch": 1,
+      "at": "2026-11-25T04:38:42.736Z",
+      "note": "stopped 0 process(es) of the step tree rooted at pid 10424"
+    }
+  ],
+  "transitions": [
+    {
+      "from": null,
+      "to": "pending",
+      "at": "2026-11-25T04:38:20.713Z",
+      "reason": "created"
+    },
+    {
+      "from": "pending",
+      "to": "scheduled",
+      "at": "2026-11-25T04:38:20.713Z",
+      "reason": "attempt 1 recorded before start"
+    },
+    {
+      "from": "scheduled",
+      "to": "running",
+      "at": "2026-11-25T04:38:20.983Z",
+      "reason": "attempt 1 started"
+    },
+    {
+      "from": "running",
+      "to": "succeeded",
+      "at": "2026-11-25T04:39:11.063Z",
+      "reason": "attempt 2 exited 0"
+    }
+  ]
+}

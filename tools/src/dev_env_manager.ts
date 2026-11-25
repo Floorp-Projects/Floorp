@@ -8,6 +8,8 @@ import {
   marionettePortForOffset,
   requireDevPortOffset,
 } from "#libs/shared/dev-ports/defines.ts";
+import { PROFILE_TOKEN_PREF } from "#libs/shared/os-server-token/defines.ts";
+import { OS_SERVER_PORT_PREF, osServerPortForOffset } from "./port_offset.ts";
 
 const logger = new Logger("dev-env");
 
@@ -18,7 +20,13 @@ export type DevEnvProfileOptions = {
    * task 2-B). When > 0 the profile gets `nora.dev.port_offset` for the
    * browser-side port resolver and `marionette.port` = browserRemote + offset
    * so Marionette cannot overlap between concurrent worktrees. When 0
-   * (default/absent) the user.js is byte-identical to the pre-offset one.
+   * (default/absent) the user.js keeps the pre-offset port behavior for the
+   * Vite/Marionette ports. The Floorp OS-Server pref (KAN-135) is written at
+   * every offset: dev launches bind the dev-only in-span port so the default
+   * and ladder offsets never collide with a concurrently running installed
+   * Floorp on the packaged production default (the hand-picked offset 53086
+   * lands back on 58261; the launch probe set and the OS-Server bind error
+   * catch that occupied port instead of silently sharing it).
    */
   portOffset?: number;
 };
@@ -45,6 +53,10 @@ user_pref("security.sandbox.content.level", 1);
 user_pref("remote.active-protocols", 1);
 user_pref("browser.newtabpage.enabled", true);
 user_pref("floorp.mcp.enabled", true);
+// Local launch profile isolation; runtime also checks the startup mode.
+user_pref("${PROFILE_TOKEN_PREF}", true);
+// Dev-only Floorp OS-Server port, shifted by the launch offset (KAN-135).
+user_pref("${OS_SERVER_PORT_PREF}", ${osServerPortForOffset(portOffset)});
 user_pref("browser.sessionstore.resume_from_crash", false);
 user_pref("nora.dev.allow_http_loader", ${allowBrowserHttpLoader});
 ${
@@ -75,7 +87,10 @@ function clearStaleLaunchPrefs(profileDir: string): void {
   const kept = content.split("\n").filter((line) => {
     const trimmed = line.trim();
     return !trimmed.startsWith('user_pref("nora.dev.port_offset"') &&
-      !trimmed.startsWith('user_pref("marionette.port"');
+      !trimmed.startsWith('user_pref("marionette.port"') &&
+      // KAN-135: a reused profile must not keep a stale shifted OS-Server
+      // port from a previous launch of this profile.
+      !trimmed.startsWith('user_pref("floorp.os.server.port"');
   });
   if (kept.length === content.split("\n").length) return;
   try {

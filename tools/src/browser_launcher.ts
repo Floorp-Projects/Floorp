@@ -594,7 +594,11 @@ export async function run(
       printFirefoxLog(line.trim());
     },
     environment,
-    options.recordProcess ? (child) => recordDevProcess(child.pid) : undefined,
+    options.recordProcess
+      ? async (child) => {
+        await recordDevProcess(child.pid);
+      }
+      : undefined,
   );
 
   console.log(`[launcher@native-exit] ${

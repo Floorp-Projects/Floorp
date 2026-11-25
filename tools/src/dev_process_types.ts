@@ -14,6 +14,11 @@ export interface DevProcessInfo {
   startTime: string;
   /** Available on Linux, where ps does not preserve argument boundaries. */
   argv?: string[];
+  /**
+   * POSIX: process group id, read together with the start time (same ps
+   * line on macOS, same /proc/<pid>/stat read on Linux).
+   */
+  pgid?: number;
 }
 
 export interface DevStopScope {

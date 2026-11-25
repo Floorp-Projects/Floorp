@@ -54,7 +54,8 @@ const process: DevProcessInfo = {
 function snapshotOutput(_cmd: string, args: string[]): string {
   if (Deno.build.os === "windows") return JSON.stringify([process]);
   if (args.includes("pid=,comm=")) return `${process.pid} deno`;
-  return `${process.pid} ${process.ppid} ${process.startTime} ${process.commandLine}`;
+  // ps -o pid=,ppid=,pgid=,lstart=,args= (the group id is the pid here).
+  return `${process.pid} ${process.ppid} ${process.pid} ${process.startTime} ${process.commandLine}`;
 }
 
 Deno.test("process recorder writes identity atomically and preserves orphan records", async () => {

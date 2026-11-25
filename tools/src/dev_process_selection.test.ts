@@ -379,3 +379,20 @@ Deno.test("normalization uses the supplied platform, independent of the test hos
   );
   assertEquals(normalizeDevPath("/DEV/one/../two/", "linux"), "/DEV/two");
 });
+
+Deno.test("Unix ps parser reads the process group column when asked", () => {
+  assertEquals(
+    parseUnixDevProcesses(
+      " 42 1 40 Sat Nov  7 10:30:00 2026 /usr/bin/deno test\n 43 1 Sat Nov  7 10:30:00 2026 no pgid\n",
+      true,
+    ),
+    [{
+      pid: 42,
+      ppid: 1,
+      pgid: 40,
+      startTime: "Sat Nov  7 10:30:00 2026",
+      name: "",
+      commandLine: "/usr/bin/deno test",
+    }],
+  );
+});

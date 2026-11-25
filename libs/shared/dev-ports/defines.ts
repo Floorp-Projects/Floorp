@@ -66,8 +66,9 @@ export const DEV_PORT_MAX = Math.max(
  *
  * The launcher (tools/src/dev_env_manager.ts) writes this pref into the launch
  * profile's `user.js` **only when the offset is non-zero**; a profile without
- * the pref resolves to offset 0, which keeps the pre-offset port behavior
- * byte-identical.
+ * the pref resolves to offset 0, preserving the Vite/Marionette base ports.
+ * The separate dev-only OS-Server preference is written even at offset 0
+ * (KAN-135); it is not a trusted page origin or an entry in this table.
  */
 export const DEV_PORT_OFFSET_PREF = "nora.dev.port_offset";
 

@@ -176,9 +176,9 @@ async function runStage(
   Pref.run();
   Symlinker.run();
 
-  // Build production assets
+  // Build packaged assets with a stage startup marker for profile isolation.
   const buildid2 = Update.generateUuidV7();
-  await Builder.run("production", buildid2);
+  await Builder.run("stage", buildid2);
 
   // Inject manifests but keep dev-style directory so dev servers and browser use the built assets
   Injector.run("stage");
