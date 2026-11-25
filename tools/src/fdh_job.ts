@@ -466,20 +466,25 @@ async function platformRecordsOf(
       // A damaged journal: no record, so a failed "not read" assertion.
       continue;
     }
-    records.set(
-      result.index,
-      await readPlatformQaRecord({
-        worktree,
-        taskId,
-        platform,
-        jobId: job.jobId,
-        reportRef: command.platformReport,
-        head: job.inputs.head,
-        worktreeState: job.inputs.worktreeState,
-        payloadSha256: option("payload-sha256"),
-        window: { startedAt: result.startedAt, endedAt: result.endedAt },
-      }),
-    );
+    try {
+      records.set(
+        result.index,
+        await readPlatformQaRecord({
+          worktree,
+          taskId,
+          platform,
+          jobId: job.jobId,
+          reportRef: command.platformReport,
+          head: job.inputs.head,
+          worktreeState: job.inputs.worktreeState,
+          payloadSha256: option("payload-sha256"),
+          window: { startedAt: result.startedAt, endedAt: result.endedAt },
+        }),
+      );
+    } catch {
+      // Never block the settle on a report: without a record the command
+      // gets a failed "the report was not read" assertion.
+    }
   }
   return records;
 }

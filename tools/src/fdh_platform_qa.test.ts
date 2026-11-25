@@ -615,6 +615,10 @@ Deno.test("platform QA record: the report must be this task's, at its own path, 
     write({ outcome: "passed", taskId: "other-task" });
     assertStringIncludes((await read()).problems[0], "other-task/linux");
 
+    // An identity String() cannot convert is a problem, not a throw.
+    write({ outcome: "passed", taskId: { toString: null, valueOf: null } });
+    assertStringIncludes((await read()).problems[0], "[object]/linux");
+
     Deno.removeSync(`${out}/linux-report.json`);
     Deno.mkdirSync(`${out}/linux-report.json`);
     assertStringIncludes((await read()).problems[0], "not a regular file");

@@ -253,8 +253,13 @@ export function readPlatformFile(
 
 /** One line of at most `max` characters, for text taken from a report. */
 function clip(value: unknown, max: number): string {
+  // An object from JSON may have no usable toString (`{"toString": null}`),
+  // and String() would throw; its text is not needed anyway.
+  const shown = typeof value === "object" && value !== null
+    ? "[object]"
+    : String(value);
   // deno-lint-ignore no-control-regex
-  const text = String(value).replace(/[\u0000-\u001f\u007f]/g, " ");
+  const text = shown.replace(/[\u0000-\u001f\u007f]/g, " ");
   return text.length <= max ? text : `${text.slice(0, max)}...`;
 }
 
