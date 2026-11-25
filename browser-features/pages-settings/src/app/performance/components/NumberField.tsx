@@ -22,15 +22,30 @@ import type { NumberFieldProps } from "../types.ts";
 // later frame, which can race React's controlled onChange. Keep its validation,
 // keyboard and stepper handlers, but let React alone handle text input updates.
 // Drop Ark's defaultValue because this input receives a controlled value.
+// Zag maps Home/End to "set to min/max", cancels the caret move and rewrites
+// the DOM value in a later frame; keep them as native text-editing keys.
 const ControlledNumberInput = forwardRef<
   HTMLInputElement,
   ComponentProps<"input">
 >(function ControlledNumberInput(
-  { defaultValue: _defaultValue, onInput: _onInput, ...props },
+  { defaultValue: _defaultValue, onInput: _onInput, onKeyDown, ...props },
   ref,
 ) {
-  return <input {...props} ref={ref} />;
+  return (
+    <input
+      {...props}
+      ref={ref}
+      onKeyDown={(event) => {
+        if (event.key === "Home" || event.key === "End") return;
+        onKeyDown?.(event);
+      }}
+    />
+  );
 });
+
+// Same press-and-hold timing as Zag's spin triggers.
+const SPIN_DELAY_MS = 300;
+const SPIN_INTERVAL_MS = 50;
 
 // Convert a draft back to a number with the same locale rules as the
 // formatter: localized digits, then the localized decimal separator.
@@ -140,6 +155,44 @@ export function NumberField({
       onCommit(next);
     }
   };
+  const latestStepBy = useRef(stepBy);
+  latestStepBy.current = stepBy;
+  const spinTimer = useRef<number | undefined>(undefined);
+  const pointerPressed = useRef(false);
+  const stopSpin = () => {
+    clearTimeout(spinTimer.current);
+    clearInterval(spinTimer.current);
+    spinTimer.current = undefined;
+  };
+  const startSpin = (
+    event: React.PointerEvent<HTMLButtonElement>,
+    amount: number,
+  ) => {
+    if (event.button !== 0) return;
+    pointerPressed.current = true;
+    stopSpin();
+    stepBy(amount);
+    spinTimer.current = setTimeout(() => {
+      spinTimer.current = setInterval(
+        () => latestStepBy.current(amount),
+        SPIN_INTERVAL_MS,
+      );
+    }, SPIN_DELAY_MS);
+  };
+  // Pointer presses already stepped; only keyboard or assistive-technology
+  // activation reaches the button as a bare click.
+  const clickStep = (amount: number) => {
+    if (pointerPressed.current) {
+      pointerPressed.current = false;
+      return;
+    }
+    stepBy(amount);
+  };
+  useEffect(() => stopSpin, []);
+  useEffect(() => {
+    if (disabled) stopSpin();
+  }, [disabled]);
+
   const onStepKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
     // During IME composition, arrows navigate the candidate list; do not
@@ -211,7 +264,11 @@ export function NumberField({
             // Keep the input focused like the Zag triggers did, so a mouse
             // press does not blur-commit and then step again.
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => stepBy(1)}
+            onPointerDown={(event) => startSpin(event, 1)}
+            onPointerUp={stopSpin}
+            onPointerLeave={stopSpin}
+            onPointerCancel={stopSpin}
+            onClick={() => clickStep(1)}
           >
             <ChevronUp />
           </button>
@@ -223,7 +280,11 @@ export function NumberField({
             data-part="decrement-trigger"
             disabled={disabled}
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => stepBy(-1)}
+            onPointerDown={(event) => startSpin(event, -1)}
+            onPointerUp={stopSpin}
+            onPointerLeave={stopSpin}
+            onPointerCancel={stopSpin}
+            onClick={() => clickStep(-1)}
           >
             <ChevronDown />
           </button>
