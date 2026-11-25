@@ -14,6 +14,7 @@ import {
   Option,
   PanelLeft,
   PencilRuler,
+  Puzzle,
   RefreshCw,
   Settings,
   UserRoundPen,
@@ -25,16 +26,25 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/common/sidebar.tsx";
-import { type Feature, NavFeatures } from "@/components/nav-features.tsx";
+import {
+  type Feature,
+  NavFeatures,
+  NavigationFocusScope,
+} from "@/components/nav-features.tsx";
 import { useEffect, useMemo, useState } from "react";
 import { rpc } from "../lib/rpc/rpc.ts";
 import {
   CONTEXT_MENU_SETTINGS_ROUTE,
   useContextMenuAvailability,
 } from "@/lib/experiments/context-menu-availability.tsx";
+import {
+  featureHubNavigation,
+  useFeatureHub,
+} from "@/lib/feature-hub/FeatureHubProvider.tsx";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation();
+  const hub = useFeatureHub();
   const contextMenuAvailable = useContextMenuAvailability() === "available";
 
   const overview = [
@@ -140,6 +150,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: t("pages.aboutBrowser"), url: "/about/browser", icon: BadgeInfo },
     { title: t("pages.updates"), url: "/about/updates", icon: RefreshCw },
   ];
+  const hubFeatures: Feature[] = featureHubNavigation(
+    hub.snapshot,
+    hub.translate,
+  ).map((item) => ({
+    reactKey: item.key,
+    title: item.title,
+    url: item.url,
+    icon: Puzzle,
+    exactMatch: true,
+    focusKey: item.url,
+    disabled: hub.status !== "ready",
+  }));
 
   return (
     <Sidebar {...props}>
@@ -147,18 +169,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavFeatures
-          title={t("sidebar.overview")}
-          features={overview}
-        />
-        <NavFeatures
-          title={t("sidebar.features")}
-          features={features}
-        />
-        <NavFeatures
-          title={t("sidebar.about")}
-          features={about}
-        />
+        <NavigationFocusScope>
+          <NavFeatures
+            title={t("sidebar.overview")}
+            features={overview}
+          />
+          <NavFeatures
+            title={t("sidebar.features")}
+            features={features}
+          />
+          {hubFeatures.length > 0 && (
+            <NavFeatures
+              title={t("featureHub.navigation")}
+              features={hubFeatures}
+            />
+          )}
+          <NavFeatures
+            title={t("sidebar.about")}
+            features={about}
+          />
+        </NavigationFocusScope>
       </SidebarContent>
       {
         /* <SidebarFooter>

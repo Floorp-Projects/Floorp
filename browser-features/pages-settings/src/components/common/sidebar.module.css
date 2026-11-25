@@ -73,6 +73,13 @@
 .link:hover {
   background: rgb(215 205 234 / .1);
 }
+.disabled {
+  color: rgb(255 255 255 / .68);
+  cursor: not-allowed;
+}
+.link.disabled:not([aria-current="page"]):hover {
+  background: transparent;
+}
 .link[aria-current="page"] {
   background: rgb(215 205 234 / .12);
   font-weight: 700;
@@ -88,6 +95,20 @@
 }
 .link svg {
   flex-shrink: 0;
+}
+@media (forced-colors: active) {
+  .link.disabled {
+    background: Canvas;
+    color: GrayText;
+    opacity: 1;
+  }
+  .link.disabled:not([aria-current="page"]):hover,
+  .link.disabled[aria-current="page"] {
+    background: Canvas;
+  }
+  .link.disabled[aria-current="page"]::before {
+    background: CanvasText;
+  }
 }
 .dialog {
   margin: 0;

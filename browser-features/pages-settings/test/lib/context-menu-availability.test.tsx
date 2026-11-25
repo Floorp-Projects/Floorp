@@ -33,6 +33,7 @@ import {
 import { rpc } from "../../src/lib/rpc/rpc.ts";
 import { AppSidebar } from "../../src/components/app-sidebar.tsx";
 import SearchPage from "../../src/app/search/page.tsx";
+import { FeatureHubProvider } from "../../src/lib/feature-hub/FeatureHubProvider.tsx";
 
 function enrolled(
   overrides: Partial<AvailableExperiment> = {},
@@ -145,26 +146,28 @@ async function renderAvailability(initialRoute: string) {
       <I18nextProvider i18n={i18n}>
         <MemoryRouter initialEntries={[initialRoute]}>
           <ContextMenuAvailabilityProvider>
-            <Probe />
-            <div data-sidebar="true">
-              <AppSidebar />
-            </div>
-            <main>
-              <Suspense fallback={<p>Loading route</p>}>
-                <Routes>
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route
-                    path={CONTEXT_MENU_SETTINGS_ROUTE}
-                    element={
-                      <ContextMenuAvailabilityGate>
-                        <LazyEditor />
-                      </ContextMenuAvailabilityGate>
-                    }
-                  />
-                  <Route path="*" element={<div>Home</div>} />
-                </Routes>
-              </Suspense>
-            </main>
+            <FeatureHubProvider>
+              <Probe />
+              <div data-sidebar="true">
+                <AppSidebar />
+              </div>
+              <main>
+                <Suspense fallback={<p>Loading route</p>}>
+                  <Routes>
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route
+                      path={CONTEXT_MENU_SETTINGS_ROUTE}
+                      element={
+                        <ContextMenuAvailabilityGate>
+                          <LazyEditor />
+                        </ContextMenuAvailabilityGate>
+                      }
+                    />
+                    <Route path="*" element={<div>Home</div>} />
+                  </Routes>
+                </Suspense>
+              </main>
+            </FeatureHubProvider>
           </ContextMenuAvailabilityProvider>
         </MemoryRouter>
       </I18nextProvider>,

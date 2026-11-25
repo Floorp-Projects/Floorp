@@ -16,6 +16,11 @@ import {
   ContextMenuAvailabilityGate,
   ContextMenuAvailabilityProvider,
 } from "@/lib/experiments/context-menu-availability.tsx";
+import {
+  FeatureHubProvider,
+  FeatureHubViewBoundary,
+  HubExtensionPage,
+} from "@/lib/feature-hub/FeatureHubProvider.tsx";
 
 const Dashboard = lazy(() => import("@/app/dashboard/page.tsx"));
 const Design = lazy(() => import("@/app/design/page.tsx"));
@@ -41,7 +46,9 @@ const SearchPage = lazy(() => import("@/app/search/page.tsx"));
 export default function App() {
   return (
     <ContextMenuAvailabilityProvider>
-      <SettingsApp />
+      <FeatureHubProvider>
+        <SettingsApp />
+      </FeatureHubProvider>
     </ContextMenuAvailabilityProvider>
   );
 }
@@ -136,6 +143,14 @@ function SettingsApp() {
                   />
                   <Route path="/about/browser" element={<About />} />
                   <Route path="/about/updates" element={<Updates />} />
+                  <Route
+                    path="/extensions/:featureId/:localId"
+                    element={
+                      <FeatureHubViewBoundary>
+                        <HubExtensionPage />
+                      </FeatureHubViewBoundary>
+                    }
+                  />
                 </Routes>
               </Suspense>
             </main>

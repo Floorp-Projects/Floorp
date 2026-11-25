@@ -4,18 +4,22 @@ This is a local experiment, not the production loader and not a security
 sandbox. The parent ESM host evaluates one pinned, self-contained classic script
 fixture in a fresh system-principal `Cu.Sandbox` per activation. The fixture ABI
 (`activate`, `attachWindow`, `health`, `deactivate`) and JSON-string broker are
-experimental and are not the future `FeatureContext`. The only effect is a
-generation-owned diagnostic marker on eligible browser windows. No HUB, legacy
-loader, BrowserGlue, Actors, existing feature, network, preference, or
-feature-data integration is added.
+experimental and are not the future `FeatureContext`. M0 fixtures only create a
+generation-owned diagnostic marker on eligible browser windows. Stage 1 adds a
+parent-only HUB registry and pinned HUB fixtures; Stage 2 adds restricted
+parent-Actor page discovery and the Settings React transport. This remains
+separate from the legacy loader and existing feature-data, preference, or
+arbitrary network integrations.
 
-Nothing starts automatically. `getM0FeatureHostExperimental(true)` is the
-explicit profile-root singleton entrypoint and is restricted to `dev` or `test`
-mode. Browser tests use `createM0FeatureHostForTests(true)`, which creates a
-UUID-named root below `floorp-hotfix-m0-tests` and removes only that new root
-after clean shutdown. It never deletes the persistent `floorp-hotfix-m0`
-experiment root. Both entrypoints require opt-in. Fixture bytes and SHA-256 pins
-are in `M0Fixtures.sys.mts`; arbitrary package source and remote imports are not
+Experimental FeatureHost activation does not start automatically.
+`getM0FeatureHostExperimental(true)` is the explicit profile-root singleton
+entrypoint and is restricted to `dev` or `test` mode. Browser tests use
+`createM0FeatureHostForTests(true)`, which creates a UUID-named root below
+`floorp-hotfix-m0-tests` and removes only that new root after clean shutdown. It
+never deletes the persistent `floorp-hotfix-m0` experiment root. Both
+entrypoints require opt-in. Fixture bytes and SHA-256 pins are in
+`M0Fixtures.sys.mts`; separate HUB fixture bytes and pins are in
+`HubFixtures.sys.mts`. Arbitrary package source and remote imports are not
 accepted. No package GC is needed for this finite fixture set.
 
 `ResourceScope` revokes synchronously. A handle's cleanup reference and
@@ -68,6 +72,72 @@ Shutdown removes observers, load callbacks, readiness waiters, and tracked
 window references. Native tests close a test-owned first attached window while
 leaving the runner's original window open.
 
+## M1 HUB contract (Stage 1 + Stage 2)
+
+`HubRegistry.sys.mts` owns bounded JSON descriptors, generation leases,
+host-epoch claims, detached snapshots, monotonically increasing HUB revisions,
+and direct acknowledgement validation. Fixture requests contain only a
+`hub.register` discriminator and a strict descriptor; pages and actors receive
+only serialized `HubSnapshotMessage` values and return
+`HubSnapshotAcknowledgement` values. Descriptors permit canonical
+`/extensions/{featureId}/{localId}` routes, localization keys, optional
+navigation metadata, and the fixed `message` view with bounded scalar
+interpolation parameters. They cannot provide markup, renderers, callbacks,
+privileged objects, external URLs, or feature-data writes.
+
+`BrowserGlue.sys.mts` initializes shared HUB page discovery and registers the
+`NRFeatureHub` JSWindowActor. Actor registration and adapter setup are
+automatic, but discovery and connection are accepted only in `dev` or `test`
+mode, including for `about:hub` and chrome Settings pages. This does not install
+or activate the experimental FeatureHost or any experimental fixture.
+`HubPageDiscovery.sys.mts` installs the shared `HubClientDiscoveryAdapter` used
+by `HubRegistry.sys.mts` and discovers only parent-visible current top-level
+documents in the finite captured W0. A document must be in an eligible normal
+browser window (`navigator:browser`, visible toolbar, non-private, and not a Web
+Panel), and the parent rechecks its current WindowGlobal and URI before
+accepting a client. In `dev`/`test`, authorized documents are `about:hub` and
+`chrome://noraneko-settings/...`; HTTP `localhost` or `127.0.0.1` additionally
+requires `nora.dev.allow_http_loader` and the trusted Settings port resolved by
+`launchDevPorts()`. Actor registration or a same-origin URL alone does not grant
+parent authority.
+
+The page sends a fresh `requestId` on connect/resync. The parent creates a
+connection nonce; snapshots and page acknowledgements carry both values, and the
+parent validates them against the current Actor connection and latest snapshot
+before accepting an acknowledgement. The Settings `FeatureHubProvider`
+acknowledges only after React has committed the matching view. Dynamic sidebar
+items match the exact canonical pathname; built-in entries retain their existing
+prefix matching. If a descriptor disappears while its URL remains open, the page
+renders the localized unavailable section at that same URL rather than
+redirecting or presenting stale content.
+
+Native tests that inject fake parent clients into the packaged system ESM remain
+core registry/lifecycle coverage only. They are separate from the real
+Actor/React page-transport acceptance tests below and do not establish visual or
+assistive-technology behavior.
+
+### Verified Stage 2 packaged acceptance
+
+Packaged-asset acceptance in `dev` mode with the HTTP loader explicitly disabled
+passed M0, authorization, and history. The positive M0 path used a top-level
+`about:hub` page and chrome Settings companion and completed the handshake and
+publication. Authorization used live controlled HTTP HTML documents returning
+200 from the Settings origin, wrong port, and dotted-host wrong origin. Wrong
+origins and the HTTP-loader-off Settings document were rejected at the
+registration boundary before parent discovery, with no HUB admission. A
+private-window content document obtained an actual Actor but was rejected by the
+parent as ineligible. These are development-mode packaged results, not
+production-loader qualification.
+
+The Back result was ordinary history: `pageshow.persisted` was false and both
+WindowGlobal and inner-window identities changed. BFCache behavior is
+unverified. The uninstrumented native feature-host group passed 8/8, and the
+Settings provider acceptance passed 1/1. Native checks passed for all 24 changed
+M1 module files. The scoped Pages check reports 15 Settings diagnostics (13
+TS7017 and 2 TS2345); identical signatures reproduce on an isolated M0-base
+tree, so these remain a baseline typecheck limitation rather than new M1
+diagnostics.
+
 Browser tests may reopen the same UUID-named test root after stopping its host.
 The test-only write-fault adapter injects failures before or after native
 `IOUtils.writeJSON`; reads still use native `IOUtils`. The test-only durable
@@ -98,8 +168,8 @@ exhaustion without re-evaluation; and covers disabled-update `PREPARED`, durable
 disable intent, and interrupted enable. This is not evidence for other platforms
 or for power-failure / in-rename / in-flush behavior. The recorded process
 matrix evidence is Linux x86_64 only; Linux aarch64 process recovery has not
-been verified. HUB publication/readiness, signing, migration, and production
-loader integration are not included.
+been verified. HUB UI readiness, signing, migration, and production loader
+integration are not included.
 
 ## Design acceptance cases
 
@@ -107,38 +177,74 @@ The case names and numbers below match §16 of `floorp-hotfix-design-v0.2.md`.
 Statuses describe this local prototype and its colocated tests, not full M0
 acceptance.
 
-| #  | Design case                                       | Slice status                                                                                                         |
-| -- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1  | import top-level failure                          | Partial: broken fixture rejection exists; legacy ownership is out of scope.                                          |
-| 2  | install                                           | Pinned fixture installation is pointer-only and performs zero evaluation.                                            |
-| 3  | disabled update crash                             | Native synthetic case and Linux process-kill `PREPARED` case restore the before pointer without evaluation.          |
-| 4  | enable failure / disable crash intent             | Native recovery and Linux process kills cover interrupted enable and durable disable intent without evaluation.      |
-| 5  | v1→v2→v1 and re-enable                            | Existing native lifecycle test exercises fresh sandbox generations.                                                  |
-| 6  | old callback/disposer delay                       | Partial: stale wrappers and broker callbacks are measured; no sandbox security or heap-leak claim.                   |
-| 7  | hook needs task release                           | Native: abort precedes deactivate; released tasks drain concurrently with global/window disposal under one deadline. |
-| 8  | concurrent dispose / hook throw / timeout         | Native: task, hook, child/window, resource, deadline, and sandbox teardown outcomes are aggregated.                  |
-| 9  | W0 capture / window churn                         | Native: W0/window churn tests; Linux x86_64 process case proves real W1-to-W2 continuity.                            |
-| 10 | no HUB tab / ack / live disconnect                | Deferred: HUB publication is outside this slice.                                                                     |
-| 11 | precommit / revision update                       | Native tests cover pending replay, descriptor conflict ordering, dequeue revision checks, and bounded-queue busy.    |
-| 12 | postcommit publication / attach failure           | Partial: staged-close cleanup failure quarantines before commit; failed admission quarantines; HUB is deferred.      |
-| 13 | PREPARED crash recovery                           | Schema-2 recovery has Linux process-kill coverage at PREPARED, OLD_STOPPED, CANDIDATE_READY, and disabled update.    |
-| 14 | interrupted / repeated attempts                   | Linux process kills repeat fallback-before-mark and verify bounded digest exhaustion without retry.                  |
-| 15 | rejected selected package / corrupt record        | Preflight rejection may use one proof-eligible fallback; malformed/incompatible records evaluate nothing.            |
-| 16 | candidate failure / old restore / cleanup failure | Candidate failure restores only a current-health before generation within the two-candidate budget.                  |
-| 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                      |
-| 18 | fifty-update session                              | Native test compares resource, window-scope, task, and timer baselines and fresh wrappers across 50 updates.         |
-| 19 | profile/data compatibility                        | Deferred to M2; no existing feature data is touched.                                                                 |
-| 20 | terminal write after publish                      | Before/after-replace fault paths preserve durable success when present and block the current runtime.                |
-| 21 | new request / lost response / txId reuse / expiry | Native: detached replay; 32 archived + last persist on reopen; retry unknown/no effects; current-revision tx works.  |
-| 22 | host/runtime build tuple change                   | Package compatibility metadata and rollback health proof are separately exact-tuple gated.                           |
-| 23 | startup fallback / crash boundary                 | Linux process kills cover committed update publication and fallback recovery; other crash models remain open.        |
+| #  | Design case                                       | Slice status                                                                                                                                                                                                        |
+| -- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1  | import top-level failure                          | Partial: broken fixture rejection exists; legacy ownership is out of scope.                                                                                                                                         |
+| 2  | install                                           | Pinned fixture installation is pointer-only and performs zero evaluation.                                                                                                                                           |
+| 3  | disabled update crash                             | Native synthetic case and Linux process-kill `PREPARED` case restore the before pointer without evaluation.                                                                                                         |
+| 4  | enable failure / disable crash intent             | Native recovery and Linux process kills cover interrupted enable and durable disable intent without evaluation.                                                                                                     |
+| 5  | v1→v2→v1 and re-enable                            | Existing native lifecycle test exercises fresh sandbox generations.                                                                                                                                                 |
+| 6  | old callback/disposer delay                       | Partial: stale wrappers and broker callbacks are measured; no sandbox security or heap-leak claim.                                                                                                                  |
+| 7  | hook needs task release                           | Native: abort precedes deactivate; released tasks drain concurrently with global/window disposal under one deadline.                                                                                                |
+| 8  | concurrent dispose / hook throw / timeout         | Native: task, hook, child/window, resource, deadline, and sandbox teardown outcomes are aggregated.                                                                                                                 |
+| 9  | W0 capture / window churn                         | Native: W0/window churn tests; Linux x86_64 process case proves real W1-to-W2 continuity.                                                                                                                           |
+| 10 | no HUB tab / ack / live disconnect                | Core: empty W0 and live/closed/stale acks. Actor: allowed Settings/loopback, wrong port/origin/private/iframe exclusion, and genuine page ack; packaged HTTP-off rejects before parent discovery with no admission. |
+| 11 | precommit / revision update                       | Native tests cover pending replay, descriptor conflict ordering, dequeue revision checks, and bounded-queue busy.                                                                                                   |
+| 12 | postcommit publication / attach failure           | Core: ack-gated commit and post-commit failures. Actor/React: second-window admission and ordinary history; no BFCache proof.                                                                                       |
+| 13 | PREPARED crash recovery                           | Schema-2 recovery has Linux process-kill coverage at PREPARED, OLD_STOPPED, CANDIDATE_READY, and disabled update.                                                                                                   |
+| 14 | interrupted / repeated attempts                   | Linux process kills repeat fallback-before-mark and verify bounded digest exhaustion without retry.                                                                                                                 |
+| 15 | rejected selected package / corrupt record        | Preflight rejection may use one proof-eligible fallback; malformed/incompatible records evaluate nothing.                                                                                                           |
+| 16 | candidate failure / old restore / cleanup failure | Candidate failure restores only a current-health before generation within the two-candidate budget.                                                                                                                 |
+| 17 | private-mode existing feature migration           | Deferred to M2.                                                                                                                                                                                                     |
+| 18 | fifty-update session                              | Native test compares resource, window-scope, task, and timer baselines and fresh wrappers across 50 updates.                                                                                                        |
+| 19 | profile/data compatibility                        | Deferred to M2; no existing feature data is touched.                                                                                                                                                                |
+| 20 | terminal write after publish                      | Before/after-replace fault paths preserve durable success when present and block the current runtime.                                                                                                               |
+| 21 | new request / lost response / txId reuse / expiry | Native: detached replay; 32 archived + last persist on reopen; retry unknown/no effects; current-revision tx works.                                                                                                 |
+| 22 | host/runtime build tuple change                   | Package compatibility metadata and rollback health proof are separately exact-tuple gated.                                                                                                                          |
+| 23 | startup fallback / crash boundary                 | Linux process kills cover committed update publication and fallback recovery; other crash models remain open.                                                                                                       |
 
-The colocated browser test is `M0FeatureHost.test.mts`; compile the production
-modules before starting the browser with
-`deno task feles-build build --phase before-mach`, then run
-`deno task test --near browser-features/modules/modules/feature-host/M0FeatureHost.test.mts --layer esm`.
-The 50-update lifecycle case remains part of `runAllTests`. The Deno harness
-checks run with `deno task test:host`; the separate Linux process matrix runs
-with `deno task test:hotfix-process`. Passing these tests does not validate HUB
-readiness, power-failure behavior, other-platform process recovery, or complete
-M0 acceptance.
+The original test files are at the `feature-host/` directory root:
+`HubRegistry.test.mts`, `M0HubLifecycle.test.mts`, and `M0FeatureHost.test.mts`.
+`HubRegistry.test.mts` and `M0FeatureHost.test.mts` cover core/unit behavior;
+`M0HubLifecycle.test.mts` also contains real Actor/React HUB cases. Compile
+production modules before starting the browser with
+`deno task feles-build build --phase before-mach`, then run each suite with:
+
+```sh
+deno task test --near browser-features/modules/modules/feature-host/HubRegistry.test.mts --layer esm
+deno task test --near browser-features/modules/modules/feature-host/M0HubLifecycle.test.mts --layer esm
+deno task test --near browser-features/modules/modules/feature-host/M0FeatureHost.test.mts --layer esm
+```
+
+The 50-update lifecycle case is in `M0FeatureHost.test.mts`'s `runAllTests`. The
+grouped `feature-host` directory target runs these suites and the M1 Actor
+acceptance files below:
+`deno task test --near browser-features/modules/modules/feature-host --layer esm`.
+The separate Linux M0 process-death matrix runs with
+`deno task test:hotfix-process`; Deno harness tests run with
+`deno task test:host`.
+
+The real Actor/React acceptance targets are
+`M1HubAuthorizationAcceptance.test.mts`, `M1HubResyncAcceptance.test.mts`,
+`M1HubAckFencingAcceptance.test.mts`, `M1HubWindowAdmissionAcceptance.test.mts`,
+and `M1HubHistoryAcceptance.test.mts`. Run them individually with:
+
+```sh
+deno task test --near browser-features/modules/modules/feature-host/test/M1HubAuthorizationAcceptance.test.mts --layer esm
+deno task test --near browser-features/modules/modules/feature-host/test/M1HubResyncAcceptance.test.mts --layer esm
+deno task test --near browser-features/modules/modules/feature-host/test/M1HubAckFencingAcceptance.test.mts --layer esm
+deno task test --near browser-features/modules/modules/feature-host/test/M1HubWindowAdmissionAcceptance.test.mts --layer esm
+deno task test --near browser-features/modules/modules/feature-host/test/M1HubHistoryAcceptance.test.mts --layer esm
+```
+
+The Settings React provider/navigation test is run with
+`deno task test --near browser-features/pages-settings/test/lib/feature-hub-provider.test.tsx --layer pages`.
+
+Remaining validation gaps: the current Back test was ordinary session history
+(`pageshow.persisted` was false and restored WindowGlobal/inner-window identity
+changed), so BFCache behavior is unverified. Cross-platform screen-reader/AT and
+visual HCM checks, signing/distribution, existing-feature/private migration, and
+production-loader integration remain unverified. This development-mode packaged
+run does not establish production qualification or source/installed runtime
+equivalence. Core-only tests and development-mode Actor tests do not close those
+gaps or establish complete M0/M1 acceptance.

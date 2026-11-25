@@ -1,0 +1,19 @@
+.section {
+  border: 1px solid transparent;
+  padding-block: 1rem;
+  padding-inline: 1rem;
+}
+
+@media (prefers-contrast: more), (prefers-contrast: custom) {
+  .section {
+    border-color: currentColor;
+  }
+}
+
+@media (forced-colors: active) {
+  .section {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+}

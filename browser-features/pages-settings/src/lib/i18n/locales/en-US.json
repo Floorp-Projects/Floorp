@@ -21,6 +21,23 @@
         "overview": "Overview",
         "features": "Features"
     },
+    "featureHub": {
+        "navigation": "Feature pages",
+        "unavailableTitle": "Feature page unavailable",
+        "unavailableBody": "This feature page is no longer available.",
+        "safeUnavailable": "Feature content is unavailable."
+    },
+    "hotfixHub": {
+        "sample": {
+            "title": "Hotfix sample ({{version}})",
+            "navigation": "Hotfix sample",
+            "body": "The {{version}} feature hotfix is active."
+        },
+        "staged": {
+            "title": "Staged hotfix",
+            "body": "This staged hotfix should not be published."
+        }
+    },
     "pages": {
         "home": "Home",
         "tabAndAppearance": "Tab & Appearance",

@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-export type FixtureVersion = "v1" | "v2" | "broken";
+import type { M0Fixture, M0FixtureVersion } from "./FeatureHostTypes.ts";
 
-export interface M0Fixture {
-  version: FixtureVersion;
-  digest: string;
-  source: string;
-  compatibility: {
-    hostSchema: number;
-    hostBuildId: string;
-    runtimeBuildIds: readonly string[];
-    capabilities: readonly string[];
-  };
-}
+export type { FixtureVersion, M0FixtureVersion } from "./FeatureHostTypes.ts";
+export type { M0Fixture } from "./FeatureHostTypes.ts";
 
 const compatibility = Object.freeze({
   hostSchema: 2,
@@ -27,7 +18,7 @@ const v2 =
   `(() => { let activations = 0; globalThis.__floorpM0 = { activate() { activations += 1; }, attachWindow(context, request) { const value = JSON.parse(context); request(JSON.stringify({ type: "marker", windowId: value.windowId })); }, health() { return "v2:" + activations; }, deactivate() {} }; })();`;
 const broken = `throw new Error("M0 broken fixture");`;
 
-export const M0_FIXTURES: Readonly<Record<FixtureVersion, M0Fixture>> = Object
+export const M0_FIXTURES: Readonly<Record<M0FixtureVersion, M0Fixture>> = Object
   .freeze({
     v1: Object.freeze({
       version: "v1",
