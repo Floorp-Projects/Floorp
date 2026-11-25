@@ -281,6 +281,31 @@ Deno.test("durable boundary predicates distinguish operation and attempt phase",
   );
 });
 
+Deno.test("initial HUB default boundary matches only the absent-record write", () => {
+  const initial = {
+    featureId: "hub-panel-menu",
+    selectedVersion: "hub-menu-v1",
+    selectedDigest: "a".repeat(64),
+    desiredEnabled: true,
+    selectedHealth: "unverified",
+    selectedHealthBuild: null,
+    pending: null,
+    lastOutcome: null,
+    blockedReason: null,
+  };
+  assert(
+    matchesDurableBoundary("initial_default", initial),
+    "initial default record matches its durable boundary",
+  );
+  assert(
+    !matchesDurableBoundary("initial_default", {
+      ...initial,
+      desiredEnabled: false,
+    }),
+    "mismatched default state is rejected",
+  );
+});
+
 Deno.test("durable marker parsing binds current launch and boundary", () => {
   const marker = {
     schemaVersion: 1,

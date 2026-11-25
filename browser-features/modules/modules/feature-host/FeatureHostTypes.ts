@@ -20,8 +20,12 @@ export interface PinnedFixture<Version extends string = FixtureVersion> {
 }
 
 export interface FeatureDefinition {
-  featureId: string;
-  fixtures: Readonly<Record<string, PinnedFixture<string>>>;
+  readonly featureId: string;
+  readonly fixtures: Readonly<Record<string, PinnedFixture<string>>>;
+  readonly initialState?: {
+    readonly version: string;
+    readonly enabled: boolean;
+  };
 }
 
 export type M0Fixture = PinnedFixture<FixtureVersion>;

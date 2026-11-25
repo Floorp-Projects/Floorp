@@ -3304,6 +3304,73 @@ async function testNativeWindowCloseDuringGatedUpdate(): Promise<void> {
   }
 }
 
+async function testOnlyWindowsForTestsSnapshotsInputAndRejectsReuse(): Promise<
+  void
+> {
+  let session: M0TestHostHandle | null = null;
+  const ownedWindows: Window[] = [];
+  try {
+    const selected = openTestBrowserWindow();
+    ownedWindows.push(selected);
+    const callerExcluded = openTestBrowserWindow();
+    ownedWindows.push(callerExcluded);
+    await waitForDelayedStartup(selected);
+    await waitForDelayedStartup(callerExcluded);
+    const callerWindows = [selected];
+    session = await createM0FeatureHostForTests(
+      true,
+      undefined,
+      false,
+      undefined,
+      { onlyWindowsForTests: callerWindows },
+    );
+    callerWindows[0] = callerExcluded;
+
+    const openedAfterSnapshot = openTestBrowserWindow();
+    ownedWindows.push(openedAfterSnapshot);
+    await waitForDelayedStartup(openedAfterSnapshot);
+
+    const host = session.host;
+    const selectedId = host.windowIdForTests(selected);
+    assert(selectedId !== null, "snapshotted window remains in host scope");
+    assertEquals(
+      host.windowIdForTests(callerExcluded),
+      null,
+      "mutating the caller array does not replace the snapshotted window",
+    );
+    assertEquals(
+      host.windowIdForTests(openedAfterSnapshot),
+      null,
+      "new windows outside the snapshotted scope are not admitted",
+    );
+    assertEquals(
+      host.windowLifecycleDiagnosticsForTests.tracked,
+      1,
+      "window capture remains limited to the owned snapshot",
+    );
+
+    let reuseError = "";
+    try {
+      await createM0FeatureHostForTests(
+        true,
+        session.root,
+        false,
+        undefined,
+        { onlyWindowsForTests: [selected] },
+      );
+    } catch (error) {
+      reuseError = error instanceof Error ? error.message : String(error);
+    }
+    assert(
+      reuseError.includes("test observer must be installed before open"),
+      "owned-window scope cannot be added when reusing an open host",
+    );
+  } finally {
+    for (const window of ownedWindows) if (!window.closed) window.close();
+    if (session) await session.cleanup();
+  }
+}
+
 async function testParentModuleSurvivesOwnedInitialWindowClose(): Promise<
   void
 > {
@@ -3705,6 +3772,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "native W0 close cancels gated attach without starving update",
       fn: testNativeWindowCloseDuringGatedUpdate,
+    },
+    {
+      name: "test-owned window scope snapshots caller input and rejects reuse",
+      fn: testOnlyWindowsForTestsSnapshotsInputAndRejectsReuse,
     },
     {
       name: "parent system module survives first attached window close",

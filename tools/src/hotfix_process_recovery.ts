@@ -63,6 +63,15 @@ export function matchesDurableBoundary(
   const attempted = Array.isArray(attempt?.attemptedDigests)
     ? attempt.attemptedDigests
     : [];
+  if (boundary === "initial_default") {
+    return record.featureId === "hub-panel-menu" &&
+      record.selectedVersion === "hub-menu-v1" &&
+      typeof record.selectedDigest === "string" &&
+      record.desiredEnabled === true &&
+      record.selectedHealth === "unverified" &&
+      record.selectedHealthBuild === null && record.pending === null &&
+      record.lastOutcome === null && record.blockedReason === null;
+  }
   if (boundary === "committed_pending_publish") {
     const outcome = typeof record.lastOutcome === "object" &&
         record.lastOutcome !== null
@@ -991,9 +1000,10 @@ const run = async () => {
     }
   };
   try {
-    const session = await createHost(true, config.root, config.reopen, undefined, { afterDurableWriteForTests: observer, excludeWindowsForTests: true });
-    const host = session.host;
-    if (!config.reopen) {
+    const host = config.setup === "hub_menu_initial_default"
+      ? await hostModule.M0FeatureHost.openHubPanelMenuForTests(config.root, config.reopen, undefined, { afterDurableWriteForTests: observer, excludeWindowsForTests: true })
+      : (await createHost(true, config.root, config.reopen, undefined, { afterDurableWriteForTests: observer, excludeWindowsForTests: true })).host;
+    if (!config.reopen && config.setup !== "hub_menu_initial_default") {
       await host.install("process-install", 0, "v1");
       if (config.setup === "enabled_update" || config.setup === "disable") {
         await host.enable("process-enable", host.diagnostics.stateRevision);
@@ -2356,6 +2366,12 @@ async function runProcessRecoveryMatrix(): Promise<void> {
   let launchCounter = 0;
   const rootFor = () =>
     join(profilePath, "floorp-hotfix-m0-tests", `m0-${crypto.randomUUID()}`);
+  const hubMenuRootFor = () =>
+    join(
+      profilePath,
+      "floorp-hotfix-m0-tests",
+      `feature-${crypto.randomUUID()}`,
+    );
   const stepOptions = (root: string, setup: SetupKind, steps: ScenarioStep[]) =>
     runScenario(trace, {
       name: `scenario-${++scenarioCounter}`,
@@ -2370,6 +2386,44 @@ async function runProcessRecoveryMatrix(): Promise<void> {
       allocateLaunchId: () => ++launchCounter,
     });
   try {
+    if (Deno.args.includes("--hub-menu-initial-default")) {
+      const root = hubMenuRootFor();
+      const { final, scenario } = await stepOptions(
+        root,
+        "hub_menu_initial_default",
+        [
+          { boundary: "initial_default", reopen: false },
+          { boundary: null, reopen: true },
+        ],
+      );
+      const marker = scenario.launches[0]?.marker as DurableMarker | undefined;
+      addAssertion(
+        trace,
+        "hub-menu-initial-default-written-before-evaluation",
+        !!marker && marker.evaluationCount === 0 &&
+          matchesDurableBoundary("initial_default", marker.snapshot),
+        `evaluationCount=${String(marker?.evaluationCount)} feature=${
+          String(marker?.snapshot.featureId)
+        } selected=${String(marker?.snapshot.selectedVersion)}`,
+      );
+      const journal = final.journal as Record<string, unknown>;
+      addAssertion(
+        trace,
+        "hub-menu-initial-default-recovers-after-process-kill",
+        final.evaluationCount === 1 &&
+          journal.featureId === "hub-panel-menu" &&
+          journal.selectedVersion === "hub-menu-v1" &&
+          journal.selectedDigest === marker?.snapshot.selectedDigest &&
+          journal.desiredEnabled === true && journal.blockedReason === null,
+        `evaluationCount=${String(final.evaluationCount)} selected=${
+          String(journal.selectedVersion)
+        } desiredEnabled=${String(journal.desiredEnabled)} blocked=${
+          String(journal.blockedReason)
+        }`,
+      );
+      succeeded = true;
+      return;
+    }
     const phaseScenarios: Array<[DurableBoundary, SetupKind]> = [
       ["PREPARED", "enabled_update"],
       ["OLD_STOPPED", "enabled_update"],

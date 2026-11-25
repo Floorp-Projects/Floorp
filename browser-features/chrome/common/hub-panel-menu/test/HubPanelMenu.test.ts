@@ -1,725 +1,650 @@
 // SPDX-License-Identifier: MPL-2.0
 // @colocated-env browser
 
-import { render } from "@nora/solid-xul";
-import { assert, assertEquals, runTests } from "../../../test/utils/test_harness.ts";
-import { HubPanelMenu } from "../HubPanelMenu.tsx";
+import {
+  assert,
+  assertEquals,
+  runTests,
+} from "../../../test/utils/test_harness.ts";
+import type {
+  AppMenuAdapterConnection,
+  AppMenuOwner,
+} from "../../../../modules/modules/feature-host/AppMenuRegistry.sys.mts";
+import {
+  HUB_MENU_LABEL_FALLBACK,
+  mountOwnedHubPanelMenuView,
+  observeHubMenuReadiness,
+} from "../HubPanelMenuView.tsx";
+import type {
+  HubPanelMenuFocusContext,
+  OwnedHubPanelMenuView,
+} from "../types.ts";
 
-const PANEL_UI_BUTTON_ID = "PanelUI-menu-button";
-const SETTINGS_BUTTON_ID = "appMenu-settings-button";
-const MAIN_VIEW_ID = "appMenu-mainView";
-const PANEL_BODY_CLASS = "panel-subview-body";
-const HUB_BUTTON_ID = "appMenu-floorp-hub-button";
+type RegistryModule =
+  typeof import("../../../../modules/modules/feature-host/AppMenuRegistry.sys.mts");
+const { AppMenuRegistry, HUB_PANEL_MENU_FEATURE_ID } = ChromeUtils
+  .importESModule(
+    "resource://noraneko/modules/feature-host/AppMenuRegistry.sys.mjs",
+  ) as RegistryModule;
+type AppMenuRegistryInstance = InstanceType<typeof AppMenuRegistry>;
 
-function cleanupDOM(): void {
-  document!.getElementById(PANEL_UI_BUTTON_ID)?.remove();
-  document!.getElementById(SETTINGS_BUTTON_ID)?.remove();
-  document!.getElementById(MAIN_VIEW_ID)?.remove();
-  document!.getElementById(HUB_BUTTON_ID)?.remove();
+const OWNER: AppMenuOwner = Object.freeze({
+  featureId: HUB_PANEL_MENU_FEATURE_ID,
+  hostEpoch: "owned-view-test",
+  generation: 1,
+});
+
+interface MenuFixture {
+  readonly container: HTMLDivElement;
+  readonly parent: Element;
+  readonly settings: Element;
+  readonly marker: Element;
 }
 
-function createMockPanelMenu(): HTMLElement {
-  cleanupDOM();
-
-  const panelUIButton = document!.createElement("div");
-  panelUIButton.id = PANEL_UI_BUTTON_ID;
-  document!.body!.appendChild(panelUIButton);
-
-  const settingsButton = document!.createElement("div");
-  settingsButton.id = SETTINGS_BUTTON_ID;
-  document!.body!.appendChild(settingsButton);
-
-  const afterSettings = document!.createElement("div");
-  settingsButton.after(afterSettings);
-
-  const mainView = document!.createElement("div");
-  mainView.id = MAIN_VIEW_ID;
-  const panelBody = document!.createElement("div");
-  panelBody.className = PANEL_BODY_CLASS;
-  mainView.appendChild(panelBody);
-  document!.body!.appendChild(mainView);
-
-  return panelUIButton;
+function createMenuFixture(): MenuFixture {
+  const container = document.createElement("div");
+  const parent = document.createXULElement("vbox");
+  const settings = document.createXULElement("toolbarbutton");
+  const marker = document.createXULElement("toolbarbutton");
+  parent.append(settings, marker);
+  container.append(parent);
+  return { container, parent, settings, marker };
 }
 
-function testHubPanelMenuExports(): void {
-  assert(
-    typeof HubPanelMenu === "function",
-    "HubPanelMenu should be a constructor function",
-  );
-}
-
-function testHubPanelMenuDoesNotThrowWithoutPanelUIButton(): void {
-  cleanupDOM();
-  let threw = false;
-  try {
-    new HubPanelMenu();
-  } catch {
-    threw = true;
-  }
-  assert(
-    !threw,
-    "HubPanelMenu constructor should not throw when UI elements are missing",
-  );
-}
-
-function testHubPanelMenuConstructsWithPanelButton(): void {
-  cleanupDOM();
-  createMockPanelMenu();
-
-  let threw = false;
-  try {
-    new HubPanelMenu();
-  } catch {
-    threw = true;
-  }
-
-  assert(
-    !threw,
-    "HubPanelMenu constructor should not throw when panel UI elements are available",
-  );
-
-  cleanupDOM();
-}
-
-function testStaticRenderCreatesToolbarButton(): void {
-  const container = document!.createElement("div");
-  document!.body!.appendChild(container);
-
-  render(() => HubPanelMenu.Render(), container);
-
-  const rendered = container.querySelector(`#${HUB_BUTTON_ID}`);
-  assert(
-    rendered !== null,
-    "HubPanelMenu.Render should create a toolbarbutton element with the expected ID",
-  );
-
-  container.remove();
-}
-
-function testHandleOpenHubAddsTabAndHidesPanel(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-  // deno-lint-ignore no-explicit-any
-  const originalGBrowser = (globalThis as any).gBrowser;
-
-  let hideCalled = false;
-  let addTabCalled = false;
-
-  // Always use Object.defineProperty to replace globals with mocks,
-  // since directly modifying properties on non-configurable objects may fail
-  Object.defineProperty(globalThis, "PanelUI", {
-    value: {
-      hide: () => {
-        hideCalled = true;
-      },
-    },
-    configurable: true,
+function mountView(
+  fixture: MenuFixture,
+  options: {
+    readonly onCommand?: () => void;
+    readonly readLabel?: (fallback: string) => unknown;
+    readonly onFailure?: (owner: AppMenuOwner, error: Error) => void;
+    readonly buttonId?: string;
+    readonly enabled?: boolean;
+    readonly focusContext?: HubPanelMenuFocusContext;
+  } = {},
+): {
+  readonly view: OwnedHubPanelMenuView;
+  readonly translationChanged: () => void;
+} {
+  let translationChanged = () => {};
+  const view = mountOwnedHubPanelMenuView({
+    parent: fixture.parent,
+    marker: fixture.settings.nextElementSibling,
+    buttonId: options.buttonId ?? "appMenu-floorp-hub-button",
+    localizationKey: "hub.menu.title",
+    enabled: options.enabled ?? true,
+    owner: OWNER,
+    onCommand: options.onCommand ?? (() => {}),
+    readLabel: (_key, fallback) =>
+      options.readLabel ? options.readLabel(fallback) : fallback,
+    observeTranslations: (update) => translationChanged = update,
+    reportFailure: options.onFailure,
+    focusContext: options.focusContext,
   });
-
-  Object.defineProperty(globalThis, "gBrowser", {
-    value: {
-      addTab: (_url: string, _options: unknown) => {
-        addTabCalled = true;
-        return {};
-      },
-    },
-    configurable: true,
-  });
-
-  try {
-    // deno-lint-ignore no-explicit-any
-    (HubPanelMenu as any).handleOpenHub();
-
-    assert(hideCalled, "handleOpenHub should call PanelUI.hide");
-    assert(addTabCalled, "handleOpenHub should call gBrowser.addTab");
-  } finally {
-    cleanupDOM();
-    if (originalPanelUI !== undefined) {
-      Object.defineProperty(globalThis, "PanelUI", {
-        value: originalPanelUI,
-        configurable: true,
-      });
-    } else {
-      try {
-        Object.defineProperty(globalThis, "PanelUI", {
-          value: undefined,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // PanelUI is non-configurable; cannot reset to undefined.
-      }
-    }
-    if (originalGBrowser !== undefined) {
-      Object.defineProperty(globalThis, "gBrowser", {
-        value: originalGBrowser,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).gBrowser = undefined;
-    }
-  }
+  return { view, translationChanged: () => translationChanged() };
 }
 
-function testHandleOpenHubWithoutPanelUI(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-  // deno-lint-ignore no-explicit-any
-  const originalGBrowser = (globalThis as any).gBrowser;
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-
-  // Remove PanelUI to test error handling (may be read-only in Firefox)
+function testOwnedViewUsesItsExactElementAndSettingsSlot(): void {
+  const fixture = createMenuFixture();
+  let view: OwnedHubPanelMenuView | null = null;
   try {
-    Object.defineProperty(globalThis, "PanelUI", {
-      value: undefined,
-      configurable: true,
-      writable: true,
-    });
-  } catch {
-    // PanelUI is non-configurable; cannot set to undefined.
-  }
-
-  let addTabCalled = false;
-  Object.defineProperty(globalThis, "gBrowser", {
-    value: {
-      addTab: (_url: string, _options: unknown) => {
-        addTabCalled = true;
-        return {};
-      },
-      selectedTab: null,
-    },
-    configurable: true,
-  });
-
-  // deno-lint-ignore no-explicit-any
-  (globalThis as any).Services = {
-    scriptSecurityManager: {
-      getSystemPrincipal: () => ({}),
-    },
-  };
-
-  try {
-    // deno-lint-ignore no-explicit-any
-    (HubPanelMenu as any).handleOpenHub();
-
-    assert(
-      addTabCalled,
-      "handleOpenHub should still call gBrowser.addTab even without PanelUI",
-    );
-  } finally {
-    cleanupDOM();
-    if (originalPanelUI !== undefined) {
-      Object.defineProperty(globalThis, "PanelUI", {
-        value: originalPanelUI,
-        configurable: true,
-      });
-    }
-    if (originalGBrowser !== undefined) {
-      Object.defineProperty(globalThis, "gBrowser", {
-        value: originalGBrowser,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).gBrowser = undefined;
-    }
-    if (originalServices !== undefined) {
-      Object.defineProperty(globalThis, "Services", {
-        value: originalServices,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Services = undefined;
-    }
-  }
-}
-
-function testHandleOpenHubCorrectUrlAndOptions(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalGBrowser = (globalThis as any).gBrowser;
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-
-  let actualUrl: string | null = null;
-  let actualOptions: unknown = null;
-  let systemPrincipalCalled = false;
-
-  Object.defineProperty(globalThis, "gBrowser", {
-    value: {
-      addTab: (url: string, options: unknown) => {
-        actualUrl = url;
-        actualOptions = options;
-        return { tab: "test-tab" };
-      },
-      selectedTab: null,
-    },
-    configurable: true,
-  });
-
-  Object.defineProperty(globalThis, "PanelUI", {
-    value: {
-      hide: () => {},
-    },
-    configurable: true,
-  });
-
-  // deno-lint-ignore no-explicit-any
-  (globalThis as any).Services = {
-    scriptSecurityManager: {
-      getSystemPrincipal: () => {
-        systemPrincipalCalled = true;
-        return {};
-      },
-    },
-  };
-
-  try {
-    // deno-lint-ignore no-explicit-any
-    (HubPanelMenu as any).handleOpenHub();
-
-    assertEquals(actualUrl, "about:hub", "handleOpenHub should open about:hub");
-    assert(
-      systemPrincipalCalled,
-      "handleOpenHub should use system principal",
-    );
-
-    // deno-lint-ignore no-explicit-any
-    const options = actualOptions as any;
+    view = mountView(fixture).view;
+    assertEquals(view.node.id, "appMenu-floorp-hub-button", "fixed button ID");
     assertEquals(
-      options.relatedToCurrent,
-      true,
-      "handleOpenHub should set relatedToCurrent option",
+      view.node.getAttribute("class"),
+      "subviewbutton",
+      "legacy menu class is preserved",
+    );
+    assertEquals(
+      view.node.getAttribute("tabindex"),
+      "-1",
+      "owned HUB button is programmatically focusable",
+    );
+    assertEquals(
+      view.node.getAttribute("label"),
+      HUB_MENU_LABEL_FALLBACK,
+      "missing translation uses the default label",
     );
     assert(
-      options.triggeringPrincipal,
-      "handleOpenHub should include triggeringPrincipal",
+      fixture.settings.nextElementSibling === view.node &&
+        view.node.nextElementSibling === fixture.marker,
+      "the owned button is inserted immediately after Settings",
     );
+    view.setEnabled(false);
+    assert(view.node.disabled, "XUL disabled property updates");
+    assert(view.node.hasAttribute("disabled"), "disabled state updates");
+    view.setEnabled(true);
+    assert(!view.node.disabled, "XUL disabled property clears");
+    assert(!view.node.hasAttribute("disabled"), "enabled state updates");
   } finally {
-    cleanupDOM();
-    if (originalGBrowser !== undefined) {
-      Object.defineProperty(globalThis, "gBrowser", {
-        value: originalGBrowser,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).gBrowser = undefined;
-    }
-    if (originalPanelUI !== undefined) {
-      Object.defineProperty(globalThis, "PanelUI", {
-        value: originalPanelUI,
-        configurable: true,
-      });
-    } else {
-      try {
-        Object.defineProperty(globalThis, "PanelUI", {
-          value: undefined,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // PanelUI is non-configurable; cannot reset to undefined.
-      }
-    }
-    if (originalServices !== undefined) {
-      Object.defineProperty(globalThis, "Services", {
-        value: originalServices,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Services = undefined;
-    }
+    view?.dispose();
+    fixture.container.remove();
   }
 }
 
-function testHandleOpenHubSelectsNewTab(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalGBrowser = (globalThis as any).gBrowser;
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-
-  const mockTab = { tabId: "new-tab" };
-  let selectedTabSet = false;
-
-  Object.defineProperty(globalThis, "gBrowser", {
-    value: {
-      addTab: (_url: string, _options: unknown) => mockTab,
-      set selectedTab(tab) {
-        selectedTabSet = tab === mockTab;
-      },
-      get selectedTab() {
-        return null;
-      },
-    },
-    configurable: true,
-  });
-
-  Object.defineProperty(globalThis, "PanelUI", {
-    value: {
-      hide: () => {},
-    },
-    configurable: true,
-  });
-
-  // deno-lint-ignore no-explicit-any
-  (globalThis as any).Services = {
-    scriptSecurityManager: {
-      getSystemPrincipal: () => ({}),
-    },
+function testFocusClaimRestoresOnlyWithoutUserMovement(): void {
+  const fixture = createMenuFixture();
+  const trigger = document.createXULElement("toolbarbutton");
+  const other = document.createElement("button");
+  const priorActive = document.activeElement;
+  const testWindow = document.defaultView;
+  if (!testWindow) throw new Error("focus test requires a window");
+  const settings = fixture.settings as Element & { focus: () => void };
+  fixture.container.style.position = "fixed";
+  fixture.container.style.left = "0";
+  fixture.container.style.top = "0";
+  fixture.container.style.zIndex = "2147483647";
+  fixture.container.style.minWidth = "12rem";
+  fixture.container.style.minHeight = "4rem";
+  fixture.parent.setAttribute("style", "min-width: 12rem; min-height: 4rem;");
+  fixture.settings.setAttribute("label", "Settings");
+  fixture.settings.setAttribute("tabindex", "0");
+  fixture.marker.setAttribute("label", "marker");
+  trigger.setAttribute("label", "Menu");
+  trigger.setAttribute("open", "true");
+  trigger.setAttribute("tabindex", "0");
+  const focusContext: HubPanelMenuFocusContext = {
+    trigger,
+    settings: fixture.settings,
+    isMenuOpen: () => trigger.getAttribute("open") === "true",
+    isForeground: () => true,
   };
-
+  let oldView: OwnedHubPanelMenuView | null = null;
+  let replacement: OwnedHubPanelMenuView | null = null;
+  let movedView: OwnedHubPanelMenuView | null = null;
   try {
-    // deno-lint-ignore no-explicit-any
-    (HubPanelMenu as any).handleOpenHub();
-
+    fixture.container.append(trigger, other);
+    document.body.append(fixture.container);
+    oldView = mountView(fixture, {
+      buttonId: "stage2-owned-focus-old",
+      focusContext,
+    }).view;
     assert(
-      selectedTabSet,
-      "handleOpenHub should set selectedTab to the newly created tab",
+      oldView.node.isConnected && oldView.node.getClientRects().length > 0,
+      "old view fixture is connected and visible",
+    );
+    oldView.node.focus();
+    assert(document.activeElement === oldView.node, "old view receives focus");
+    let descendantBlurObserved = false;
+    const observeDescendantBlur = (event: FocusEvent): void => {
+      if (oldView && event.composedPath().includes(oldView.node)) {
+        descendantBlurObserved = true;
+      }
+    };
+    testWindow.addEventListener("blur", observeDescendantBlur, true);
+    try {
+      oldView.dispose("replacement");
+    } finally {
+      testWindow.removeEventListener("blur", observeDescendantBlur, true);
+    }
+    assert(
+      descendantBlurObserved,
+      "old view blur reaches the window capture listener during handoff",
+    );
+    assert(
+      document.activeElement === fixture.settings,
+      "focused removal uses visible Settings as fallback",
+    );
+    replacement = mountView(fixture, {
+      buttonId: "stage2-owned-focus-new",
+      enabled: false,
+      focusContext,
+    }).view;
+    assert(
+      document.activeElement === settings,
+      "disabled replacement does not consume the claim",
+    );
+    replacement.setEnabled(true);
+    assert(
+      document.activeElement === replacement.node,
+      "replacement consumes a valid focus claim",
+    );
+    replacement.dispose("replacement");
+    other.focus();
+    settings.focus();
+    movedView = mountView(fixture, {
+      buttonId: "stage2-owned-focus-after-movement",
+      focusContext,
+    }).view;
+    assert(
+      document.activeElement === fixture.settings,
+      "moving away and back cancels restoration",
+    );
+    movedView.setEnabled(false);
+    movedView.setEnabled(true);
+    assert(
+      document.activeElement === settings,
+      "disable and re-enable do not steal focus after a canceled claim",
     );
   } finally {
-    cleanupDOM();
-    if (originalGBrowser !== undefined) {
-      Object.defineProperty(globalThis, "gBrowser", {
-        value: originalGBrowser,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).gBrowser = undefined;
+    movedView?.dispose();
+    oldView?.dispose();
+    replacement?.dispose();
+    fixture.container.remove();
+    if (priorActive && "focus" in priorActive) {
+      (priorActive as Element & { focus: () => void }).focus();
     }
-    if (originalPanelUI !== undefined) {
-      Object.defineProperty(globalThis, "PanelUI", {
-        value: originalPanelUI,
-        configurable: true,
-      });
-    } else {
+  }
+}
+
+function testDelayedOldCleanupPreservesReplacementNodeAndHandler(): void {
+  const fixture = createMenuFixture();
+  let oldCommands = 0;
+  let replacementCommands = 0;
+  let oldView: OwnedHubPanelMenuView | null = null;
+  let replacement: OwnedHubPanelMenuView | null = null;
+  try {
+    oldView = mountView(fixture, { onCommand: () => oldCommands++ }).view;
+    const oldNode = oldView.node;
+    replacement = mountView(fixture, {
+      onCommand: () => replacementCommands++,
+    }).view;
+
+    oldView.dispose();
+    oldNode.dispatchEvent(new Event("command"));
+    replacement.node.dispatchEvent(new Event("command"));
+
+    assert(!fixture.parent.contains(oldNode), "old cleanup removes its node");
+    assert(
+      fixture.parent.contains(replacement.node),
+      "old cleanup preserves the replacement node with the same ID",
+    );
+    assertEquals(oldCommands, 0, "disposed old handler no longer fires");
+    assertEquals(
+      replacementCommands,
+      1,
+      "replacement handler remains active after old cleanup",
+    );
+  } finally {
+    oldView?.dispose();
+    replacement?.dispose();
+    fixture.container.remove();
+  }
+}
+
+function testInvalidInitialLabelsRejectAndCleanSetup(): void {
+  for (const invalidLabel of [17, "   "]) {
+    const fixture = createMenuFixture();
+    let view: OwnedHubPanelMenuView | null = null;
+    try {
+      let thrown = false;
       try {
-        Object.defineProperty(globalThis, "PanelUI", {
-          value: undefined,
-          configurable: true,
-          writable: true,
-        });
-      } catch {
-        // PanelUI is non-configurable; cannot reset to undefined.
+        view = mountView(fixture, {
+          readLabel: () => invalidLabel,
+        }).view;
+      } catch (error) {
+        thrown = error instanceof Error &&
+          error.message === "invalid HUB menu label";
       }
-    }
-    if (originalServices !== undefined) {
-      Object.defineProperty(globalThis, "Services", {
-        value: originalServices,
-        configurable: true,
-      });
-    } else {
-      // deno-lint-ignore no-explicit-any
-      (globalThis as any).Services = undefined;
+      assert(thrown, "invalid initial translation rejects render");
+      assertEquals(
+        fixture.parent.children.length,
+        2,
+        "failed initial setup leaves only owned Settings and marker nodes",
+      );
+    } finally {
+      view?.dispose();
+      fixture.container.remove();
     }
   }
 }
 
-function testStaticRenderLabelWithDefaultTranslation(): void {
-  const container = document!.createElement("div");
-  document!.body!.appendChild(container);
-
-  render(() => HubPanelMenu.Render(), container);
-
-  const rendered = container.querySelector(`#${HUB_BUTTON_ID}`);
-  assert(rendered !== null, "Hub button should be rendered");
-
-  const label = rendered!.getAttribute("label");
-  assertEquals(
-    label,
-    "Floorp Hub",
-    "Render should use default translation when i18next returns default",
-  );
-
-  container.remove();
-}
-
-function testStaticRenderWithCommandHandler(): void {
-  const container = document!.createElement("div");
-  document!.body!.appendChild(container);
-
-  render(() => HubPanelMenu.Render(), container);
-
-  const rendered = container.querySelector(`#${HUB_BUTTON_ID}`);
-  assert(rendered !== null, "Hub button should be rendered");
-
-  // Check that the element has the command handler attached
-  // In Solid-XUL, onCommand becomes a command event listener
-  const _hasCommandListener =
-    rendered!.getAttribute("command") !== null ||
-    rendered!.getAttribute("oncommand") !== null;
-
-  // Note: Solid-XUL handles events differently, so we just verify the element renders
-  assert(
-    rendered!.tagName.toLowerCase() === "toolbarbutton" ||
-      rendered!.tagName.toLowerCase() === "xul:toolbarbutton",
-    "Render should create a toolbarbutton element",
-  );
-
-  container.remove();
-}
-
-function testConstructorReturnsEarlyWithoutPanelUIButton(): void {
-  cleanupDOM();
-
-  // Create all elements EXCEPT PanelUI-menu-button
-  const settingsButton = document!.createElement("div");
-  settingsButton.id = SETTINGS_BUTTON_ID;
-  document!.body!.appendChild(settingsButton);
-
-  const mainView = document!.createElement("div");
-  mainView.id = MAIN_VIEW_ID;
-  document!.body!.appendChild(mainView);
-
-  // Constructor should not throw and should return early
-  let threw = false;
+function testLateTranslationFailureReportsThroughOwnedView(): void {
+  const fixture = createMenuFixture();
+  let label: unknown = "Initial label";
+  const failures: { owner: AppMenuOwner; error: Error }[] = [];
+  let view: OwnedHubPanelMenuView | null = null;
+  let translationChanged = () => {};
   try {
-    new HubPanelMenu();
-  } catch {
-    threw = true;
+    const mounted = mountView(fixture, {
+      readLabel: () => label,
+      onFailure: (owner, error) => failures.push({ owner, error }),
+    });
+    view = mounted.view;
+    translationChanged = mounted.translationChanged;
+    label = null;
+    translationChanged();
+    assertEquals(failures.length, 1, "late invalid translation is reported");
+    assertEquals(
+      JSON.stringify(failures[0].owner),
+      JSON.stringify(OWNER),
+      "translation failure is tagged with its view owner",
+    );
+    assertEquals(
+      failures[0].error.message,
+      "invalid HUB menu label",
+      "translation failure preserves the validation error",
+    );
+    assertEquals(
+      view.node.getAttribute("label"),
+      "Initial label",
+      "invalid late label does not replace the last valid label",
+    );
+  } finally {
+    view?.dispose();
+    fixture.container.remove();
   }
-
-  assert(
-    !threw,
-    "Constructor should return early without throwing when panelUIButton is missing",
-  );
-
-  cleanupDOM();
 }
 
-function testConstructorDoesNotRenderPanelInitially(): void {
-  cleanupDOM();
-  createMockPanelMenu();
-
-  new HubPanelMenu();
-
-  // Panel should not be rendered initially (only when open attribute is set)
-  const hubButton = document!.getElementById(HUB_BUTTON_ID);
-  assert(
-    hubButton === null,
-    "Hub button should not be rendered immediately after construction",
-  );
-
-  cleanupDOM();
-}
-
-function testRenderPanelDoesNothingWithoutParentElement(): void {
-  cleanupDOM();
-
-  // Only create PanelUI button, no parent element
-  const panelUIButton = document!.createElement("div");
-  panelUIButton.id = PANEL_UI_BUTTON_ID;
-  document!.body!.appendChild(panelUIButton);
-
-  // Create instance but don't create the main view
-  const _instance = new HubPanelMenu();
-
-  // Try to trigger render by setting open attribute
-  panelUIButton.setAttribute("open", "true");
-
-  // Should not throw, and button should not appear
-  const hubButton = document!.getElementById(HUB_BUTTON_ID);
-  assert(
-    hubButton === null,
-    "renderPanel should return early without parentElement",
-  );
-
-  cleanupDOM();
-}
-
-function testMultipleInstancesDoNotDuplicateObservers(): void {
-  cleanupDOM();
-  createMockPanelMenu();
-
-  // Create multiple instances
-  const instance1 = new HubPanelMenu();
-  const instance2 = new HubPanelMenu();
-
-  // Both should exist without throwing
-  assert(instance1 !== null, "First instance should be created");
-  assert(instance2 !== null, "Second instance should be created");
-
-  cleanupDOM();
-}
-
-function testMutationObserverDisconnectsOnCleanup(): void {
-  cleanupDOM();
-  createMockPanelMenu();
-
-  // Create instance which sets up observer
-  const instance = new HubPanelMenu();
-
-  // Verify instance was created
-  assert(instance !== null, "Instance should be created");
-
-  // In a real scenario, when the component is destroyed, onCleanup would be called
-  // which would call observer.disconnect()
-  // This test verifies the instance structure supports cleanup
-  assert(
-    typeof instance === "object",
-    "instance should be an object with cleanup support",
-  );
-
-  cleanupDOM();
-}
-
-function testRenderPanelOnlyOnceWhenOpen(): void {
-  cleanupDOM();
-  createMockPanelMenu();
-
-  const instance = new HubPanelMenu();
-
-  // Trigger open multiple times
-  const panelUIButton = document!.getElementById(PANEL_UI_BUTTON_ID);
-  if (panelUIButton) {
-    panelUIButton.setAttribute("open", "true");
-    panelUIButton.setAttribute("open", "true");
-    panelUIButton.setAttribute("open", "true");
+function testTranslationCleanupFailureStillRemovesOwnedResources(): void {
+  const fixture = createMenuFixture();
+  let commands = 0;
+  let view: OwnedHubPanelMenuView | null = null;
+  try {
+    view = mountOwnedHubPanelMenuView({
+      parent: fixture.parent,
+      marker: fixture.settings.nextElementSibling,
+      buttonId: "stage2-cleanup-failure",
+      localizationKey: "hub.menu.title",
+      enabled: true,
+      owner: OWNER,
+      onCommand: () => commands++,
+      readLabel: (_key, fallback) => fallback,
+      observeTranslations: () => () => {
+        throw new Error("translation cleanup failed");
+      },
+    });
+    let cleanupFailure: unknown;
+    try {
+      view.dispose();
+    } catch (error) {
+      cleanupFailure = error;
+    }
+    assert(
+      cleanupFailure instanceof AggregateError,
+      "translation cleanup errors are aggregated",
+    );
+    assertEquals(
+      fixture.parent.children.length,
+      2,
+      "translation cleanup failure still removes the owned node",
+    );
+    view.node.dispatchEvent(new Event("command"));
+    assertEquals(
+      commands,
+      0,
+      "translation cleanup failure removes the listener",
+    );
+    view.dispose();
+  } finally {
+    view?.dispose();
+    fixture.container.remove();
   }
-
-  // The isRendered flag should prevent multiple renders
-  // We can't directly access the private property, but we can verify
-  // no errors are thrown when open is set multiple times
-  assert(instance !== null, "Instance should handle multiple open events");
-
-  cleanupDOM();
 }
 
-function testHandleOpenHubHandlesMissingGBrowser(): void {
-  // deno-lint-ignore no-explicit-any
-  const originalGBrowser = (globalThis as any).gBrowser;
-  // deno-lint-ignore no-explicit-any
-  const originalPanelUI = (globalThis as any).PanelUI;
-  // deno-lint-ignore no-explicit-any
-  const originalServices = (globalThis as any).Services;
-
-  // Remove gBrowser to test error handling (non-configurable in Firefox, so set to undefined)
-  // deno-lint-ignore no-explicit-any
-  (globalThis as any).gBrowser = undefined;
-
-  Object.defineProperty(globalThis, "PanelUI", {
-    value: {
-      hide: () => {},
-    },
+function testFocusTransferFailureStillRemovesOwnedResources(): void {
+  const fixture = createMenuFixture();
+  const trigger = document.createXULElement("toolbarbutton");
+  const priorActive = document.activeElement;
+  fixture.container.style.position = "fixed";
+  fixture.container.style.left = "0";
+  fixture.container.style.top = "0";
+  fixture.container.style.zIndex = "2147483647";
+  fixture.container.style.minWidth = "12rem";
+  fixture.container.style.minHeight = "4rem";
+  fixture.parent.setAttribute("style", "min-width: 12rem; min-height: 4rem;");
+  fixture.settings.setAttribute("label", "Settings");
+  fixture.settings.setAttribute("tabindex", "0");
+  trigger.setAttribute("open", "true");
+  const focusContext: HubPanelMenuFocusContext = {
+    trigger,
+    settings: fixture.settings,
+    isMenuOpen: () => true,
+    isForeground: () => true,
+  };
+  Object.defineProperty(fixture.settings, "focus", {
     configurable: true,
+    value: () => {
+      throw new Error("focus transfer failed");
+    },
   });
-
-  let threw = false;
+  let commands = 0;
+  let translationDisposals = 0;
+  let view: OwnedHubPanelMenuView | null = null;
   try {
-    // deno-lint-ignore no-explicit-any
-    (HubPanelMenu as any).handleOpenHub();
-  } catch {
-    threw = true;
-  }
+    fixture.container.append(trigger);
+    document.body.append(fixture.container);
+    view = mountOwnedHubPanelMenuView({
+      parent: fixture.parent,
+      marker: fixture.settings.nextElementSibling,
+      buttonId: "stage2-focus-cleanup-failure",
+      localizationKey: "hub.menu.title",
+      enabled: true,
+      owner: OWNER,
+      onCommand: () => commands++,
+      readLabel: (_key, fallback) => fallback,
+      observeTranslations: () => () => translationDisposals++,
+      focusContext,
+    });
+    view.node.setAttribute("tabindex", "0");
+    view.node.focus();
+    assert(document.activeElement === view.node, "owned view receives focus");
 
-  // Should handle missing gBrowser gracefully
-  assert(
-    typeof threw === "boolean",
-    "handleOpenHub should handle missing gBrowser",
-  );
-
-  // Cleanup
-  if (originalGBrowser !== undefined) {
-    Object.defineProperty(globalThis, "gBrowser", {
-      value: originalGBrowser,
-      configurable: true,
-    });
-  }
-  if (originalPanelUI !== undefined) {
-    Object.defineProperty(globalThis, "PanelUI", {
-      value: originalPanelUI,
-      configurable: true,
-    });
-  } else {
-    // deno-lint-ignore no-explicit-any
-    (globalThis as any).PanelUI = undefined;
-  }
-  if (originalServices !== undefined) {
-    Object.defineProperty(globalThis, "Services", {
-      value: originalServices,
-      configurable: true,
-    });
-  } else {
-    // deno-lint-ignore no-explicit-any
-    (globalThis as any).Services = undefined;
+    let cleanupFailure: unknown;
+    try {
+      view.dispose("replacement");
+    } catch (error) {
+      cleanupFailure = error;
+    }
+    assert(
+      cleanupFailure instanceof AggregateError,
+      "focus transfer error is aggregated with cleanup",
+    );
+    assert(
+      cleanupFailure.errors.some((error) =>
+        error instanceof Error && error.message === "focus transfer failed"
+      ),
+      "focus transfer error is retained",
+    );
+    assert(
+      !fixture.parent.contains(view.node),
+      "focus transfer error still removes the owned node",
+    );
+    view.node.dispatchEvent(new Event("command"));
+    assertEquals(commands, 0, "focus transfer error removes the listener");
+    assertEquals(
+      translationDisposals,
+      1,
+      "focus transfer error still disposes translation observation",
+    );
+  } finally {
+    view?.dispose();
+    fixture.container.remove();
+    if (priorActive && "focus" in priorActive) {
+      (priorActive as Element & { focus: () => void }).focus();
+    }
   }
 }
 
-export async function runAllTests(): Promise<void> {
-  await runTests("HubPanelMenu.test.ts", [
-    { name: "HubPanelMenu exports", fn: testHubPanelMenuExports },
-    {
-      name: "constructor does not throw without UI elements",
-      fn: testHubPanelMenuDoesNotThrowWithoutPanelUIButton,
-    },
-    {
-      name: "static render creates toolbar button",
-      fn: testStaticRenderCreatesToolbarButton,
-    },
-    {
-      name: "constructor does not throw with panel UI elements",
-      fn: testHubPanelMenuConstructsWithPanelButton,
-    },
-    {
-      name: "handleOpenHub opens hub and hides panel",
-      fn: testHandleOpenHubAddsTabAndHidesPanel,
-    },
-    {
-      name: "handleOpenHub works without PanelUI",
-      fn: testHandleOpenHubWithoutPanelUI,
-    },
-    {
-      name: "handleOpenHub uses correct URL and options",
-      fn: testHandleOpenHubCorrectUrlAndOptions,
-    },
-    {
-      name: "handleOpenHub selects newly created tab",
-      fn: testHandleOpenHubSelectsNewTab,
-    },
-    {
-      name: "static render uses default translation",
-      fn: testStaticRenderLabelWithDefaultTranslation,
-    },
-    {
-      name: "static render includes command handler",
-      fn: testStaticRenderWithCommandHandler,
-    },
-    {
-      name: "constructor returns early without panel button",
-      fn: testConstructorReturnsEarlyWithoutPanelUIButton,
-    },
-    {
-      name: "constructor does not render panel initially",
-      fn: testConstructorDoesNotRenderPanelInitially,
-    },
-    {
-      name: "renderPanel returns early without parent element",
-      fn: testRenderPanelDoesNothingWithoutParentElement,
-    },
-    {
-      name: "multiple instances can be created",
-      fn: testMultipleInstancesDoNotDuplicateObservers,
-    },
-    {
-      name: "mutation observer disconnects on cleanup",
-      fn: testMutationObserverDisconnectsOnCleanup,
-    },
-    {
-      name: "render panel only once when open",
-      fn: testRenderPanelOnlyOnceWhenOpen,
-    },
-    {
-      name: "handleOpenHub handles missing gBrowser",
-      fn: testHandleOpenHubHandlesMissingGBrowser,
-    },
-  ]);
+async function testReadinessObserverLifetimeIsBounded(): Promise<void> {
+  const fixture = createMenuFixture();
+  const trigger = document.createElement("button");
+  let notifyCount = 0;
+  let ready = false;
+  let stop = () => {};
+  try {
+    stop = observeHubMenuReadiness(
+      fixture.container,
+      () => ready,
+      () => notifyCount++,
+    );
+    fixture.container.append(trigger);
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    assertEquals(notifyCount, 0, "unready menu mutations do not notify");
+    ready = true;
+    trigger.setAttribute("open", "true");
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    assertEquals(notifyCount, 1, "ready menu mutation notifies once");
+    trigger.removeAttribute("open");
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    assertEquals(notifyCount, 1, "observer disconnects after readiness");
+  } finally {
+    stop();
+    fixture.container.remove();
+  }
+
+  const disposedFixture = createMenuFixture();
+  let disposedNotifications = 0;
+  let stopWaiting = () => {};
+  try {
+    stopWaiting = observeHubMenuReadiness(
+      disposedFixture.container,
+      () => true,
+      () => disposedNotifications++,
+    );
+    stopWaiting();
+    disposedFixture.container.append(document.createElement("span"));
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    assertEquals(
+      disposedNotifications,
+      0,
+      "disposed readiness observer ignores later DOM changes",
+    );
+  } finally {
+    stopWaiting();
+    disposedFixture.container.remove();
+  }
 }
+
+async function testInitialMountTranslationFailureFencesReadiness(): Promise<
+  void
+> {
+  const browserWindow = Services.wm.getMostRecentWindow("navigator:browser") as
+    | Window
+    | null;
+  if (!browserWindow) throw new Error("test requires a browser window");
+  const trigger = browserWindow.document.getElementById("PanelUI-menu-button");
+  if (!trigger) throw new Error("test browser menu trigger is unavailable");
+  const fixture = createMenuFixture();
+  const registry = new AppMenuRegistry();
+  let claim: ReturnType<AppMenuRegistryInstance["claimHost"]> | null = null;
+  let connection: AppMenuAdapterConnection | null = null;
+  const viewRef: { current: OwnedHubPanelMenuView | null } = { current: null };
+  let translationChanged = () => {};
+  let reportAccepted = false;
+  let hostFailures = 0;
+  try {
+    claim = registry.claimHost(HUB_PANEL_MENU_FEATURE_ID, "owned-view-race");
+    connection = registry.registerAdapter(browserWindow, {
+      render: (request) => {
+        let reads = 0;
+        const mounted = mountOwnedHubPanelMenuView({
+          parent: fixture.parent,
+          marker: fixture.settings.nextElementSibling,
+          buttonId: request.buttonId,
+          localizationKey: request.localizationKey,
+          enabled: request.enabled,
+          owner: request.owner,
+          onCommand: () => {},
+          readLabel: () => ++reads === 1 ? "Initial label" : null,
+          observeTranslations: (update) => translationChanged = update,
+          reportFailure: (owner, error) => {
+            reportAccepted = connection?.reportFailure(owner, error) ?? false;
+          },
+        });
+        viewRef.current = mounted;
+        translationChanged();
+        return trigger.getAttribute("open") === "true"
+          ? "rendered"
+          : "deferred";
+      },
+      setEnabled: () => {},
+      remove: () => {
+        viewRef.current?.dispose();
+        viewRef.current = null;
+      },
+    });
+    const lease = registry.beginGeneration(
+      {
+        featureId: HUB_PANEL_MENU_FEATURE_ID,
+        hostEpoch: "owned-view-race",
+        generation: 1,
+      },
+      () => hostFailures++,
+      () => false,
+    );
+    registry.stageDescriptor(lease, { command: "open-hub" });
+    let readinessError = "";
+    try {
+      await registry.stageAndWait(
+        lease,
+        [browserWindow],
+        new AbortController().signal,
+        500,
+      );
+    } catch (error) {
+      const message = typeof error === "object" && error !== null
+        ? Reflect.get(error, "message")
+        : undefined;
+      readinessError = typeof message === "string" ? message : String(error);
+    }
+    assertEquals(
+      readinessError,
+      "invalid HUB menu label",
+      "initial translation failure rejects readiness synchronously",
+    );
+    assert(
+      reportAccepted,
+      "unacknowledged current delivery can report failure",
+    );
+    assertEquals(
+      hostFailures,
+      1,
+      "translation failure is sticky and reported once",
+    );
+    assertEquals(
+      registry.diagnosticsForTests.pendingAcknowledgements,
+      0,
+      "failed initial render does not leave a readiness waiter",
+    );
+    assertEquals(
+      viewRef.current?.node.getAttribute("label"),
+      "Initial label",
+      "failed observed update does not replace its valid initial label",
+    );
+    registry.revoke(lease);
+  } finally {
+    if (connection) connection.dispose();
+    claim?.release();
+    viewRef.current?.dispose();
+    fixture.container.remove();
+  }
+}
+
+await runTests("HubPanelMenu.test.ts", [
+  {
+    name: "owned view captures its button and preserves Settings order",
+    fn: testOwnedViewUsesItsExactElementAndSettingsSlot,
+  },
+  {
+    name: "focus claim restores only without user movement",
+    fn: testFocusClaimRestoresOnlyWithoutUserMovement,
+  },
+  {
+    name: "delayed old cleanup preserves replacement node and handler",
+    fn: testDelayedOldCleanupPreservesReplacementNodeAndHandler,
+  },
+  {
+    name: "invalid initial labels reject and clean up setup",
+    fn: testInvalidInitialLabelsRejectAndCleanSetup,
+  },
+  {
+    name: "late translation failures are reported by the owned view",
+    fn: testLateTranslationFailureReportsThroughOwnedView,
+  },
+  {
+    name: "translation cleanup errors still remove owned resources",
+    fn: testTranslationCleanupFailureStillRemovesOwnedResources,
+  },
+  {
+    name: "focus transfer errors still remove owned resources",
+    fn: testFocusTransferFailureStillRemovesOwnedResources,
+  },
+  {
+    name: "readiness observer waits and disconnects at readiness or disposal",
+    fn: testReadinessObserverLifetimeIsBounded,
+  },
+  {
+    name: "initial observed translation failure rejects adapter readiness",
+    fn: testInitialMountTranslationFailureFencesReadiness,
+  },
+]);

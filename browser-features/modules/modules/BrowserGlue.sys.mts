@@ -6,6 +6,7 @@ const { ActorManagerParent } = ChromeUtils.importESModule(
   "resource://gre/modules/ActorManagerParent.sys.mjs",
 );
 import { initializeHubPageDiscovery } from "./feature-host/HubPageDiscovery.sys.mts";
+import { initializeHubPanelMenuFeature } from "./feature-host/HubPanelMenuBootstrap.sys.mts";
 
 function localPathToResourceURI(path: string) {
   const re = new RegExp(/\.\.\/([a-zA-Z0-9-_/]+)\.sys\.mts/);
@@ -584,4 +585,5 @@ const JS_WINDOW_ACTORS: {
 };
 
 initializeHubPageDiscovery();
+initializeHubPanelMenuFeature();
 ActorManagerParent.addJSWindowActors(JS_WINDOW_ACTORS);
