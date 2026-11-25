@@ -3,6 +3,7 @@
 import { M0_FIXTURES } from "./M0Fixtures.sys.mts";
 import { HUB_FIXTURES } from "./HubFixtures.sys.mts";
 import { getSharedHubRegistry, type HubRegistry } from "./HubRegistry.sys.mts";
+import { isHubIdentifier } from "./HubPageDescriptorValidation.ts";
 import {
   getFeatureWindowIdentity,
   isCandidateFeatureWindow,
@@ -14,7 +15,11 @@ import type {
   HubHostClaim,
   HubLiveDocument,
 } from "./HubRegistryTypes.ts";
-import type { FixtureVersion, M0Fixture } from "./FeatureHostTypes.ts";
+import type {
+  FeatureDefinition,
+  FixtureVersion,
+  PinnedFixture,
+} from "./FeatureHostTypes.ts";
 import {
   type Cleanup,
   type DisposeReport,
@@ -22,9 +27,9 @@ import {
   M0ModuleHost,
 } from "./M0ModuleHost.sys.mts";
 
-const FEATURE_ID = "experimental-local-sample";
+const M0_FEATURE_ID = "experimental-local-sample";
 const HOST_BUILD_ID = "m0-schema-2";
-const FIXTURES = Object.freeze({ ...M0_FIXTURES, ...HUB_FIXTURES });
+const HOST_CAPABILITIES = new Set(["window-marker", "hub-pages"]);
 const ROOT = PathUtils.join(PathUtils.profileDir, "floorp-hotfix-m0");
 const TEST_ROOT = PathUtils.join(
   PathUtils.profileDir,
@@ -49,7 +54,7 @@ interface Descriptor {
   featureId: string;
   op: RequestOperation;
   expectedRevision: number | null;
-  target: FixtureVersion | null;
+  target: string | null;
   recoveryEpoch: string | null;
   normalizedInput: string;
 }
@@ -58,18 +63,18 @@ interface Outcome {
   txId: string;
   request: Descriptor;
   status: OutcomeStatus;
-  selectedVersion: FixtureVersion | null;
+  selectedVersion: string | null;
 }
 
 interface M0Record {
   schemaVersion: 2;
   featureId: string;
   desiredEnabled: boolean;
-  selectedVersion: FixtureVersion | null;
+  selectedVersion: string | null;
   selectedDigest: string | null;
   selectedHealth: "verified" | "unverified";
   selectedHealthBuild: { hostBuildId: string; runtimeBuildId: string } | null;
-  rollbackVersion: FixtureVersion | null;
+  rollbackVersion: string | null;
   rollbackDigest: string | null;
   rollbackHealthBuild: { hostBuildId: string; runtimeBuildId: string } | null;
   stateRevision: number;
@@ -81,11 +86,11 @@ interface M0Record {
 }
 
 interface RecordSnapshot {
-  selectedVersion: FixtureVersion | null;
+  selectedVersion: string | null;
   selectedDigest: string | null;
   selectedHealth: "verified" | "unverified";
   selectedHealthBuild: M0Record["selectedHealthBuild"];
-  rollbackVersion: FixtureVersion | null;
+  rollbackVersion: string | null;
   rollbackDigest: string | null;
   rollbackHealthBuild: M0Record["rollbackHealthBuild"];
   desiredEnabled: boolean;
@@ -96,7 +101,7 @@ interface PendingTransaction {
   txId: string;
   request: Descriptor;
   before: RecordSnapshot;
-  targetVersion: FixtureVersion | null;
+  targetVersion: string | null;
   targetDigest: string | null;
   phase: PendingPhase;
 }
@@ -145,6 +150,7 @@ export interface M0FeatureHostTestOptions {
 
 const owners = new Map<string, M0FeatureHost>();
 const openingHosts = new Map<string, Promise<M0FeatureHost>>();
+const openingDefinitions = new Map<string, string>();
 let m0PayloadEvaluations = 0;
 
 export function m0PayloadEvaluationsForTests(): number {
@@ -189,10 +195,10 @@ class StorageFailure extends Error {
   }
 }
 
-function defaultRecord(): M0Record {
+function defaultRecord(definition: FeatureDefinition): M0Record {
   return {
     schemaVersion: 2,
-    featureId: FEATURE_ID,
+    featureId: definition.featureId,
     desiredEnabled: false,
     selectedVersion: null,
     selectedDigest: null,
@@ -230,8 +236,12 @@ function withSnapshot(
   return { ...record, ...snapshot };
 }
 
-function isVersion(value: unknown): value is FixtureVersion {
-  return typeof value === "string" && Object.hasOwn(FIXTURES, value);
+function isVersion(
+  value: unknown,
+  definition: FeatureDefinition,
+): value is string {
+  return typeof value === "string" &&
+    Object.hasOwn(definition.fixtures, value);
 }
 
 function isTxId(value: unknown): value is string {
@@ -239,9 +249,14 @@ function isTxId(value: unknown): value is string {
     /^[A-Za-z0-9._:-]+$/.test(value);
 }
 
-function isKnownDigest(value: unknown): value is string {
+function isKnownDigest(
+  value: unknown,
+  definition: FeatureDefinition,
+): value is string {
   return typeof value === "string" &&
-    Object.values(FIXTURES).some((fixture) => fixture.digest === value);
+    Object.values(definition.fixtures).some((fixture) =>
+      fixture.digest === value
+    );
 }
 
 function isOperation(value: unknown): value is RequestOperation {
@@ -256,7 +271,10 @@ function hasExactKeys(value: object, keys: readonly string[]): boolean {
     actual.every((key) => keys.includes(key));
 }
 
-function isDescriptor(value: unknown): value is Descriptor {
+function isDescriptor(
+  value: unknown,
+  definition: FeatureDefinition,
+): value is Descriptor {
   if (
     typeof value !== "object" || value === null ||
     !hasExactKeys(value, [
@@ -270,12 +288,13 @@ function isDescriptor(value: unknown): value is Descriptor {
   ) return false;
   const descriptor = value as Partial<Descriptor>;
   if (
-    descriptor.featureId !== FEATURE_ID || !isOperation(descriptor.op) ||
+    descriptor.featureId !== definition.featureId ||
+    !isOperation(descriptor.op) ||
     !(descriptor.expectedRevision === null ||
       (typeof descriptor.expectedRevision === "number" &&
         Number.isSafeInteger(descriptor.expectedRevision) &&
         descriptor.expectedRevision >= 0)) ||
-    !(descriptor.target === null || isVersion(descriptor.target)) ||
+    !(descriptor.target === null || isVersion(descriptor.target, definition)) ||
     !(descriptor.recoveryEpoch === null || isTxId(descriptor.recoveryEpoch)) ||
     typeof descriptor.normalizedInput !== "string" ||
     descriptor.normalizedInput.length > 256
@@ -295,20 +314,25 @@ function isDescriptor(value: unknown): value is Descriptor {
       `${descriptor.op}:${descriptor.target ?? "none"}`;
 }
 
-function isOutcome(value: unknown): value is Outcome {
+function isOutcome(
+  value: unknown,
+  definition: FeatureDefinition,
+): value is Outcome {
   if (
     typeof value !== "object" || value === null ||
     !hasExactKeys(value, ["txId", "request", "status", "selectedVersion"])
   ) return false;
   const outcome = value as Partial<Outcome>;
-  return isTxId(outcome.txId) && isDescriptor(outcome.request) &&
+  return isTxId(outcome.txId) &&
+    isDescriptor(outcome.request, definition) &&
     (outcome.status === "pending" ||
       outcome.status === "committed_pending_publish" ||
       outcome.status === "succeeded" ||
       outcome.status === "failed_restored" ||
       outcome.status === "failed_quarantined" ||
       outcome.status === "storage_failed") &&
-    (outcome.selectedVersion === null || isVersion(outcome.selectedVersion));
+    (outcome.selectedVersion === null ||
+      isVersion(outcome.selectedVersion, definition));
 }
 
 function isHealthBuild(
@@ -326,7 +350,10 @@ function isHealthBuild(
     build.runtimeBuildId.length > 0 && build.runtimeBuildId.length <= 128;
 }
 
-function isSnapshot(value: unknown): value is RecordSnapshot {
+function isSnapshot(
+  value: unknown,
+  definition: FeatureDefinition,
+): value is RecordSnapshot {
   if (
     typeof value !== "object" || value === null ||
     !hasExactKeys(value, [
@@ -343,13 +370,13 @@ function isSnapshot(value: unknown): value is RecordSnapshot {
   const snapshot = value as Partial<RecordSnapshot>;
   return typeof snapshot.desiredEnabled === "boolean" &&
     (snapshot.selectedVersion === null ||
-      isVersion(snapshot.selectedVersion)) &&
+      isVersion(snapshot.selectedVersion, definition)) &&
     (snapshot.rollbackVersion === null ||
-      isVersion(snapshot.rollbackVersion)) &&
+      isVersion(snapshot.rollbackVersion, definition)) &&
     (snapshot.selectedDigest === null ||
-      isKnownDigest(snapshot.selectedDigest)) &&
+      isKnownDigest(snapshot.selectedDigest, definition)) &&
     (snapshot.rollbackDigest === null ||
-      isKnownDigest(snapshot.rollbackDigest)) &&
+      isKnownDigest(snapshot.rollbackDigest, definition)) &&
     (snapshot.selectedHealth === "verified" ||
       snapshot.selectedHealth === "unverified") &&
     isHealthBuild(snapshot.selectedHealthBuild) &&
@@ -367,12 +394,16 @@ function isSnapshot(value: unknown): value is RecordSnapshot {
       (snapshot.rollbackHealthBuild === null)) &&
     (snapshot.selectedVersion === null ||
       snapshot.selectedDigest ===
-        FIXTURES[snapshot.selectedVersion].digest) &&
+        definition.fixtures[snapshot.selectedVersion].digest) &&
     (snapshot.rollbackVersion === null ||
-      snapshot.rollbackDigest === FIXTURES[snapshot.rollbackVersion].digest);
+      snapshot.rollbackDigest ===
+        definition.fixtures[snapshot.rollbackVersion].digest);
 }
 
-function isPending(value: unknown): value is PendingTransaction {
+function isPending(
+  value: unknown,
+  definition: FeatureDefinition,
+): value is PendingTransaction {
   if (
     typeof value !== "object" || value === null ||
     !hasExactKeys(value, [
@@ -387,18 +418,25 @@ function isPending(value: unknown): value is PendingTransaction {
   ) return false;
   const pending = value as Partial<PendingTransaction>;
   return isOperation(pending.op) && isTxId(pending.txId) &&
-    isDescriptor(pending.request) && pending.request.op === pending.op &&
-    isSnapshot(pending.before) &&
-    (pending.targetVersion === null || isVersion(pending.targetVersion)) &&
-    (pending.targetDigest === null || isKnownDigest(pending.targetDigest)) &&
+    isDescriptor(pending.request, definition) &&
+    pending.request.op === pending.op &&
+    isSnapshot(pending.before, definition) &&
+    (pending.targetVersion === null ||
+      isVersion(pending.targetVersion, definition)) &&
+    (pending.targetDigest === null ||
+      isKnownDigest(pending.targetDigest, definition)) &&
     pending.targetVersion !== null && pending.targetDigest !== null &&
     (pending.targetVersion === null ||
-      pending.targetDigest === FIXTURES[pending.targetVersion].digest) &&
+      pending.targetDigest ===
+        definition.fixtures[pending.targetVersion].digest) &&
     (pending.phase === "PREPARED" || pending.phase === "OLD_STOPPED" ||
       pending.phase === "CANDIDATE_READY");
 }
 
-function isAttemptEpisode(value: unknown): value is AttemptEpisode {
+function isAttemptEpisode(
+  value: unknown,
+  definition: FeatureDefinition,
+): value is AttemptEpisode {
   if (
     typeof value !== "object" || value === null ||
     !hasExactKeys(value, [
@@ -413,12 +451,15 @@ function isAttemptEpisode(value: unknown): value is AttemptEpisode {
   const episode = value as Partial<AttemptEpisode>;
   if (
     !isTxId(episode.recoveryEpoch) || !isTxId(episode.originTxId) ||
-    !isDescriptor(episode.request) || !isKnownDigest(episode.targetDigest) ||
+    !isDescriptor(episode.request, definition) ||
+    !isKnownDigest(episode.targetDigest, definition) ||
     !Array.isArray(episode.attemptedDigests) ||
     !Array.isArray(episode.rejectedDigests) ||
     episode.attemptedDigests.length > 2 || episode.rejectedDigests.length > 2 ||
-    !episode.attemptedDigests.every(isKnownDigest) ||
-    !episode.rejectedDigests.every(isKnownDigest)
+    !episode.attemptedDigests.every((entry) =>
+      isKnownDigest(entry, definition)
+    ) ||
+    !episode.rejectedDigests.every((entry) => isKnownDigest(entry, definition))
   ) return false;
   const attempted = episode.attemptedDigests;
   const rejected = episode.rejectedDigests;
@@ -430,7 +471,10 @@ function isAttemptEpisode(value: unknown): value is AttemptEpisode {
       episode.request.recoveryEpoch === episode.recoveryEpoch);
 }
 
-function validateRecord(value: unknown): M0Record {
+function validateRecord(
+  value: unknown,
+  definition: FeatureDefinition,
+): M0Record {
   if (typeof value !== "object" || value === null) {
     throw new Error("invalid M0 state record");
   }
@@ -455,12 +499,15 @@ function validateRecord(value: unknown): M0Record {
   ];
   if (
     Object.keys(value).some((key) => !keys.includes(key)) ||
-    record.schemaVersion !== 2 || record.featureId !== FEATURE_ID ||
+    record.schemaVersion !== 2 ||
+    record.featureId !== definition.featureId ||
     typeof record.desiredEnabled !== "boolean" ||
     !Number.isSafeInteger(record.stateRevision) ||
     (record.stateRevision ?? -1) < 0 ||
-    !(record.selectedVersion === null || isVersion(record.selectedVersion)) ||
-    !(record.rollbackVersion === null || isVersion(record.rollbackVersion)) ||
+    !(record.selectedVersion === null ||
+      isVersion(record.selectedVersion, definition)) ||
+    !(record.rollbackVersion === null ||
+      isVersion(record.rollbackVersion, definition)) ||
     !(record.selectedDigest === null ||
       typeof record.selectedDigest === "string") ||
     !(record.rollbackDigest === null ||
@@ -475,18 +522,20 @@ function validateRecord(value: unknown): M0Record {
       (record.rollbackHealthBuild === null) ||
     !Array.isArray(record.recentOutcomes) ||
     record.recentOutcomes.length > 32 ||
-    !record.recentOutcomes.every(isOutcome) ||
+    !record.recentOutcomes.every((entry) => isOutcome(entry, definition)) ||
     record.recentOutcomes.some((outcome) =>
       outcome.status === "pending" ||
       outcome.status === "committed_pending_publish" ||
       outcome.status === "storage_failed"
     ) ||
-    !(record.lastOutcome === null || isOutcome(record.lastOutcome)) ||
+    !(record.lastOutcome === null ||
+      isOutcome(record.lastOutcome, definition)) ||
     (record.lastOutcome !== null &&
       (record.lastOutcome.status === "pending" ||
         record.lastOutcome.status === "storage_failed")) ||
-    !(record.pending === null || isPending(record.pending)) ||
-    !(record.attempt === null || isAttemptEpisode(record.attempt)) ||
+    !(record.pending === null || isPending(record.pending, definition)) ||
+    !(record.attempt === null ||
+      isAttemptEpisode(record.attempt, definition)) ||
     !(record.blockedReason === null ||
       typeof record.blockedReason === "string" &&
         record.blockedReason.length > 0 &&
@@ -497,9 +546,11 @@ function validateRecord(value: unknown): M0Record {
         record.selectedHealthBuild !== null)) ||
     (record.rollbackVersion === null) !== (record.rollbackDigest === null) ||
     (record.selectedVersion !== null &&
-      record.selectedDigest !== FIXTURES[record.selectedVersion].digest) ||
+      record.selectedDigest !==
+        definition.fixtures[record.selectedVersion].digest) ||
     (record.rollbackVersion !== null &&
-      record.rollbackDigest !== FIXTURES[record.rollbackVersion].digest) ||
+      record.rollbackDigest !==
+        definition.fixtures[record.rollbackVersion].digest) ||
     (record.desiredEnabled && record.selectedVersion === null) ||
     (record.pending !== null &&
       (record.pending.txId === "" ||
@@ -521,7 +572,7 @@ function validateRecord(value: unknown): M0Record {
         record.attempt.originTxId !== record.lastOutcome.txId ||
         record.lastOutcome.selectedVersion === null ||
         !record.attempt.attemptedDigests.includes(
-          FIXTURES[record.lastOutcome.selectedVersion].digest,
+          definition.fixtures[record.lastOutcome.selectedVersion].digest,
         ))) ||
     (record.lastOutcome?.status === "failed_quarantined" &&
       record.blockedReason === null)
@@ -539,15 +590,121 @@ async function digest(source: string): Promise<string> {
   ).join("");
 }
 
-const HOST_CAPABILITIES = new Set(["window-marker", "hub-pages"]);
+function snapshotFeatureDefinition(input: unknown): FeatureDefinition {
+  if (
+    typeof input !== "object" || input === null ||
+    !hasExactKeys(input, ["featureId", "fixtures"])
+  ) throw new Error("invalid feature definition");
+  const value = input as Partial<FeatureDefinition>;
+  if (
+    typeof value.featureId !== "string" ||
+    !isHubIdentifier(value.featureId) ||
+    typeof value.fixtures !== "object" || value.fixtures === null ||
+    Array.isArray(value.fixtures)
+  ) throw new Error("invalid feature definition");
+  const fixtures: Record<string, PinnedFixture<string>> = Object.create(null);
+  const entries = Object.entries(value.fixtures);
+  if (entries.length === 0 || entries.length > 32) {
+    throw new Error("invalid feature catalog");
+  }
+  for (const [version, candidate] of entries) {
+    if (
+      !/^[A-Za-z0-9][A-Za-z0-9.-]{0,63}$/.test(version) ||
+      typeof candidate !== "object" || candidate === null ||
+      !hasExactKeys(candidate, ["version", "digest", "source", "compatibility"])
+    ) throw new Error("invalid feature package definition");
+    const fixture = candidate as Partial<PinnedFixture<string>>;
+    const compatibility = fixture.compatibility;
+    if (
+      fixture.version !== version ||
+      typeof fixture.digest !== "string" ||
+      !/^[0-9a-f]{64}$/.test(fixture.digest) ||
+      typeof fixture.source !== "string" || fixture.source.length === 0 ||
+      fixture.source.length > 131_072 ||
+      typeof compatibility !== "object" || compatibility === null ||
+      !hasExactKeys(compatibility, [
+        "hostSchema",
+        "hostBuildId",
+        "runtimeBuildIds",
+        "capabilities",
+      ])
+    ) throw new Error("invalid feature package definition");
+    const runtimeBuildIds = compatibility.runtimeBuildIds;
+    const capabilities = compatibility.capabilities;
+    if (
+      compatibility.hostSchema !== 2 ||
+      compatibility.hostBuildId !== HOST_BUILD_ID ||
+      !Array.isArray(runtimeBuildIds) || runtimeBuildIds.length === 0 ||
+      runtimeBuildIds.length > 16 ||
+      !runtimeBuildIds.every((buildId) =>
+        typeof buildId === "string" && buildId.length > 0 &&
+        buildId.length <= 128
+      ) || new Set(runtimeBuildIds).size !== runtimeBuildIds.length ||
+      !Array.isArray(capabilities) ||
+      capabilities.length > HOST_CAPABILITIES.size ||
+      !capabilities.every((capability) =>
+        typeof capability === "string" &&
+        HOST_CAPABILITIES.has(capability)
+      ) || new Set(capabilities).size !== capabilities.length ||
+      (value.featureId !== M0_FEATURE_ID &&
+        capabilities.includes("window-marker"))
+    ) throw new Error("invalid feature compatibility metadata");
+    const immutableCompatibility = Object.freeze({
+      hostSchema: compatibility.hostSchema,
+      hostBuildId: compatibility.hostBuildId,
+      runtimeBuildIds: Object.freeze([...runtimeBuildIds]),
+      capabilities: Object.freeze([...capabilities]),
+    });
+    fixtures[version] = Object.freeze({
+      version: fixture.version,
+      digest: fixture.digest,
+      source: fixture.source,
+      compatibility: immutableCompatibility,
+    });
+  }
+  return Object.freeze({
+    featureId: value.featureId,
+    fixtures: Object.freeze(fixtures),
+  });
+}
 
-export function isM0FixtureCompatibleForTests(
-  version: FixtureVersion,
+function featureDefinitionFingerprint(definition: FeatureDefinition): string {
+  return JSON.stringify({
+    featureId: definition.featureId,
+    fixtures: Object.keys(definition.fixtures).sort().map((version) => {
+      const fixture = definition.fixtures[version];
+      return [
+        version,
+        fixture.version,
+        fixture.digest,
+        fixture.source,
+        fixture.compatibility.hostSchema,
+        fixture.compatibility.hostBuildId,
+        fixture.compatibility.runtimeBuildIds,
+        fixture.compatibility.capabilities,
+      ];
+    }),
+  });
+}
+
+const M0_FEATURE_DEFINITION = snapshotFeatureDefinition({
+  featureId: M0_FEATURE_ID,
+  fixtures: { ...M0_FIXTURES, ...HUB_FIXTURES },
+});
+const M0_DEFINITION_FINGERPRINT = featureDefinitionFingerprint(
+  M0_FEATURE_DEFINITION,
+);
+
+function isFixtureCompatible(
+  definition: FeatureDefinition,
+  version: string,
   hostBuildId: string,
   runtimeBuildId: string,
   availableCapabilities: readonly string[],
 ): boolean {
-  const compatibility = FIXTURES[version].compatibility;
+  const fixture = definition.fixtures[version];
+  if (!fixture) return false;
+  const compatibility = fixture.compatibility;
   return compatibility.hostSchema === 2 &&
     compatibility.hostBuildId === HOST_BUILD_ID &&
     hostBuildId === HOST_BUILD_ID &&
@@ -558,17 +715,36 @@ export function isM0FixtureCompatibleForTests(
     );
 }
 
+export function isM0FixtureCompatibleForTests(
+  version: FixtureVersion,
+  hostBuildId: string,
+  runtimeBuildId: string,
+  availableCapabilities: readonly string[],
+): boolean {
+  return isFixtureCompatible(
+    M0_FEATURE_DEFINITION,
+    version,
+    hostBuildId,
+    runtimeBuildId,
+    availableCapabilities,
+  );
+}
+
 class PackageStore {
   readonly #directory: string;
+  readonly #definition: FeatureDefinition;
 
-  constructor(root: string) {
+  constructor(root: string, definition: FeatureDefinition) {
     this.#directory = PathUtils.join(root, "packages");
+    this.#definition = definition;
   }
 
-  async ensure(version: FixtureVersion): Promise<M0FixtureValue> {
-    const fixture = FIXTURES[version];
+  async ensure(version: string): Promise<M0FixtureValue> {
+    const fixture = this.#definition.fixtures[version];
+    if (!fixture) throw new Error("unknown package version");
     if (
-      !isM0FixtureCompatibleForTests(
+      !isFixtureCompatible(
+        this.#definition,
         version,
         HOST_BUILD_ID,
         Services.appinfo.appBuildID,
@@ -621,11 +797,13 @@ class PackageStore {
 
   async load(
     digestValue: string,
-    version: FixtureVersion,
+    version: string,
   ): Promise<M0FixtureValue> {
-    const fixture = FIXTURES[version];
+    const fixture = this.#definition.fixtures[version];
+    if (!fixture) throw new Error("unknown package version");
     if (
-      !isM0FixtureCompatibleForTests(
+      !isFixtureCompatible(
+        this.#definition,
         version,
         HOST_BUILD_ID,
         Services.appinfo.appBuildID,
@@ -656,9 +834,11 @@ class PackageStore {
   }
 }
 
-interface M0FixtureValue extends M0Fixture {}
+type M0FixtureValue = PinnedFixture<string>;
 
 export class M0FeatureHost {
+  readonly #definition: FeatureDefinition;
+  readonly #definitionFingerprint: string;
   readonly #store: PackageStore;
   readonly #recordPath: string;
   readonly #windows = new Map<string, Window>();
@@ -681,7 +861,7 @@ export class M0FeatureHost {
       } else if (topic === "domwindowclosed") this.#onWindowClosed(window);
     },
   };
-  #record = defaultRecord();
+  #record: M0Record;
   #running: M0ModuleHost | null = null;
   #epoch = Services.uuid.generateUUID().toString();
   #generation = 0;
@@ -718,8 +898,13 @@ export class M0FeatureHost {
   private constructor(
     readonly root: string,
     testWritesEnabled: boolean,
+    definition: FeatureDefinition,
+    definitionFingerprint: string,
     testOptions?: M0FeatureHostTestOptions,
   ) {
+    this.#definition = definition;
+    this.#definitionFingerprint = definitionFingerprint;
+    this.#record = defaultRecord(definition);
     this.#testWritesEnabled = testWritesEnabled;
     this.#afterDurableWriteForTests = testOptions?.afterDurableWriteForTests ??
       null;
@@ -729,7 +914,7 @@ export class M0FeatureHost {
     this.#hubPublicationTimeoutMs =
       testOptions?.hubPublicationTimeoutMsForTests ??
         2_000;
-    this.#store = new PackageStore(root);
+    this.#store = new PackageStore(root, definition);
     this.#recordPath = PathUtils.join(root, "state.json");
   }
 
@@ -741,20 +926,70 @@ export class M0FeatureHost {
     initialWriteFaultForTests?: WriteFaultPlan,
     testOptions?: M0FeatureHostTestOptions,
   ): Promise<M0FeatureHost> {
+    return await this.#openWithDefinition(
+      root,
+      experimentalOptIn,
+      testRoot,
+      reopenTestRoot,
+      initialWriteFaultForTests,
+      testOptions,
+      M0_FEATURE_DEFINITION,
+      "m0",
+    );
+  }
+
+  static async openForTests(
+    root: string,
+    experimentalOptIn: boolean,
+    reopenTestRoot: boolean,
+    initialWriteFaultForTests: WriteFaultPlan | undefined,
+    testOptions: M0FeatureHostTestOptions | undefined,
+    definitionInput: FeatureDefinition,
+  ): Promise<M0FeatureHost> {
+    return await this.#openWithDefinition(
+      root,
+      experimentalOptIn,
+      true,
+      reopenTestRoot,
+      initialWriteFaultForTests,
+      testOptions,
+      snapshotFeatureDefinition(definitionInput),
+      "feature",
+    );
+  }
+
+  static async #openWithDefinition(
+    root: string,
+    experimentalOptIn: boolean,
+    testRoot: boolean,
+    reopenTestRoot: boolean,
+    initialWriteFaultForTests: WriteFaultPlan | undefined,
+    testOptions: M0FeatureHostTestOptions | undefined,
+    definition: FeatureDefinition,
+    testRootPrefix: "m0" | "feature",
+  ): Promise<M0FeatureHost> {
     if (testOptions && !testRoot) {
       throw new Error("M0 test write observers require a test root");
     }
+    const definitionFingerprint = featureDefinitionFingerprint(definition);
+    const testRootPattern = testRootPrefix === "m0"
+      ? /^m0-[0-9a-f-]+$/
+      : /^feature-[0-9a-f-]+$/;
     const mode = Services.prefs.getStringPref("nora.startup.mode", "");
     if (
       (mode !== "dev" && mode !== "test") ||
       !experimentalOptIn ||
       (testRoot
         ? PathUtils.parent(root) !== TEST_ROOT ||
-          !/^m0-[0-9a-f-]+$/.test(PathUtils.filename(root))
-        : root !== ROOT)
+          !testRootPattern.test(PathUtils.filename(root))
+        : root !== ROOT ||
+          definitionFingerprint !== M0_DEFINITION_FINGERPRINT)
     ) throw new Error("M0 host is dev/test opt-in only");
     const opening = openingHosts.get(root);
     if (opening) {
+      if (openingDefinitions.get(root) !== definitionFingerprint) {
+        throw new Error("feature definition conflicts with existing root");
+      }
       if (
         testOptions?.afterDurableWriteForTests ||
         testOptions?.hubRegistryForTests
@@ -765,6 +1000,9 @@ export class M0FeatureHost {
     }
     const existing = owners.get(root);
     if (existing) {
+      if (existing.#definitionFingerprint !== definitionFingerprint) {
+        throw new Error("feature definition conflicts with existing root");
+      }
       if (
         testOptions?.afterDurableWriteForTests ||
         testOptions?.hubRegistryForTests
@@ -776,6 +1014,8 @@ export class M0FeatureHost {
     const host = new M0FeatureHost(
       root,
       testRoot,
+      definition,
+      definitionFingerprint,
       testOptions,
     );
     if (initialWriteFaultForTests) {
@@ -800,6 +1040,7 @@ export class M0FeatureHost {
         if (await IOUtils.exists(host.#recordPath)) {
           host.#record = validateRecord(
             await IOUtils.readJSON(host.#recordPath),
+            host.#definition,
           );
           if (
             !host.#record.blockedReason &&
@@ -822,11 +1063,15 @@ export class M0FeatureHost {
         throw error;
       }
     })();
+    openingDefinitions.set(root, definitionFingerprint);
     openingHosts.set(root, openingPromise);
     try {
       return await openingPromise;
     } finally {
-      if (openingHosts.get(root) === openingPromise) openingHosts.delete(root);
+      if (openingHosts.get(root) === openingPromise) {
+        openingHosts.delete(root);
+        openingDefinitions.delete(root);
+      }
     }
   }
 
@@ -875,7 +1120,7 @@ export class M0FeatureHost {
     if (committed || pending) {
       if (!txId || !request) throw new Error("invalid recovery origin");
       let base = pending ? withSnapshot(record, pending.before) : record;
-      let targetVersion: FixtureVersion | null = null;
+      let targetVersion: string | null = null;
       const episode = record.attempt;
       const tried = new Set([
         ...(episode?.attemptedDigests ?? []),
@@ -915,7 +1160,7 @@ export class M0FeatureHost {
         await this.#quarantine(txId, request, "recovery-attempt-exhausted");
         return;
       }
-      const targetDigest = FIXTURES[targetVersion].digest;
+      const targetDigest = this.#definition.fixtures[targetVersion].digest;
       const recoveryPending: PendingTransaction = pending ?? {
         op: request.op,
         txId,
@@ -970,7 +1215,7 @@ export class M0FeatureHost {
     const recoveryEpoch = Services.uuid.generateUUID().toString()
       .replace(/[{}]/g, "").toLowerCase();
     const startupRequest: Descriptor = {
-      featureId: FEATURE_ID,
+      featureId: this.#definition.featureId,
       op: "startup_recovery",
       expectedRevision: null,
       target: null,
@@ -1044,10 +1289,10 @@ export class M0FeatureHost {
     txId: string,
     request: Descriptor,
     pending: PendingTransaction,
-    targetVersion: FixtureVersion,
+    targetVersion: string,
     base: M0Record,
   ): Promise<void> {
-    const targetDigest = FIXTURES[targetVersion].digest;
+    const targetDigest = this.#definition.fixtures[targetVersion].digest;
     const episode = this.#record.attempt ??
       this.#newAttempt(txId, request, targetDigest);
     if (
@@ -1130,6 +1375,11 @@ export class M0FeatureHost {
 
   get diagnostics(): Readonly<M0Record> {
     return JSON.parse(JSON.stringify(this.#record)) as M0Record;
+  }
+
+  get generationForTests(): number {
+    if (!this.#testWritesEnabled) throw new Error("test diagnostics disabled");
+    return this.#generation;
   }
 
   get runningLifecycleForTests(): M0Lifecycle | null {
@@ -1286,7 +1536,7 @@ export class M0FeatureHost {
     this.#nextWriteFault = { mode, skip };
   }
 
-  install(txId: string, expectedRevision: number, version: FixtureVersion) {
+  install(txId: string, expectedRevision: number, version: string) {
     return this.#execute(txId, expectedRevision, "install", version);
   }
 
@@ -1298,7 +1548,7 @@ export class M0FeatureHost {
     return this.#execute(txId, expectedRevision, "disable", null);
   }
 
-  update(txId: string, expectedRevision: number, version: FixtureVersion) {
+  update(txId: string, expectedRevision: number, version: string) {
     return this.#execute(txId, expectedRevision, "update", version);
   }
 
@@ -1414,7 +1664,7 @@ export class M0FeatureHost {
       ...next,
       stateRevision: nextRevision,
     } as M0Record;
-    validateRecord(committed);
+    validateRecord(committed, this.#definition);
     const plan = this.#nextWriteFault;
     const fault = plan?.skip === 0 ? plan.mode : null;
     if (plan) {
@@ -1450,7 +1700,7 @@ export class M0FeatureHost {
     txId: string,
     expectedRevision: number,
     op: Operation,
-    target: FixtureVersion | null,
+    target: string | null,
   ): Promise<Outcome> {
     if (!isTxId(txId)) {
       return Promise.reject(new Error("invalid transaction ID"));
@@ -1459,14 +1709,14 @@ export class M0FeatureHost {
       return Promise.reject(new Error("invalid expected revision"));
     }
     const request: Descriptor = {
-      featureId: FEATURE_ID,
+      featureId: this.#definition.featureId,
       op,
       expectedRevision,
       target,
       recoveryEpoch: null,
       normalizedInput: `${op}:${target ?? "none"}`,
     };
-    if (!isDescriptor(request)) {
+    if (!isDescriptor(request, this.#definition)) {
       return Promise.reject(new Error("invalid transaction descriptor"));
     }
     const known = this.#findOutcome(txId);
@@ -1707,7 +1957,8 @@ export class M0FeatureHost {
 
   #selectedEligible(record: M0Record): boolean {
     return record.selectedVersion !== null &&
-      record.selectedDigest === FIXTURES[record.selectedVersion].digest &&
+      record.selectedDigest ===
+        this.#definition.fixtures[record.selectedVersion].digest &&
       record.selectedHealth === "verified" &&
       record.selectedHealthBuild?.hostBuildId === HOST_BUILD_ID &&
       record.selectedHealthBuild.runtimeBuildId === Services.appinfo.appBuildID;
@@ -1716,7 +1967,8 @@ export class M0FeatureHost {
   #rollbackEligible(record: M0Record): boolean {
     return record.rollbackVersion !== null &&
       record.rollbackDigest !== record.selectedDigest &&
-      record.rollbackDigest === FIXTURES[record.rollbackVersion].digest &&
+      record.rollbackDigest ===
+        this.#definition.fixtures[record.rollbackVersion].digest &&
       record.rollbackHealthBuild?.hostBuildId === HOST_BUILD_ID &&
       record.rollbackHealthBuild.runtimeBuildId === Services.appinfo.appBuildID;
   }
@@ -1725,7 +1977,7 @@ export class M0FeatureHost {
     record: M0Record,
     selectedDigest: string,
   ): {
-    version: FixtureVersion;
+    version: string;
     digest: string;
     healthBuild: M0Record["rollbackHealthBuild"];
   } | null {
@@ -2075,7 +2327,7 @@ export class M0FeatureHost {
         ...(episode?.attemptedDigests ?? []),
         ...(episode?.rejectedDigests ?? []),
       ]);
-      let fallbackVersion: FixtureVersion | null = null;
+      let fallbackVersion: string | null = null;
       if (
         before.desiredEnabled && before.selectedVersion &&
         before.selectedDigest &&
@@ -2088,7 +2340,8 @@ export class M0FeatureHost {
         !alreadyTried.has(before.rollbackDigest)
       ) fallbackVersion = before.rollbackVersion;
       if (fallbackVersion) {
-        const fallbackDigest = FIXTURES[fallbackVersion].digest;
+        const fallbackDigest =
+          this.#definition.fixtures[fallbackVersion].digest;
         let fallback: M0FixtureValue;
         try {
           fallback = await this.#store.load(fallbackDigest, fallbackVersion);
@@ -2196,7 +2449,10 @@ export class M0FeatureHost {
     }
     let selectedVersion = this.#record.selectedVersion;
     try {
-      const durable = validateRecord(await IOUtils.readJSON(this.#recordPath));
+      const durable = validateRecord(
+        await IOUtils.readJSON(this.#recordPath),
+        this.#definition,
+      );
       this.#record = durable;
       selectedVersion = durable.selectedVersion;
       const terminal = durable.lastOutcome;
@@ -2635,6 +2891,7 @@ export class M0FeatureHost {
   }
 
   #publishWindowMarker(entry: WindowEntry, token: string): void {
+    if (this.#definition.featureId !== M0_FEATURE_ID) return;
     const runtime = this.#running;
     if (
       !runtime || !this.#isCurrentGeneration(runtime, token) ||
@@ -2817,12 +3074,15 @@ export class M0FeatureHost {
         throw new Error("invalid HUB descriptor");
       }
       if (!this.#hubClaim) {
-        this.#hubClaim = this.#hubRegistry.claimHost(FEATURE_ID, this.#epoch);
+        this.#hubClaim = this.#hubRegistry.claimHost(
+          this.#definition.featureId,
+          this.#epoch,
+        );
       }
       let lease = this.#hubGenerationLeases.get(runtime);
       if (!lease) {
         lease = this.#hubRegistry.beginGeneration({
-          featureId: FEATURE_ID,
+          featureId: this.#definition.featureId,
           hostEpoch: this.#epoch,
           generation,
         });
@@ -2840,6 +3100,7 @@ export class M0FeatureHost {
     }
     if (
       request.type !== "marker" ||
+      this.#definition.featureId !== M0_FEATURE_ID ||
       !candidateCapabilities.includes("window-marker") ||
       Object.keys(request).length !== 2 ||
       typeof request.windowId !== "string"
@@ -2986,6 +3247,54 @@ export interface M0TestHostHandle {
   cleanup(): Promise<DisposeReport>;
 }
 
+export type FeatureHostTestHandle = M0TestHostHandle;
+
+function createTestHostHandle(
+  root: string,
+  createdRoot: boolean,
+  host: M0FeatureHost,
+): M0TestHostHandle {
+  let cleanupPromise: Promise<DisposeReport> | null = null;
+  return {
+    root,
+    host,
+    shutdown: () => host.shutdown(),
+    shutdownForRestartForTests: async () => {
+      const report = await host.shutdown();
+      if (report.errors.length === 0 && !report.timedOut) owners.delete(root);
+      return report;
+    },
+    committedPendingPublishRecordForTests: () =>
+      host.committedPendingPublishRecordForTests(),
+    failNextWriteForTests: (mode, skip) =>
+      host.setNextWriteFaultForTests(mode, skip),
+    deferWindowAttachForTests: (windowId) =>
+      host.deferWindowAttachForTests(windowId),
+    deferWindowAttachCompletionForTests: (windowId) =>
+      host.deferWindowAttachCompletionForTests(windowId),
+    registerWindowCleanupForTests: (windowId, cleanup) =>
+      host.registerWindowCleanupForTests(windowId, cleanup),
+    failWindowAttachForTests: (windowId) =>
+      host.failWindowAttachForTests(windowId),
+    excludeWindowsForTests: () => host.excludeWindowsForTests(),
+    useOnlyWindowForTests: (window) => host.useOnlyWindowForTests(window),
+    cleanup: () => {
+      if (cleanupPromise) return cleanupPromise;
+      cleanupPromise = (async () => {
+        const report = await host.shutdown();
+        if (
+          createdRoot && report.errors.length === 0 && !report.timedOut &&
+          !owners.has(root)
+        ) {
+          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
+        }
+        return report;
+      })();
+      return cleanupPromise;
+    },
+  };
+}
+
 export async function getM0FeatureHostExperimental(
   experimentalOptIn: boolean,
 ): Promise<M0FeatureHost> {
@@ -3023,43 +3332,36 @@ export async function createM0FeatureHostForTests(
       : undefined,
     testOptions,
   );
-  let cleanupPromise: Promise<DisposeReport> | null = null;
-  return {
+  return createTestHostHandle(root, createdRoot, host);
+}
+
+export async function createFeatureHostForTests(
+  definitionInput: FeatureDefinition,
+  experimentalOptIn: boolean,
+  rootOverride?: string,
+  reopenExisting = false,
+  testOptions?: M0FeatureHostTestOptions,
+): Promise<FeatureHostTestHandle> {
+  const mode = Services.prefs.getStringPref("nora.startup.mode", "");
+  if (!experimentalOptIn || (mode !== "dev" && mode !== "test")) {
+    throw new Error("feature host is dev/test opt-in only");
+  }
+  const definition = snapshotFeatureDefinition(definitionInput);
+  const suffix = Services.uuid.generateUUID().toString().replace(/[{}]/g, "")
+    .toLowerCase();
+  const root = rootOverride ?? PathUtils.join(TEST_ROOT, `feature-${suffix}`);
+  if (
+    PathUtils.parent(root) !== TEST_ROOT ||
+    !/^feature-[0-9a-f-]+$/.test(PathUtils.filename(root))
+  ) throw new Error("feature host test root must be isolated");
+  const createdRoot = !(await IOUtils.exists(root));
+  const host = await M0FeatureHost.openForTests(
     root,
-    host,
-    shutdown: () => host.shutdown(),
-    shutdownForRestartForTests: async () => {
-      const report = await host.shutdown();
-      if (report.errors.length === 0 && !report.timedOut) owners.delete(root);
-      return report;
-    },
-    committedPendingPublishRecordForTests: () =>
-      host.committedPendingPublishRecordForTests(),
-    failNextWriteForTests: (mode, skip) =>
-      host.setNextWriteFaultForTests(mode, skip),
-    deferWindowAttachForTests: (windowId) =>
-      host.deferWindowAttachForTests(windowId),
-    deferWindowAttachCompletionForTests: (windowId) =>
-      host.deferWindowAttachCompletionForTests(windowId),
-    registerWindowCleanupForTests: (windowId, cleanup) =>
-      host.registerWindowCleanupForTests(windowId, cleanup),
-    failWindowAttachForTests: (windowId) =>
-      host.failWindowAttachForTests(windowId),
-    excludeWindowsForTests: () => host.excludeWindowsForTests(),
-    useOnlyWindowForTests: (window) => host.useOnlyWindowForTests(window),
-    cleanup: () => {
-      if (cleanupPromise) return cleanupPromise;
-      cleanupPromise = (async () => {
-        const report = await host.shutdown();
-        if (
-          createdRoot &&
-          report.errors.length === 0 && !report.timedOut && !owners.has(root)
-        ) {
-          await IOUtils.remove(root, { recursive: true, ignoreAbsent: true });
-        }
-        return report;
-      })();
-      return cleanupPromise;
-    },
-  };
+    experimentalOptIn,
+    reopenExisting,
+    undefined,
+    testOptions,
+    definition,
+  );
+  return createTestHostHandle(root, createdRoot, host);
 }

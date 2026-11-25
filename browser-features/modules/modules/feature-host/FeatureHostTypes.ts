@@ -7,8 +7,8 @@ export type HubFixtureVersion =
   | "hub-staged-failure";
 export type FixtureVersion = M0FixtureVersion | HubFixtureVersion;
 
-export interface PinnedFixture {
-  version: FixtureVersion;
+export interface PinnedFixture<Version extends string = FixtureVersion> {
+  readonly version: Version;
   digest: string;
   source: string;
   compatibility: {
@@ -19,4 +19,9 @@ export interface PinnedFixture {
   };
 }
 
-export type M0Fixture = PinnedFixture;
+export interface FeatureDefinition {
+  featureId: string;
+  fixtures: Readonly<Record<string, PinnedFixture<string>>>;
+}
+
+export type M0Fixture = PinnedFixture<FixtureVersion>;

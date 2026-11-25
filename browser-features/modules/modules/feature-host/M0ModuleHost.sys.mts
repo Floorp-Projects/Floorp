@@ -517,6 +517,7 @@ function bounded<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   });
 }
 
+/** The system-principal compartment separates lifecycle for core-trusted pinned source, not untrusted code. */
 export class M0ModuleHost {
   readonly scope = new ResourceScope();
   #sandbox: Sandbox | null = null;
