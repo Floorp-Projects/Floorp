@@ -52,7 +52,7 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def read_json(path):
+def read_json(path, *, max_bytes=1024 * 1024):
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -61,9 +61,10 @@ def read_json(path):
             result[key] = value
         return result
 
-    data = path.read_bytes()
-    if len(data) > 1024 * 1024:
-        raise ValueError("oversized policy")
+    with path.open("rb") as stream:
+        data = stream.read(max_bytes + 1)
+    if len(data) > max_bytes:
+        raise ValueError("oversized JSON file")
     return json.loads(data, object_pairs_hook=unique)
 
 

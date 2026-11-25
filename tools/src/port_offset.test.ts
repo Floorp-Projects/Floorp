@@ -93,11 +93,13 @@ Deno.test("auto skips every busy ladder rung", async () => {
   assertEquals(offset, 2 * DEV_PORT_NON_OVERLAP_SPAN);
 });
 
-Deno.test("auto candidates are 0 plus the non-overlap ladder", () => {
+Deno.test("auto candidates skip the ladder rung that uses the installed port", () => {
   const candidates = autoPortOffsetCandidates();
   assertEquals(candidates[0], 0);
   assertEquals(candidates[1], DEV_PORT_NON_OVERLAP_SPAN);
   assertEquals(candidates[2], 2 * DEV_PORT_NON_OVERLAP_SPAN);
+  assertEquals(candidates.includes(53080), false); // 5181 + 53080 = 58261
+  assertEquals(candidates.includes(53100), true);
   // differences between any two candidates are >= the span, so candidate port
   // sets (Marionette included) are pairwise disjoint by design
   for (let i = 1; i < candidates.length; i++) {
@@ -110,19 +112,19 @@ Deno.test("auto candidates are 0 plus the non-overlap ladder", () => {
   }
 });
 
-Deno.test("start log reports the Marionette port the launch listens on", () => {
+Deno.test("start log reports the launch Marionette port and OS-Server URL", () => {
   // Offset 0 writes no marionette.port pref, so the default 2828 applies.
   assertEquals(launchMarionettePort(0), MARIONETTE_DEFAULT_PORT);
   assertEquals(MARIONETTE_DEFAULT_PORT, 2828);
   assertEquals(
     describeLaunchPorts(0),
-    "port-offset=0 marionette=2828 pref=nora.dev.port_offset",
+    "port-offset=0 marionette=2828 os-server=http://127.0.0.1:5175 pref=nora.dev.port_offset",
   );
   // Non-zero offsets shift the 5180 base (Gate 2: offset 100 -> 5280).
   assertEquals(launchMarionettePort(100), 5280);
   assertEquals(
     describeLaunchPorts(100),
-    "port-offset=100 marionette=5280 pref=nora.dev.port_offset",
+    "port-offset=100 marionette=5280 os-server=http://127.0.0.1:5275 pref=nora.dev.port_offset",
   );
 });
 
@@ -161,6 +163,23 @@ Deno.test("osServerPortForOffset validates via the shared offset error", () => {
   );
 });
 
+Deno.test("manual offsets cannot map any dev port to the installed port", () => {
+  for (const basePort of launchPortsForOffset(0)) {
+    const offset = OS_SERVER_PRODUCTION_DEFAULT_PORT - basePort;
+    assertThrows(
+      () => parsePortOffsetSpec(String(offset)),
+      Error,
+      "installed Floorp OS-Server port 58261",
+    );
+  }
+  assertThrows(
+    () => osServerPortForOffset(53086),
+    Error,
+    "installed Floorp OS-Server port 58261",
+  );
+  assertEquals(parsePortOffsetSpec("53100"), 53100);
+});
+
 Deno.test(
   "dev OS port is an unused in-span gap, never a trusted page origin",
   () => {
@@ -185,9 +204,6 @@ Deno.test(
       ),
       false,
     );
-    // the packaged production default stays 58261 (dev band is 5175+offset;
-    // only the hand-picked offset 53086 lands back on 58261, caught by the
-    // launch probe set / OS-Server bind error, not silently shared)
     assertEquals(OS_SERVER_PRODUCTION_DEFAULT_PORT, 58261);
   },
 );

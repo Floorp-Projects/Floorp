@@ -5,15 +5,12 @@ import { parseArgs } from "@std/cli/parse-args";
 import {
   createOsTestClient,
   reconcileOsTestClientArgs,
+  resolveOsTestBaseUrl,
   resolveTokenFile,
 } from "../src/os_test_client.ts";
 import type { OsTestClient } from "../src/os_test_client_types.ts";
 
 // --token-file > FLOORP_OS_TOKEN_FILE; explicit paths only, no Home/profile discovery.
-// Python verifiers do not yet support this authenticated-client contract.
-
-const DEFAULT_BASE_URL =
-  Deno.env.get("FLOORP_OS_BASE_URL") ?? "http://127.0.0.1:58261";
 const FINGERPRINT_COMMENT_RE = /<!--fp:([a-z0-9]{8}(?:[a-z0-9]{8})?)-->/g;
 
 const TEST_PAGE_HTML = `<!doctype html>
@@ -1488,7 +1485,7 @@ async function testParallelTabStability(
 export async function main(argv: string[] = Deno.args): Promise<number> {
   const targetArgs = reconcileOsTestClientArgs([], argv);
   const parsed = parseArgs(targetArgs.verifierArgs, {
-    string: ["base-url", "concurrency-workers", "concurrency-loops"],
+    string: ["concurrency-workers", "concurrency-loops"],
     boolean: [
       "quick",
       "skip-browser-info",
@@ -1498,7 +1495,6 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
       "skip-concurrency",
     ],
     default: {
-      "base-url": DEFAULT_BASE_URL,
       "concurrency-workers": "3",
       "concurrency-loops": "2",
       quick: false,
@@ -1512,7 +1508,10 @@ export async function main(argv: string[] = Deno.args): Promise<number> {
 
   // Load/validate explicit credentials before starting fixtures or API requests.
   const runtime: RuntimeOptions = await createOsTestClient({
-    baseUrl: targetArgs.baseUrlFlag ?? String(parsed["base-url"]),
+    baseUrl: resolveOsTestBaseUrl(
+      targetArgs.baseUrlFlag,
+      Deno.env.get("FLOORP_OS_BASE_URL"),
+    ),
     tokenFile: resolveTokenFile(
       targetArgs.tokenFileFlag,
       Deno.env.get("FLOORP_OS_TOKEN_FILE"),

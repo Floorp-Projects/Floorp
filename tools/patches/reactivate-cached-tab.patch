@@ -1,0 +1,34 @@
+diff --git a/moz-src/browser/components/tabbrowser/AsyncTabSwitcher.sys.mjs b/moz-src/browser/components/tabbrowser/AsyncTabSwitcher.sys.mjs
+--- a/moz-src/browser/components/tabbrowser/AsyncTabSwitcher.sys.mjs
++++ b/moz-src/browser/components/tabbrowser/AsyncTabSwitcher.sys.mjs
+@@ -520,7 +520,6 @@
+   maybeActivateDocShell(tab) {
+-    // If we've reached the point where the requested tab has entered
+-    // the loaded state, but the DocShell is still not yet active, we
+-    // should activate it.
++    // A cached tab can lose its layers while its DocShell is inactive.
++    // Once selected, it needs an active DocShell to paint those layers.
+     let browser = tab.linkedBrowser;
+     let state = this.getTabState(tab);
+     let canCheckDocShellState =
+@@ -529,7 +528,8 @@
+     if (
+       tab == this.requestedTab &&
+       canCheckDocShellState &&
+-      state == this.STATE_LOADED &&
++      (state == this.STATE_LOADED ||
++        (state == this.STATE_LOADING && this.tabLayerCache.includes(tab))) &&
+       !browser.docShellIsActive &&
+       !this.windowHidden
+     ) {
+@@ -1067,6 +1067,10 @@
+     oldBrowser.deprioritize();
+     this.requestedTab = tab;
++    if (this.tabLayerCache.includes(tab)) {
++      this.maybeActivateDocShell(tab);
++    }
++
+     if (tabState == this.STATE_LOADED) {
+       this.maybeVisibleTabs.clear();
+       // We're switching to a tab that is still loaded.
+       // Make sure its priority is correct as it may

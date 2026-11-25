@@ -53,10 +53,17 @@ function assertHttpLoaderAllowed(): void {
   );
 }
 
-const isTestOwner = import.meta.env.MODE === "test" &&
+const isTestMode = import.meta.env.MODE === "test" ||
+  import.meta.env.MODE === "test-packaged";
+const isTestOwner = isTestMode &&
   claimTestRunOwnership(Services.ppmm.sharedData);
-if (import.meta.env.MODE !== "test" || isTestOwner) {
-  setStartupMarker("nora.startup.mode", import.meta.env.MODE);
+if (!isTestMode || isTestOwner) {
+  // Stage is a local dev launch with packaged assets. Its runtime profile
+  // token service recognizes the same dev marker as the HTTP-loader launch.
+  const startupMode = import.meta.env.MODE === "stage"
+    ? "dev"
+    : import.meta.env.MODE;
+  setStartupMarker("nora.startup.mode", startupMode);
   setStartupMarker("nora.startup.loader", "");
   setStartupMarker("nora.startup.test", "");
   setStartupMarker("nora.startup.error", "");
@@ -126,4 +133,10 @@ if (import.meta.env.MODE === "dev") {
 } else {
   //@ts-expect-error TS cannot find the module from chrome that is inner in Firefox
   await (await import("chrome://noraneko/content/core.js")).default();
+  // Explicit QA-only startup. Production builds never load the test entry.
+  if (import.meta.env.MODE === "test-packaged" && isTestOwner) {
+    //@ts-expect-error Packaged chrome resource, resolved by Gecko.
+    await (await import("chrome://noraneko/content/qa/packaged-tests.js"))
+      .default();
+  }
 }
