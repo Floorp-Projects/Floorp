@@ -75,3 +75,49 @@ export interface PlatformQaReport {
   startedAt: string;
   finishedAt: string;
 }
+
+/** File and clock access of a run, replaceable in tests. */
+export interface PlatformQaIo {
+  sha256File(file: string): Promise<string>;
+  openFile(file: string): Promise<ReadableStream<Uint8Array>>;
+  writeFile(file: string, data: Uint8Array): Promise<void>;
+  mkdir(dir: string): Promise<void>;
+  now(): string;
+}
+
+export interface PlatformQaCliResult {
+  exitCode: number;
+  stdout: string;
+}
+
+export interface PlatformQaCliDeps {
+  io?: PlatformQaIo;
+  readFile?: (file: string) => Promise<Uint8Array>;
+  taskStateExists?: (taskId: string) => boolean;
+  createTarget?: (
+    platform: QaPlatform,
+    config: unknown,
+    payloadFile?: string,
+  ) => Promise<{ target: PlatformQaTarget; redactions: string[] }>;
+  activeJobs?: (
+    worktree: string,
+    taskId: string,
+    platform: QaPlatform,
+  ) => string[];
+}
+
+/**
+ * Inputs of a platform QA step job (KAN-145). The hashes are taken when the
+ * job starts and are part of its command, so a rerun after a lost attempt
+ * checks that the payload and target config are still the same files.
+ */
+export interface PlatformStepOptions {
+  platform: QaPlatform;
+  targetFile: string;
+  targetSha256: string;
+  payloadFile: string;
+  payloadSha256: string;
+  evalScript?: string;
+  expect?: string;
+  startUrl?: string;
+}

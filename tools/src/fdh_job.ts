@@ -71,28 +71,15 @@ import {
   stopProcessTree,
 } from "./fdh_job_process.ts";
 
-import { platformAssertionName, type QaPlatform } from "./fdh_platform_qa.ts";
+import { platformAssertionName } from "./fdh_platform_qa.ts";
+import type { PlatformStepOptions } from "./fdh_platform_qa_types.ts";
 
 /** `fdh.ts`, which the detached executor runs as `job exec`. */
 const FDH_CLI = path.fromFileUrl(new URL("../fdh.ts", import.meta.url));
 
 export type StepKind = "build" | "test" | "platform";
 
-/**
- * Inputs of a platform QA step (KAN-145). The hashes are taken when the job
- * starts and are part of its command, so a rerun after a lost attempt checks
- * that the payload and target config are still the same files.
- */
-export interface PlatformStepOptions {
-  platform: QaPlatform;
-  targetFile: string;
-  targetSha256: string;
-  payloadFile: string;
-  payloadSha256: string;
-  evalScript?: string;
-  expect?: string;
-  startUrl?: string;
-}
+export type { PlatformStepOptions } from "./fdh_platform_qa_types.ts";
 
 /** Report directory of a task's platform QA runs. */
 export function platformQaOutDir(worktree: string, taskId: string): string {

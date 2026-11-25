@@ -517,3 +517,44 @@ Deno.test("platform QA: any IPv4 address is redacted, versions are not", () => {
   );
   assertEquals(redact({ v: "1.2.3.4.5" }, []), { v: "1.2.3.4.5" });
 });
+
+Deno.test("platform QA CLI: a changed target config replaces an older report", async () => {
+  const { io, files } = memoryIo();
+  const result = await runPlatformQaCli([
+    "run",
+    "--platform=linux",
+    `--task-id=${TASK}`,
+    "--target=c.json",
+    `--target-sha256=${SHA}`,
+    "--payload=f.tar.xz",
+    `--payload-sha256=${SHA}`,
+    "--out=/out",
+  ], {
+    io,
+    readFile: () => Promise.resolve(bytes("{}")),
+    createTarget: () => {
+      throw new Error("unreachable");
+    },
+  });
+  assertEquals(result.exitCode, 1);
+  const written = JSON.parse(
+    new TextDecoder().decode(files.get("/out/linux-report.json")),
+  );
+  assertEquals(written.outcome, "failed");
+  assertEquals(written.reason, "target config changed since the job started");
+  assertEquals(JSON.parse(result.stdout).outcome, "failed");
+});
+
+Deno.test("platform QA: the image is not built while other blockers stand", async () => {
+  const { target, calls } = fakeTarget({
+    preflights: [{
+      ready: false,
+      blockers: ["low-disk", "image-missing"],
+      needsPrepare: true,
+    }],
+  });
+  const report = await runPlatformQa(target, RUN, memoryIo().io);
+  assertEquals(report.outcome, "blocked");
+  assertEquals(report.reason, "blocked: low-disk, image-missing");
+  assertEquals(calls, ["preflight"]);
+});

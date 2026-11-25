@@ -31,6 +31,9 @@ import { QaTargetError } from "./fdh_qa_remote.ts";
 import { taskStatePath, validateTaskId } from "./fdh_task.ts";
 import { isTerminal, listJobIds, readJob } from "./fdh_executor.ts";
 import type {
+  PlatformQaCliDeps,
+  PlatformQaCliResult,
+  PlatformQaIo,
   PlatformQaOutcome,
   PlatformQaPreflight,
   PlatformQaReport,
@@ -41,6 +44,9 @@ import type {
 } from "./fdh_platform_qa_types.ts";
 
 export type {
+  PlatformQaCliDeps,
+  PlatformQaCliResult,
+  PlatformQaIo,
   PlatformQaOutcome,
   PlatformQaReport,
   PlatformQaRunOptions,
@@ -304,14 +310,6 @@ export async function createPlatformTarget(
   };
 }
 
-export interface PlatformQaIo {
-  sha256File(file: string): Promise<string>;
-  openFile(file: string): Promise<ReadableStream<Uint8Array>>;
-  writeFile(file: string, data: Uint8Array): Promise<void>;
-  mkdir(dir: string): Promise<void>;
-  now(): string;
-}
-
 export const DENO_IO: PlatformQaIo = {
   async sha256File(file) {
     return encodeHex(
@@ -413,7 +411,11 @@ export async function runPlatformQa(
         if (!reset.clean) fail("reset: target not clean");
         pre = await step("preflight", () => target.preflight());
       }
-      if (pre.needsPrepare) {
+      // Building the image needs disk and memory: only when nothing else
+      // blocks the target.
+      if (
+        pre.needsPrepare && pre.blockers.every((b) => b === "image-missing")
+      ) {
         await step("prepare", () => target.prepare());
         pre = await step("preflight", () => target.preflight());
       }
@@ -603,19 +605,6 @@ function need(options: Map<string, string>, key: string): string {
   return value;
 }
 
-export interface PlatformQaCliResult {
-  exitCode: number;
-  stdout: string;
-}
-
-export interface PlatformQaCliDeps {
-  io?: PlatformQaIo;
-  readFile?: (file: string) => Promise<Uint8Array>;
-  taskStateExists?: (taskId: string) => boolean;
-  createTarget?: typeof createPlatformTarget;
-  activeJobs?: typeof activePlatformJobs;
-}
-
 /** `fdh platform-qa <run|cleanup> ...` (argv without the leading word). */
 export async function runPlatformQaCli(
   argv: string[],
@@ -763,13 +752,34 @@ export async function runPlatformQaCli(
     );
     const outDir = need(options, "out");
     if (targetSha !== options.get("target-sha256")) {
+      const at = io.now();
+      const refused: PlatformQaReport = {
+        schema: "fdh-platform-qa-report/v1",
+        taskId,
+        platform,
+        outcome: "failed",
+        reason: "target config changed since the job started",
+        payload: {
+          name: path.basename(need(options, "payload")),
+          sha256: need(options, "payload-sha256"),
+          version: null,
+        },
+        probe: null,
+        eval: null,
+        screenshot: null,
+        cleanupClean: null,
+        steps: [],
+        startedAt: at,
+        finishedAt: at,
+      };
+      await io.mkdir(outDir);
+      await io.writeFile(
+        path.join(outDir, `${platform}-report.json`),
+        new TextEncoder().encode(JSON.stringify(refused, null, 2) + "\n"),
+      );
       return {
         exitCode: 1,
-        stdout: JSON.stringify({
-          platform,
-          outcome: "failed",
-          reason: "target config changed since the job started",
-        }),
+        stdout: summaryLine(refused, `${platform}-report.json`),
       };
     }
     const created = await createTarget(
