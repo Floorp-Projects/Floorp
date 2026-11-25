@@ -98,11 +98,6 @@ export const SETTING_FIELDS: SettingFieldDefinition[] = [
     "titleKey": "design.uiCustomization.multirowTab.newtabInsideEnabled",
   },
   {
-    "id": "tab-sleep-exclusion-enabled",
-    "route": "/features/design",
-    "titleKey": "design.tabSleepExclusion.enable",
-  },
-  {
     "id": "open-new-window-behavior",
     "route": "/features/design",
     "titleKey": "design.tabWindowBehavior.openLinks",
@@ -232,6 +227,21 @@ export const SETTING_FIELDS: SettingFieldDefinition[] = [
     "id": "show-toolbar",
     "route": "/features/webapps",
     "titleKey": "progressiveWebApp.showToolbar",
+  },
+  {
+    "id": "tab-auto-unload-enabled",
+    "route": "/features/performance",
+    "titleKey": "performance.tabAutoUnload.enable",
+  },
+  {
+    "id": "tab-auto-unload-memory-threshold",
+    "route": "/features/performance",
+    "titleKey": "performance.tabAutoUnload.memoryThreshold",
+  },
+  {
+    "id": "tab-auto-unload-min-inactive",
+    "route": "/features/performance",
+    "titleKey": "performance.tabAutoUnload.minInactive",
   },
   {
     "id": "idle-memory-reclaim-enabled",

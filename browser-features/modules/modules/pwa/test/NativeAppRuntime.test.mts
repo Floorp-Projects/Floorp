@@ -9,6 +9,7 @@ import {
 import { MacAppShimInstaller } from "../MacAppShimInstaller.sys.mts";
 import { AppRegistry } from "../AppRegistry.sys.mts";
 import { getMacAppBundle, MacOSSupport } from "../supports/MacOS.sys.mts";
+import { MockMacOSSupport } from "../supports/test/MockMacOSSupport.ts";
 import type { Manifest } from "../type.ts";
 import type { NativeAppService } from "#libs/pwa/nativeAppRuntimeTypes.ts";
 import { buildSsbKey } from "#libs/pwa/ssbKeyUtils.ts";
@@ -172,7 +173,7 @@ async function nativeLaunchRegression(
   let initialized = false;
   try {
     Services.prefs.setBoolPref(pref, true);
-    await new MacOSSupport(options).install(app, store);
+    await new MockMacOSSupport(options).install(app, store);
     assert(runtime.isAvailable(), "real native Runtime is available");
     initialized = true;
     Services.obs.addObserver(observer, EVENT_TOPIC);
