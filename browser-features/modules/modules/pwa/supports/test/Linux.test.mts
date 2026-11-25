@@ -72,6 +72,259 @@ export async function runAllTests(): Promise<void> {
 
   await runTests("Linux.test.mts", [
     {
+      name: "the launcher carries the per-PWA app identity on both backends",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const entry = await IOUtils.readUTF8(files.desktop);
+          assert(
+            entry.includes("--name floorp-linux-launcher-regression"),
+            "Exec sets the GTK program name",
+          );
+          assert(
+            entry.includes("--class floorp-linux-launcher-regression"),
+            "Exec sets the GTK program class",
+          );
+          assert(
+            entry.includes(
+              "StartupWMClass=floorp-linux-launcher-regression",
+            ),
+            "StartupWMClass matches the window identity",
+          );
+        }),
+    },
+    {
+      name: "launch repairs a launcher written before --class existed",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const current = await IOUtils.readUTF8(files.desktop);
+          const legacy = current.replace(
+            " --class floorp-linux-launcher-regression",
+            "",
+          );
+          assert(legacy !== current, "Fixture drops the --class argument");
+          await IOUtils.writeUTF8(files.desktop, legacy);
+
+          await support.repair(manifest);
+
+          const repaired = await IOUtils.readUTF8(files.desktop);
+          assertEquals(repaired, current, "Legacy launcher is rewritten");
+        }),
+    },
+    {
+      name: "repair leaves a launcher owned by another profile alone",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const foreign = (await IOUtils.readUTF8(files.desktop)).replace(
+            "Exec=",
+            "Exec=another-profile ",
+          );
+          await IOUtils.writeUTF8(files.desktop, foreign);
+
+          await support.repair(manifest);
+
+          assertEquals(
+            await IOUtils.readUTF8(files.desktop),
+            foreign,
+            "Foreign launcher is preserved",
+          );
+        }),
+    },
+    {
+      name: "repair runs through the launcher mutation queue",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const current = await IOUtils.readUTF8(files.desktop);
+          await IOUtils.writeUTF8(
+            files.desktop,
+            current.replace(" --class floorp-linux-launcher-regression", ""),
+          );
+
+          // Hold the queue, then check that repair cannot slip past it.
+          let release!: () => void;
+          const held = new Promise<void>((resolve) => {
+            release = resolve;
+          });
+          const queued = LinuxSupport.withMutation(() => held);
+          let repaired = false;
+          const repair = support.repair(manifest).then(() => {
+            repaired = true;
+          });
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          assertEquals(
+            repaired,
+            false,
+            "repair waits for the in-flight launcher mutation",
+          );
+
+          release();
+          await queued;
+          await repair;
+          assertEquals(repaired, true, "repair completes once the queue drains");
+          assertEquals(
+            await IOUtils.readUTF8(files.desktop),
+            current,
+            "launcher is repaired after the queue drains",
+          );
+        }),
+    },
+    {
+      name: "the remap decision follows GDK_BACKEND when it is set",
+      fn: () => {
+        const isWaylandSession = () =>
+          (LinuxSupport as unknown as {
+            isWaylandSession(): boolean;
+          }).isWaylandSession();
+        const saved = {
+          gdk: Services.env.get("GDK_BACKEND"),
+          session: Services.env.get("XDG_SESSION_TYPE"),
+          display: Services.env.get("WAYLAND_DISPLAY"),
+        };
+        try {
+          Services.env.set("GDK_BACKEND", "x11");
+          Services.env.set("XDG_SESSION_TYPE", "wayland");
+          assertEquals(
+            isWaylandSession(),
+            false,
+            "GDK_BACKEND=x11 wins over a Wayland session type",
+          );
+
+          Services.env.set("GDK_BACKEND", "wayland,x11");
+          Services.env.set("XDG_SESSION_TYPE", "x11");
+          assertEquals(
+            isWaylandSession(),
+            true,
+            "the first GDK_BACKEND entry decides",
+          );
+
+          Services.env.set("GDK_BACKEND", "");
+          Services.env.set("XDG_SESSION_TYPE", "wayland");
+          assertEquals(
+            isWaylandSession(),
+            true,
+            "falls back to the session type when GDK_BACKEND is unset",
+          );
+        } finally {
+          Services.env.set("GDK_BACKEND", saved.gdk);
+          Services.env.set("XDG_SESSION_TYPE", saved.session);
+          Services.env.set("WAYLAND_DISPLAY", saved.display);
+        }
+      },
+    },
+    {
+      name: "renamed launcher deletion failure preserves icons for retry",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const renamed = PathUtils.join(
+            PathUtils.parent(files.desktop)!,
+            "renamed.desktop",
+          );
+          await IOUtils.move(files.desktop, renamed);
+          const remove = Object.getOwnPropertyDescriptor(IOUtils, "remove")!;
+          const originalRemove = IOUtils.remove.bind(IOUtils);
+          let rejected = false;
+          try {
+            Object.defineProperty(IOUtils, "remove", {
+              ...remove,
+              value: (path: string, options?: RemoveOptions) => {
+                if (path === renamed) {
+                  return Promise.reject(new Error("fixture deletion failure"));
+                }
+                return originalRemove(path, options);
+              },
+            });
+            await support.uninstall(manifest);
+          } catch {
+            rejected = true;
+          } finally {
+            Object.defineProperty(IOUtils, "remove", remove);
+          }
+          assert(rejected, "Uninstall reports the launcher deletion failure");
+          assert(await IOUtils.exists(renamed), "Failed launcher remains");
+          assert(await IOUtils.exists(files.svg), "Its icon remains usable");
+          await support.uninstall(manifest);
+          assert(!await IOUtils.exists(renamed), "Retry removes the launcher");
+          assert(!await IOUtils.exists(files.svg), "Retry removes the icon");
+        }),
+    },
+    {
+      name:
+        "uninstall finds renamed launchers by app and exact profile command",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const files = paths(root);
+          await support.install(manifest);
+          const original = await IOUtils.readUTF8(files.desktop);
+          const directory = PathUtils.parent(files.desktop)!;
+          const renamed = PathUtils.join(
+            directory,
+            "org.mozilla.firefox.webapp-{linux-launcher-regression}.desktop",
+          );
+          const duplicate = PathUtils.join(directory, "My renamed app.desktop");
+          const legacy = PathUtils.join(
+            PathUtils.parent(paths(root, true).desktop)!,
+            "Renamed legacy app.desktop",
+          );
+          await IOUtils.move(files.desktop, renamed);
+          await IOUtils.writeUTF8(duplicate, original);
+          await IOUtils.makeDirectory(PathUtils.parent(legacy)!, {
+            createAncestors: true,
+          });
+          await IOUtils.writeUTF8(legacy, original);
+          const preserved = [
+            [
+              "foreign-profile.desktop",
+              original.replace("Exec=", "Exec=other "),
+            ],
+            [
+              "foreign-id.desktop",
+              original.replace("X-Floorp-Id=", "X-Floorp-Id=other-"),
+            ],
+            ["duplicate-exec.desktop", original + "Exec=other\n"],
+            ["backup.txt", original],
+          ];
+          for (const [name, text] of preserved) {
+            await IOUtils.writeUTF8(PathUtils.join(directory, name), text);
+          }
+          const nested = PathUtils.join(directory, "nested.desktop");
+          await IOUtils.makeDirectory(nested);
+          await IOUtils.writeUTF8(
+            PathUtils.join(nested, "owned.desktop"),
+            original,
+          );
+          await support.uninstall(manifest);
+          for (
+            const path of [files.desktop, renamed, duplicate, legacy, files.svg]
+          ) {
+            assert(
+              !await IOUtils.exists(path),
+              `Owned launcher/icon removed: ${path}`,
+            );
+          }
+          for (const [name, text] of preserved) {
+            assertEquals(
+              await IOUtils.readUTF8(PathUtils.join(directory, name)),
+              text,
+              `Unrelated entry is preserved: ${name}`,
+            );
+          }
+          assertEquals(
+            await IOUtils.readUTF8(PathUtils.join(nested, "owned.desktop")),
+            original,
+            "Nested directories are not traversed",
+          );
+        }),
+    },
+    {
       name:
         "SVG install, rejected store update, and uninstall preserve the launcher",
       fn: () =>
@@ -308,6 +561,36 @@ export async function runAllTests(): Promise<void> {
               );
             }
           }
+        }),
+    },
+    {
+      name: "uninstall removes legacy launcher and icons together",
+      fn: () =>
+        withSandbox(async (root, support) => {
+          const legacy = paths(root, true);
+          Services.env.set("XDG_DATA_HOME", "");
+          await support.install(manifest);
+          Services.env.set(
+            "XDG_DATA_HOME",
+            PathUtils.join(root, "data 日本語"),
+          );
+          assert(
+            await IOUtils.exists(legacy.desktop),
+            "Legacy canonical launcher exists before uninstall",
+          );
+          await support.uninstall(manifest);
+          assert(
+            !await IOUtils.exists(legacy.desktop),
+            "Legacy canonical launcher is removed",
+          );
+          assert(
+            !await IOUtils.exists(legacy.svg),
+            "Legacy SVG icon is removed with it",
+          );
+          assert(
+            !await IOUtils.exists(legacy.png),
+            "Legacy PNG icon is removed with it",
+          );
         }),
     },
     {

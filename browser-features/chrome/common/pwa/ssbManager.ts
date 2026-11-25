@@ -144,8 +144,16 @@ export class SiteSpecificBrowserManager {
   }
 
   private listener = {
-    onLocationChange: () => {
-      this.onCurrentTabChangedOrLoaded();
+    onLocationChange: (browser: Browser, webProgress: nsIWebProgress) => {
+      if (
+        !webProgress.isTopLevel ||
+        browser !== globalThis.gBrowser.selectedBrowser
+      ) {
+        return;
+      }
+      void this.onCurrentTabChangedOrLoaded(browser).catch((error) => {
+        console.error("[SiteSpecificBrowserManager] Page check failed:", error);
+      });
     },
   };
 
@@ -188,17 +196,24 @@ export class SiteSpecificBrowserManager {
     installUserContextId?: number,
   ) {
     const requestedUrl = browser.currentURI.spec;
-    return await withLinuxMutation(async () => {
-      if (!browserStillShowsUrl(browser, requestedUrl)) return;
-      await this.installOrRunCurrentPage(browser, asPwa, installUserContextId);
+    const runRequest = await withLinuxMutation(async () => {
+      if (!browserStillShowsUrl(browser, requestedUrl)) return null;
+      return await this.installOrRunCurrentPage(
+        browser,
+        asPwa,
+        installUserContextId,
+      );
     });
+    if (runRequest) {
+      await this.runSsbByUrl(runRequest.url, runRequest.userContextId);
+    }
   }
 
   private async installOrRunCurrentPage(
     browser: Browser,
     asPwa: boolean,
     installUserContextId?: number,
-  ) {
+  ): Promise<{ url: string; userContextId?: number } | null> {
     const effectiveUserContextId = this.getEffectiveUserContextId(
       browser,
       installUserContextId,
@@ -211,14 +226,14 @@ export class SiteSpecificBrowserManager {
     );
 
     if (!browserStillShowsUrl(browser, currentPageUrl)) {
-      return;
+      return null;
     }
 
     if (isInstalled) {
       const currentTabSsb = await this.getCurrentTabSsb(browser);
 
       if (!currentTabSsb || !browserStillShowsUrl(browser, currentPageUrl)) {
-        return;
+        return null;
       }
 
       const ssbObj = await this.getIdByUrl(
@@ -227,18 +242,16 @@ export class SiteSpecificBrowserManager {
       );
 
       if (ssbObj && browserStillShowsUrl(browser, currentPageUrl)) {
-        await this.runSsbByUrl(
-          currentPageUrl,
-          effectiveUserContextId,
-        );
+        return { url: currentPageUrl, userContextId: effectiveUserContextId };
       }
+      return null;
     } else {
       const manifest = await this.createFromBrowser(browser, {
         useWebManifest: asPwa,
       });
 
       if (!manifest || !browserStillShowsUrl(browser, currentPageUrl)) {
-        return;
+        return null;
       }
 
       manifest.userContextId = effectiveUserContextId;
@@ -248,6 +261,7 @@ export class SiteSpecificBrowserManager {
       if (browserStillShowsUrl(browser, currentPageUrl)) {
         this.scheduleRunSsbByUrl(manifest.start_url, effectiveUserContextId);
       }
+      return null;
     }
   }
 
@@ -448,11 +462,12 @@ export class SiteSpecificBrowserManager {
     await this.ssbRunner.runSsbByUrl(url, userContextId);
   }
 
-  private async onCurrentTabChangedOrLoaded() {
-    const browser = globalThis.gBrowser.selectedBrowser as Browser;
+  private async onCurrentTabChangedOrLoaded(browser: Browser) {
+    const requestedUrl = browser.currentURI.spec;
     const currentPageCanBeInstalled = this.checkSiteCanBeInstall(
       browser.currentURI,
     );
+    if (!currentPageCanBeInstalled) return;
     const currentPageHasSsbManifest = await this.manifestProcesser
       .getManifestFromBrowser(browser, true);
     const currentPageIsInstalled = await this.checkCurrentPageIsInstalled(
@@ -460,16 +475,18 @@ export class SiteSpecificBrowserManager {
     );
 
     if (
-      (!currentPageCanBeInstalled || !currentPageHasSsbManifest) &&
-      !currentPageIsInstalled
-    ) {
+      browser !== globalThis.gBrowser.selectedBrowser ||
+      !browserStillShowsUrl(browser, requestedUrl)
+    ) return;
+
+    if (!currentPageHasSsbManifest && !currentPageIsInstalled) {
       return;
     }
 
     // Update UI elements
     this.updateUIElements(currentPageIsInstalled);
     Services.obs.notifyObservers(
-      {} as nsISupports,
+      browser as unknown as nsISupports,
       "nora-pwa-check-page-has-manifest",
     );
   }

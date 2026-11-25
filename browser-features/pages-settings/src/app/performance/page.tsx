@@ -6,7 +6,9 @@
 import styles from "@/components/common/settings-sections.module.css";
 import { useTranslation } from "react-i18next";
 import { IdleMemoryReclaim } from "@/app/performance/components/IdleMemoryReclaim.tsx";
+import { TabAutoUnload } from "@/app/performance/components/TabAutoUnload.tsx";
 
+/** Performance settings page with the unloading and reclaim cards. */
 export default function Page() {
   const { t } = useTranslation();
 
@@ -14,10 +16,13 @@ export default function Page() {
     <div className={`floorp-settings-page ${styles.page}`}>
       <div className="floorp-page-header">
         <h1 className="floorp-page-heading">{t("performance.title")}</h1>
-        <p className="floorp-page-description">{t("performance.description")}</p>
+        <p className="floorp-page-description">
+          {t("performance.description")}
+        </p>
       </div>
 
       <div className={styles.sections}>
+        <TabAutoUnload />
         <IdleMemoryReclaim />
       </div>
     </div>
