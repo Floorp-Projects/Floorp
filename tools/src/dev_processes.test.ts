@@ -7,6 +7,7 @@ import {
   readDevProcesses,
   recordDevProcess,
   reportDevPortConflict,
+  reportDevStartupPortConflict,
 } from "./dev_processes.ts";
 import type { DevProcessInfo } from "./dev_process_types.ts";
 
@@ -28,6 +29,9 @@ async function withCommandOutput(
         ),
         stderr: new Uint8Array(),
       });
+    }
+    spawn() {
+      return { output: () => this.output(), kill() {} };
     }
   }
   Object.defineProperty(Deno, "Command", {
@@ -57,6 +61,123 @@ function snapshotOutput(_cmd: string, args: string[]): string {
   // ps -o pid=,ppid=,pgid=,lstart=,args= (the group id is the pid here).
   return `${process.pid} ${process.ppid} ${process.pid} ${process.startTime} ${process.commandLine}`;
 }
+
+Deno.test("process inventory cancels its child, has its own deadline, and never writes a cancelled registration", async () => {
+  const directory = await Deno.makeTempDir();
+  const file = path.join(directory, "registry.json");
+  const descriptor = Object.getOwnPropertyDescriptor(Deno, "Command")!;
+  const empty = {
+    success: true,
+    code: 0,
+    signal: null,
+    stdout: new Uint8Array(),
+    stderr: new Uint8Array(),
+  };
+  let spawned = Promise.withResolvers<void>();
+  let output = Promise.withResolvers<Deno.CommandOutput>();
+  let kills = 0;
+  class MockCommand {
+    spawn() {
+      spawned.resolve();
+      return {
+        output: () => output.promise,
+        kill() {
+          kills++;
+          output.resolve(empty);
+        },
+      };
+    }
+  }
+  try {
+    await Deno.writeTextFile(file, "unchanged");
+    Object.defineProperty(Deno, "Command", {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      value: MockCommand,
+    });
+    const controller = new AbortController();
+    const registration = recordDevProcess(
+      81,
+      file,
+      undefined,
+      controller.signal,
+    );
+    await spawned.promise;
+    controller.abort(new Error("cancelled registration"));
+    await assertRejects(() => registration, Error, "cancelled registration");
+    assertEquals(await Deno.readTextFile(file), "unchanged");
+    spawned = Promise.withResolvers<void>();
+    output = Promise.withResolvers<Deno.CommandOutput>();
+    await assertRejects(
+      () => listDevProcesses(undefined, undefined, 20),
+      Error,
+      "Process inventory timed out",
+    );
+    assert(kills >= 2);
+    const before = kills;
+    await assertRejects(
+      () => listDevProcesses(undefined, controller.signal),
+      Error,
+      "cancelled registration",
+    );
+    assertEquals(kills, before);
+  } finally {
+    Object.defineProperty(Deno, "Command", descriptor);
+    await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("process inventory accepts an empty snapshot and propagates command failures", async () => {
+  for (const timeout of [0, -1, NaN, Infinity]) {
+    await assertRejects(
+      () => listDevProcesses(undefined, undefined, timeout),
+      TypeError,
+      "Invalid process inventory timeout",
+    );
+  }
+  await withCommandOutput(
+    () => "",
+    async () => assertEquals(await listDevProcesses(), []),
+  );
+  await withCommandOutput(() => {
+    throw new Error("inventory failed");
+  }, async () => {
+    await assertRejects(() => listDevProcesses(), Error, "inventory failed");
+  });
+});
+
+Deno.test("ordinary structured startup conflicts retain owner lookup and recovery advice; native and invalid ports stay private", async () => {
+  const error = console.error;
+  const printed: unknown[][] = [];
+  let lookups = 0;
+  console.error = (...args: unknown[]) => {
+    printed.push(args);
+  };
+  try {
+    await withCommandOutput(() => {
+      lookups++;
+      return "port 15611 PID 81";
+    }, async () => {
+      for (const port of [null, 0, -1, 65536, NaN]) {
+        await reportDevStartupPortConflict(port, false);
+      }
+      await reportDevStartupPortConflict(15611, true);
+      assertEquals(lookups, 0);
+      await reportDevStartupPortConflict(15611, false);
+      assertEquals(lookups, 1);
+      assert(JSON.stringify(printed).includes("PID 81"));
+      assert(JSON.stringify(printed).includes("owning checkout"));
+    });
+    const source = await Deno.readTextFile(
+      new URL("../dev-tool.ts", import.meta.url),
+    );
+    assert(
+      source.includes("await reportDevStartupPortConflict(port, nativeLaunch)"),
+    );
+  } finally {
+    console.error = error;
+  }
+});
 
 Deno.test("process recorder writes identity atomically and preserves orphan records", async () => {
   const directory = await Deno.makeTempDir();

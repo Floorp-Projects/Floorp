@@ -392,6 +392,9 @@ function withProcessSnapshot(
         stderr: new Uint8Array(),
       });
     }
+    spawn() {
+      return { output: () => this.output(), kill() {} };
+    }
   }
   Object.defineProperty(Deno, "Command", {
     configurable: true,

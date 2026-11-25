@@ -599,7 +599,10 @@ export async function run(
     },
     environment,
     async (child) => {
-      if (options.recordProcess && !await registerProcess(child.pid)) {
+      if (
+        options.recordProcess &&
+        !await registerProcess(child.pid, undefined, undefined, options.signal)
+      ) {
         throw new DevStartupFailure("registration-failed");
       }
       options.signal?.throwIfAborted();

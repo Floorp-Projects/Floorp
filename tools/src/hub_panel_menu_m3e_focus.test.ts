@@ -328,7 +328,7 @@ Deno.test("generated passive focus probes preserve exact native calls and restor
     [trigger.id]: trigger,
   };
   const popup = { state: "open" };
-  const listeners = new Set<unknown>();
+  const listeners = new Map<unknown, string>();
   const document = {
     get activeElement() {
       return active;
@@ -336,8 +336,8 @@ Deno.test("generated passive focus probes preserve exact native calls and restor
     hasFocus: () => true,
     getElementById: (id: string) => id === "appMenu-popup" ? popup : nodes[id],
     querySelectorAll: () => [old],
-    addEventListener: (_type: string, callback: unknown) =>
-      listeners.add(callback),
+    addEventListener: (type: string, callback: unknown) =>
+      listeners.set(callback, type),
     removeEventListener: (_type: string, callback: unknown) =>
       listeners.delete(callback),
   };
@@ -363,6 +363,7 @@ Deno.test("generated passive focus probes preserve exact native calls and restor
   const registry = new Registry();
   const originalRevoke = registry.revoke;
   const originalFocus = settings.focus;
+  let tick = 1000;
   const run = new Function(
     "input",
     "getTaskState",
@@ -370,6 +371,7 @@ Deno.test("generated passive focus probes preserve exact native calls and restor
     "ChromeUtils",
     "nodeId",
     "waitFor",
+    "Date",
     `const REGISTRY_URI = "controlled-registry"; return (async () => { ${HUB_PANEL_MENU_M3E_FOCUS_SCRIPT} })();`,
   );
   const execute = (action: string) =>
@@ -389,8 +391,25 @@ Deno.test("generated passive focus probes preserve exact native calls and restor
       { importESModule: () => ({ getSharedAppMenuRegistry: () => registry }) },
       (_state: unknown, node: unknown) => node ? 1 : null,
       (predicate: () => boolean) => Promise.resolve(assert(predicate())),
+      { now: () => ++tick },
     );
   await execute("prepare");
+  const pointer = [...listeners].find(([, type]) => type === "pointermove")![0];
+  assert(typeof pointer === "function");
+  const before = tick;
+  pointer({
+    isTrusted: true,
+    target: settings,
+    composedPath: () => [settings, document, win],
+  });
+  const probe = (task as unknown as {
+    focusProbe: {
+      dispatchMetadata: { eventAt: number };
+      events: { at: number }[];
+    };
+  }).focusProbe;
+  assertEquals(probe.events.at(-1)?.at, before + 1);
+  assertEquals(probe.dispatchMetadata.eventAt, before + 1);
   const lease = {};
   assertStrictEquals(registry.revoke(lease, "replacement"), returned);
   assertStrictEquals(calledThis, registry);

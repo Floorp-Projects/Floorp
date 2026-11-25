@@ -2,6 +2,7 @@
 
 import { join } from "@std/path";
 import { PROJECT_ROOT } from "./defines.ts";
+import { settleWithin } from "./async_utils.ts";
 
 export const DEV_STARTUP_STATUS_FILE = join(
   PROJECT_ROOT,
@@ -115,8 +116,12 @@ export async function startDevBrowser(
   onFailure: (error: unknown) => void,
   timeoutMs = 90000,
   reportFailure: (error: unknown) => Promise<void> = () => Promise.resolve(),
+  cleanupTimeoutMs = 5000,
 ): Promise<void> {
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+  if (
+    !Number.isFinite(timeoutMs) || timeoutMs <= 0 ||
+    !Number.isFinite(cleanupTimeoutMs) || cleanupTimeoutMs <= 0
+  ) {
     throw new TypeError("Invalid startup timeout");
   }
   const controller = new AbortController();
@@ -151,12 +156,17 @@ export async function startDevBrowser(
     await ready.promise;
   } catch (error) {
     controller.abort(error);
-    try {
-      await shutdown();
-    } finally {
-      await pending?.catch(() => {});
-    }
-    await reportFailure(error);
+    await settleWithin(
+      Promise.allSettled([
+        Promise.resolve().then(shutdown),
+        pending,
+      ]),
+      cleanupTimeoutMs,
+    );
+    await settleWithin(
+      Promise.resolve().then(() => reportFailure(error)),
+      cleanupTimeoutMs,
+    );
     throw error;
   } finally {
     clearTimeout(timer);

@@ -234,10 +234,12 @@ export const ProcessUtils = {
       env: environment,
     }).spawn();
 
+    const cancelled = Promise.withResolvers<never>();
     const abort = () => {
       try {
         child.kill("SIGKILL");
       } catch { /* Already exited. */ }
+      cancelled.reject(signal?.reason);
     };
     signal?.addEventListener("abort", abort, { once: true });
     if (signal?.aborted) abort();
@@ -268,7 +270,13 @@ export const ProcessUtils = {
     let streams: Promise<unknown> | undefined;
 
     try {
-      await onSpawn?.(child);
+      await Promise.race([
+        Promise.resolve().then(() => {
+          signal?.throwIfAborted();
+          return onSpawn?.(child);
+        }),
+        cancelled.promise,
+      ]);
       signal?.throwIfAborted();
       streams = Promise.all([
         readStream(child.stdout, "stdout"),

@@ -3,6 +3,7 @@
 import * as path from "@std/path";
 import { basename as posixBasename } from "@std/path/posix";
 import { PLATFORM, PROJECT_ROOT } from "./defines.ts";
+import { settleWithin } from "./async_utils.ts";
 import {
   matchesDevIdentity,
   parseDevProcessRegistry,
@@ -32,6 +33,7 @@ async function commandOutput(
   cmd: string,
   args: string[],
   input?: string,
+  signal?: AbortSignal,
 ): Promise<string> {
   const command = new Deno.Command(cmd, {
     args,
@@ -41,7 +43,29 @@ async function commandOutput(
     env: { LC_ALL: "C" },
   });
   let output: Deno.CommandOutput;
-  if (input === undefined) {
+  if (signal) {
+    signal.throwIfAborted();
+    const child = command.spawn();
+    const cancelled = Promise.withResolvers<never>();
+    const abort = () => {
+      try {
+        child.kill("SIGKILL");
+      } catch { /* Already exited. */ }
+      cancelled.reject(signal.reason);
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
+    const pending = Promise.resolve().then(() => child.output());
+    try {
+      output = await Promise.race([pending, cancelled.promise]);
+    } catch (error) {
+      abort();
+      await settleWithin(pending, 1000);
+      throw error;
+    } finally {
+      signal.removeEventListener("abort", abort);
+    }
+  } else if (input === undefined) {
     output = await command.output();
   } else {
     const child = command.spawn();
@@ -50,6 +74,7 @@ async function commandOutput(
     await writer.close();
     output = await child.output();
   }
+  signal?.throwIfAborted();
   if (!output.success) {
     throw new Error(
       `${cmd}: ${new TextDecoder().decode(output.stderr).trim()}`,
@@ -60,19 +85,50 @@ async function commandOutput(
 
 export async function listDevProcesses(
   pid?: number,
+  signal?: AbortSignal,
+  timeoutMs = 5000,
 ): Promise<DevProcessInfo[]> {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new TypeError("Invalid process inventory timeout");
+  }
+  const controller = new AbortController();
+  const abort = () => controller.abort(signal?.reason);
+  signal?.addEventListener("abort", abort, { once: true });
+  if (signal?.aborted) abort();
+  const timer = setTimeout(
+    () => controller.abort(new Error("Process inventory timed out")),
+    timeoutMs,
+  );
+  try {
+    return await captureDevProcesses(pid, controller.signal);
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", abort);
+  }
+}
+
+async function captureDevProcesses(
+  pid: number | undefined,
+  signal: AbortSignal,
+): Promise<DevProcessInfo[]> {
+  signal.throwIfAborted();
   if (PLATFORM === "windows") {
     const filter = pid === undefined ? "" : ` -Filter 'ProcessId = ${pid}'`;
-    const output = await commandOutput("powershell", [
-      "-NoProfile",
-      "-NonInteractive",
-      "-Command",
-      "$ErrorActionPreference = 'Stop'; [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); " +
-      `ConvertTo-Json -InputObject @(Get-CimInstance Win32_Process${filter} | ForEach-Object { ` +
-      "@{ pid = [int]$_.ProcessId; ppid = [int]$_.ParentProcessId; name = $_.Name; " +
-      "commandLine = [string]$_.CommandLine; startTime = $(if ($_.CreationDate) { $_.CreationDate.ToUniversalTime().ToString('o') } else { '' }) } " +
-      "}) -Compress",
-    ]);
+    const output = await commandOutput(
+      "powershell",
+      [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "$ErrorActionPreference = 'Stop'; [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); " +
+        `ConvertTo-Json -InputObject @(Get-CimInstance Win32_Process${filter} | ForEach-Object { ` +
+        "@{ pid = [int]$_.ProcessId; ppid = [int]$_.ParentProcessId; name = $_.Name; " +
+        "commandLine = [string]$_.CommandLine; startTime = $(if ($_.CreationDate) { $_.CreationDate.ToUniversalTime().ToString('o') } else { '' }) } " +
+        "}) -Compress",
+      ],
+      undefined,
+      signal,
+    );
     if (!output.trim()) return [];
     const parsed: unknown = JSON.parse(output.replace(/^\uFEFF/, ""));
     if (!Array.isArray(parsed)) throw new Error("Invalid Windows process list");
@@ -98,12 +154,22 @@ export async function listDevProcesses(
   }
   // An all-process snapshot also handles a requested PID that exited before ps.
   const selector = ["-axww"];
-  const output = await commandOutput("ps", [
-    ...selector,
-    "-o",
-    "pid=,ppid=,pgid=,lstart=,args=",
-  ]);
-  const names = await commandOutput("ps", [...selector, "-o", "pid=,comm="]);
+  const output = await commandOutput(
+    "ps",
+    [
+      ...selector,
+      "-o",
+      "pid=,ppid=,pgid=,lstart=,args=",
+    ],
+    undefined,
+    signal,
+  );
+  const names = await commandOutput(
+    "ps",
+    [...selector, "-o", "pid=,comm="],
+    undefined,
+    signal,
+  );
   const byPid = new Map(
     names.split("\n").flatMap((line) => {
       const match = line.match(/^\s*(\d+)\s+(.*)$/);
@@ -116,21 +182,28 @@ export async function listDevProcesses(
     pid === undefined || process.pid === pid
   );
   for (const process of processes) {
+    signal.throwIfAborted();
     process.name = byPid.get(process.pid) ?? "";
     if (PLATFORM === "linux") {
       try {
-        process.argv = (await Deno.readTextFile(`/proc/${process.pid}/cmdline`))
-          .split("\0").filter(Boolean);
+        process.argv =
+          (await Deno.readTextFile(`/proc/${process.pid}/cmdline`, { signal }))
+            .split("\0").filter(Boolean);
         // Include boot ID and kernel start ticks for sub-second PID identity.
-        const stat = await Deno.readTextFile(`/proc/${process.pid}/stat`);
+        const stat = await Deno.readTextFile(`/proc/${process.pid}/stat`, {
+          signal,
+        });
         const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
         const ticks = fields[19];
         // The group id from the same read as the start time.
         process.pgid = Number(fields[2]);
         const boot =
-          (await Deno.readTextFile("/proc/sys/kernel/random/boot_id")).trim();
+          (await Deno.readTextFile("/proc/sys/kernel/random/boot_id", {
+            signal,
+          })).trim();
         process.startTime = `${boot}:${ticks}`;
       } catch {
+        signal.throwIfAborted();
         // ps identity remains available for inaccessible/exited processes.
       }
     }
@@ -156,9 +229,10 @@ export async function recordDevProcess(
   pid: number,
   file = DEV_PROCESSES_FILE,
   expected?: DevProcessIdentity,
+  signal?: AbortSignal,
 ): Promise<boolean> {
   try {
-    const process = (await listDevProcesses(pid)).find((entry) =>
+    const process = (await listDevProcesses(pid, signal)).find((entry) =>
       entry.pid === pid
     );
     if (!process?.startTime) {
@@ -176,6 +250,7 @@ export async function recordDevProcess(
       );
       return false;
     }
+    signal?.throwIfAborted();
     const entries = readDevProcesses(file).filter((entry) => entry.pid !== pid);
     entries.push(identity);
     Deno.mkdirSync(path.dirname(file), { recursive: true });
@@ -187,6 +262,7 @@ export async function recordDevProcess(
     Deno.renameSync(temporary, file);
     return true;
   } catch (error) {
+    signal?.throwIfAborted();
     console.error("[dev-tool] Cannot record dev process:", error);
     return false;
   }
@@ -252,8 +328,35 @@ export async function terminateDevProcesses(
   await signalMatching("SIGKILL");
 }
 
+export async function reportDevStartupPortConflict(
+  port: number | null,
+  native: boolean,
+): Promise<void> {
+  if (
+    !native && port !== null && Number.isInteger(port) && port > 0 &&
+    port <= 65535
+  ) {
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => controller.abort(new Error("Port owner lookup timed out")),
+      5000,
+    );
+    try {
+      await reportDevPortConflict(
+        `Port ${port} is already in use`,
+        controller.signal,
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+}
+
 /** Called only after a startup log reports a port conflict. No ports change. */
-export async function reportDevPortConflict(log: string): Promise<boolean> {
+export async function reportDevPortConflict(
+  log: string,
+  signal?: AbortSignal,
+): Promise<boolean> {
   const lines = log.split(/\r?\n/).filter((line) =>
     /port[^\n]*already in use|EADDRINUSE/i.test(line)
   );
@@ -274,19 +377,29 @@ export async function reportDevPortConflict(log: string): Promise<boolean> {
         ? `-LocalPort ${[...ports].join(",")}`
         : "-State Listen";
       console.error(
-        await commandOutput("powershell", [
-          "-NoProfile",
-          "-NonInteractive",
-          "-Command",
-          `Get-NetTCPConnection ${filter} -ErrorAction Stop | ` +
-          "Select-Object -Property LocalPort,OwningProcess -Unique | ForEach-Object { " +
-          "'[dev-tool] Port ' + $_.LocalPort + ': PID ' + $_.OwningProcess }",
-        ]),
+        await commandOutput(
+          "powershell",
+          [
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            `Get-NetTCPConnection ${filter} -ErrorAction Stop | ` +
+            "Select-Object -Property LocalPort,OwningProcess -Unique | ForEach-Object { " +
+            "'[dev-tool] Port ' + $_.LocalPort + ': PID ' + $_.OwningProcess }",
+          ],
+          undefined,
+          signal,
+        ),
       );
     } else {
       const filter = ports.size ? `-iTCP:${[...ports].join(",")}` : "-iTCP";
       console.error(
-        await commandOutput("lsof", ["-nP", filter, "-sTCP:LISTEN"]),
+        await commandOutput(
+          "lsof",
+          ["-nP", filter, "-sTCP:LISTEN"],
+          undefined,
+          signal,
+        ),
       );
     }
   } catch (error) {

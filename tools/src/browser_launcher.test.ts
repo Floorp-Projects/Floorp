@@ -700,59 +700,75 @@ Deno.test("browser command retains the ordinary single-profile default", () => {
   assertEquals(command.includes("--no-remote"), false);
 });
 
-Deno.test("failed browser registration kills and awaits the child without publishing startup or browser output", async () => {
-  const descriptor = Object.getOwnPropertyDescriptor(Deno, "Command")!;
-  const envDescriptor = Object.getOwnPropertyDescriptor(Deno.env, "toObject")!;
-  let started = false;
-  let killed = false;
-  const status = Promise.withResolvers<Deno.CommandStatus>();
-  const empty = () =>
-    new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.close();
-      },
-    });
-  class MockCommand {
-    spawn() {
-      return {
-        pid: 81,
-        stdout: empty(),
-        stderr: empty(),
-        status: status.promise,
-        kill() {
-          killed = true;
-          status.resolve({ code: 137, success: false, signal: "SIGKILL" });
+Deno.test("failed or stalled browser registration kills and awaits the child without publishing startup or browser output", async () => {
+  for (const stalled of [false, true]) {
+    const descriptor = Object.getOwnPropertyDescriptor(Deno, "Command")!;
+    const envDescriptor = Object.getOwnPropertyDescriptor(
+      Deno.env,
+      "toObject",
+    )!;
+    let started = false;
+    let killed = false;
+    const status = Promise.withResolvers<Deno.CommandStatus>();
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const empty = () =>
+      new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.close();
         },
-      };
-    }
-  }
-  try {
-    Object.defineProperty(Deno.env, "toObject", {
-      ...envDescriptor,
-      value: () => ({}),
-    });
-    Object.defineProperty(Deno, "Command", {
-      configurable: descriptor.configurable,
-      enumerable: descriptor.enumerable,
-      value: MockCommand,
-    });
-    await assertRejects(
-      () =>
-        runBrowser({
-          binaryPath: "/mock/browser",
-          profilePath: "/mock/profile",
-          recordProcess: true,
-          onStarted: () => {
-            started = true;
+      });
+    class MockCommand {
+      spawn() {
+        return {
+          pid: 81,
+          stdout: empty(),
+          stderr: empty(),
+          status: status.promise,
+          kill() {
+            killed = true;
+            status.resolve({ code: 137, success: false, signal: "SIGKILL" });
           },
-        }, () => Promise.resolve(false)),
-      Error,
-      "registration-failed",
-    );
-    assertEquals({ started, killed }, { started: false, killed: true });
-  } finally {
-    Object.defineProperty(Deno, "Command", descriptor);
-    Object.defineProperty(Deno.env, "toObject", envDescriptor);
+        };
+      }
+    }
+    try {
+      Object.defineProperty(Deno.env, "toObject", {
+        ...envDescriptor,
+        value: () => ({}),
+      });
+      Object.defineProperty(Deno, "Command", {
+        configurable: descriptor.configurable,
+        enumerable: descriptor.enumerable,
+        value: MockCommand,
+      });
+      if (stalled) {
+        timer = setTimeout(
+          () => controller.abort(new Error("cancelled registration")),
+          20,
+        );
+      }
+      await assertRejects(
+        () =>
+          runBrowser({
+            binaryPath: "/mock/browser",
+            profilePath: "/mock/profile",
+            recordProcess: true,
+            signal: controller.signal,
+            onStarted: () => {
+              started = true;
+            },
+          }, () =>
+            stalled ? new Promise<boolean>(() => {}) : Promise.resolve(false)),
+        Error,
+        stalled ? "cancelled registration" : "registration-failed",
+      );
+      assertEquals({ started, killed }, { started: false, killed: true });
+    } finally {
+      clearTimeout(timer);
+      Object.defineProperty(Deno, "Command", descriptor);
+      Object.defineProperty(Deno.env, "toObject", envDescriptor);
+    }
   }
 });
 

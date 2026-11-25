@@ -18,6 +18,22 @@ function testEnvironment(token?: string) {
   };
 }
 
+async function exitOwner(path: string): Promise<void> {
+  const output = await new Deno.Command(Deno.execPath(), {
+    args: [
+      "eval",
+      `import { withDevStateLock } from ${
+        JSON.stringify(new URL("./dev_state_lock.ts", import.meta.url).href)
+      }; await withDevStateLock(() => { Deno.exit(0); }, "dead-parent", ${
+        JSON.stringify(path)
+      }, { get: () => undefined, set: () => {}, delete: () => {} });`,
+    ],
+    stdout: "null",
+    stderr: "piped",
+  }).output();
+  assertEquals(output.success, true);
+}
+
 Deno.test("delegated NotFound propagates once without reacquiring the parent's lock", async () => {
   const root = await Deno.makeTempDir();
   const path = `${root}/lock`;
@@ -80,19 +96,7 @@ Deno.test({
     const root = await Deno.makeTempDir();
     const path = `${root}/lock`;
     try {
-      const output = await new Deno.Command(Deno.execPath(), {
-        args: [
-          "eval",
-          `import { withDevStateLock } from ${
-            JSON.stringify(new URL("./dev_state_lock.ts", import.meta.url).href)
-          }; await withDevStateLock(() => { Deno.exit(0); }, "dead-parent", ${
-            JSON.stringify(path)
-          }, { get: () => undefined, set: () => {}, delete: () => {} });`,
-        ],
-        stdout: "null",
-        stderr: "piped",
-      }).output();
-      assertEquals(output.success, true);
+      await exitOwner(path);
       assertEquals(
         (await Deno.readTextFile(`${path}.owner`)).trim(),
         "dead-parent",
@@ -122,6 +126,66 @@ Deno.test({
       await Deno.remove(root, { recursive: true });
     }
   },
+});
+
+Deno.test("takeover excludes former delegation while the old marker still exists", async () => {
+  const root = await Deno.makeTempDir();
+  const path = `${root}/lock`;
+  const remove = Deno.remove;
+  const takingOver = Promise.withResolvers<void>();
+  const resume = Promise.withResolvers<void>();
+  let successor: Promise<void> | undefined;
+  let admission: Deno.FsFile | undefined;
+  let entered = false;
+  try {
+    await exitOwner(path);
+    let intercepted = false;
+    Deno.remove = async (target, options) => {
+      if (target === `${path}.owner` && !intercepted) {
+        intercepted = true;
+        takingOver.resolve();
+        await resume.promise;
+      }
+      return await remove(target, options);
+    };
+    successor = withDevStateLock(
+      () => Promise.resolve(),
+      "new",
+      path,
+      testEnvironment(),
+    );
+    await takingOver.promise;
+    assertEquals(
+      (await Deno.readTextFile(`${path}.owner`)).trim(),
+      "dead-parent",
+    );
+    admission = await Deno.open(`${path}.lease`, { read: true, write: true });
+    assertEquals(await admission.tryLock(false), false);
+    const former = assertRejects(
+      () =>
+        withDevStateLock(
+          () => {
+            entered = true;
+            return Promise.resolve();
+          },
+          undefined,
+          path,
+          testEnvironment("dead-parent"),
+        ),
+      Error,
+      "delegation expired",
+    );
+    resume.resolve();
+    await former;
+    await successor;
+    assertEquals(entered, false);
+  } finally {
+    resume.resolve();
+    await successor;
+    Deno.remove = remove;
+    admission?.close();
+    await remove(root, { recursive: true });
+  }
 });
 
 Deno.test("successor closes expired delegation before draining leases; nested former children fail fast", async () => {

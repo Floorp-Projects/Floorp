@@ -29,6 +29,7 @@ import {
   recordDevProcess,
   registerWindowsBrowserListenerIdentity,
   reportDevPortConflict,
+  reportDevStartupPortConflict,
   terminateDevProcesses,
 } from "./src/dev_processes.ts";
 // Lazy imports for rebuild — avoids type-checking injector.ts at dev-tool level
@@ -335,6 +336,9 @@ async function cmdStart() {
           startup.port <= 65535
         ? startup.port
         : null;
+      if (code === "port-conflict") {
+        await reportDevStartupPortConflict(port, nativeLaunch);
+      }
       throw new Error(
         `Dev startup failed: ${code}; port=${port}; status=${DEV_STARTUP_STATUS_FILE}`,
       );

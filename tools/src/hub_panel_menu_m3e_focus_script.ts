@@ -69,15 +69,16 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
       for (const type of ["focusin", "keydown", "pointerdown", "pointermove", "blur", "popuphidden", "unload"]) {
         const target = type === "blur" || type === "unload" ? win : win.document;
         const listener = (event) => {
+          const at = Date.now();
           audit.dispatchEvent = event;
           const path = event.composedPath();
-          audit.dispatchMetadata = { kind: "event", type, trusted: event.isTrusted, eventAt: Date.now(), windowTarget: event.target === win || event.target === win.document, target: path.includes(settings) ? "settings" : path.includes(win.document.getElementById("appMenu-new-tab-button2")) ? "new-tab" : path.includes(win.gURLBar?.inputField) ? "urlbar" : "other" };
+          audit.dispatchMetadata = { kind: "event", type, trusted: event.isTrusted, eventAt: at, windowTarget: event.target === win || event.target === win.document, target: path.includes(settings) ? "settings" : path.includes(win.document.getElementById("appMenu-new-tab-button2")) ? "new-tab" : path.includes(win.gURLBar?.inputField) ? "urlbar" : "other" };
           if (audit.events.length >= 128) throw new Error("M3e focus audit overflow");
           const current = win.closed ? null : win.document.getElementById(buttonId);
           const active = win.closed ? null : win.document.activeElement;
           const fallback = active?.id === "appMenu-settings-button" || active?.id === "PanelUI-menu-button";
-          if (type === "focusin" && fallback && audit.fallbackAt === null) audit.fallbackAt = Date.now();
-          audit.events.push({ type, trusted: event.isTrusted, at: Date.now(), fallback, newButton: type === "focusin" && !!current && current !== old && active === current, windowTarget: event.target === win || event.target === win.document });
+          if (type === "focusin" && fallback && audit.fallbackAt === null) audit.fallbackAt = at;
+          audit.events.push({ type, trusted: event.isTrusted, at, fallback, newButton: type === "focusin" && !!current && current !== old && active === current, windowTarget: event.target === win || event.target === win.document });
         };
         target.addEventListener(type, listener, true);
         audit.removers.push(() => target.removeEventListener(type, listener, true));

@@ -52,6 +52,7 @@ export async function withDevStateLock<T>(
       mode: 0o600,
     });
     if (!ownerToken && inherited) {
+      await lockBefore(lease, false, deadline);
       locked = await file.tryLock(true);
       if (locked) {
         throw new Error(
@@ -65,29 +66,30 @@ export async function withDevStateLock<T>(
         if (!(error instanceof Deno.errors.NotFound)) throw error;
       }
       if (owner === inherited) {
-        await lockBefore(lease, false, deadline);
-        let current: string | undefined;
-        try {
-          current = (await Deno.readTextFile(ownerPath)).trim();
-        } catch (error) {
-          if (!(error instanceof Deno.errors.NotFound)) throw error;
-        }
-        if (current === inherited) return await operation();
+        return await operation();
       }
       throw new Error(
         "Dev state delegation expired; retry without the inherited owner token",
       );
     }
-    if (!locked) {
-      await lockBefore(file, true, deadline);
-      locked = true;
+    while (!locked) {
+      await lockBefore(lease, true, deadline);
+      locked = await file.tryLock(true);
+      if (!locked) {
+        await lease.unlock();
+        if (Date.now() >= deadline) {
+          throw new Error(
+            "Dev state is busy; retry after the current startup or operation finishes",
+          );
+        }
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
     }
     try {
       await Deno.remove(ownerPath);
     } catch (error) {
       if (!(error instanceof Deno.errors.NotFound)) throw error;
     }
-    await lockBefore(lease, true, deadline);
     await Deno.writeTextFile(ownerPath, ownerToken ?? crypto.randomUUID(), {
       mode: 0o600,
     });
@@ -97,7 +99,7 @@ export async function withDevStateLock<T>(
       (await Deno.readTextFile(ownerPath)).trim(),
     );
     await lease.unlock();
-    await lease.lock(false);
+    await lockBefore(lease, false, deadline);
     return await operation();
   } finally {
     try {

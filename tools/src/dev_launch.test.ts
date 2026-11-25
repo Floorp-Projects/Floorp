@@ -188,6 +188,75 @@ Deno.test("native Vite artifacts omit arbitrary output but retain split-chunk po
   }
 });
 
+Deno.test("startup failure releases the lock within its cleanup budget even if registration, shutdown or reporting never settle", async () => {
+  const root = await Deno.makeTempDir();
+  const environment = { get: () => undefined, set() {}, delete() {} };
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    for (const reporting of ["reject", "stall"]) {
+      const registration = Promise.withResolvers<void>();
+      let lateReady = () => {};
+      let exited = false;
+      let reported = false;
+      await assertRejects(
+        () =>
+          Promise.race([
+            withDevStateLock(
+              () =>
+                startDevBrowser(
+                  () => Promise.resolve(),
+                  (ready) => {
+                    lateReady = ready;
+                    return registration.promise;
+                  },
+                  () => new Promise<void>(() => {}),
+                  () => {
+                    exited = true;
+                  },
+                  () => {
+                    exited = true;
+                  },
+                  20,
+                  () => {
+                    reported = true;
+                    return reporting === "reject"
+                      ? Promise.reject(new Error("diagnostic write failed"))
+                      : new Promise<void>(() => {});
+                  },
+                  20,
+                ),
+              "startup",
+              `${root}/lock`,
+              environment,
+            ),
+            new Promise<never>((_, reject) => {
+              timer = setTimeout(
+                () => reject(new Error("unbounded cleanup")),
+                1000,
+              );
+            }),
+          ]),
+        DevStartupFailure,
+        "startup-timeout",
+      );
+      clearTimeout(timer);
+      await withDevStateLock(
+        () => Promise.resolve(),
+        "recovery",
+        `${root}/lock`,
+        environment,
+      );
+      lateReady();
+      registration.resolve();
+      await Promise.resolve();
+      assertEquals({ reported, exited }, { reported: true, exited: false });
+    }
+  } finally {
+    clearTimeout(timer);
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
 Deno.test("all checkout launch modes await startup inside the lock", async () => {
   const source = await Deno.readTextFile(
     new URL("../feles-build.ts", import.meta.url),

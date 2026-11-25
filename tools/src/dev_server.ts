@@ -42,9 +42,15 @@ export async function run(
 ): Promise<void> {
   const signal = options.signal;
   signal?.throwIfAborted();
+  const managed: ManagedViteProcess[] = [];
+  const stopOwned = () =>
+    stop(
+      managed.map((process) => process.child),
+      managed.flatMap((process) => process.output),
+    );
   let stopping: Promise<void> | undefined;
   const abort = () => {
-    stopping = stop();
+    stopping = stopOwned();
   };
   signal?.addEventListener("abort", abort, { once: true });
   try {
@@ -55,7 +61,7 @@ export async function run(
         `Dev server ports shifted by --port-offset +${portOffset}.`,
       );
     }
-    if (!await recordDevProcess(Deno.pid)) {
+    if (!await recordDevProcess(Deno.pid, undefined, undefined, signal)) {
       throw new DevStartupFailure("registration-failed");
     }
 
@@ -132,7 +138,9 @@ export async function run(
       }).spawn();
 
       const output: Promise<void>[] = [];
-      viteProcesses.push({ name: server.name, port, child, log, output });
+      const process = { name: server.name, port, child, log, output };
+      managed.push(process);
+      viteProcesses.push(process);
 
       const pipeToFile = async (
         stream: ReadableStream<Uint8Array> | null,
@@ -157,7 +165,7 @@ export async function run(
 
       // Start piping without awaiting so servers run concurrently
       output.push(pipeToFile(child.stdout), pipeToFile(child.stderr));
-      if (!await recordDevProcess(child.pid)) {
+      if (!await recordDevProcess(child.pid, undefined, undefined, signal)) {
         throw new DevStartupFailure("registration-failed");
       }
 
@@ -169,7 +177,7 @@ export async function run(
     logger.info("All Vite dev servers started. Verifying startup health...");
 
     const startupFailures: string[] = [];
-    for (const proc of viteProcesses) {
+    for (const proc of managed) {
       signal?.throwIfAborted();
       const status = await detectEarlyExit(proc, 2_000);
       signal?.throwIfAborted();
@@ -222,46 +230,43 @@ export async function run(
       logger.warn(`Failed to write ready string to writer: ${e?.message ?? e}`);
     }
   } catch (error) {
-    await stop();
+    await stopOwned();
     throw error;
   } finally {
     signal?.removeEventListener("abort", abort);
-    if (signal?.aborted) await (stopping ?? stop());
+    if (signal?.aborted) await (stopping ?? stopOwned());
   }
 }
 
-export async function stop(): Promise<void> {
-  const children = viteProcesses.flatMap((
-    process,
-  ) => [process.child.status, ...process.output]);
-  for (const process of viteProcesses) {
+export async function stop(
+  children: readonly Deno.ChildProcess[] = viteProcesses.map((process) =>
+    process.child
+  ),
+  output: readonly Promise<void>[] = viteProcesses.flatMap((process) =>
+    process.output
+  ),
+): Promise<void> {
+  shutdown(children);
+  await Promise.allSettled([
+    ...children.map((child) => child.status),
+    ...output,
+  ]);
+}
+
+export function shutdown(
+  children: readonly Deno.ChildProcess[] = viteProcesses.map((process) =>
+    process.child
+  ),
+): void {
+  logger.info("Shutting down Vite dev servers...");
+  viteProcesses = viteProcesses.filter((process) =>
+    !children.includes(process.child)
+  );
+  for (const child of children) {
     try {
-      process.child.kill("SIGKILL");
+      child.kill("SIGKILL");
     } catch { /* Already exited. */ }
   }
-  shutdown();
-  await Promise.allSettled(children);
-}
-
-export function shutdown(): void {
-  logger.info("Shutting down Vite dev servers...");
-  for (const proc of viteProcesses) {
-    try {
-      if (proc.child?.pid) {
-        try {
-          Deno.kill(proc.child.pid);
-        } catch {
-          // ignore
-        }
-      }
-      // deno-lint-ignore no-explicit-any
-    } catch (e: any) {
-      logger.warn(
-        `Failed to stop process ${proc.child?.pid}: ${e?.message ?? e}`,
-      );
-    }
-  }
-  viteProcesses = [];
   logger.success("Vite dev servers shut down.");
 }
 
