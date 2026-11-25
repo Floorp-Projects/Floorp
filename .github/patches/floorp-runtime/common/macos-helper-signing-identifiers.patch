@@ -1,0 +1,14 @@
+--- a/tools/signing/macos/mach_commands.py
++++ b/tools/signing/macos/mach_commands.py
+@@ -661,6 +661,11 @@
+         cs_cmd.append("--p12-password-file")
+         cs_cmd.append(p12_password_file_arg)
+ 
++    for identifier in ("org.mozilla.updater", "org.mozilla.dmgInstallHelper"):
++        helper_path = f"Contents/Library/LaunchServices/{identifier}"
++        if os.path.isfile(os.path.join(app, *helper_path.split("/"))):
++            cs_cmd.extend(["--binary-identifier", f"{helper_path}:{identifier}"])
++
+     temp_files_to_cleanup = []
+ 
+     for signing_group in signing_groups:
