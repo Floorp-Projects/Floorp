@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "sourceFormat": "work-record",
+  "envelope": {
+    "epoch": 1,
+    "principal": {
+      "id": "fdh-evidence-converter",
+      "kind": "agent",
+      "grantedBy": "authenticated-dsh-host"
+    },
+    "entities": [
+      {
+        "kind": "task",
+        "id": "scheduler:task:floorp-independent-negative",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "task-owner",
+        "label": "independent negative-path review of the QA3 source contract"
+      },
+      {
+        "kind": "job",
+        "id": "scheduler:job:floorp-independent-negative-01",
+        "issuer": "scheduler",
+        "owner": "UNVERIFIED",
+        "ownerRole": "job-owner",
+        "label": "negative record floorp-independent-negative-01"
+      },
+      {
+        "kind": "run",
+        "id": "executor:run:floorp-independent-negative-01",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "attempt",
+        "id": "executor:attempt:floorp-independent-negative-01:1",
+        "issuer": "executor",
+        "owner": "UNVERIFIED",
+        "ownerRole": "run-owner"
+      },
+      {
+        "kind": "session",
+        "id": "host:session:floorp-independent-negative-01-session",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "session-owner",
+        "context": "independent fixture-driven review"
+      },
+      {
+        "kind": "workspace",
+        "id": "host:workspace:floorp-independent-review",
+        "issuer": "host",
+        "owner": "UNVERIFIED",
+        "ownerRole": "workspace-owner",
+        "path": "/workspace/qa-review-v030/fix-qa309"
+      },
+      {
+        "kind": "approval",
+        "id": "host-authorization:approval:floorp-independent-negative-01-approval",
+        "issuer": "host-authorization",
+        "owner": "UNVERIFIED",
+        "ownerRole": "approver",
+        "label": "no approval is requested by this record",
+        "decision": "not-required"
+      }
+    ],
+    "relationships": [
+      {
+        "from": "scheduler:task:floorp-independent-negative",
+        "type": "task-has-job",
+        "to": "scheduler:job:floorp-independent-negative-01"
+      },
+      {
+        "from": "scheduler:job:floorp-independent-negative-01",
+        "type": "job-has-run",
+        "to": "executor:run:floorp-independent-negative-01"
+      },
+      {
+        "from": "executor:run:floorp-independent-negative-01",
+        "type": "run-has-attempt",
+        "to": "executor:attempt:floorp-independent-negative-01:1"
+      },
+      {
+        "from": "executor:run:floorp-independent-negative-01",
+        "type": "run-uses-session",
+        "to": "host:session:floorp-independent-negative-01-session"
+      },
+      {
+        "from": "executor:run:floorp-independent-negative-01",
+        "type": "run-in-workspace",
+        "to": "host:workspace:floorp-independent-review"
+      },
+      {
+        "from": "host-authorization:approval:floorp-independent-negative-01-approval",
+        "type": "approval-for-job",
+        "to": "scheduler:job:floorp-independent-negative-01"
+      }
+    ],
+    "taskStatus": {
+      "state": "succeeded",
+      "cancelRequested": false
+    },
+    "cancelRequested": false,
+    "stateTransition": {
+      "from": "running",
+      "to": "succeeded",
+      "at": null,
+      "reason": "all recorded negative expectations held"
+    }
+  },
+  "runtime": {
+    "os": {
+      "name": "linux",
+      "arch": "UNVERIFIED"
+    },
+    "build": {
+      "commit": null,
+      "repository": "Floorp-Projects/Floorp"
+    },
+    "packageDigest": null,
+    "toolchain": {
+      "dsh": {
+        "version": "UNVERIFIED",
+        "pin": "UNVERIFIED"
+      },
+      "floorp": {
+        "commit": null,
+        "pin": "UNVERIFIED"
+      }
+    }
+  },
+  "attempts": [
+    {
+      "run": "executor:run:floorp-independent-negative-01",
+      "attempt": 1,
+      "startedAt": null,
+      "endedAt": null,
+      "result": "passed",
+      "exitCode": null,
+      "logRef": "floorp-independent-negative-01.log",
+      "notes": "Fixture-driven negative run; the record carries no wall-clock window and no process exit code for the whole record."
+    }
+  ],
+  "operations": [
+    {
+      "input": "19 encoded JUnit report fixtures",
+      "target": "JUnit reader pre-parse rejection gate",
+      "order": 1,
+      "observation": "17 unsafe fixtures rejected before parsing (max parserCalls=0), 2 valid UTF-8 controls accepted"
+    },
+    {
+      "input": "protocol fixtures (valid exit-zero acceptance)",
+      "target": "command protocol outcome mapping",
+      "order": 2,
+      "observation": "9 case(s), acceptedAsZero=1"
+    },
+    {
+      "input": "pidfd race models (fixture only)",
+      "target": "signal recipient recheck",
+      "order": 3,
+      "observation": "3 model(s), wrongBirthSignalled=0"
+    },
+    {
+      "input": "one EMFILE injected at the real pidfd_open call",
+      "target": "transient cleanup fault handling",
+      "order": 4,
+      "observation": "faults=1; childAliveAfterHelperReturned=True; reaped=True"
+    }
+  ],
+  "assertions": [
+    {
+      "name": "unsafe-junit-rejected-before-parsing",
+      "expected": "17 unsafe fixtures rejected with parserCalls=0 and 2 valid UTF-8 controls accepted",
+      "actual": "17/17 unsafe rejected with parserCalls=0, 2/2 controls accepted",
+      "passed": true
+    },
+    {
+      "name": "only-valid-protocol-fixture-accepted-as-exit-zero",
+      "expected": "1",
+      "actual": "1",
+      "passed": true
+    },
+    {
+      "name": "fixture-tokens-absent-from-environment",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "name": "caller-subreaper-unchanged",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "name": "fixture-cleanup-reaped",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "name": "subreaper-restored-after-fault",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "name": "no-native-or-browser-executed",
+      "expected": "false",
+      "actual": "false",
+      "passed": true
+    }
+  ],
+  "environmentFidelity": {
+    "host": "Linux consumer environment /workspace/qa-review-v030/fix-qa309 (fixture-driven negative tests, no native or browser execution)",
+    "network": "not-used",
+    "matchesTarget": false,
+    "deviations": [
+      "nativeOrBrowserExecuted=false: no native or browser process ran",
+      "fault injection (one EMFILE at pidfd_open) is synthetic"
+    ],
+    "notes": "File-descriptor, subreaper and parser gates are observed with local fixtures; production failure rates are out of scope."
+  },
+  "inputFidelity": {
+    "inputs": [
+      {
+        "path": "tools/qa3/source.py",
+        "sha256": "99698eec43bc357db800a3400969595224f09ed3ffc77f80ec139f8f4a6c2115"
+      }
+    ],
+    "unchangedDuringRun": "unknown",
+    "deviations": [
+      "the record does not state whether inputs stayed unchanged during the negative run"
+    ],
+    "notes": "The only recorded input identity is sourceSHA256; no plan or lock digests are part of this record."
+  },
+  "visualJudge": null,
+  "cleanup": {
+    "result": "completed",
+    "details": [
+      "fixtureCleanup pid 49689 reaped=True",
+      "subreaperRestored=True",
+      "parentSubreaperUnchanged=True"
+    ],
+    "notes": "Cleanup is observed under an injected transient pidfd fault: the fixture child was reaped and the subreaper state was restored."
+  },
+  "limitations": [
+    "No build commit identity is recorded: build.commit and toolchain.floorp.commit stay null, and the code under test is identified only by its source SHA-256.",
+    "Runtime architecture is UNVERIFIED: the record carries no architecture, so os.arch is UNVERIFIED.",
+    "DSH toolchain pin is UNVERIFIED for this record.",
+    "No wall-clock attempt timestamps are recorded, so attempts carry null startedAt/endedAt.",
+    "No visual (look-and-feel) judgment was performed for this record; visualJudge is null.",
+    "Task/Job ownership is UNVERIFIED: the record names no owner, so owners are marked UNVERIFIED.",
+    "Fixture-only negative tests: no native build, product execution or cross-platform qualification is established here."
+  ],
+  "reproduction": {
+    "result": "not-reproduced",
+    "notes": "The unsafe-input procedure completed normally and no defect was observed: every unsafe encoded JUnit fixture was rejected before parsing (valid UTF-8 controls stayed accepted) and the injected cleanup fault did not leak the fixture child."
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "schema": "fdh-platform-qa-report/v1",
+  "taskId": "kan-145-fail",
+  "platform": "linux",
+  "outcome": "failed",
+  "reason": "eval-expect-not-found",
+  "payload": {
+    "name": "floorp-linux-x86_64.tar.xz",
+    "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9",
+    "version": "12.21.1@159.0.1"
+  },
+  "probe": {
+    "app": "Floorp",
+    "version": "159.0.1",
+    "buildId": "20261103153232",
+    "os": "Linux",
+    "windows": 1,
+    "url": "about:blank",
+    "contentSandboxLevel": 6
+  },
+  "eval": {
+    "script": "return Services.appinfo.name;",
+    "value": "Floorp",
+    "expect": "NotThere"
+  },
+  "screenshot": null,
+  "cleanupClean": true,
+  "steps": [
+    {
+      "name": "payload",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:41.580Z",
+      "finishedAt": "2026-11-25T04:37:41.666Z",
+      "result": {
+        "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9"
+      }
+    },
+    {
+      "name": "preflight",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:41.666Z",
+      "finishedAt": "2026-11-25T04:37:42.571Z",
+      "result": {
+        "ready": true,
+        "blockers": [],
+        "holder": null,
+        "needsPrepare": false,
+        "details": {
+          "freeBytes": 172104527872,
+          "availableMemoryMb": 6528,
+          "imagePresent": true,
+          "containerHolder": null,
+          "ready": true,
+          "blockers": [],
+          "image": "fdh-qa-linux:41fc5d48b6ce"
+        }
+      }
+    },
+    {
+      "name": "acquire",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:42.571Z",
+      "finishedAt": "2026-11-25T04:37:43.421Z",
+      "result": {
+        "ok": true,
+        "acquired": true
+      }
+    },
+    {
+      "name": "stage",
+      "ok": true,
+      "startedAt": "2026-11-25T04:37:43.421Z",
+      "finishedAt": "2026-11-25T04:38:02.128Z",
+      "result": {
+        "bytes": 108174124,
+        "version": "12.21.1@159.0.1"
+      }
+    },
+    {
+      "name": "launch",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:02.128Z",
+      "finishedAt": "2026-11-25T04:38:06.937Z",
+      "result": {
+        "version": "159.0.1"
+      }
+    },
+    {
+      "name": "probe",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:06.937Z",
+      "finishedAt": "2026-11-25T04:38:07.534Z",
+      "result": {
+        "app": "Floorp",
+        "version": "159.0.1",
+        "buildId": "20261103153232",
+        "os": "Linux",
+        "windows": 1,
+        "url": "about:blank",
+        "contentSandboxLevel": 6
+      }
+    },
+    {
+      "name": "eval",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:07.534Z",
+      "finishedAt": "2026-11-25T04:38:07.996Z",
+      "result": "Floorp"
+    },
+    {
+      "name": "cleanup",
+      "ok": true,
+      "startedAt": "2026-11-25T04:38:07.997Z",
+      "finishedAt": "2026-11-25T04:38:08.583Z",
+      "result": {
+        "containerRemoved": true,
+        "clean": true
+      }
+    }
+  ],
+  "startedAt": "2026-11-25T04:37:41.579Z",
+  "finishedAt": "2026-11-25T04:38:08.583Z"
+}

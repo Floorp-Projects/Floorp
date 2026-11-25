@@ -93,16 +93,17 @@ export namespace gFlexOrder {
     const launcher = document.getElementById("sidebar-container");
     if (
       document.documentElement.hasAttribute("sidebar-expand-on-hover") &&
-      (launcher?.hasAttribute("sidebar-launcher-expanded") ||
-        launcher?.hasAttribute("sidebar-ongoing-animations"))
+      launcher?.hasAttribute("sidebar-launcher-expanded")
     ) {
       // Expanding Firefox's launcher can let a flex-shrunk Floorp panel grow.
       // Keep the collapsed measurement so the hover target does not move.
       return;
     }
     const atEnd = untrack(orders).floorpSidebar > 0;
+    // Flex order follows the inline direction; DOMRects use physical edges.
+    const onRight = atEnd !== (getComputedStyle(browser)?.direction === "rtl");
     const browserRect = browser.getBoundingClientRect();
-    let occupiedEdge = atEnd ? browserRect.right : browserRect.left;
+    let occupiedEdge = onRight ? browserRect.right : browserRect.left;
     let hasVisiblePanel = false;
     for (
       const id of [
@@ -119,7 +120,10 @@ export namespace gFlexOrder {
         style.position === "fixed"
       ) continue;
       const rect = element.getBoundingClientRect();
-      occupiedEdge = atEnd
+      // Boxless elements (for example display:contents) have an empty rect at
+      // the origin. Counting it would reserve the entire right-side viewport.
+      if (rect.width <= 0 || rect.height <= 0) continue;
+      occupiedEdge = onRight
         ? Math.min(occupiedEdge, rect.left)
         : Math.max(occupiedEdge, rect.right);
       hasVisiblePanel = true;
@@ -127,7 +131,7 @@ export namespace gFlexOrder {
     const width = hasVisiblePanel
       ? Math.max(
         0,
-        atEnd
+        onRight
           ? browserRect.right - occupiedEdge
           : occupiedEdge - browserRect.left,
       )
@@ -149,10 +153,7 @@ export namespace gFlexOrder {
     const panelObserver = new MutationObserver(updateHoverOffset);
     const launcherObserver = new MutationObserver(() => {
       const launcher = document.getElementById("sidebar-container");
-      if (
-        !launcher?.hasAttribute("sidebar-launcher-expanded") &&
-        !launcher?.hasAttribute("sidebar-ongoing-animations")
-      ) {
+      if (!launcher?.hasAttribute("sidebar-launcher-expanded")) {
         scheduleHoverOffsetUpdate();
       }
     });
@@ -183,7 +184,6 @@ export namespace gFlexOrder {
           attributeFilter: [
             "sidebar-positionend",
             "sidebar-launcher-expanded",
-            "sidebar-ongoing-animations",
           ],
         });
       }

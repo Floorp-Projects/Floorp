@@ -9,6 +9,8 @@ import {
   runTests,
 } from "../../../test/utils/test_harness.ts";
 import type { TFloorpDesignConfigs } from "../type.ts";
+import leptonContentStylesRaw from "@nora/skin/lepton/css/leptonContent.css?raw";
+import leptonContentOverlayRaw from "@nora/skin/lepton/overlay/leptonContentOverlay.css?raw";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -107,8 +109,12 @@ function testLeptonNoUseTabColorAsToolbarColor(): void {
 
 function testLeptonHasExpectedStyleEntries(): void {
   const result = getCSSFromConfig(makeConfig("lepton"));
-  // Production: chromeStyles = [leptonChrome, leptonContent] (2).
-  // Dev:        chromeStylesRaw = [leptonChrome, LEPTON_COMPAT, navBar] (3).
+  // Production: chromeStyles = [leptonChrome, overlay, leptonContent,
+  //             overlay] (4).
+  // Dev:        chromeStylesRaw = [leptonChrome, overlay, LEPTON_COMPAT,
+  //             navBar] (4); the content sheet and its overlay are in
+  //             stylesRaw (AGENT_SHEET), like photon and protonfix.
+  // Order against the overlays is checked in lepton-overlay.test.ts.
   // Both branches must carry Lepton's chrome + content sheets; the Gecko 152
   // compat layer and the nav-bar color override are layered on as raw CSS.
   const chromeCount = result.chromeStyles?.length ??
@@ -121,6 +127,39 @@ function testLeptonHasExpectedStyleEntries(): void {
     (result.chromeStylesRaw?.length ?? 0) >= 1,
     "lepton should always carry inline raw chrome CSS (compat + navBar)",
   );
+}
+
+function testLeptonHasContentStyles(): void {
+  const result = getCSSFromConfig(makeConfig("lepton"));
+  const contentStyles = [...(result.styles ?? []), ...(result.stylesRaw ?? [])];
+  assert(
+    contentStyles.length > 0,
+    "lepton should register Lepton's content sheet for content documents",
+  );
+  if (result.styles) {
+    assert(
+      result.styles.includes(
+        "chrome://noraneko-skin/content/lepton/css/leptonContent.css",
+      ),
+      "lepton production content styles should include leptonContent.css",
+    );
+    assert(
+      result.styles.includes(
+        "chrome://noraneko-skin/content/lepton/overlay/leptonContentOverlay.css",
+      ),
+      "lepton production content styles should include the Floorp overlay",
+    );
+  }
+  if (result.stylesRaw) {
+    assert(
+      result.stylesRaw.includes(leptonContentStylesRaw),
+      "lepton dev content styles should include the raw leptonContent.css",
+    );
+    assert(
+      result.stylesRaw.includes(leptonContentOverlayRaw),
+      "lepton dev content styles should include the raw Floorp overlay",
+    );
+  }
 }
 
 function getChromeInlineCss(
@@ -141,8 +180,8 @@ function testLeptonPhotonProtonfixNavBarCssIncludesPersonalToolbar(): void {
       `${theme} navBar CSS should style #PersonalToolbar`,
     );
     assert(
-      css.includes("--tab-selected-bgcolor"),
-      `${theme} navBar CSS should follow selected tab color in the no-theme case`,
+      css.includes("--floorp-chrome-surface-color"),
+      `${theme} navBar CSS should paint the shared chrome surface color`,
     );
   }
 }
@@ -251,8 +290,12 @@ function testNavBarCssIsLwtAware(): void {
     `LWT navBar branch must prefer --toolbar-bgcolor over --toolbar-background-color`,
   );
 
-  // The no-theme branch SHOULD read --tab-selected-bgcolor (Lepton aligns the
-  // tab to the toolbar in this case, so the tab color IS the toolbar color).
+  // The no-theme branch must NOT read --tab-selected-bgcolor either. Floorp
+  // aliases it to --tab-background-color-selected, and only Lepton's
+  // color_like_toolbar (or its Windows/macOS system-color block) unsets it.
+  // protonfix keeps color_like_toolbar off, so on Linux with the built-in
+  // Light/Dark themes the bars took the selected-tab color (#fff /
+  // rgba(106,106,120,0.7)) while #browser kept the toolbar color.
   const noThemeBlockMatch = css.match(
     /:root:not\(\[lwtheme\]\)\s+#nav-bar,[\s\S]*?\}/,
   );
@@ -262,8 +305,8 @@ function testNavBarCssIsLwtAware(): void {
     `navBar CSS must have a :not([lwtheme]) selector group for #nav-bar`,
   );
   assert(
-    noThemeBlock.includes("--tab-selected-bgcolor"),
-    `no-theme navBar branch must read --tab-selected-bgcolor (Lepton makes the tab track the toolbar)`,
+    !noThemeBlock.includes("--tab-selected-bgcolor"),
+    `no-theme navBar branch must NOT read --tab-selected-bgcolor (protonfix keeps a distinct selected-tab color)`,
   );
   // Same divergence-avoidance ordering as the LWT branch: --toolbar-bgcolor
   // must come BEFORE --toolbar-background-color so the bar matches the
@@ -412,6 +455,7 @@ export async function runAllTests(): Promise<void> {
       name: "lepton has expected style entries",
       fn: testLeptonHasExpectedStyleEntries,
     },
+    { name: "lepton has content styles", fn: testLeptonHasContentStyles },
     {
       name: "lepton/photon/protonfix navBar CSS includes PersonalToolbar",
       fn: testLeptonPhotonProtonfixNavBarCssIncludesPersonalToolbar,

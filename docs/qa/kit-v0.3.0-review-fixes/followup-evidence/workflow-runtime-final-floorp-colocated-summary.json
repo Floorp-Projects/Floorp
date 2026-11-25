@@ -1,0 +1,161 @@
+{
+  "observedAt": "2026-10-09T15:25:35.499310+00:00",
+  "run": 37949019418,
+  "attempt": 1,
+  "head": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+  "completeExpectedJobs": true,
+  "allJobsSuccess": true,
+  "jobs": [
+    {
+      "name": "smoke",
+      "id": 113882662746,
+      "head_sha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "status": "completed",
+      "conclusion": "success",
+      "selectedSteps": [
+        {
+          "name": "Validate locked Runtime release metadata",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "name": "Native Runtime / windows-latest",
+      "id": 113883032040,
+      "head_sha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "status": "completed",
+      "conclusion": "success",
+      "selectedSteps": [
+        {
+          "name": "Validate locked native Runtime artifact",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install locked Runtime for browser suite",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run combined browser test suite against locked Runtime",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify downloaded Firefox execution coverage",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run runner unit tests",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "name": "Native Runtime / ubuntu-24.04",
+      "id": 113883032045,
+      "head_sha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "status": "completed",
+      "conclusion": "success",
+      "selectedSteps": [
+        {
+          "name": "Validate locked native Runtime artifact",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Install locked Runtime for browser suite",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run combined browser test suite against locked Runtime",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Verify downloaded Firefox execution coverage",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run runner unit tests",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Native Runtime / macos-latest",
+      "id": 113883032096,
+      "head_sha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "status": "completed",
+      "conclusion": "success",
+      "selectedSteps": [
+        {
+          "name": "Validate locked native Runtime artifact",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install locked Runtime for browser suite",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run combined browser test suite against locked Runtime",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify downloaded Firefox execution coverage",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run runner unit tests",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "name": "Native Runtime / ubuntu-24.04-arm",
+      "id": 113883032258,
+      "head_sha": "7747cf0e711937e056a34594d8d39fcc8dfc54f0",
+      "status": "completed",
+      "conclusion": "success",
+      "selectedSteps": [
+        {
+          "name": "Validate locked native Runtime artifact",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install locked Runtime for browser suite",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run combined browser test suite against locked Runtime",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Verify downloaded Firefox execution coverage",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run runner unit tests",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    }
+  ],
+  "linuxRequiredStepsSuccess": true
+}

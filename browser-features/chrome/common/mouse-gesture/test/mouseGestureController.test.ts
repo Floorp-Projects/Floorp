@@ -1110,6 +1110,37 @@ async function testRecognizedGestureExecutesSynchronously(): Promise<void> {
   });
 }
 
+async function testReversalEndingAtItsOriginExecutes(
+  finalMoveButtons = 2,
+): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController(
+      { actions: [{ pattern: ["right", "left"], action: DRAWN_RIGHT_ACTION }] },
+      ({ win }) => {
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchDrag(win, 96, 0);
+        for (let x = 90; x > 0; x -= 6) {
+          dispatchMouse(win, "mousemove", 0, x, 0, 2);
+        }
+        dispatchMouse(win, "mousemove", 2, 0, 0, finalMoveButtons);
+        const mouseUp = dispatchMouse(win, "mouseup", 2);
+        const contextMenu = dispatchMouse(win, "contextmenu", 2);
+
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          1,
+          "reversal should run its action",
+        );
+        assert(mouseUp.defaultPrevented, "reversal should consume mouseup");
+        assert(
+          contextMenu.defaultPrevented,
+          "reversal should suppress the context menu",
+        );
+      },
+    );
+  });
+}
+
 async function testUnrecognizedMovedGestureConsumesMouseUp(): Promise<void> {
   await withTrackedActions(async (counts) => {
     await withController(
@@ -2406,7 +2437,107 @@ async function testHeldButtonContinuesAfterEarlyMenu(): Promise<void> {
   });
 }
 
+async function testReturningGestureKeepsActivation(): Promise<void> {
+  for (const pattern of [["up", "down"], ["down", "up"]] as const) {
+    await withTrackedActions(async (counts) => {
+      await withController({
+        actions: [{ pattern: [...pattern], action: DRAWN_RIGHT_ACTION }],
+      }, ({ win, runAllTimers }) => {
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        const direction = pattern[0] === "up" ? -1 : 1;
+        dispatchDrag(win, 0, direction * 160);
+        for (let i = 1; i <= 16; i++) {
+          dispatchMouse(
+            win,
+            "mousemove",
+            0,
+            0,
+            direction * 160 * (1 - i / 16),
+            2,
+          );
+        }
+        assertEquals(
+          dispatchMouse(win, "contextmenu", 2, 0, 0, 0).defaultPrevented,
+          true,
+          "returning to the origin must not restore a pre-release native menu",
+        );
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          0,
+          "held gesture must not fire",
+        );
+        const release = dispatchMouse(win, "mouseup", 2, 0, 0);
+        assertEquals(
+          release.defaultPrevented,
+          true,
+          "returning gesture owns its release",
+        );
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          1,
+          "returning gesture fires once",
+        );
+        assertEquals(
+          dispatchMouse(win, "contextmenu", 2).defaultPrevented,
+          true,
+          "recognized gesture suppresses its following native menu",
+        );
+        runAllTimers();
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchMouse(win, "mouseup", 2);
+        assertEquals(
+          dispatchMouse(win, "contextmenu", 2).defaultPrevented,
+          false,
+          "the next ordinary click still opens its menu",
+        );
+      });
+    });
+  }
+}
+
+async function testSubthresholdJitterDoesNotActivate(): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController({
+      actions: [{ pattern: ["up", "down"], action: DRAWN_RIGHT_ACTION }],
+    }, ({ win, pendingTimerCount }) => {
+      dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+      for (let i = 0; i < 30; i++) {
+        dispatchMouse(win, "mousemove", 0, 0, -4, 2);
+        dispatchMouse(win, "mousemove", 0, 0, 0, 2);
+      }
+      assertEquals(
+        dispatchMouse(win, "mouseup", 2).defaultPrevented,
+        false,
+        "cumulative small jitter must keep an ordinary right click passive",
+      );
+      assertEquals(
+        dispatchMouse(win, "contextmenu", 2).defaultPrevented,
+        false,
+        "small jitter must retain the native context menu",
+      );
+      assertEquals(
+        counts[DRAWN_RIGHT_ACTION],
+        0,
+        "small jitter executes no action",
+      );
+      assertEquals(
+        pendingTimerCount(),
+        0,
+        "small jitter starts no suppression timer",
+      );
+    });
+  });
+}
+
 const tests: TestCase[] = [
+  {
+    name: "returning gestures stay activated at their starting point",
+    fn: testReturningGestureKeepsActivation,
+  },
+  {
+    name: "repeated sub-threshold jitter keeps ordinary right clicks",
+    fn: testSubthresholdJitterDoesNotActivate,
+  },
   {
     name: "held right button survives a page-cancelled early contextmenu",
     fn: testHeldButtonContinuesAfterEarlyMenu,
@@ -2494,6 +2625,16 @@ const tests: TestCase[] = [
   {
     name: "recognized gesture executes synchronously on mouseup",
     fn: testRecognizedGestureExecutesSynchronously,
+  },
+  {
+    name:
+      "reversal ending at its origin executes and suppresses the context menu",
+    fn: testReversalEndingAtItsOriginExecutes,
+  },
+  {
+    name:
+      "reversal survives a secondary drag event delivered after button release",
+    fn: () => testReversalEndingAtItsOriginExecutes(0),
   },
   {
     name: "unrecognized but moved gesture consumes its mouseup",

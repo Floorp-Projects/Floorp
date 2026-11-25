@@ -1,0 +1,14 @@
+fatal: packfile /workspace/qa-review-v030/repos/Floorp-Runtime/.git/objects/pack/pack-df5a3a05811407d5bdd990eca4d1c973353de2a8.pack cannot be mapped, check sys.vm.max_map_count and/or RLIMIT_DATA: Cannot allocate memory
+Traceback (most recent call last):
+  File "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-fixtures.py", line 35, in <module>
+    original = base_bytes(relative)
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/qa-review-v030/fix-qa309/evidence/setup-independent-fixtures.py", line 25, in base_bytes
+    return subprocess.check_output(['git', 'show', BASE + ':' + path], cwd=REPO, env=env, timeout=10)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 466, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'show', '81c92fc4bbbc13b4fd4c2a2adaf6a137e342bd53:.github/workflows/mozconfigs/macosx64-aarch64.mozconfig']' returned non-zero exit status 128.

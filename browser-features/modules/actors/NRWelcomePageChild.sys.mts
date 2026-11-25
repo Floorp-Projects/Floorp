@@ -3,16 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { launchDevPorts } from "../common/dev-port-offset.ts";
+
+/** Launch-local dev port resolver (FDH Gate 2 task 2-B): resolves the
+ * table names to the ports this launch actually uses (offset-aware). */
+const launchDevPort = launchDevPorts();
+
 export class NRWelcomePageChild extends JSWindowActorChild {
   actorCreated() {
     console.debug("NRWelcomePageChild created!");
     const window = this.contentWindow;
     if (
-      window?.location.port === "5187" ||
+      window?.location.port === launchDevPort.portString("welcome") ||
       window?.location.href.startsWith("chrome://") ||
       window?.location.href.startsWith("about:")
     ) {
-      console.debug("NRWelcomePage 5187 ! or Chrome Page!");
+      console.debug(
+        `NRWelcomePage ${
+          launchDevPort.portString("welcome")
+        } ! or Chrome Page!`,
+      );
       Cu.exportFunction(this.getLocaleInfo.bind(this), window, {
         defineAs: "NRGetLocaleInfo",
       });
@@ -47,7 +57,7 @@ export class NRWelcomePageChild extends JSWindowActorChild {
   }
 
   private isWelcomePage(window: Window): boolean {
-    return window.location.port === "5187" ||
+    return window.location.port === launchDevPort.portString("welcome") ||
       window.location.href.startsWith("chrome://noraneko-welcome/") ||
       window.location.href.split(/[?#]/)[0] === "about:welcome";
   }
