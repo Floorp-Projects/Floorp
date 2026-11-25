@@ -468,7 +468,7 @@ async function testSensitiveStateDropped(): Promise<void> {
         csp: `csp-${MARK}`,
         postdata_b64: btoa(`post-${MARK}`),
         referrerInfo: `ref-${MARK}`,
-        structuredCloneState: `scs-${MARK}`,
+        structuredCloneState: btoa(`scs-${MARK}`),
       }],
       index: 1,
       formdata: { id: { field: `form-${MARK}` }, url: `${PREFIX}/a22` },
