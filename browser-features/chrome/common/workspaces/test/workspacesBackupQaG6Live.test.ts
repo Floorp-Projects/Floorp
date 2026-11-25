@@ -200,6 +200,40 @@ async function testToggleAcrossWindows(): Promise<void> {
   });
 }
 
+// L-12: after system sleep the pending timer is late by the sleep duration
+// (monotonic clock). An overdue run must start as soon as wake_notification
+// arrives, and only once across windows.
+async function testWakeRunsOverdueBackup(): Promise<void> {
+  await withBackupState(async (before) => {
+    await withWindows(false, false, async (open) => {
+      await open();
+      setLastRun(Date.now());
+      setConfig({ retentionDays: 8 });
+      await delay(3_000);
+      // Simulates a long sleep: wall clock moved on, the timer did not.
+      setLastRun(Date.now() - 60 * MINUTE);
+      await delay(3_000);
+      assertEquals(
+        (await newBackups(before)).length,
+        0,
+        "pending timer has not fired before wake",
+      );
+      Services.obs.notifyObservers({}, "wake_notification");
+      await waitForAsync(
+        async () => (await newBackups(before)).length > 0,
+        "overdue backup runs right after wake",
+        10_000,
+      );
+      await delay(4_000);
+      const created = await newBackups(before);
+      assertEquals(created.length, 1, "one backup across windows after wake");
+      const [summary] = await summariesFor(created);
+      assert(summary, "backup is listed");
+      assertEquals(summary.kind, "auto", "kind is auto");
+    });
+  });
+}
+
 // L-07: with workspaces disabled the detached service still schedules auto
 // backups in tabs mode.
 async function testScheduleWithWorkspacesDisabled(): Promise<void> {
@@ -352,6 +386,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "L-05/L-06/L-08 toggle across three windows",
       fn: testToggleAcrossWindows,
+    },
+    {
+      name: "L-12 wake_notification runs an overdue backup",
+      fn: testWakeRunsOverdueBackup,
     },
     {
       name: "L-07 schedule with workspaces disabled",

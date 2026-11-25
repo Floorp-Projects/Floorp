@@ -471,6 +471,7 @@ export class WorkspacesBackupService {
   private timer: ReturnType<typeof globalThis.setTimeout> | null = null;
   private readonly configObserver: () => void;
   private readonly enabledObserver: () => void;
+  private readonly wakeObserver: () => void;
   private disposed = false;
   private cleanupInFlight: Promise<void> | null = null;
   /**
@@ -513,6 +514,10 @@ export class WorkspacesBackupService {
       this.scheduleNext(1_000);
     };
     this.enabledObserver = () => this.scheduleNext(1_000);
+    // Gecko timers run on a monotonic clock that pauses during system sleep,
+    // so a pending timer fires late by the sleep duration. Re-derive the delay
+    // from the wall-clock lastRun on wake.
+    this.wakeObserver = () => this.scheduleNext();
     Services.prefs.addObserver(
       WORKSPACE_BACKUP_CONFIG_PREF_NAME,
       this.configObserver,
@@ -521,6 +526,7 @@ export class WorkspacesBackupService {
       WORKSPACE_ENABLED_PREF_NAME,
       this.enabledObserver,
     );
+    Services.obs.addObserver(this.wakeObserver, "wake_notification");
     onCleanup(() => this.dispose());
 
     this.cleanupRetention().catch((error) => {
@@ -961,6 +967,9 @@ export class WorkspacesBackupService {
   }
 
   public dispose(): void {
+    if (this.disposed) {
+      return;
+    }
     this.disposed = true;
     if (this.timer !== null) {
       globalThis.clearTimeout(this.timer);
@@ -974,6 +983,7 @@ export class WorkspacesBackupService {
       WORKSPACE_ENABLED_PREF_NAME,
       this.enabledObserver,
     );
+    Services.obs.removeObserver(this.wakeObserver, "wake_notification");
   }
 
   /**
