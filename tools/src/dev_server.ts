@@ -11,6 +11,7 @@ import { DEV_SERVER, PROJECT_ROOT } from "./defines.ts";
 import { Logger } from "./utils.ts";
 import { recordDevProcess, reportDevPortConflict } from "./dev_processes.ts";
 import { sleep } from "./async_utils.ts";
+import { createDevServerLog, DevStartupFailure } from "./dev_launch.ts";
 
 const logger = new Logger("dev-server");
 
@@ -18,6 +19,8 @@ type ManagedViteProcess = {
   name: string;
   port: number;
   child: Deno.ChildProcess;
+  log: Awaited<ReturnType<typeof createDevServerLog>>;
+  output: Promise<void>[];
 };
 
 let viteProcesses: ManagedViteProcess[] = [];
@@ -35,165 +38,209 @@ async function detectEarlyExit(
 export async function run(
   // deno-lint-ignore no-explicit-any
   writer: any,
-  options: { portOffset?: number } = {},
+  options: { portOffset?: number; signal?: AbortSignal } = {},
 ): Promise<void> {
-  const portOffset = requireDevPortOffset(options.portOffset ?? 0);
-  logger.info("Starting Vite dev servers...");
-  if (portOffset > 0) {
-    logger.info(
-      `Dev server ports shifted by --port-offset +${portOffset}.`,
-    );
-  }
-  await recordDevProcess(Deno.pid);
-
-  const servers = [
-    { name: "designs", path: path.join(PROJECT_ROOT, "browser-features/skin") },
-    { name: "main", path: path.join(PROJECT_ROOT, "bridge/loader-features") },
-    {
-      name: "modal-child",
-      path: path.join(PROJECT_ROOT, "browser-features/pages-modal-child"),
-    },
-    {
-      name: "newtab",
-      path: path.join(PROJECT_ROOT, "browser-features/pages-newtab"),
-    },
-    {
-      name: "notes",
-      path: path.join(PROJECT_ROOT, "browser-features/pages-notes"),
-    },
-    {
-      name: "settings",
-      path: path.join(PROJECT_ROOT, "browser-features/pages-settings"),
-    },
-    {
-      name: "welcome",
-      path: path.join(PROJECT_ROOT, "browser-features/pages-welcome"),
-    },
-    {
-      name: "profile-manager",
-      path: path.join(PROJECT_ROOT, "browser-features/pages-profile-manager"),
-    },
-    {
-      name: "workflow-progress",
-      path: path.join(PROJECT_ROOT, "browser-features/pages-workflow-progress"),
-    },
-  ];
-
-  // Ensure logs directory exists
-  const logsDir = path.join(PROJECT_ROOT, "logs");
+  const signal = options.signal;
+  signal?.throwIfAborted();
+  let stopping: Promise<void> | undefined;
+  const abort = () => {
+    stopping = stop();
+  };
+  signal?.addEventListener("abort", abort, { once: true });
   try {
-    Deno.mkdirSync(logsDir, { recursive: true });
-    // deno-lint-ignore no-explicit-any
-  } catch (e: any) {
-    logger.warn(`Failed to create logs dir ${logsDir}: ${e?.message ?? e}`);
-  }
-
-  for (const server of servers) {
-    const port = getPortFor(server.name, portOffset);
-    // Run Vite via Deno's npm compatibility (Deno-only)
-    const cmd = "deno";
-    const args = ["run", "-A", "npm:vite", "--port", String(port)];
-
-    const child = new Deno.Command(cmd, {
-      args,
-      cwd: server.path,
-      stdin: "null",
-      stdout: "piped",
-      stderr: "piped",
-    }).spawn();
-
-    const logFilePath = path.join(logsDir, `vite-${server.name}.log`);
-    let fh: Deno.FsFile | null = null;
-    try {
-      fh = await Deno.open(logFilePath, {
-        write: true,
-        create: true,
-        truncate: true,
-      });
-      // deno-lint-ignore no-explicit-any
-    } catch (e: any) {
-      logger.warn(`Failed to open log file ${logFilePath}: ${e?.message ?? e}`);
-    }
-
-    const pipeToFile = async (
-      stream: ReadableStream<Uint8Array> | null,
-      file: Deno.FsFile | null,
-    ) => {
-      if (!stream || !file) return;
-      const reader = stream.getReader();
-      try {
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value) {
-            await file.write(value);
-          }
-        }
-        // deno-lint-ignore no-explicit-any
-      } catch (e: any) {
-        logger.warn(`Error piping to file ${logFilePath}: ${e?.message ?? e}`);
-      }
-    };
-
-    // Start piping without awaiting so servers run concurrently
-    pipeToFile(child.stdout, fh);
-    pipeToFile(child.stderr, fh);
-
-    viteProcesses.push({ name: server.name, port, child });
-    await recordDevProcess(child.pid);
-
-    logger.info(
-      `Started Vite dev server for ${server.name} with PID: ${child.pid}, logging to ${logFilePath}`,
-    );
-  }
-
-  logger.info("All Vite dev servers started. Verifying startup health...");
-
-  const startupFailures: string[] = [];
-  for (const proc of viteProcesses) {
-    const status = await detectEarlyExit(proc, 2_000);
-    if (status && status.code !== 0) {
-      const log = await Deno.readTextFile(
-        path.join(logsDir, `vite-${proc.name}.log`),
-      ).catch(() => "");
-      await reportDevPortConflict(log);
-      startupFailures.push(
-        `${proc.name} (port ${proc.port}) exited early with code ${status.code}`,
+    const portOffset = requireDevPortOffset(options.portOffset ?? 0);
+    logger.info("Starting Vite dev servers...");
+    if (portOffset > 0) {
+      logger.info(
+        `Dev server ports shifted by --port-offset +${portOffset}.`,
       );
     }
-  }
-
-  if (startupFailures.length > 0) {
-    shutdown();
-    throw new Error(
-      `One or more Vite dev servers failed to start:\n${
-        startupFailures.join("\n")
-      }`,
-    );
-  }
-
-  // Keep a small additional wait for initial compile/warm-up.
-  await sleep(3_000);
-
-  try {
-    if (typeof writer?.write === "function") {
-      // prefer direct write
-      writer.write(`${DEV_SERVER.ready_string}\n`);
-    } else if (typeof writer === "function") {
-      // some callers pass a callback
-      writer(`${DEV_SERVER.ready_string}\n`);
-    } else {
-      // fallback to console
-      console.log(DEV_SERVER.ready_string);
+    if (!await recordDevProcess(Deno.pid)) {
+      throw new DevStartupFailure("registration-failed");
     }
 
-    if (typeof writer?.end === "function") {
-      writer.end();
+    const servers = [
+      {
+        name: "designs",
+        path: path.join(PROJECT_ROOT, "browser-features/skin"),
+      },
+      { name: "main", path: path.join(PROJECT_ROOT, "bridge/loader-features") },
+      {
+        name: "modal-child",
+        path: path.join(PROJECT_ROOT, "browser-features/pages-modal-child"),
+      },
+      {
+        name: "newtab",
+        path: path.join(PROJECT_ROOT, "browser-features/pages-newtab"),
+      },
+      {
+        name: "notes",
+        path: path.join(PROJECT_ROOT, "browser-features/pages-notes"),
+      },
+      {
+        name: "settings",
+        path: path.join(PROJECT_ROOT, "browser-features/pages-settings"),
+      },
+      {
+        name: "welcome",
+        path: path.join(PROJECT_ROOT, "browser-features/pages-welcome"),
+      },
+      {
+        name: "profile-manager",
+        path: path.join(PROJECT_ROOT, "browser-features/pages-profile-manager"),
+      },
+      {
+        name: "workflow-progress",
+        path: path.join(
+          PROJECT_ROOT,
+          "browser-features/pages-workflow-progress",
+        ),
+      },
+    ];
+
+    // Ensure logs directory exists
+    const logsDir = path.join(PROJECT_ROOT, "logs");
+    try {
+      Deno.mkdirSync(logsDir, { recursive: true });
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
+      logger.warn(`Failed to create logs dir ${logsDir}: ${e?.message ?? e}`);
     }
-    // deno-lint-ignore no-explicit-any
-  } catch (e: any) {
-    logger.warn(`Failed to write ready string to writer: ${e?.message ?? e}`);
+
+    for (const server of servers) {
+      signal?.throwIfAborted();
+      const port = getPortFor(server.name, portOffset);
+      // Run Vite via Deno's npm compatibility (Deno-only)
+      const cmd = "deno";
+      const args = ["run", "-A", "npm:vite", "--port", String(port)];
+
+      const logFilePath = path.join(logsDir, `vite-${server.name}.log`);
+      const log = await createDevServerLog(
+        logFilePath,
+        !!Deno.env.get("FLOORP_M3E_LAUNCH_TOKEN"),
+        server.name,
+        port,
+        Deno.pid,
+      );
+      signal?.throwIfAborted();
+      const child = new Deno.Command(cmd, {
+        args,
+        cwd: server.path,
+        stdin: "null",
+        stdout: "piped",
+        stderr: "piped",
+      }).spawn();
+
+      const output: Promise<void>[] = [];
+      viteProcesses.push({ name: server.name, port, child, log, output });
+
+      const pipeToFile = async (
+        stream: ReadableStream<Uint8Array> | null,
+      ) => {
+        if (!stream) return;
+        const reader = stream.getReader();
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            if (value) {
+              await log.write(value);
+            }
+          }
+          // deno-lint-ignore no-explicit-any
+        } catch (e: any) {
+          logger.warn(
+            `Error piping to file ${logFilePath}: ${e?.message ?? e}`,
+          );
+        }
+      };
+
+      // Start piping without awaiting so servers run concurrently
+      output.push(pipeToFile(child.stdout), pipeToFile(child.stderr));
+      if (!await recordDevProcess(child.pid)) {
+        throw new DevStartupFailure("registration-failed");
+      }
+
+      logger.info(
+        `Started Vite dev server for ${server.name} with PID: ${child.pid}, logging to ${logFilePath}`,
+      );
+    }
+
+    logger.info("All Vite dev servers started. Verifying startup health...");
+
+    const startupFailures: string[] = [];
+    for (const proc of viteProcesses) {
+      signal?.throwIfAborted();
+      const status = await detectEarlyExit(proc, 2_000);
+      signal?.throwIfAborted();
+      if (status && status.code !== 0) {
+        await Promise.allSettled(proc.output);
+        await proc.log.finish("failed", status.code);
+        if (proc.log.portConflict) {
+          throw new DevStartupFailure("port-conflict", proc.port);
+        }
+        const log = await Deno.readTextFile(
+          path.join(logsDir, `vite-${proc.name}.log`),
+        ).catch(() => "");
+        await reportDevPortConflict(log);
+        startupFailures.push(
+          `${proc.name} (port ${proc.port}) exited early with code ${status.code}`,
+        );
+      }
+    }
+
+    if (startupFailures.length > 0) {
+      throw new Error(
+        `One or more Vite dev servers failed to start:\n${
+          startupFailures.join("\n")
+        }`,
+      );
+    }
+
+    // Keep a small additional wait for initial compile/warm-up.
+    await sleep(3_000);
+    signal?.throwIfAborted();
+    for (const proc of viteProcesses) await proc.log.finish("ready");
+
+    try {
+      if (typeof writer?.write === "function") {
+        // prefer direct write
+        writer.write(`${DEV_SERVER.ready_string}\n`);
+      } else if (typeof writer === "function") {
+        // some callers pass a callback
+        writer(`${DEV_SERVER.ready_string}\n`);
+      } else {
+        // fallback to console
+        console.log(DEV_SERVER.ready_string);
+      }
+
+      if (typeof writer?.end === "function") {
+        writer.end();
+      }
+      // deno-lint-ignore no-explicit-any
+    } catch (e: any) {
+      logger.warn(`Failed to write ready string to writer: ${e?.message ?? e}`);
+    }
+  } catch (error) {
+    await stop();
+    throw error;
+  } finally {
+    signal?.removeEventListener("abort", abort);
+    if (signal?.aborted) await (stopping ?? stop());
   }
+}
+
+export async function stop(): Promise<void> {
+  const children = viteProcesses.flatMap((
+    process,
+  ) => [process.child.status, ...process.output]);
+  for (const process of viteProcesses) {
+    try {
+      process.child.kill("SIGKILL");
+    } catch { /* Already exited. */ }
+  }
+  shutdown();
+  await Promise.allSettled(children);
 }
 
 export function shutdown(): void {

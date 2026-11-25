@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { assertEquals, assertRejects } from "@std/assert";
-import { nativeDevLogTarget, startDevBrowser } from "./dev_launch.ts";
+import {
+  createDevServerLog,
+  DevStartupFailure,
+  nativeDevLogTarget,
+  safeDevStartupFailure,
+  startDevBrowser,
+} from "./dev_launch.ts";
 import { withDevStateLock } from "./dev_state_lock.ts";
 
 Deno.test("launch startup retains the checkout lock through ready servers and registered browser, not browser lifetime", async () => {
@@ -98,6 +104,87 @@ Deno.test("launch failures before and after spawn shut servers down and reject s
       )
     );
     assertEquals(stopped, 1);
+  }
+});
+
+Deno.test("startup deadline aborts server setup or browser startup and awaits cancellation before returning", async () => {
+  for (const phase of ["servers", "browser"]) {
+    let cancelled = false;
+    let cleaned = false;
+    let stopped = false;
+    const stalled = (signal: AbortSignal) =>
+      new Promise<void>((resolve) => {
+        signal.addEventListener("abort", () => {
+          cancelled = true;
+          queueMicrotask(() => {
+            cleaned = true;
+            resolve();
+          });
+        }, { once: true });
+      });
+    await assertRejects(
+      () =>
+        startDevBrowser(
+          (signal) => phase === "servers" ? stalled(signal) : Promise.resolve(),
+          (_ready, signal) => stalled(signal),
+          () => {
+            stopped = true;
+          },
+          () => {},
+          () => {},
+          20,
+        ),
+      DevStartupFailure,
+      "startup-timeout",
+    );
+    assertEquals({ cancelled, cleaned, stopped }, {
+      cancelled: true,
+      cleaned: true,
+      stopped: true,
+    });
+  }
+});
+
+Deno.test("native Vite artifacts omit arbitrary output but retain split-chunk port conflicts and sanitized startup codes", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const log = await createDevServerLog(
+      `${root}/vite-main.log`,
+      true,
+      "main",
+      5173,
+      81,
+    );
+    await log.write(new TextEncoder().encode("SECRET_SENTINEL EADDR"));
+    await log.write(new TextEncoder().encode("INUSE SECRET_SENTINEL"));
+    assertEquals(log.portConflict, true);
+    await log.finish("failed", 1);
+    const text = await Deno.readTextFile(`${root}/vite-main.log`);
+    assertEquals(text.includes("SECRET_SENTINEL"), false);
+    assertEquals(JSON.parse(text).portConflict, true);
+    assertEquals(
+      safeDevStartupFailure(new DevStartupFailure("port-conflict", 5173)),
+      { state: "failed", code: "port-conflict", port: 5173 },
+    );
+    assertEquals(safeDevStartupFailure(new Error("SECRET_SENTINEL")), {
+      state: "failed",
+      code: "startup-failed",
+      port: null,
+    });
+    const normal = await createDevServerLog(
+      `${root}/ordinary.log`,
+      false,
+      "main",
+      5173,
+      81,
+    );
+    await normal.write(new TextEncoder().encode("ordinary developer output"));
+    assertEquals(
+      await Deno.readTextFile(`${root}/ordinary.log`),
+      "ordinary developer output",
+    );
+  } finally {
+    await Deno.remove(root, { recursive: true });
   }
 });
 

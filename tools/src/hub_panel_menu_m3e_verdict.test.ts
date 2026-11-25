@@ -86,7 +86,7 @@ Deno.test("M3e verdict fails closed for missing, duplicate, or not-run cases", (
 
 Deno.test("M3e verdict rejects launch failures and incomplete cleanup", () => {
   const failedLaunch = passingInput();
-  failedLaunch.launchFailures.push("launch failed");
+  failedLaunch.launchFailures.push({ category: "launch", kind: "Error" });
   assertEquals(hubPanelMenuM3eVerdict(failedLaunch), false);
 
   const incompleteCleanup = passingInput();
@@ -109,10 +109,10 @@ Deno.test("M3e verdict rejects launch failures and incomplete cleanup", () => {
   assertEquals(hubPanelMenuM3eVerdict(unknownCleanup), false);
 
   const failedRun = passingInput();
-  failedRun.runFailure = "unexpected run failure";
+  failedRun.runFailure = { category: "run", kind: "Error" };
   assertEquals(hubPanelMenuM3eVerdict(failedRun), false);
 
   const setupFailedBeforeStart = passingInput();
-  setupFailedBeforeStart.runFailure = "profile seeding failed before start";
+  setupFailedBeforeStart.runFailure = { category: "run", kind: "Error" };
   assertEquals(hubPanelMenuM3eVerdict(setupFailedBeforeStart), false);
 });

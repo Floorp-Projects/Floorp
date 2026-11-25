@@ -3,6 +3,7 @@
 import type {
   HubPanelMenuM3eCaseResult,
   HubPanelMenuM3eCleanup,
+  HubPanelMenuM3eFailure,
   HubPanelMenuM3eVerdictInput,
 } from "./hub_panel_menu_m3e_acceptance.types.ts";
 
@@ -13,7 +14,7 @@ export type MutableHubPanelMenuM3eVerdictInput =
   >
   & {
     cases: HubPanelMenuM3eCaseResult[];
-    launchFailures: string[];
-    runFailure: string | null;
+    launchFailures: HubPanelMenuM3eFailure[];
+    runFailure: HubPanelMenuM3eFailure | null;
     cleanup: { -readonly [Field in keyof HubPanelMenuM3eCleanup]: boolean };
   };

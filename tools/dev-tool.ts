@@ -5,7 +5,12 @@ import * as path from "@std/path";
 import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
 import { withDevStateLock } from "./src/dev_state_lock.ts";
-import { nativeDevLogTarget } from "./src/dev_launch.ts";
+import {
+  DEV_STARTUP_STATUS_FILE,
+  DevStartupFailure,
+  nativeDevLogTarget,
+  reportDevStartupFailure,
+} from "./src/dev_launch.ts";
 import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
   matchesDevIdentity,
@@ -251,7 +256,7 @@ async function cmdStart() {
   );
 
   // Remove stale state files
-  for (const f of [marionetteFile, PID_FILE]) {
+  for (const f of [marionetteFile, PID_FILE, DEV_STARTUP_STATUS_FILE]) {
     try {
       Deno.removeSync(f);
     } catch {
@@ -316,6 +321,24 @@ async function cmdStart() {
   const maxWait = 120; // seconds
   for (let i = 0; i < maxWait; i++) {
     await new Promise((r) => setTimeout(r, 1000));
+    const startup = await Deno.readTextFile(DEV_STARTUP_STATUS_FILE).then((
+      text,
+    ) => JSON.parse(text)).catch(() => null);
+    if (startup?.state === "failed") {
+      const code =
+        ["port-conflict", "registration-failed", "startup-timeout"].includes(
+            startup.code,
+          )
+          ? startup.code
+          : "startup-failed";
+      const port = Number.isInteger(startup.port) && startup.port > 0 &&
+          startup.port <= 65535
+        ? startup.port
+        : null;
+      throw new Error(
+        `Dev startup failed: ${code}; port=${port}; status=${DEV_STARTUP_STATUS_FILE}`,
+      );
+    }
     try {
       const port = Deno.readTextFileSync(marionetteFile).trim();
       if (port) {
@@ -336,7 +359,13 @@ async function cmdStart() {
           }
         }
         console.log(`Browser ready! Marionette on port ${port}.`);
-        console.log(`Log: ${logFile}`);
+        console.log(
+          `Log: ${
+            nativeLaunch
+              ? path.join(PROJECT_ROOT, "_dist", "dev-server.log")
+              : logFile
+          }`,
+        );
         return;
       }
     } catch {
@@ -345,14 +374,22 @@ async function cmdStart() {
     const log = await Deno.readTextFile(logFile).catch(() => "");
     if (await reportDevPortConflict(log)) Deno.exit(1);
     if (i % 5 === 4 && !(await listDevProcesses(Number(pid))).length) {
+      await reportDevStartupFailure(new DevStartupFailure("startup-failed"));
       console.error(
-        `[dev-tool] Dev server exited before Marionette was ready. Check ${logFile}.`,
+        `[dev-tool] Dev server exited before Marionette was ready. Check ${
+          nativeLaunch ? DEV_STARTUP_STATUS_FILE : logFile
+        }.`,
       );
       Deno.exit(1);
     }
   }
 
-  console.error(`Timed out after ${maxWait}s. Check ${logFile} for errors.`);
+  await reportDevStartupFailure(new DevStartupFailure("startup-timeout"));
+  console.error(
+    `Timed out after ${maxWait}s. Check ${
+      nativeLaunch ? DEV_STARTUP_STATUS_FILE : logFile
+    } for errors.`,
+  );
   Deno.exit(1);
 }
 

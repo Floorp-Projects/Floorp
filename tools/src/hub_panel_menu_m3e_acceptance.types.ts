@@ -51,7 +51,19 @@ export interface HubPanelMenuM3eLaunchRecord {
   profilePath: string;
   identities: readonly DevProcessIdentity[];
   ports: readonly number[];
-  failure: string | null;
+  failure: HubPanelMenuM3eFailure | null;
+}
+
+export interface HubPanelMenuM3eFailure {
+  readonly category:
+    | "launch"
+    | "run"
+    | "snapshot"
+    | "report"
+    | "cleanup"
+    | "incomplete";
+  readonly kind: "Error" | "NotFound" | "PermissionDenied" | "Other";
+  readonly rowId?: string;
 }
 
 export type HubPanelMenuM3eCaseStatus = "not-run" | "passed" | "failed";
@@ -61,7 +73,7 @@ export interface HubPanelMenuM3eCaseResult {
   readonly status: HubPanelMenuM3eCaseStatus;
   readonly startedAt: string | null;
   readonly completedAt: string | null;
-  readonly failure: string | null;
+  readonly failure: HubPanelMenuM3eFailure | null;
   readonly observations: Readonly<
     Record<string, boolean | number | string | null>
   >;
@@ -76,9 +88,9 @@ export interface HubPanelMenuM3eProfileSnapshot {
 
 export interface HubPanelMenuM3eVerdictInput {
   readonly complete: boolean;
-  readonly runFailure: string | null;
+  readonly runFailure: HubPanelMenuM3eFailure | null;
   readonly cases: readonly HubPanelMenuM3eCaseResult[];
-  readonly launchFailures: readonly string[];
+  readonly launchFailures: readonly HubPanelMenuM3eFailure[];
   readonly sharedProfileBefore: HubPanelMenuM3eProfileSnapshot | null;
   readonly sharedProfileAfter: HubPanelMenuM3eProfileSnapshot | null;
   readonly cleanup: HubPanelMenuM3eCleanup;
@@ -120,8 +132,8 @@ export interface HubPanelMenuM3eAcceptanceReport {
   readonly completedAt: string | null;
   readonly passed: boolean;
   readonly cases: readonly HubPanelMenuM3eCaseResult[];
-  readonly launchFailures: readonly string[];
-  readonly runFailure: string | null;
+  readonly launchFailures: readonly HubPanelMenuM3eFailure[];
+  readonly runFailure: HubPanelMenuM3eFailure | null;
   readonly sharedProfileBefore: HubPanelMenuM3eProfileSnapshot | null;
   readonly sharedProfileAfter: HubPanelMenuM3eProfileSnapshot | null;
   readonly cleanup: HubPanelMenuM3eCleanup;

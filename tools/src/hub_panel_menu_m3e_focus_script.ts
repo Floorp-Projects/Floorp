@@ -34,6 +34,8 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
         try { await win.PanelUI.show(); await event.promise; } finally { event.cancel(); }
       }
       const old = win.document.getElementById(buttonId);
+      const settings = win.document.getElementById("appMenu-settings-button");
+      const trigger = win.document.getElementById("PanelUI-menu-button");
       requireFocus(visible(old));
       if (input.action === "open") {
         if (role !== "late") return observation();
@@ -67,6 +69,9 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
       for (const type of ["focusin", "keydown", "pointerdown", "pointermove", "blur", "popuphidden", "unload"]) {
         const target = type === "blur" || type === "unload" ? win : win.document;
         const listener = (event) => {
+          audit.dispatchEvent = event;
+          const path = event.composedPath();
+          audit.dispatchMetadata = { kind: "event", type, trusted: event.isTrusted, eventAt: Date.now(), windowTarget: event.target === win || event.target === win.document, target: path.includes(settings) ? "settings" : path.includes(win.document.getElementById("appMenu-new-tab-button2")) ? "new-tab" : path.includes(win.gURLBar?.inputField) ? "urlbar" : "other" };
           if (audit.events.length >= 128) throw new Error("M3e focus audit overflow");
           const current = win.closed ? null : win.document.getElementById(buttonId);
           const active = win.closed ? null : win.document.activeElement;
@@ -96,7 +101,11 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
       } });
       Object.defineProperty(document, "removeEventListener", { configurable: true, value: function(type, listener, options) {
         const result = remove.call(this, type, listener, options);
-        if (options === true && audit.claimListeners.get(listener)?.size === 3 && ["keydown", "pointerdown", "pointermove"].includes(type)) audit.claimInvalidatedAt ??= Date.now();
+        if (options === true && audit.claimListeners.get(listener)?.size === 3 && ["keydown", "pointerdown", "pointermove"].includes(type) && audit.claimInvalidatedAt === null) {
+          audit.claimInvalidatedAt = Date.now();
+          const source = audit.dispatchEvent?.eventPhase > 0 ? audit.dispatchMetadata : audit.pendingStimulus === "menu-close" && trigger.getAttribute("open") !== "true" ? { kind: "menu-closed", closed: true } : audit.pendingStimulus === "window-close" && win.closed ? { kind: "window-closed", closed: true } : { kind: "other" };
+          audit.claimInvalidationSource = Object.freeze({ ...source, at: audit.claimInvalidatedAt, stimulusId: audit.stimulusId ?? null, operation: audit.pendingStimulus ?? null, menuClosed: audit.pendingStimulus === "menu-close" && trigger.getAttribute("open") !== "true" });
+        }
         return result;
       } });
       audit.removers.push(() => {
@@ -111,6 +120,7 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
       const atGate = observation();
       if (!(!win.closed && !audit.old.isConnected && atGate.foreground && atGate.popupOpen && atGate.activeSettings && atGate.fallbackVisible && audit.fallbackAt !== null && Date.now() - audit.preparedAt < 2500)) return { precondition: false, atGate, oldConnected: audit.old.isConnected, fallbackAt: audit.fallbackAt, elapsed: Date.now() - audit.preparedAt };
       audit.actionAt = Date.now();
+      audit.stimulusId = input.caseId + ":" + audit.actionAt;
       audit.claimLiveAtAction = [...audit.claimListeners.values()].some((types) => types.size === 3) && audit.claimInvalidatedAt === null;
       requireFocus(audit.claimLiveAtAction);
       let pointerTarget = null;
@@ -129,6 +139,8 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
         task.windows.second.focus();
         await waitFor(() => !win.document.hasFocus(), 1000, "real window blur");
       } else if (input.caseId === "focus-menu-close-cancellation") {
+        requireFocus(atGate.triggerOpen);
+        audit.pendingStimulus = "menu-close";
         const popup = win.document.getElementById("appMenu-popup");
         const event = waitForPopupEvent(popup, "popuphidden", 1000);
         try { popup.hidePopup(); await event.promise; } finally { event.cancel(); }
@@ -138,6 +150,7 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
         await waitFor(() => win.gBrowser.selectedBrowser.currentURI.spec === "about:blank#hub-menu-focus-navigation", 1000, "actual focus navigation");
       } else if (input.caseId === "focus-window-close-intent-cancellation") {
         requireFocus(role === "late");
+        audit.pendingStimulus = "window-close";
         win.close();
         await waitFor(() => win.closed, 1000, "actual close intent");
       } else if (input.caseId === "focus-bounded-expiry") {
@@ -147,7 +160,7 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
     }
     if (input.action === "gate-result" || input.action === "result") {
       const result = observation();
-      if (input.action === "gate-result") audit.gatedCancellation = { gateCheckedAt: Date.now(), actionAt: audit.actionAt, claimLiveAtAction: audit.claimLiveAtAction, claimInvalidatedAt: audit.claimInvalidatedAt, events: audit.events.map((entry) => ({ ...entry })), buttonCount: result.buttonCount, activeButton: result.activeButton };
+      if (input.action === "gate-result") audit.gatedCancellation = { gateCheckedAt: Date.now(), actionAt: audit.actionAt, stimulusId: audit.stimulusId, claimInvalidationSource: audit.claimInvalidationSource ?? null, claimLiveAtAction: audit.claimLiveAtAction, claimInvalidatedAt: audit.claimInvalidatedAt, events: audit.events.map((entry) => ({ ...entry })), buttonCount: result.buttonCount, activeButton: result.activeButton };
       return { ...result, gatedCancellation: audit.gatedCancellation ?? null, movementTarget: audit.movementTarget ?? null, claimLiveAtAction: audit.claimLiveAtAction, claimInvalidatedAt: audit.claimInvalidatedAt, preparedAt: audit.preparedAt, actionAt: audit.actionAt, fallbackAt: audit.fallbackAt, oldConnected: win.closed ? false : audit.old.isConnected, oldNodeId: audit.oldNodeId, events: audit.events.map((entry) => ({ ...entry })), revocations: audit.revocations, focusCalls: audit.focusCalls };
     }
     if (input.action === "monitor") {

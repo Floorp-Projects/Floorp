@@ -49,6 +49,56 @@ export function assertHubPanelMenuM3eGatedCancellation(
       ),
     "named trusted cancellation event missing before gate release",
   );
+  const source = record(proof.claimInvalidationSource);
+  const structural = caseId === "focus-menu-close-cancellation" &&
+      source.kind === "menu-closed" && source.closed === true ||
+    caseId === "focus-window-close-intent-cancellation" &&
+      source.kind === "window-closed" && source.closed === true;
+  const target = caseId === "focus-pointer-cancellation" ||
+      caseId === "focus-keyboard-cancellation"
+    ? "settings"
+    : caseId === "focus-movement-cancellation"
+    ? "new-tab"
+    : caseId === "focus-navigation-cancellation"
+    ? "urlbar"
+    : null;
+  const eventType = caseId === "focus-window-close-intent-cancellation"
+    ? ["blur", "unload"]
+    : caseId === "focus-menu-close-cancellation"
+    ? ["popuphidden", "blur"]
+    : [expected];
+  check(
+    typeof proof.stimulusId === "string" &&
+      proof.stimulusId === `${caseId}:${proof.actionAt}` &&
+      source.stimulusId === proof.stimulusId &&
+      source.at === proof.claimInvalidatedAt &&
+      (structural ||
+        source.kind === "event" && source.trusted === true &&
+          eventType.includes(String(source.type)) &&
+          typeof source.eventAt === "number" &&
+          source.eventAt >= Number(proof.actionAt) &&
+          source.eventAt <= Number(proof.claimInvalidatedAt) &&
+          Array.isArray(proof.events) &&
+          proof.events.map(record).some((event) =>
+            event.type === source.type && event.trusted === true &&
+            event.at === source.eventAt &&
+            (!["blur", "unload"].includes(String(source.type)) ||
+              event.windowTarget === true)
+          ) &&
+          (caseId !== "focus-menu-close-cancellation" ||
+            source.type === "popuphidden" ||
+            source.operation === "menu-close" && source.menuClosed === true &&
+              source.windowTarget === true &&
+              proof.events.map(record).some((event) =>
+                event.type === "popuphidden" && event.trusted === true &&
+                Number(event.at) >= Number(proof.actionAt) &&
+                Number(event.at) <= Number(source.eventAt)
+              )) &&
+          (target === null || source.target === target) &&
+          (!["blur", "unload"].includes(String(source.type)) ||
+            source.windowTarget === true)),
+    "first invalidation was not caused by the named stimulus",
+  );
 }
 
 export async function withHubPanelMenuM3eFocusCleanup<T>(

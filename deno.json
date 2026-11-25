@@ -84,7 +84,7 @@
     "firefox-tests:prepare-browser": "deno run --allow-read --allow-write=browser-features/chrome/test/firefox-downloaded/generated tools/firefox-tests/prepare_firefox_browser_tests.ts",
     "test": "deno run -A tools/src/colocated_test_runner.ts",
     "test:firefox-tests": "deno test --allow-read --allow-write --allow-run=git tools/firefox-tests/",
-    "test:host": "deno test --allow-read --allow-write --allow-run=openssl --allow-net=127.0.0.1 tools/src/ tools/design-matrix/",
+    "test:host": "deno test --allow-read --allow-write --allow-run=openssl,deno --allow-net=127.0.0.1 tools/src/ tools/design-matrix/",
     "test:hotfix-process": "deno run -A tools/src/hotfix_process_recovery.ts",
     "test:docs-pipeline": "deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/",
     "test:smoke": "deno run -A tools/src/smoke_runner.ts",

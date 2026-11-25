@@ -3,6 +3,7 @@
 import * as path from "@std/path";
 import { BIN_PATH_EXE, PATHS, PROJECT_ROOT } from "./defines.ts";
 import { recordDevProcess } from "./dev_processes.ts";
+import { DevStartupFailure } from "./dev_launch.ts";
 import { ProcessUtils } from "./utils.ts";
 import { devPort } from "#libs/shared/dev-ports/defines.ts";
 
@@ -34,6 +35,7 @@ function printFirefoxLog(line: string) {
 }
 
 export interface BrowserLaunchOptions {
+  signal?: AbortSignal;
   onStarted?: () => void;
   /** Record the child for checkout-scoped dev-tool stop. */
   recordProcess?: boolean;
@@ -561,6 +563,7 @@ export async function startIsolatedBrowserPair(
 
 export async function run(
   portOrOptions: number | BrowserLaunchOptions = devPort("browserRemote"),
+  registerProcess = recordDevProcess,
 ): Promise<void> {
   const options: BrowserLaunchOptions = typeof portOrOptions === "number"
     ? { port: portOrOptions, marionette: true }
@@ -596,9 +599,13 @@ export async function run(
     },
     environment,
     async (child) => {
-      if (options.recordProcess) await recordDevProcess(child.pid);
+      if (options.recordProcess && !await registerProcess(child.pid)) {
+        throw new DevStartupFailure("registration-failed");
+      }
+      options.signal?.throwIfAborted();
       options.onStarted?.();
     },
+    options.signal,
   );
 
   console.log(`[launcher@native-exit] ${

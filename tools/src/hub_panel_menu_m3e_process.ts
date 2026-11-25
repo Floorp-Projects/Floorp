@@ -25,7 +25,10 @@ import type {
   HubPanelMenuM3eOwnedCommandOperations,
   HubPanelMenuM3eOwnedProcessRefresh,
 } from "./hub_panel_menu_m3e_process.types.ts";
-import type { HubPanelMenuM3eOwnedCommandResult } from "./hub_panel_menu_m3e_acceptance.types.ts";
+import type {
+  HubPanelMenuM3eFailure,
+  HubPanelMenuM3eOwnedCommandResult,
+} from "./hub_panel_menu_m3e_acceptance.types.ts";
 
 const OUTPUT_LIMIT = 256 * 1024;
 const COMMAND_TIMEOUT_MS = 120_000;
@@ -55,8 +58,56 @@ export function hubPanelMenuM3eLaunchEnvironment(
   );
 }
 
+export function hubPanelMenuM3eFailure(
+  category: HubPanelMenuM3eFailure["category"],
+  error: unknown = null,
+  rowId?: string,
+): HubPanelMenuM3eFailure {
+  return {
+    category,
+    kind: error instanceof Deno.errors.NotFound
+      ? "NotFound"
+      : error instanceof Deno.errors.PermissionDenied
+      ? "PermissionDenied"
+      : error instanceof Error
+      ? "Error"
+      : "Other",
+    ...(["A", "B", "C"].includes(rowId ?? "") ? { rowId } : {}),
+  };
+}
+
+function safeFailure(value: unknown): HubPanelMenuM3eFailure {
+  const input = typeof value === "object" && value !== null
+    ? value as Record<string, unknown>
+    : {};
+  const category =
+    ["launch", "run", "snapshot", "report", "cleanup", "incomplete"].includes(
+        String(input.category),
+      )
+      ? input.category
+      : "run";
+  const kind = ["Error", "NotFound", "PermissionDenied", "Other"].includes(
+      String(input.kind),
+    )
+    ? input.kind
+    : "Other";
+  return {
+    category,
+    kind,
+    ...(["A", "B", "C"].includes(String(input.rowId))
+      ? { rowId: input.rowId }
+      : {}),
+  } as HubPanelMenuM3eFailure;
+}
+
 export function serializeHubPanelMenuM3eEvidence(value: unknown): string {
   return JSON.stringify(value, (key, item: unknown) => {
+    if ((key === "failure" || key === "runFailure") && item !== null) {
+      return safeFailure(item);
+    }
+    if (key === "launchFailures" && Array.isArray(item)) {
+      return item.map(safeFailure);
+    }
     if (["commandLine", "sessionId"].includes(key)) return "omitted";
     if (typeof item === "string" && /^[\[{]/.test(item)) {
       try {

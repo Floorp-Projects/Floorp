@@ -223,7 +223,9 @@ export const ProcessUtils = {
     cb: (stream: "stdout" | "stderr", line: string) => void,
     environment: Record<string, string> = Deno.env.toObject(),
     onSpawn?: (child: Deno.ChildProcess) => Promise<void>,
+    signal?: AbortSignal,
   ): Promise<number> {
+    signal?.throwIfAborted();
     const child = new Deno.Command(cmd[0], {
       args: cmd.slice(1),
       stdin: "null",
@@ -232,7 +234,13 @@ export const ProcessUtils = {
       env: environment,
     }).spawn();
 
-    await onSpawn?.(child);
+    const abort = () => {
+      try {
+        child.kill("SIGKILL");
+      } catch { /* Already exited. */ }
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+    if (signal?.aborted) abort();
 
     const readStream = async (
       stream: ReadableStream<Uint8Array> | null,
@@ -257,12 +265,29 @@ export const ProcessUtils = {
       }
     };
 
-    await Promise.all([
-      readStream(child.stdout, "stdout"),
-      readStream(child.stderr, "stderr"),
-    ]);
+    let streams: Promise<unknown> | undefined;
 
-    const status = await child.status;
-    return status.code ?? 0;
+    try {
+      await onSpawn?.(child);
+      signal?.throwIfAborted();
+      streams = Promise.all([
+        readStream(child.stdout, "stdout"),
+        readStream(child.stderr, "stderr"),
+      ]);
+      await streams;
+      const status = await child.status;
+      signal?.throwIfAborted();
+      return status.code ?? 0;
+    } catch (error) {
+      abort();
+      await Promise.allSettled([
+        streams,
+        child.status,
+        ...(!streams ? [child.stdout.cancel(), child.stderr.cancel()] : []),
+      ]);
+      throw error;
+    } finally {
+      signal?.removeEventListener("abort", abort);
+    }
   },
 } as const;

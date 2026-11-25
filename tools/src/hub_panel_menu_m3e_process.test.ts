@@ -11,6 +11,7 @@ import {
   assertHubPanelMenuM3eUserJsDoesNotOverride,
   captureHubPanelMenuM3eLaunchProcesses,
   cleanupHubPanelMenuM3eLaunches,
+  hubPanelMenuM3eFailure,
   hubPanelMenuM3eLaunchEnvironment,
   hubPanelMenuM3eLaunchPids,
   hubPanelMenuM3eProcessExited,
@@ -25,6 +26,7 @@ import {
   withHubPanelMenuM3eCleanup,
   writeHubPanelMenuM3eCommandArtifacts,
 } from "./hub_panel_menu_m3e_process.ts";
+import { createDevServerLog } from "./dev_launch.ts";
 import type {
   DevProcessIdentity,
   DevProcessInfo,
@@ -420,7 +422,7 @@ Deno.test("M3e environment and all retained command artifacts exclude session an
         status: "failed",
         startedAt: null,
         completedAt: null,
-        failure: null,
+        failure: hubPanelMenuM3eFailure("run", new Error(marker)),
         observations: {
           applicationQuit: JSON.stringify({
             browserIdentities: [{ commandLine: marker }],
@@ -431,8 +433,10 @@ Deno.test("M3e environment and all retained command artifacts exclude session an
           }),
         },
       }],
-      launchFailures: [],
-      runFailure: null,
+      launchFailures: [
+        hubPanelMenuM3eFailure("launch", new Error(marker), "C"),
+      ],
+      runFailure: hubPanelMenuM3eFailure("run", new Error(marker)),
       sharedProfileBefore: null,
       sharedProfileAfter: null,
       cleanup: {
@@ -451,13 +455,30 @@ Deno.test("M3e environment and all retained command artifacts exclude session an
         profilePath: "/owned",
         identities: [{ pid: 81, startTime: "boot:100", commandLine: marker }],
         ports: [],
-        failure: null,
+        failure: hubPanelMenuM3eFailure("launch", new Error(marker), "C"),
       }],
       packageMetadata: [],
       policyBinding: null,
       reportPath: `${root}/report.json`,
     };
     await writeReport(`${root}/report.json`, report);
+    await Deno.writeTextFile(
+      `${root}/malicious-failures.json`,
+      serializeHubPanelMenuM3eEvidence({
+        runFailure: marker,
+        failure: { category: marker, kind: marker, message: marker },
+        launchFailures: [marker],
+      }),
+    );
+    const vite = await createDevServerLog(
+      `${root}/vite-main.log`,
+      true,
+      "main",
+      5173,
+      81,
+    );
+    await vite.write(new TextEncoder().encode(marker));
+    await vite.finish("failed", 1);
     await Deno.writeTextFile(
       `${root}/orderly-restarts.json`,
       serializeHubPanelMenuM3eEvidence([{

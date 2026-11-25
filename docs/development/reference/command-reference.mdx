@@ -1,7 +1,7 @@
 ---
 title: "Command Reference"
 sidebar_label: "Commands"
-floorp_commit: "40743397fbb36ea1aebaf83e620c13c1233301e8"
+floorp_commit: "3b6a45e0d968e497828548eda732f04258bf28ed"
 generated: true
 ---
 # Command Reference
@@ -276,7 +276,7 @@ Source: `deno.json:86`
 deno task test:host
 ```
 
-Implementation: `deno test --allow-read --allow-write --allow-run=openssl --allow-net=127.0.0.1 tools/src/ tools/design-matrix/`
+Implementation: `deno test --allow-read --allow-write --allow-run=openssl,deno --allow-net=127.0.0.1 tools/src/ tools/design-matrix/`
 
 Source: `deno.json:87`
 
@@ -378,7 +378,7 @@ Source: `deno.json:91`
 feles-build build --phase <before-mach|after-mach>
 ```
 
-Source: `tools/feles-build.ts:320`
+Source: `tools/feles-build.ts:333`
 
 ### `dev`
 
@@ -386,7 +386,7 @@ Source: `tools/feles-build.ts:320`
 feles-build dev [--port-offset <n|auto>]
 ```
 
-Source: `tools/feles-build.ts:276`
+Source: `tools/feles-build.ts:289`
 
 ### `misc`
 
@@ -394,7 +394,7 @@ Source: `tools/feles-build.ts:276`
 feles-build misc patch --action <apply|create|init>
 ```
 
-Source: `tools/feles-build.ts:332`
+Source: `tools/feles-build.ts:345`
 
 ### `stage`
 
@@ -402,7 +402,7 @@ Source: `tools/feles-build.ts:332`
 feles-build stage [--marionette] [--port-offset <n|auto>]
 ```
 
-Source: `tools/feles-build.ts:305`
+Source: `tools/feles-build.ts:318`
 
 ### `test`
 
@@ -410,4 +410,4 @@ Source: `tools/feles-build.ts:305`
 feles-build test [--own-native-session] [--port-offset <n|auto>]
 ```
 
-Source: `tools/feles-build.ts:287`
+Source: `tools/feles-build.ts:300`

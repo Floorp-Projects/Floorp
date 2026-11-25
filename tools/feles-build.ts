@@ -19,7 +19,7 @@ import {
 import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import { Logger } from "./src/utils.ts";
 import { withDevStateLock } from "./src/dev_state_lock.ts";
-import { startDevBrowser } from "./src/dev_launch.ts";
+import { reportDevStartupFailure, startDevBrowser } from "./src/dev_launch.ts";
 
 const logger = new Logger("feles-build");
 
@@ -88,14 +88,15 @@ async function runDev(portOffset = 0): Promise<void> {
   });
 
   await startDevBrowser(
-    () => DevServer.run(() => {}, { portOffset }),
-    (onStarted) =>
+    (signal) => DevServer.run(() => {}, { portOffset, signal }),
+    (onStarted, signal) =>
       BrowserLauncher.run({
         initialUrl: devHttpOrigin("settings", "/", portOffset),
         recordProcess: true,
         onStarted,
+        signal,
       }),
-    DevServer.shutdown,
+    DevServer.stop,
     () => {
       logger.info("Browser closed — shutting down dev servers.");
       DevServer.shutdown();
@@ -105,6 +106,8 @@ async function runDev(portOffset = 0): Promise<void> {
       logger.error(`Browser launcher failed: ${error}`);
       Deno.exit(1);
     },
+    90000,
+    reportDevStartupFailure,
   );
 }
 
@@ -152,10 +155,15 @@ async function runStage(
   });
 
   await startDevBrowser(
-    () => DevServer.run(() => {}, { portOffset }),
-    (onStarted) =>
-      BrowserLauncher.run({ marionette, recordProcess: true, onStarted }),
-    DevServer.shutdown,
+    (signal) => DevServer.run(() => {}, { portOffset, signal }),
+    (onStarted, signal) =>
+      BrowserLauncher.run({
+        marionette,
+        recordProcess: true,
+        onStarted,
+        signal,
+      }),
+    DevServer.stop,
     () => {
       logger.info("Browser closed — shutting down dev servers.");
       DevServer.shutdown();
@@ -165,6 +173,8 @@ async function runStage(
       logger.error(`Browser launcher failed: ${error}`);
       Deno.exit(1);
     },
+    90000,
+    reportDevStartupFailure,
   );
 }
 
@@ -201,17 +211,20 @@ async function runTest(
   });
 
   await startDevBrowser(
-    () => DevServer.run(() => {}, { portOffset }),
-    (onStarted) =>
+    (signal) => DevServer.run(() => {}, { portOffset, signal }),
+    (onStarted, signal) =>
       BrowserLauncher.run({
         marionette: true,
         ownLinuxSession: ownNativeSession,
         recordProcess: true,
         onStarted,
+        signal,
       }),
-    DevServer.shutdown,
+    DevServer.stop,
     () => {},
     (error) => logger.error(`Browser launcher failed: ${error}`),
+    90000,
+    reportDevStartupFailure,
   );
 }
 

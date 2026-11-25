@@ -13,6 +13,7 @@ import {
   captureHubPanelMenuM3eLaunchProcesses,
   cleanupHubPanelMenuM3eLaunches,
   connectHubPanelMenuM3eBrowser,
+  hubPanelMenuM3eFailure,
   hubPanelMenuM3eLaunchPids,
   hubPanelMenuM3eProcessExited,
   listHubPanelMenuM3eOwnedListeningPorts,
@@ -44,6 +45,7 @@ import type { MarionetteClient } from "./browser_connector.ts";
 import type {
   HubPanelMenuM3eAcceptanceReport,
   HubPanelMenuM3eCaseResult,
+  HubPanelMenuM3eFailure,
   HubPanelMenuM3eLaunchRecord,
   HubPanelMenuM3eOwnedCommandResult,
   HubPanelMenuM3ePolicyBinding,
@@ -108,7 +110,7 @@ function recordCase(
   id: string,
   status: "passed" | "failed",
   observations: Readonly<Record<string, boolean | number | string | null>> = {},
-  failure: string | null = null,
+  failure: HubPanelMenuM3eFailure | null = null,
 ): void {
   const index = cases.findIndex((result) => result.id === id);
   if (index < 0 || cases[index].status !== "not-run") {
@@ -303,7 +305,7 @@ async function startStartupRow(
   taskId: string,
   profileRoot: string,
   runDirectory: string,
-  launchFailures: string[],
+  launchFailures: HubPanelMenuM3eFailure[],
   cleanup: MutableHubPanelMenuM3eCleanup,
   launches: HubPanelMenuM3eLaunchRecord[],
   beforeLaunch?: (profilePath: string) => Promise<void>,
@@ -380,9 +382,7 @@ async function startStartupRow(
     }
     if (startError !== null) throw startError;
     if (!startResult || !startResult.completed || !startResult.success) {
-      const failure = `M3e ${row.id} dev-tool launch failed`;
-      launchFailures.push(failure);
-      throw new Error(failure);
+      throw new Error("M3e dev-tool launch failed");
     }
     await assertHubPanelMenuM3eUserJsDoesNotOverride(profilePath);
     const browserProcess = assertHubPanelMenuM3eProcessProfile(
@@ -460,10 +460,10 @@ async function startStartupRow(
       startupEvidence,
     };
   } catch (error) {
-    const failure = String(error);
+    const failure = hubPanelMenuM3eFailure("launch", error, row.id);
     launchRecord.failure = failure;
-    if (!launchFailures.some((item) => item.includes(row.id))) {
-      launchFailures.push(`${row.id}: ${failure}`);
+    if (!launchFailures.some((item) => item.rowId === row.id)) {
+      launchFailures.push(failure);
     }
     if (client) await closeHubPanelMenuM3eBrowser(client).catch(() => {});
     if (launchRecord.identities.length > 0) {
@@ -604,7 +604,7 @@ async function refreshAndStopOwnedLaunch(
       ).catch(() => false);
     });
   } catch {
-    launch.failure ??= "M3e teardown diagnostics failed";
+    launch.failure ??= hubPanelMenuM3eFailure("cleanup");
     cleanup.ownedCommandCleanupProven = false;
   }
   launch.identities = refreshed.identities;
@@ -671,7 +671,7 @@ async function main(): Promise<void> {
   await Deno.mkdir(runDirectory, { mode: 0o700 });
   const reportPath = join(runDirectory, "acceptance-report.json");
   const cases = createHubPanelMenuM3eCaseResults();
-  const launchFailures: string[] = [];
+  const launchFailures: HubPanelMenuM3eFailure[] = [];
   const cleanup: MutableHubPanelMenuM3eCleanup = {
     launchOwnershipProven: false,
     ownedProcessesStopped: true,
@@ -690,7 +690,7 @@ async function main(): Promise<void> {
     | Awaited<ReturnType<typeof snapshotProfileTree>>
     | null = null;
   let profileRoot: string | null = null;
-  let runFailure: string | null = null;
+  let runFailure: HubPanelMenuM3eFailure | null = null;
   let policyBinding: HubPanelMenuM3ePolicyBinding | null = null;
   let bundle:
     | Awaited<ReturnType<typeof createHubPanelMenuM3eFixtureBundle>>
@@ -1067,7 +1067,7 @@ async function main(): Promise<void> {
       },
     });
   } catch (error) {
-    runFailure = String(error);
+    runFailure = hubPanelMenuM3eFailure("run", error);
     if (
       currentCaseId &&
       cases.find((result) => result.id === currentCaseId)?.status === "not-run"
@@ -1135,9 +1135,7 @@ async function main(): Promise<void> {
         sharedProfileAfter,
       );
     } catch (error) {
-      runFailure ??= `M3e final shared-profile snapshot failed: ${
-        String(error)
-      }`;
+      runFailure ??= hubPanelMenuM3eFailure("snapshot", error);
       cleanup.sharedProfileUnchanged = false;
     }
   }
@@ -1149,7 +1147,7 @@ async function main(): Promise<void> {
     functionalCases.length === HUB_PANEL_MENU_M3E_FUNCTIONAL_CASE_IDS.length &&
     functionalCases.every((result) => result.status === "passed");
   if (!functionalComplete) {
-    runFailure ??= "M3e functional required cases are incomplete";
+    runFailure ??= hubPanelMenuM3eFailure("incomplete");
   }
   const createReport = (passed: boolean): HubPanelMenuM3eAcceptanceReport => ({
     schemaVersion: 1,
@@ -1172,9 +1170,7 @@ async function main(): Promise<void> {
     await writeReport(reportPath, createReport(false));
   } catch (error) {
     cleanup.reportWritten = false;
-    runFailure ??= `M3e pre-cleanup report serialization failed: ${
-      String(error)
-    }`;
+    runFailure ??= hubPanelMenuM3eFailure("report", error);
     console.error(serializeHubPanelMenuM3eReport(createReport(false)));
     Deno.exitCode = 1;
     return;
@@ -1185,21 +1181,18 @@ async function main(): Promise<void> {
     cleanup.ownedProcessesStopped && cleanup.ownedPortsClosed &&
     cleanup.fixtureClosed && cleanup.fixtureObservationsBounded &&
     cleanup.sharedProfileUnchanged && cleanup.ownedCommandCleanupProven;
-  let cleanupCaseFailure: string | null = null;
+  let cleanupCaseFailure: HubPanelMenuM3eFailure | null = null;
   if (eligibleForProfileRemoval && profileRoot) {
     try {
       await Deno.remove(profileRoot, { recursive: true });
       await Deno.lstat(profileRoot);
-      cleanupCaseFailure = "M3e owned profile remained after cleanup";
+      cleanupCaseFailure = hubPanelMenuM3eFailure("cleanup");
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) cleanup.profilesRemoved = true;
-      else {cleanupCaseFailure = `M3e owned profile cleanup failed: ${
-          String(error)
-        }`;}
+      else cleanupCaseFailure = hubPanelMenuM3eFailure("cleanup", error);
     }
   } else {
-    cleanupCaseFailure =
-      "M3e profile cleanup was not eligible before all evidence proofs";
+    cleanupCaseFailure = hubPanelMenuM3eFailure("cleanup");
   }
   if (cleanup.profilesRemoved) {
     recordCase(cases, HUB_PANEL_MENU_M3E_FINAL_CLEANUP_CASE_ID, "passed", {
@@ -1218,7 +1211,7 @@ async function main(): Promise<void> {
     );
   }
   if (cases.some((result) => result.status === "not-run")) {
-    runFailure ??= "M3e acceptance contains required cases that were not run";
+    runFailure ??= hubPanelMenuM3eFailure("incomplete");
   }
   const complete =
     cases.length === HUB_PANEL_MENU_M3E_REQUIRED_CASE_IDS.length &&
@@ -1237,7 +1230,7 @@ async function main(): Promise<void> {
     await writeReport(reportPath, report);
   } catch (error) {
     cleanup.reportWritten = false;
-    runFailure ??= `M3e final report serialization failed: ${String(error)}`;
+    runFailure ??= hubPanelMenuM3eFailure("report", error);
     console.error(serializeHubPanelMenuM3eReport(createReport(false)));
     Deno.exitCode = 1;
     return;

@@ -64,13 +64,28 @@ Deno.test("focus oracles distinguish positive restoration, real timely cancellat
       claimLiveAtAction: true,
       claimInvalidatedAt: 1101,
       gatedCancellation: {
+        stimulusId: `${caseId}:1100`,
+        claimInvalidationSource: {
+          kind: "event",
+          stimulusId: `${caseId}:1100`,
+          at: 1101,
+          type,
+          eventAt: 1101,
+          trusted: true,
+          windowTarget: true,
+          target: caseId === "focus-movement-cancellation"
+            ? "new-tab"
+            : caseId === "focus-navigation-cancellation"
+            ? "urlbar"
+            : "settings",
+        },
         actionAt: 1100,
         gateCheckedAt: 1150,
         claimLiveAtAction: true,
         claimInvalidatedAt: 1101,
         buttonCount: 0,
         activeButton: false,
-        events: [{ type, trusted: true, at: 1101 }],
+        events: [{ type, trusted: true, at: 1101, windowTarget: true }],
       },
       events: [{ type, trusted: true, at: 1101, newButton: false }],
     };
@@ -126,6 +141,17 @@ Deno.test("focus oracles distinguish positive restoration, real timely cancellat
 
 Deno.test("cancellation must be proven with its named trusted event before replacement render is released", () => {
   const proof = {
+    stimulusId: "focus-pointer-cancellation:1000",
+    claimInvalidationSource: {
+      kind: "event",
+      stimulusId: "focus-pointer-cancellation:1000",
+      at: 1010,
+      type: "pointermove",
+      eventAt: 1010,
+      trusted: true,
+      windowTarget: false,
+      target: "settings",
+    },
     actionAt: 1000,
     gateCheckedAt: 1100,
     claimLiveAtAction: true,
@@ -139,6 +165,21 @@ Deno.test("cancellation must be proven with its named trusted event before repla
     const invalid of [
       null,
       {},
+      { ...proof, claimInvalidationSource: null },
+      ...[
+        { eventAt: 1020 },
+        { target: "other" },
+        { stimulusId: "different" },
+        { at: 1009 },
+        { trusted: false },
+        { type: "keydown" },
+      ].map((change) => ({
+        ...proof,
+        claimInvalidationSource: {
+          ...proof.claimInvalidationSource,
+          ...change,
+        },
+      })),
       { ...proof, claimInvalidatedAt: null },
       { ...proof, claimInvalidatedAt: 1200 },
       { ...proof, buttonCount: 1 },
@@ -155,6 +196,106 @@ Deno.test("cancellation must be proven with its named trusted event before repla
       )
     );
   }
+});
+
+Deno.test("a later blur or element-target blur cannot justify the first invalidation", () => {
+  const stimulusId = "focus-blur-cancellation:1000";
+  const proof = {
+    stimulusId,
+    actionAt: 1000,
+    gateCheckedAt: 1100,
+    claimLiveAtAction: true,
+    claimInvalidatedAt: 1010,
+    buttonCount: 0,
+    activeButton: false,
+    events: [{ type: "blur", trusted: true, at: 1009, windowTarget: true }, {
+      type: "blur",
+      trusted: true,
+      at: 1015,
+      windowTarget: true,
+    }],
+    claimInvalidationSource: {
+      kind: "event",
+      stimulusId,
+      at: 1010,
+      type: "blur",
+      trusted: true,
+      eventAt: 1009,
+      windowTarget: true,
+    },
+  };
+  assertHubPanelMenuM3eGatedCancellation("focus-blur-cancellation", proof);
+  for (
+    const change of [{ eventAt: 1015 }, { windowTarget: false }, {
+      kind: "other",
+    }]
+  ) {
+    assertThrows(() =>
+      assertHubPanelMenuM3eGatedCancellation("focus-blur-cancellation", {
+        ...proof,
+        claimInvalidationSource: {
+          ...proof.claimInvalidationSource,
+          ...change,
+        },
+      })
+    );
+  }
+});
+
+Deno.test("menu-close invalidation may be its synchronous window blur, but not an unrelated or later event", () => {
+  const stimulusId = "focus-menu-close-cancellation:1000";
+  const source = {
+    kind: "event",
+    stimulusId,
+    at: 1010,
+    type: "blur",
+    trusted: true,
+    eventAt: 1010,
+    windowTarget: true,
+    operation: "menu-close",
+    menuClosed: true,
+  };
+  const proof = {
+    stimulusId,
+    actionAt: 1000,
+    gateCheckedAt: 1100,
+    claimLiveAtAction: true,
+    claimInvalidatedAt: 1010,
+    buttonCount: 0,
+    activeButton: false,
+    events: [{ type: "popuphidden", trusted: true, at: 1009 }, {
+      type: "blur",
+      trusted: true,
+      at: 1010,
+      windowTarget: true,
+    }],
+    claimInvalidationSource: source,
+  };
+  assertHubPanelMenuM3eGatedCancellation(
+    "focus-menu-close-cancellation",
+    proof,
+  );
+  for (
+    const change of [{ operation: null }, { menuClosed: false }, {
+      windowTarget: false,
+    }, { eventAt: 1011 }]
+  ) {
+    assertThrows(() =>
+      assertHubPanelMenuM3eGatedCancellation("focus-menu-close-cancellation", {
+        ...proof,
+        claimInvalidationSource: { ...source, ...change },
+      })
+    );
+  }
+  assertThrows(() =>
+    assertHubPanelMenuM3eGatedCancellation("focus-menu-close-cancellation", {
+      ...proof,
+      events: [
+        { type: "popuphidden", trusted: true, at: 1015 },
+        proof.events[1],
+      ],
+    })
+  );
 });
 
 Deno.test("generated passive focus probes preserve exact native calls and restore descriptors", async () => {
