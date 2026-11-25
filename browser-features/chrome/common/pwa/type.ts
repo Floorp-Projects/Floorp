@@ -114,3 +114,19 @@ export type ViewSourceWindow = Window & {
   gViewSourceUtils: ViewSourceUtils;
   gBrowser: ViewSourceTabBrowser;
 };
+
+export interface TabsProgressListener {
+  onLocationChange(
+    browser: unknown,
+    webProgress: nsIWebProgress,
+    request: nsIRequest | null,
+    location: nsIURI,
+    flags: number,
+  ): void;
+}
+
+export interface TabsProgressBrowser {
+  selectedBrowser: unknown;
+  addTabsProgressListener(listener: TabsProgressListener): void;
+  removeTabsProgressListener(listener: TabsProgressListener): void;
+}
