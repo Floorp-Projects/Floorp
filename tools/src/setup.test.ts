@@ -31,6 +31,7 @@ import {
   prepareRuntime as prepareRuntimeProduction,
   type PrepareRuntimeOptions,
   prepareSetup,
+  prepareSetupWithProfileOverride,
   prepareVite,
   readRuntimeMarker,
   recordSetup,
@@ -656,6 +657,64 @@ Deno.test("prepareSetup composes all steps and records the guard env", () =>
     assertEquals(record.vite.status, "removed");
     assertEquals(record.guardEnv.FLOORP_SKIP_PATCHER, "1");
     assertEquals(relinks, 1);
+  }));
+
+Deno.test("FDH profile override isolates setup cleanup and rejects relative paths", () =>
+  withTempDir(async (root) => {
+    writeFflate(path.join(root, "node_modules"));
+    const source = path.join(root, "registry", "bin");
+    writeRuntimeTree(source);
+    const privateProfile = path.join(root, "private-profile");
+    const sharedProfile = path.join(root, "_dist", "profile", "test");
+    const privateBackups = path.join(privateProfile, "sessionstore-backups");
+    const sharedBackups = path.join(sharedProfile, "sessionstore-backups");
+    const privateStore = path.join(privateProfile, "sessionstore.jsonlz4");
+    const sharedStore = path.join(sharedProfile, "sessionstore.jsonlz4");
+    for (
+      const [backups, store] of [
+        [privateBackups, privateStore],
+        [sharedBackups, sharedStore],
+      ]
+    ) {
+      Deno.mkdirSync(backups, { recursive: true });
+      Deno.writeTextFileSync(path.join(backups, "recovery.jsonlz4"), "keep");
+      Deno.writeTextFileSync(store, "keep");
+    }
+    const options = {
+      projectRoot: root,
+      runtime: {
+        sourcePath: source,
+        bootstrap: prepareSyntheticRuntimeBootstrap,
+        relink: () => {},
+      },
+      vite: { devRunning: false },
+    };
+
+    const record = await prepareSetupWithProfileOverride(
+      privateProfile,
+      options,
+    );
+    assertEquals(record.profile.profileDir, privateProfile);
+    assertEquals(exists(privateBackups), false);
+    assertEquals(exists(privateStore), false);
+    assertEquals(exists(path.join(sharedBackups, "recovery.jsonlz4")), true);
+    assertEquals(exists(sharedStore), true);
+
+    await assertRejects(
+      () => prepareSetupWithProfileOverride("relative-profile", options),
+      Error,
+      "must be absolute",
+    );
+    assertEquals(exists(path.join(sharedBackups, "recovery.jsonlz4")), true);
+    assertEquals(exists(sharedStore), true);
+
+    const defaultRecord = await prepareSetupWithProfileOverride(
+      undefined,
+      options,
+    );
+    assertEquals(defaultRecord.profile.profileDir, sharedProfile);
+    assertEquals(exists(sharedBackups), false);
+    assertEquals(exists(sharedStore), false);
   }));
 
 Deno.test("mount links resolve to the target inside the same root", () => {

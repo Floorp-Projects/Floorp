@@ -472,6 +472,7 @@ export function parseFirstWindowContinuityResult(
 export async function waitForDurableMarker(options: {
   markerPath: string;
   errorPath: string;
+  resultPath?: string;
   runNonce: string;
   launchId: number;
   boundary: DurableBoundary;
@@ -489,6 +490,16 @@ export async function waitForDurableMarker(options: {
       );
     } catch (error) {
       if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
+    if (options.resultPath) {
+      try {
+        await Deno.stat(options.resultPath);
+        throw new Error(
+          "browser driver completed without expected durable marker",
+        );
+      } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) throw error;
+      }
     }
     try {
       const rawError = await Deno.readTextFile(options.errorPath);
@@ -780,14 +791,14 @@ async function waitForPortClosed(port: number): Promise<void> {
   throw new Error("Marionette listener remained open after SIGKILL");
 }
 
-function reservePort(): number {
+export function reservePort(): number {
   const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
   const port = listener.addr.port;
   listener.close();
   return port;
 }
 
-async function writePrivateProfile(
+export async function writePrivateProfile(
   profilePath: string,
   marionettePort: number,
   osServerPort: number,
@@ -914,7 +925,7 @@ export async function hashUntrackedSourceFiles(
   return hashes.sort();
 }
 
-async function buildTrace(
+export async function buildTrace(
   runNonce: string,
   port: number,
   osServerPort: number,
@@ -974,7 +985,10 @@ async function buildTrace(
   };
 }
 
-async function recordTrace(path: string, trace: ProcessRecoveryTrace) {
+export async function recordTrace(
+  path: string,
+  trace: ProcessRecoveryTrace,
+): Promise<void> {
   await Deno.writeTextFile(path, `${JSON.stringify(trace, null, 2)}\n`);
 }
 
@@ -1463,7 +1477,7 @@ async function drainStream(
   }
 }
 
-async function launchBrowser(
+export async function launchBrowser(
   profilePath: string,
   port: number,
   launchId: number,
@@ -1530,7 +1544,7 @@ async function launchBrowser(
   }
 }
 
-async function killBrowser(launch: BrowserLaunch) {
+export async function killBrowser(launch: BrowserLaunch) {
   const processes = await forceKillOwnedBrowser(
     launch.ownership,
     launch.child.status,
@@ -1546,7 +1560,7 @@ async function killBrowser(launch: BrowserLaunch) {
   return { processes, exit: status, portClosed: true };
 }
 
-function canonicalJson(value: unknown): string {
+export function canonicalJson(value: unknown): string {
   if (Array.isArray(value)) {
     return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
   }
@@ -2227,7 +2241,7 @@ async function runFirstWindowContinuityScenario(options: {
   }
 }
 
-async function waitForDriverResult(
+export async function waitForDriverResult(
   resultPath: string,
   errorPath: string,
   timeoutMs: number,
