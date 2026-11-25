@@ -86,14 +86,20 @@ export class NRStartPageChild extends JSWindowActorChild {
   ) {
     this.sendQuery("NRStartPage:GetStringPref", { name }).then(
       (value: unknown) => callback(typeof value === "string" ? value : null),
-      () => callback(null),
+      (error: unknown) => {
+        console.error("[NRStartPage] GetStringPref failed:", error);
+        callback(null);
+      },
     );
   }
 
   SetStringPref(name: string, value: string, callback: () => void = () => {}) {
     this.sendQuery("NRStartPage:SetStringPref", { name, value }).then(
       () => callback(),
-      () => callback(),
+      (error: unknown) => {
+        console.error("[NRStartPage] SetStringPref failed:", error);
+        callback();
+      },
     );
   }
 
