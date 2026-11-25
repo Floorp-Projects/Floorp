@@ -3,6 +3,7 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import * as path from "@std/path";
 import {
+  devProcessExitConfirmed,
   listDevProcesses,
   readDevProcesses,
   recordDevProcess,
@@ -113,6 +114,14 @@ Deno.test("process inventory cancels its child, has its own deadline, and never 
       Error,
       "Process inventory timed out",
     );
+    output = Promise.withResolvers<Deno.CommandOutput>();
+    assertEquals(
+      await devProcessExitConfirmed(
+        81,
+        (pid) => listDevProcesses(pid, undefined, 20),
+      ),
+      false,
+    );
     assert(kills >= 2);
     const before = kills;
     await assertRejects(
@@ -125,6 +134,29 @@ Deno.test("process inventory cancels its child, has its own deadline, and never 
     Object.defineProperty(Deno, "Command", descriptor);
     await Deno.remove(directory, { recursive: true });
   }
+});
+
+Deno.test("startup treats a failed inventory as unknown and confirms exit only from a successful empty snapshot", async () => {
+  let checks = 0;
+  const inspect = (pid?: number) => {
+    assertEquals(pid, 81);
+    checks++;
+    if (checks === 1) {
+      return Promise.reject(new Error("Process inventory timed out"));
+    }
+    return Promise.resolve(checks === 2 ? [{ ...process, pid: 81 }] : []);
+  };
+  assertEquals(await devProcessExitConfirmed(81, inspect), false);
+  assertEquals(await devProcessExitConfirmed(81, inspect), false);
+  assertEquals(await devProcessExitConfirmed(81, inspect), true);
+  const source = await Deno.readTextFile(
+    new URL("../dev-tool.ts", import.meta.url),
+  );
+  assert(
+    source.replace(/\s/g, "").includes(
+      "i%5===4&&awaitdevProcessExitConfirmed(Number(pid))",
+    ),
+  );
 });
 
 Deno.test("process inventory accepts an empty snapshot and propagates command failures", async () => {

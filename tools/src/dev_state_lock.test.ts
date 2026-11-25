@@ -128,6 +128,75 @@ Deno.test({
   },
 });
 
+Deno.test("two former children cannot mistake each other's liveness probes for a live owner", async () => {
+  for (const forceExclusive of [true, false]) {
+    const root = await Deno.makeTempDir();
+    const path = `${root}/lock`;
+    const open = Deno.open;
+    const tryLock = Deno.FsFile.prototype.tryLock;
+    const checkoutFiles = new WeakSet<Deno.FsFile>();
+    const probing = Promise.withResolvers<void>();
+    const resume = Promise.withResolvers<void>();
+    let first: Promise<unknown> | undefined;
+    let calls = 0;
+    try {
+      await exitOwner(path);
+      Deno.open = async (target, options) => {
+        const file = await open(target, options);
+        if (target === path) checkoutFiles.add(file);
+        return file;
+      };
+      let intercepted = false;
+      Deno.FsFile.prototype.tryLock = async function (exclusive) {
+        const intercept = checkoutFiles.has(this) && !intercepted;
+        if (intercept) intercepted = true;
+        const acquired = await tryLock.call(
+          this,
+          intercept && forceExclusive ? true : exclusive,
+        );
+        if (intercept && acquired) {
+          probing.resolve();
+          await resume.promise;
+        }
+        return acquired;
+      };
+      const enter = () => {
+        calls++;
+        return Promise.resolve();
+      };
+      first = assertRejects(
+        () =>
+          withDevStateLock(
+            enter,
+            undefined,
+            path,
+            testEnvironment("dead-parent"),
+          ),
+        Error,
+        "delegation expired",
+      );
+      await probing.promise;
+      const second = withDevStateLock(
+        enter,
+        undefined,
+        path,
+        testEnvironment("dead-parent"),
+      );
+      if (forceExclusive) await second;
+      else await assertRejects(() => second, Error, "delegation expired");
+      assertEquals(calls, forceExclusive ? 1 : 0);
+      resume.resolve();
+      await first;
+    } finally {
+      resume.resolve();
+      await first;
+      Deno.open = open;
+      Deno.FsFile.prototype.tryLock = tryLock;
+      await Deno.remove(root, { recursive: true });
+    }
+  }
+});
+
 Deno.test("takeover excludes former delegation while the old marker still exists", async () => {
   const root = await Deno.makeTempDir();
   const path = `${root}/lock`;

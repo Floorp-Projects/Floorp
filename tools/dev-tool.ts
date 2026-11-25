@@ -24,6 +24,7 @@ import {
 } from "./src/port_offset.ts";
 import {
   DEV_PROCESSES_FILE,
+  devProcessExitConfirmed,
   listDevProcesses,
   readDevProcesses,
   recordDevProcess,
@@ -377,7 +378,7 @@ async function cmdStart() {
     }
     const log = await Deno.readTextFile(logFile).catch(() => "");
     if (await reportDevPortConflict(log)) Deno.exit(1);
-    if (i % 5 === 4 && !(await listDevProcesses(Number(pid))).length) {
+    if (i % 5 === 4 && await devProcessExitConfirmed(Number(pid))) {
       await reportDevStartupFailure(new DevStartupFailure("startup-failed"));
       console.error(
         `[dev-tool] Dev server exited before Marionette was ready. Check ${

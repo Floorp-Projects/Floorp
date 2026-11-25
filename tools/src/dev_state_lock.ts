@@ -53,7 +53,7 @@ export async function withDevStateLock<T>(
     });
     if (!ownerToken && inherited) {
       await lockBefore(lease, false, deadline);
-      locked = await file.tryLock(true);
+      locked = await file.tryLock(false);
       if (locked) {
         throw new Error(
           "Dev state delegation expired; retry without the inherited owner token",

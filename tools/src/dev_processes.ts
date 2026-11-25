@@ -107,6 +107,17 @@ export async function listDevProcesses(
   }
 }
 
+export async function devProcessExitConfirmed(
+  pid: number,
+  inspect = listDevProcesses,
+): Promise<boolean> {
+  try {
+    return (await inspect(pid)).length === 0;
+  } catch {
+    return false;
+  }
+}
+
 async function captureDevProcesses(
   pid: number | undefined,
   signal: AbortSignal,
