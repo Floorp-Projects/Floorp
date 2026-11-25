@@ -6,6 +6,7 @@ import { splitDevCommandLine } from "./dev_process_selection.ts";
 import type { DevProcessIdentity } from "./dev_process_types.ts";
 import { settleWithin } from "./async_utils.ts";
 import { MarionetteClient } from "./browser_connector.ts";
+import { ownsDevBrowserListener } from "./dev_browser_identity.ts";
 
 export const DEV_STARTUP_TIMEOUT_MS = 120_000;
 export const DEV_STARTUP_FINALIZE_MS = 10_000;
@@ -130,25 +131,38 @@ export async function hasDevStartupReady(
   profile: string,
   port: string,
 ): Promise<boolean> {
-  if (
-    typeof record !== "object" || record === null || !("state" in record) ||
-    record.state !== "ready" || !("instances" in record) ||
-    !Array.isArray(record.instances) || record.instances.length < 2 ||
-    new Set(record.instances).size !== record.instances.length
-  ) return false;
+  const instances = readinessInstances(record);
+  if (!instances) return false;
   const server = processes.find((process) => process.pid === serverPid);
   if (
     !server ||
-    !record.instances.includes(await readinessIdentity(server, profile, port))
+    !instances.includes(await readinessIdentity(server, profile, port))
   ) return false;
   const live = new Set(
     await Promise.all(
       processes.map((process) => readinessIdentity(process, profile, port)),
     ),
   );
-  return record.instances.every((identity: unknown) =>
-    typeof identity === "string" && live.has(identity)
-  );
+  return instances.every((identity) => live.has(identity));
+}
+
+function readinessInstances(record: unknown): readonly string[] | null {
+  if (
+    typeof record !== "object" || record === null || !("state" in record) ||
+    record.state !== "ready" || !("instances" in record) ||
+    !Array.isArray(record.instances) || record.instances.length < 2 ||
+    new Set(record.instances).size !== record.instances.length ||
+    !record.instances.every((identity: unknown): identity is string =>
+      typeof identity === "string"
+    )
+  ) return null;
+  return record.instances;
+}
+
+export class DevStartupReadinessUnknown extends Error {
+  constructor() {
+    super("Existing browser readiness is inconclusive");
+  }
 }
 
 export async function verifyDevStartupReady(
@@ -167,12 +181,22 @@ export async function verifyDevStartupReady(
     signal: AbortSignal,
   ) => Promise<Pick<Deno.TcpConn, "close">> = (port, signal) =>
     Deno.connect({ hostname: "127.0.0.1", port, signal }),
+  owns = ownsDevBrowserListener,
 ): Promise<boolean> {
-  signal.throwIfAborted();
-  const timeoutMs = Math.min(5000, remaining());
-  if (timeoutMs <= 0) throw new DevStartupFailure("startup-timeout");
-  const processes = await inspect(signal, timeoutMs);
-  signal.throwIfAborted();
+  const inventory = async () => {
+    signal.throwIfAborted();
+    const timeoutMs = Math.min(5000, remaining());
+    if (timeoutMs <= 0) throw new DevStartupFailure("startup-timeout");
+    try {
+      const processes = await inspect(signal, timeoutMs);
+      signal.throwIfAborted();
+      return processes;
+    } catch {
+      signal.throwIfAborted();
+      throw new DevStartupReadinessUnknown();
+    }
+  };
+  const processes = await inventory();
   if (!await hasDevStartupReady(record, processes, serverPid, profile, port)) {
     return false;
   }
@@ -191,7 +215,35 @@ export async function verifyDevStartupReady(
     const connection = await Promise.race([pending, cancelled.promise]);
     connection.close();
     signal.throwIfAborted();
-    return true;
+    const instances = readinessInstances(record)!;
+    const browserPids: number[] = [];
+    for (const process of processes) {
+      if (
+        process.pid !== serverPid &&
+        instances.includes(await readinessIdentity(process, profile, port))
+      ) browserPids.push(process.pid);
+    }
+    let owned: boolean;
+    try {
+      owned = await owns(
+        Number(port),
+        browserPids,
+        signal,
+        Math.min(5000, remaining()),
+      );
+    } catch {
+      signal.throwIfAborted();
+      throw new DevStartupReadinessUnknown();
+    }
+    signal.throwIfAborted();
+    if (!owned) return false;
+    return await hasDevStartupReady(
+      record,
+      await inventory(),
+      serverPid,
+      profile,
+      port,
+    );
   } finally {
     signal.removeEventListener("abort", abort);
   }

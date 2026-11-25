@@ -6,6 +6,7 @@ import {
   captureWindowsBrowserListenerIdentity,
   listWindowsBrowserListeners,
   listWindowsBrowserProcesses,
+  ownsDevBrowserListener,
   parseWindowsBrowserProcessSnapshot,
   revalidateWindowsBrowserListenerIdentity,
   selectWindowsBrowserListenerIdentity,
@@ -24,6 +25,89 @@ import {
 import { sleep } from "./async_utils.ts";
 
 const BIN = "C:\\Floorp\\_dist\\bin\\floorp\\floorp.exe";
+
+Deno.test({
+  name:
+    "Linux listener ownership rejects a foreign replacement while the recorded process remains live",
+  ignore: Deno.build.os !== "linux",
+  fn: async () => {
+    const fixture = async () => {
+      const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
+      const port = listener.addr.port;
+      let listening = true;
+      let child: Deno.ChildProcess | undefined;
+      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+      const signal = new AbortController().signal;
+      try {
+        assertEquals(
+          await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+          true,
+        );
+        assertEquals(
+          await ownsDevBrowserListener(port, [], signal, 5000),
+          false,
+        );
+        listener.close();
+        listening = false;
+        child = new Deno.Command(Deno.execPath(), {
+          args: [
+            "eval",
+            `const listener = Deno.listen({hostname: "127.0.0.1", port: ${port}}); console.log("ready"); await Deno.stdin.read(new Uint8Array(1)); listener.close();`,
+          ],
+          stdin: "piped",
+          stdout: "piped",
+          stderr: "null",
+        }).spawn();
+        reader = child.stdout.getReader();
+        const ready = await reader.read();
+        assertEquals(new TextDecoder().decode(ready.value).trim(), "ready");
+        assertEquals(
+          await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+          false,
+        );
+        assertEquals(
+          await ownsDevBrowserListener(port, [child.pid], signal, 5000),
+          true,
+        );
+        const cancelled = new AbortController();
+        cancelled.abort(new Error("cancelled listener inspection"));
+        await assertRejects(
+          () =>
+            ownsDevBrowserListener(port, [child!.pid], cancelled.signal, 5000),
+          Error,
+          "cancelled listener inspection",
+        );
+      } finally {
+        if (listening) listener.close();
+        if (child) {
+          await child.stdin.close().catch(() => {});
+          await child.status;
+        }
+        if (reader) {
+          await reader.cancel();
+          reader.releaseLock();
+        }
+      }
+    };
+    const source =
+      `import { assertEquals, assertRejects } from "@std/assert"; import { ownsDevBrowserListener } from ${
+        JSON.stringify(
+          new URL("./dev_browser_identity.ts", import.meta.url).href,
+        )
+      }; await (${fixture.toString()})();`;
+    const result = await new Deno.Command(Deno.execPath(), {
+      args: [
+        "eval",
+        "--config",
+        new URL("../../deno.json", import.meta.url).pathname,
+        source,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
+  },
+});
 const PROFILE = "C:\\Floorp\\_dist\\profile\\test";
 const PARENT_START = "2026-11-15T03:00:00.000Z";
 const CHILD_START = "2026-11-15T03:00:01.000Z";

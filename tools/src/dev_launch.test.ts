@@ -6,6 +6,7 @@ import {
   DEV_STARTUP_FINALIZE_MS,
   DEV_STARTUP_TIMEOUT_MS,
   DevStartupFailure,
+  DevStartupReadinessUnknown,
   devStartupReady,
   hasDevStartupReady,
   nativeDevLogTarget,
@@ -213,6 +214,24 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
     true,
   );
   assertEquals(existing.includes("reportDevStartupFailure(error)"), true);
+  assertEquals(
+    existing.includes(
+      "if(confirmedInvalid){awaitsettleWithin(reportDevStartupFailure(error),5000);}",
+    ),
+    true,
+  );
+  assertEquals(
+    existing.includes(
+      "if(errorinstanceofDevStartupReadinessUnknown)returnfalse;",
+    ),
+    true,
+  );
+  assertEquals(
+    existing.includes(
+      "Existingbrowserreadinessisinconclusive.Retry'dev-toolstart'.",
+    ),
+    true,
+  );
   assertEquals(existing.includes("throwerror;"), true);
   assertEquals(
     source.includes("constport=awaitcheckReadiness(signal,remaining)"),
@@ -431,8 +450,8 @@ Deno.test("cached reuse refreshes inventory after polling; a browser that exits 
           return Promise.resolve({ close() {} });
         },
       ),
-    Error,
-    "inventory unknown",
+    DevStartupReadinessUnknown,
+    "inconclusive",
   );
   assertEquals(connections, 0);
 });
@@ -462,6 +481,8 @@ Deno.test("cached identities also require an accepting TCP port without opening 
             assertEquals(budget, Math.min(5000, remaining));
             return Promise.resolve(processes);
           },
+          undefined,
+          () => Promise.resolve(true),
         ),
         true,
       );
@@ -545,6 +566,146 @@ Deno.test("cancelled cached checks close late TCP connections and cannot accept 
     Error,
     "cancelled inventory",
   );
+});
+
+Deno.test("reuse rejects a swapped listener with unchanged recorded generations and rechecks identity after ownership", async () => {
+  const server = {
+    pid: 10,
+    startTime: "server",
+    commandLine: "deno task feles-build dev",
+  };
+  const browser = {
+    pid: 11,
+    startTime: "browser",
+    commandLine: "floorp --marionette",
+  };
+  const processes = [server, browser];
+  const record = await devStartupReady(processes, 10, "/isolated", "2828");
+  let owner = 11;
+  let live = processes;
+  const check = () =>
+    verifyDevStartupReady(
+      record,
+      10,
+      "/isolated",
+      "2828",
+      new AbortController().signal,
+      () => 1000,
+      () => Promise.resolve(live),
+      () => Promise.resolve({ close() {} }),
+      (port, pids, signal, budget) => {
+        assertEquals([port, pids, signal.aborted, budget], [
+          2828,
+          [11],
+          false,
+          1000,
+        ]);
+        return Promise.resolve(pids.includes(owner));
+      },
+    );
+  assertEquals(await check(), true);
+  owner = 12;
+  assertEquals(await check(), false);
+  owner = 11;
+  assertEquals(
+    await verifyDevStartupReady(
+      record,
+      10,
+      "/isolated",
+      "2828",
+      new AbortController().signal,
+      () => 1000,
+      () => Promise.resolve(live),
+      () => Promise.resolve({ close() {} }),
+      () => {
+        live = [server, { ...browser, startTime: "replaced" }];
+        return Promise.resolve(true);
+      },
+    ),
+    false,
+  );
+});
+
+Deno.test("inconclusive inventory retries without protocol commands or readiness loss; exhausted unknown checks preserve proof", async () => {
+  const processes = [
+    { pid: 10, startTime: "server", commandLine: "deno task feles-build dev" },
+    { pid: 11, startTime: "browser", commandLine: "floorp --marionette" },
+  ];
+  const record = await devStartupReady(processes, 10, "/isolated", "2828");
+  const saved = JSON.stringify(record);
+  for (const permanent of [false, true]) {
+    let clock = 0;
+    let inventories = 0;
+    let owners = 0;
+    let probes = 0;
+    let confirmedInvalid = false;
+    const pending = pollDevStartup(
+      async (signal, remaining) => {
+        try {
+          return !!await probeDevMarionettePort(
+            () => "2828",
+            signal,
+            remaining,
+            undefined,
+            () => {
+              probes++;
+              return Promise.reject(new Error("session already open"));
+            },
+            async (port) => {
+              const ready = await verifyDevStartupReady(
+                record,
+                10,
+                "/isolated",
+                port,
+                signal,
+                remaining,
+                (inventorySignal, budget) => {
+                  assertEquals(inventorySignal, signal);
+                  assertEquals(budget, Math.min(5000, remaining()));
+                  inventories++;
+                  if (permanent || inventories === 1) {
+                    clock += budget;
+                    return Promise.reject(
+                      new Error("Process inventory timed out"),
+                    );
+                  }
+                  return Promise.resolve(processes);
+                },
+                () => Promise.resolve({ close() {} }),
+                () => {
+                  owners++;
+                  return Promise.resolve(true);
+                },
+              );
+              if (!ready) confirmedInvalid = true;
+              return ready;
+            },
+          );
+        } catch (error) {
+          if (error instanceof DevStartupReadinessUnknown) return false;
+          throw error;
+        }
+      },
+      15000,
+      () => clock,
+      (ms) => {
+        clock += ms;
+        return Promise.resolve();
+      },
+    );
+    if (permanent) {
+      await assertRejects(() => pending, DevStartupFailure, "startup-timeout");
+      assertEquals(clock, 15000);
+    } else {
+      await pending;
+      assertEquals([clock, inventories, owners], [7000, 3, 1]);
+    }
+    assertEquals([probes, confirmedInvalid, JSON.stringify(record)], [
+      0,
+      false,
+      saved,
+    ]);
+  }
 });
 
 Deno.test("both readiness paths wait for a missing port file within the same deadline and propagate other read failures", async () => {

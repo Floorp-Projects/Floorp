@@ -8,6 +8,7 @@ import {
 } from "./dev_process_selection.ts";
 import type { DevProcessIdentity } from "./dev_process_types.ts";
 import { commandOutput } from "./dev_process_command.ts";
+import { PLATFORM } from "./defines.ts";
 import type {
   DevBrowserListenerRecord,
   DevBrowserProcessRecord,
@@ -19,6 +20,85 @@ import type {
 
 const DEFAULT_RETRY_COUNT = 10;
 const DEFAULT_RETRY_DELAY_MS = 100;
+
+export async function ownsDevBrowserListener(
+  port: number,
+  browserPids: readonly number[],
+  signal: AbortSignal,
+  timeoutMs: number,
+): Promise<boolean> {
+  if (
+    !Number.isInteger(port) || port < 1 || port > 65535 ||
+    !Number.isFinite(timeoutMs) || timeoutMs <= 0
+  ) throw new TypeError("Invalid listener inspection budget or port");
+  const controller = new AbortController();
+  const abort = () => controller.abort(signal.reason);
+  signal.addEventListener("abort", abort, { once: true });
+  if (signal.aborted) abort();
+  const timer = setTimeout(
+    () => controller.abort(new Error("Listener inspection timed out")),
+    timeoutMs,
+  );
+  try {
+    const signal = controller.signal;
+    signal.throwIfAborted();
+    if (PLATFORM === "windows") {
+      const rows = await listWindowsBrowserListeners(port, signal, timeoutMs);
+      signal.throwIfAborted();
+      return rows.length > 0 &&
+        rows.every((row) =>
+          row.localPort === port && row.state.toLowerCase() === "listen" &&
+          browserPids.includes(row.owningProcess)
+        );
+    }
+    if (PLATFORM === "darwin") {
+      const output = await commandOutput(
+        "lsof",
+        ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-Fp"],
+        undefined,
+        signal,
+      );
+      signal.throwIfAborted();
+      const rows = output.trim().split(/\r?\n/);
+      return rows.length > 0 &&
+        rows.every((row) =>
+          /^p\d+$/.test(row) && browserPids.includes(Number(row.slice(1)))
+        );
+    }
+    const inodes = new Set<string>();
+    const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
+    for (const file of ["/proc/net/tcp", "/proc/net/tcp6"]) {
+      const content = await Deno.readTextFile(file, { signal });
+      for (const line of content.split("\n").slice(1)) {
+        const fields = line.trim().split(/\s+/);
+        if (
+          fields[1]?.endsWith(`:${hexPort}`) && fields[3] === "0A" && fields[9]
+        ) inodes.add(fields[9]);
+      }
+    }
+    if (inodes.size === 0) return false;
+    const owned = new Set<string>();
+    for (const pid of browserPids) {
+      for await (const descriptor of Deno.readDir(`/proc/${pid}/fd`)) {
+        signal.throwIfAborted();
+        try {
+          const target = await Deno.readLink(
+            `/proc/${pid}/fd/${descriptor.name}`,
+          );
+          const match = target.match(/^socket:\[(\d+)\]$/);
+          if (match && inodes.has(match[1])) owned.add(match[1]);
+        } catch (error) {
+          if (!(error instanceof Deno.errors.NotFound)) throw error;
+        }
+      }
+    }
+    signal.throwIfAborted();
+    return [...inodes].every((inode) => owned.has(inode));
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener("abort", abort);
+  }
+}
 
 const WINDOWS_LISTENER_SNAPSHOT_SCRIPT = String.raw`
 $ErrorActionPreference = 'Stop'

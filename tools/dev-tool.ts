@@ -10,6 +10,7 @@ import {
   DEV_STARTUP_STATUS_FILE,
   DEV_STARTUP_TIMEOUT_MS,
   DevStartupFailure,
+  DevStartupReadinessUnknown,
   devStartupReady,
   nativeDevLogTarget,
   pollDevStartup,
@@ -275,32 +276,39 @@ async function cmdStart() {
         recordedProcesses,
       }).includes(pid)
     ) {
+      let confirmedInvalid = false;
       try {
         let readyPort = "";
         let priorReady = false;
         await pollDevStartup(
           async (signal, remaining) => {
-            readyPort = await checkReadiness(
-              signal,
-              remaining,
-              async (port) => {
-                const status: unknown = await Deno.readTextFile(
-                  DEV_STARTUP_STATUS_FILE,
-                ).then(JSON.parse).catch(() => null);
-                priorReady = await verifyDevStartupReady(
-                  status,
-                  pid,
-                  PATHS.profile_test,
-                  port,
-                  signal,
-                  remaining,
-                  (signal, timeoutMs) =>
-                    listDevProcesses(undefined, signal, timeoutMs),
-                );
-                return priorReady;
-              },
-            );
-            return !!readyPort;
+            try {
+              readyPort = await checkReadiness(
+                signal,
+                remaining,
+                async (port) => {
+                  const status: unknown = await Deno.readTextFile(
+                    DEV_STARTUP_STATUS_FILE,
+                  ).then(JSON.parse).catch(() => null);
+                  priorReady = await verifyDevStartupReady(
+                    status,
+                    pid,
+                    PATHS.profile_test,
+                    port,
+                    signal,
+                    remaining,
+                    (signal, timeoutMs) =>
+                      listDevProcesses(undefined, signal, timeoutMs),
+                  );
+                  if (!priorReady) confirmedInvalid = true;
+                  return priorReady;
+                },
+              );
+              return !!readyPort;
+            } catch (error) {
+              if (error instanceof DevStartupReadinessUnknown) return false;
+              throw error;
+            }
           },
           startupDeadline,
         );
@@ -327,9 +335,13 @@ async function cmdStart() {
           );
         }
       } catch (error) {
-        await settleWithin(reportDevStartupFailure(error), 5000);
+        if (confirmedInvalid) {
+          await settleWithin(reportDevStartupFailure(error), 5000);
+        }
         console.error(
-          "Existing dev server did not prove browser readiness. Use 'dev-tool stop' or 'dev-tool restart'.",
+          confirmedInvalid
+            ? "Existing dev server did not prove browser readiness. Use 'dev-tool stop' or 'dev-tool restart'."
+            : "Existing browser readiness is inconclusive. Retry 'dev-tool start'.",
         );
         throw error;
       }
