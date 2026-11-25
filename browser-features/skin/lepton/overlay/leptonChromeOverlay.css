@@ -19,3 +19,20 @@
  * declare no default namespace, and do not use @import (dropped in dev).
  * See ../README.md.
  */
+
+@media not -moz-pref("userChrome.icon.disabled") {
+  @media -moz-pref("userChrome.icon.menu") {
+    @media (-moz-platform: linux) and (not (-moz-gtk-csd-available)) {
+      :root {
+        --context-menu-background-padding-default: 6px;
+        --context-menu-text-padding: 21px;
+      }
+      .menu-icon {
+        display: unset !important;
+      }
+      #main-menubar > menu > .menu-icon {
+        display: none !important;
+      }
+    }
+  }
+}

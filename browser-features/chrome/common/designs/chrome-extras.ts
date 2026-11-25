@@ -77,6 +77,7 @@ import hiddenTabbarCSS from "./chrome-extras-css/hidden-tabbar.css?inline";
 import hiddenUrlbarIconboxCSS from "./chrome-extras-css/hidden-urlbar-iconbox.css?inline";
 import iconDisabledCSS from "./chrome-extras-css/icon-disabled.css?inline";
 import iconMenuCSS from "./chrome-extras-css/icon-menu.css?inline";
+import iconMenuLinuxCSS from "./chrome-extras-css/icon-menu-linux.css?inline";
 import scaffoldCSS from "./chrome-extras-css/scaffold.css?inline";
 import sidebarOverlapCSS from "./chrome-extras-css/sidebar-overlap.css?inline";
 import sidebarOverlapOnlyCSS from "./chrome-extras-css/sidebar-overlap-only.css?inline";
@@ -230,7 +231,7 @@ export const CHROME_EXTRAS_CSS: Record<ChromeExtrasKey, string> = {
   // nothing at all is emitted while it is on. `iconMenu` only has meaning in
   // that state too.
   iconDisabled: resolveIcons(iconDisabledCSS),
-  iconMenu: resolveIcons(iconMenuCSS),
+  iconMenu: resolveIcons(`${iconMenuCSS}\n${iconMenuLinuxCSS}`),
   centeredTab: centeredTabCSS,
   centeredUrlbar: centeredUrlbarCSS,
   centeredBookmarkbar: centeredBookmarkbarCSS,
