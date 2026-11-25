@@ -19,11 +19,17 @@ import type {
   WindowsBrowserListenerSelection,
 } from "./dev_browser_identity_types.ts";
 import {
+  listDevProcesses,
   readDevProcesses,
   recordDevProcess,
   registerWindowsBrowserListenerIdentity,
 } from "./dev_processes.ts";
 import { sleep } from "./async_utils.ts";
+import {
+  devStartupReady,
+  probeDevMarionettePort,
+  verifyDevStartupReady,
+} from "./dev_launch.ts";
 
 const BIN = "C:\\Floorp\\_dist\\bin\\floorp\\floorp.exe";
 
@@ -59,7 +65,7 @@ Deno.test({
           )!;
           for (
             const [address, expected] of [
-              ["00000000000000000000000000000000", true],
+              ["00000000000000000000000000000000", false],
               ["0000000000000000FFFF00000100007F", true],
               ["00000000000000000000000001000000", false],
               ["0000000000000000FFFF00000200007F", false],
@@ -151,6 +157,7 @@ Deno.test({
                   "-u",
                   "-c",
                   `import socket, sys; s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM); s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1); s.bind(("::", ${port})); s.listen(1); assert s.getsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY) == 1; print("ready"); sys.stdin.buffer.read(1); s.close()`,
+                  "--marionette",
                 ]
                 : [
                   "eval",
@@ -170,11 +177,53 @@ Deno.test({
             await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
             hostname !== "127.0.0.1",
           );
-          if (hostname !== "::") {
-            assertEquals(
-              await ownsDevBrowserListener(port, [child.pid], signal, 5000),
-              hostname === "127.0.0.1",
+          assertEquals(
+            await ownsDevBrowserListener(port, [child.pid], signal, 5000),
+            hostname === "127.0.0.1",
+          );
+          if (hostname === "::") {
+            const serverPid = Deno.pid;
+            const browserPid = child.pid;
+            const inspect = async (signal: AbortSignal, budget: number) =>
+              (await listDevProcesses(undefined, signal, budget)).filter((
+                process,
+              ) => process.pid === serverPid || process.pid === browserPid);
+            const record = await devStartupReady(
+              await inspect(signal, 5000),
+              serverPid,
+              "/isolated",
+              String(port),
             );
+            assertEquals(record?.state, "ready");
+            let probes = 0;
+            await assertRejects(
+              () =>
+                probeDevMarionettePort(
+                  () => String(port),
+                  signal,
+                  () => 5000,
+                  undefined,
+                  () => {
+                    probes++;
+                    return Promise.reject(
+                      new Error("foreign IPv4 listener is not Marionette"),
+                    );
+                  },
+                  (port) =>
+                    verifyDevStartupReady(
+                      record,
+                      serverPid,
+                      "/isolated",
+                      port,
+                      signal,
+                      () => 5000,
+                      inspect,
+                    ),
+                ),
+              Error,
+              "foreign IPv4 listener is not Marionette",
+            );
+            assertEquals(probes, 1);
           }
           const cancelled = new AbortController();
           cancelled.abort(new Error("cancelled listener inspection"));
@@ -213,6 +262,10 @@ Deno.test({
         JSON.stringify(
           new URL("./dev_browser_identity.ts", import.meta.url).href,
         )
+      }; import { devStartupReady, probeDevMarionettePort, verifyDevStartupReady } from ${
+        JSON.stringify(new URL("./dev_launch.ts", import.meta.url).href)
+      }; import { listDevProcesses } from ${
+        JSON.stringify(new URL("./dev_processes.ts", import.meta.url).href)
       }; await (${fixture.toString()})();`;
     const result = await new Deno.Command(Deno.execPath(), {
       args: [
@@ -234,14 +287,13 @@ Deno.test("lsof ownership selects only endpoints serving IPv4 loopback, includin
       "127.0.0.1",
       "0.0.0.0",
       "*",
-      "[::]",
       "[::ffff:127.0.0.1]",
       "[::ffff:7f00:1]",
     ]
   ) {
     assertEquals(
       parseDevBrowserLoopbackLsofOwners(
-        `p11\nf3\nn${address}:2828\np12\nf4\nn127.0.0.2:2828\nn[::1]:2828\nn127.0.0.1:2829\n`,
+        `p11\nf3\ntIPv4\nn${address}:2828\np12\nf4\nn127.0.0.2:2828\nn[::1]:2828\nn127.0.0.1:2829\n`,
         2828,
       ),
       [11],
@@ -254,10 +306,24 @@ Deno.test("lsof ownership selects only endpoints serving IPv4 loopback, includin
   );
   assertEquals(
     parseDevBrowserLoopbackLsofOwners(
-      "p11\nn*:2828\np12\nn127.0.0.1:2828\n",
+      "p11\nf3\ntIPv4\nn*:2828\np12\nn127.0.0.1:2828\n",
       2828,
     ),
     [11, 12],
+  );
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners(
+      "p11\nf3\ntIPv6\nn*:2828\nf4\nn*:2828\nf5\ntIPv6\nn[::]:2828\n",
+      2828,
+    ),
+    [],
+  );
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners(
+      "p11\nf3\ntIPv6\nn[::ffff:127.0.0.1]:2828\n",
+      2828,
+    ),
+    [11],
   );
   assertThrows(
     () => parseDevBrowserLoopbackLsofOwners("n127.0.0.1:2828\n", 2828),

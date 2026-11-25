@@ -53,7 +53,7 @@ export async function ownsDevBrowserListener(
     if (PLATFORM === "darwin") {
       const output = await commandOutput(
         "lsof",
-        ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-Fpn"],
+        ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-Fptn"],
         undefined,
         signal,
       );
@@ -79,7 +79,6 @@ export async function ownsDevBrowserListener(
           [
             `0100007F:${hexPort}`,
             `00000000:${hexPort}`,
-            `00000000000000000000000000000000:${hexPort}`,
             `0000000000000000FFFF00000100007F:${hexPort}`,
           ].includes(fields[1]) && fields[3] === "0A" && fields[9]
         ) inodes.add(fields[9]);
@@ -114,12 +113,11 @@ export function parseDevBrowserLoopbackLsofOwners(
   port: number,
 ): number[] {
   let pid = 0;
+  let family = "";
   const owners = new Set<number>();
   const endpoints = new Set([
     `127.0.0.1:${port}`,
     `0.0.0.0:${port}`,
-    `*:${port}`,
-    `[::]:${port}`,
     `[::ffff:127.0.0.1]:${port}`,
     `[::ffff:7f00:1]:${port}`,
   ]);
@@ -129,8 +127,15 @@ export function parseDevBrowserLoopbackLsofOwners(
         throw new Error("Invalid listener process owner");
       }
       pid = Number(row.slice(1));
+      family = "";
+    } else if (row.startsWith("f")) {
+      family = "";
+    } else if (row.startsWith("t")) {
+      family = row.slice(1);
     } else if (
-      row.startsWith("n") && endpoints.has(row.slice(1).toLowerCase())
+      row.startsWith("n") &&
+      (endpoints.has(row.slice(1).toLowerCase()) ||
+        (family === "IPv4" && row === `n*:${port}`))
     ) {
       if (pid <= 0) throw new Error("Listener endpoint has no process owner");
       owners.add(pid);
@@ -152,7 +157,7 @@ $rows = @(
   Get-NetTCPConnection -State Listen -ErrorAction Stop |
     Where-Object {
       [int]$_.LocalPort -eq $port -and
-        [string]$_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::', '::ffff:127.0.0.1', '::ffff:7f00:1')
+        [string]$_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::ffff:127.0.0.1', '::ffff:7f00:1')
     } |
     ForEach-Object {
       [pscustomobject]@{
