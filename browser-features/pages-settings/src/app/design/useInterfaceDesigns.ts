@@ -18,14 +18,16 @@ import FluerialDark from "@/app/design/images/designs/Floorp_UI_Fluerial_Dark.sv
 export type InterfaceDesign = DesignFormData["design"];
 
 /** The recommended design, also the default for new profiles. */
-export const RECOMMENDED_INTERFACE_DESIGN: InterfaceDesign = "lepton";
+export const RECOMMENDED_INTERFACE_DESIGN: InterfaceDesign = "proton";
 
 /**
- * Designs built for Firefox's Proton UI, which Firefox replaced with Nova.
- * They stay selectable but are no longer recommended.
+ * Designs built on the Lepton CSS base, which assumes Firefox's Proton-era
+ * DOM/CSS. Firefox replaced Proton with Nova, so these stay selectable but
+ * are no longer recommended. Proton itself tracks upstream Firefox and
+ * remains supported.
  */
 export const DEPRECATED_INTERFACE_DESIGNS: ReadonlySet<InterfaceDesign> =
-  new Set(["proton", "protonfix"]);
+  new Set(["lepton", "photon", "protonfix"]);
 
 export const isDeprecatedInterfaceDesign = (design: InterfaceDesign) =>
   DEPRECATED_INTERFACE_DESIGNS.has(design);
