@@ -6,10 +6,14 @@ import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
 import { withDevStateLock } from "./src/dev_state_lock.ts";
 import {
+  DEV_STARTUP_FINALIZE_MS,
   DEV_STARTUP_STATUS_FILE,
+  DEV_STARTUP_TIMEOUT_MS,
   DevStartupFailure,
   nativeDevLogTarget,
+  pollDevStartup,
   reportDevStartupFailure,
+  waitForDevMarionette,
 } from "./src/dev_launch.ts";
 import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
@@ -33,6 +37,7 @@ import {
   reportDevStartupPortConflict,
   terminateDevProcesses,
 } from "./src/dev_processes.ts";
+import { settleWithin } from "./src/async_utils.ts";
 // Lazy imports for rebuild — avoids type-checking injector.ts at dev-tool level
 async function loadBuildModules() {
   const Builder = await import("./src/builder.ts");
@@ -208,6 +213,8 @@ function parsePidFromOutput(output: string): string {
 }
 
 async function cmdStart() {
+  const startupDeadline = performance.now() + DEV_STARTUP_TIMEOUT_MS -
+    DEV_STARTUP_FINALIZE_MS;
   // A stale PID file must not mistake a reused PID for this dev server.
   try {
     const pid = Number(Deno.readTextFileSync(PID_FILE).trim());
@@ -319,79 +326,102 @@ async function cmdStart() {
   await recordDevProcess(Number(pid));
   console.log(`Started (PID ${pid}). Waiting for Marionette...`);
 
-  // Poll for marionette-port.txt
-  const maxWait = 120; // seconds
-  for (let i = 0; i < maxWait; i++) {
-    await new Promise((r) => setTimeout(r, 1000));
-    const startup = await Deno.readTextFile(DEV_STARTUP_STATUS_FILE).then((
-      text,
-    ) => JSON.parse(text)).catch(() => null);
-    if (startup?.state === "failed") {
-      const code =
-        ["port-conflict", "registration-failed", "startup-timeout"].includes(
-            startup.code,
-          )
-          ? startup.code
-          : "startup-failed";
-      const port = Number.isInteger(startup.port) && startup.port > 0 &&
-          startup.port <= 65535
-        ? startup.port
-        : null;
-      if (code === "port-conflict") {
-        await reportDevStartupPortConflict(port, nativeLaunch);
-      }
-      throw new Error(
-        `Dev startup failed: ${code}; port=${port}; status=${DEV_STARTUP_STATUS_FILE}`,
-      );
-    }
-    try {
-      const port = Deno.readTextFileSync(marionetteFile).trim();
-      if (port) {
-        if (PLATFORM === "windows") {
-          try {
-            await registerWindowsBrowserListenerIdentity({
-              port: Number(port),
-              expectedBinaryPath: BIN_PATH_EXE,
-              expectedProfilePath: PATHS.profile_test,
-              recordedProcesses: readDevProcesses(),
-            });
-          } catch (error) {
-            console.error(
-              "[dev-tool] Actual browser listener identity was not registered:",
-              error,
-            );
-            Deno.exit(1);
-          }
+  let readyPort = "";
+  try {
+    await pollDevStartup(async (signal, remaining, i) => {
+      const startup = await Deno.readTextFile(DEV_STARTUP_STATUS_FILE).then((
+        text,
+      ) => JSON.parse(text)).catch(() => null);
+      signal.throwIfAborted();
+      if (startup?.state === "failed") {
+        const code =
+          ["port-conflict", "registration-failed", "startup-timeout"].includes(
+              startup.code,
+            )
+            ? startup.code
+            : "startup-failed";
+        const port = Number.isInteger(startup.port) && startup.port > 0 &&
+            startup.port <= 65535
+          ? startup.port
+          : null;
+        if (code === "port-conflict") {
+          await reportDevStartupPortConflict(port, nativeLaunch);
         }
-        console.log(`Browser ready! Marionette on port ${port}.`);
-        console.log(
-          `Log: ${
-            nativeLaunch
-              ? path.join(PROJECT_ROOT, "_dist", "dev-server.log")
-              : logFile
-          }`,
+        throw new Error(
+          `Dev startup failed: ${code}; port=${port}; status=${DEV_STARTUP_STATUS_FILE}`,
         );
-        return;
       }
-    } catch {
-      // not yet
-    }
-    const log = await Deno.readTextFile(logFile).catch(() => "");
-    if (await reportDevPortConflict(log)) Deno.exit(1);
-    if (i % 5 === 4 && await devProcessExitConfirmed(Number(pid))) {
-      await reportDevStartupFailure(new DevStartupFailure("startup-failed"));
-      console.error(
-        `[dev-tool] Dev server exited before Marionette was ready. Check ${
-          nativeLaunch ? DEV_STARTUP_STATUS_FILE : logFile
-        }.`,
-      );
-      Deno.exit(1);
-    }
+      try {
+        const port = Deno.readTextFileSync(marionetteFile).trim();
+        if (port) {
+          if (PLATFORM === "windows") {
+            try {
+              await registerWindowsBrowserListenerIdentity({
+                port: Number(port),
+                expectedBinaryPath: BIN_PATH_EXE,
+                expectedProfilePath: PATHS.profile_test,
+                recordedProcesses: readDevProcesses(),
+              });
+            } catch (error) {
+              signal.throwIfAborted();
+              console.error(
+                "[dev-tool] Actual browser listener identity was not registered:",
+                error,
+              );
+              Deno.exit(1);
+            }
+          }
+          signal.throwIfAborted();
+          await waitForDevMarionette(Number(port), signal, remaining);
+          readyPort = port;
+          return true;
+        }
+      } catch {
+        // not yet
+      }
+      const log = await Deno.readTextFile(logFile).catch(() => "");
+      signal.throwIfAborted();
+      if (await reportDevPortConflict(log, signal)) {
+        signal.throwIfAborted();
+        Deno.exit(1);
+      }
+      if (
+        i % 5 === 4 &&
+        await devProcessExitConfirmed(
+          Number(pid),
+          listDevProcesses,
+          signal,
+          Math.min(5000, remaining()),
+        )
+      ) {
+        signal.throwIfAborted();
+        console.error(
+          `[dev-tool] Dev server exited before Marionette was ready. Check ${
+            nativeLaunch ? DEV_STARTUP_STATUS_FILE : logFile
+          }.`,
+        );
+        throw new DevStartupFailure("startup-failed");
+      }
+      return false;
+    }, startupDeadline);
+    console.log(`Browser ready! Marionette on port ${readyPort}.`);
+    console.log(
+      `Log: ${
+        nativeLaunch
+          ? path.join(PROJECT_ROOT, "_dist", "dev-server.log")
+          : logFile
+      }`,
+    );
+    return;
+  } catch (error) {
+    if (!(error instanceof DevStartupFailure)) throw error;
+    await settleWithin(reportDevStartupFailure(error), 5000);
+    if (error.code !== "startup-timeout") Deno.exit(1);
   }
-
-  await reportDevStartupFailure(new DevStartupFailure("startup-timeout"));
   console.error(
-    `Timed out after ${maxWait}s. Check ${
+    `Timed out within the ${
+      DEV_STARTUP_TIMEOUT_MS / 1000
+    }s startup budget. Check ${
       nativeLaunch ? DEV_STARTUP_STATUS_FILE : logFile
     } for errors.`,
   );
@@ -638,9 +668,10 @@ async function cmdConsole() {
 }
 
 async function cmdStatus() {
-  await withBrowser(async (client) => {
-    await client.setContext("chrome");
-    const info = await client.executeScript(`
+  await withBrowser(
+    async (client) => {
+      await client.setContext("chrome");
+      const info = await client.executeScript(`
       return JSON.stringify({
         title: document.title,
         url: document.documentURI,
@@ -648,13 +679,17 @@ async function cmdStatus() {
         activeTab: typeof gBrowser !== 'undefined' ? gBrowser.selectedTab.getAttribute('label') : 'N/A',
       })
     `);
-    const data = JSON.parse(info);
-    console.log("Connected to browser.");
-    console.log(`  Title: ${data.title}`);
-    console.log(`  URL: ${data.url}`);
-    console.log(`  Tabs: ${data.tabCount}`);
-    console.log(`  Active tab: ${data.activeTab}`);
-  });
+      const data = JSON.parse(info);
+      console.log("Connected to browser.");
+      console.log(`  Title: ${data.title}`);
+      console.log(`  URL: ${data.url}`);
+      console.log(`  Tabs: ${data.tabCount}`);
+      console.log(`  Active tab: ${data.activeTab}`);
+    },
+    Deno.env.get("FLOORP_M3E_STATUS_DIAGNOSTICS") === "1"
+      ? (stage) => console.error(`[m3e-status] ${stage}`)
+      : undefined,
+  );
 }
 
 async function cmdTitle() {

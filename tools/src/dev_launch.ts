@@ -3,6 +3,32 @@
 import { join } from "@std/path";
 import { PROJECT_ROOT } from "./defines.ts";
 import { settleWithin } from "./async_utils.ts";
+import { MarionetteClient } from "./browser_connector.ts";
+
+export const DEV_STARTUP_TIMEOUT_MS = 120_000;
+export const DEV_STARTUP_FINALIZE_MS = 10_000;
+
+export async function waitForDevMarionette(
+  port: number,
+  signal: AbortSignal,
+  remaining: () => number,
+  connect = (
+    port: number,
+    timeoutMs: number,
+    signal: AbortSignal,
+  ): Promise<Pick<MarionetteClient, "sendWithTimeout" | "abort">> =>
+    MarionetteClient.connect(port, timeoutMs, undefined, signal),
+): Promise<void> {
+  signal.throwIfAborted();
+  const client = await connect(port, remaining(), signal);
+  try {
+    signal.throwIfAborted();
+    await client.sendWithTimeout("WebDriver:DeleteSession", {}, remaining());
+    signal.throwIfAborted();
+  } finally {
+    client.abort();
+  }
+}
 
 export const DEV_STARTUP_STATUS_FILE = join(
   PROJECT_ROOT,
@@ -106,6 +132,59 @@ export async function createDevServerLog(
     },
     finish,
   };
+}
+
+export async function pollDevStartup(
+  check: (
+    signal: AbortSignal,
+    remaining: () => number,
+    attempt: number,
+  ) => Promise<boolean>,
+  deadline: number,
+  now = () => performance.now(),
+  sleep?: (ms: number) => Promise<void>,
+): Promise<void> {
+  if (!Number.isFinite(deadline)) {
+    throw new TypeError("Invalid startup deadline");
+  }
+  const failure = new DevStartupFailure("startup-timeout");
+  const remaining = () => Math.max(0, deadline - now());
+  if (remaining() <= 0) throw failure;
+  const controller = new AbortController();
+  const expired = Promise.withResolvers<never>();
+  const timer = setTimeout(() => {
+    controller.abort(failure);
+    expired.reject(failure);
+  }, remaining());
+  let pauseTimer: ReturnType<typeof setTimeout> | undefined;
+  const pause = sleep ?? ((ms: number) =>
+    new Promise<void>((resolve) => {
+      pauseTimer = setTimeout(resolve, ms);
+    }));
+  let pending: Promise<boolean> | undefined;
+  try {
+    for (let attempt = 0;; attempt++) {
+      if (remaining() <= 0) throw failure;
+      await Promise.race([pause(Math.min(1000, remaining())), expired.promise]);
+      if (remaining() <= 0) throw failure;
+      pending = Promise.resolve().then(() => {
+        controller.signal.throwIfAborted();
+        if (remaining() <= 0) throw failure;
+        return check(controller.signal, remaining, attempt);
+      });
+      const ready = await Promise.race([pending, expired.promise]);
+      if (remaining() <= 0) throw failure;
+      if (ready) return;
+    }
+  } catch (error) {
+    controller.abort(error);
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    clearTimeout(pauseTimer);
+    controller.abort();
+    if (pending) await settleWithin(pending, 1000);
+  }
 }
 
 export async function startDevBrowser(

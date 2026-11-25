@@ -110,9 +110,11 @@ export async function listDevProcesses(
 export async function devProcessExitConfirmed(
   pid: number,
   inspect = listDevProcesses,
+  signal?: AbortSignal,
+  timeoutMs = 5000,
 ): Promise<boolean> {
   try {
-    return (await inspect(pid)).length === 0;
+    return (await inspect(pid, signal, timeoutMs)).length === 0;
   } catch {
     return false;
   }

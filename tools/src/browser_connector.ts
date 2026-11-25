@@ -2,6 +2,7 @@
 
 import * as path from "@std/path";
 import { PROJECT_ROOT } from "./defines.ts";
+import type { MarionetteStage } from "./browser_connector.types.ts";
 
 const MARIONETTE_STATE_FILE = path.join(
   PROJECT_ROOT,
@@ -28,12 +29,24 @@ export class MarionetteClient {
   #decoder = new TextDecoder();
   #aborted = false;
 
-  private constructor() {}
+  private constructor(
+    private readonly onStage?: (stage: MarionetteStage) => void,
+    private readonly signal?: AbortSignal,
+  ) {}
+
+  #stage(stage: MarionetteStage): void {
+    try {
+      this.onStage?.(stage);
+    } catch { /* Diagnostics cannot affect the connection. */ }
+  }
 
   static async connect(
     port?: number,
     timeoutMs = SESSION_TIMEOUT_MS,
+    onStage?: (stage: MarionetteStage) => void,
+    signal?: AbortSignal,
   ): Promise<MarionetteClient> {
+    signal?.throwIfAborted();
     if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
       throw new Error("Invalid Marionette timeout");
     }
@@ -42,8 +55,14 @@ export class MarionetteClient {
 
     for (let attempt = 1; attempt <= CONNECT_MAX_RETRIES; attempt++) {
       try {
-        return await MarionetteClient.#tryConnect(actualPort, deadline);
+        return await MarionetteClient.#tryConnect(
+          actualPort,
+          deadline,
+          onStage,
+          signal,
+        );
       } catch (e: unknown) {
+        signal?.throwIfAborted();
         const msg = e instanceof Error ? e.message : String(e);
         if (
           attempt < CONNECT_MAX_RETRIES &&
@@ -52,7 +71,22 @@ export class MarionetteClient {
           console.error(
             `[marionette] Attempt ${attempt} failed: ${msg}. Retrying in ${CONNECT_RETRY_DELAY_MS}ms...`,
           );
-          await new Promise((r) => setTimeout(r, CONNECT_RETRY_DELAY_MS));
+          await new Promise<void>((resolve, reject) => {
+            const cleanup = () => {
+              clearTimeout(timer);
+              signal?.removeEventListener("abort", cancel);
+            };
+            const cancel = () => {
+              cleanup();
+              reject(signal?.reason);
+            };
+            const timer = setTimeout(() => {
+              cleanup();
+              resolve();
+            }, CONNECT_RETRY_DELAY_MS);
+            signal?.addEventListener("abort", cancel, { once: true });
+            if (signal?.aborted) cancel();
+          });
         } else {
           throw new Error(
             `Failed to connect to Marionette after ${CONNECT_MAX_RETRIES} attempts: ${msg}`,
@@ -66,11 +100,14 @@ export class MarionetteClient {
   static async #tryConnect(
     port: number,
     deadline: number,
+    onStage?: (stage: MarionetteStage) => void,
+    signal?: AbortSignal,
   ): Promise<MarionetteClient> {
-    const client = new MarionetteClient();
+    const client = new MarionetteClient(onStage, signal);
     try {
       return await client.#withDeadline(async () => {
         console.error(`[marionette] Connecting to port ${port}`);
+        client.#stage("connect");
         client.#conn = await Deno.connect({
           hostname: "127.0.0.1",
           port,
@@ -83,6 +120,7 @@ export class MarionetteClient {
         });
 
         // Read handshake
+        client.#stage("handshake");
         const handshake = await client.#readPacket();
         if (handshake?.marionetteProtocol !== 3) {
           client.#conn.close();
@@ -127,6 +165,7 @@ export class MarionetteClient {
     timeoutMs: number,
     // deno-lint-ignore no-explicit-any
   ): Promise<any> {
+    this.#stage("command");
     const response = await this.#withDeadline(async () => {
       const id = this.#msgId++;
       const msg = JSON.stringify([0, id, command, params]);
@@ -276,15 +315,26 @@ export class MarionetteClient {
     timeoutMs: number,
   ): Promise<T> {
     let timer: ReturnType<typeof setTimeout> | undefined;
+    const cancelled = Promise.withResolvers<never>();
+    const cancel = () => {
+      this.abort();
+      cancelled.reject(this.signal?.reason);
+    };
+    this.signal?.addEventListener("abort", cancel, { once: true });
     try {
+      this.signal?.throwIfAborted();
       if (this.#aborted || !Number.isFinite(timeoutMs) || timeoutMs <= 0) {
         throw new Error("Marionette connection unavailable");
       }
       return await Promise.race([
+        cancelled.promise,
         operation(),
         new Promise<never>((_, reject) => {
           timer = setTimeout(
-            () => reject(new Error("Marionette operation timed out")),
+            () => {
+              this.#stage("timeout");
+              reject(new Error("Marionette operation timed out"));
+            },
             timeoutMs,
           );
         }),
@@ -294,6 +344,7 @@ export class MarionetteClient {
       throw error;
     } finally {
       clearTimeout(timer);
+      this.signal?.removeEventListener("abort", cancel);
     }
   }
 
@@ -352,8 +403,9 @@ function readPort(): number {
 
 export async function withBrowser<T>(
   fn: (client: MarionetteClient) => Promise<T>,
+  onStage?: (stage: MarionetteStage) => void,
 ): Promise<T> {
-  const client = await MarionetteClient.connect();
+  const client = await MarionetteClient.connect(undefined, undefined, onStage);
   try {
     return await fn(client);
   } finally {

@@ -154,9 +154,10 @@ Deno.test("startup treats a failed inventory as unknown and confirms exit only f
   );
   assert(
     source.replace(/\s/g, "").includes(
-      "i%5===4&&awaitdevProcessExitConfirmed(Number(pid))",
+      "i%5===4&&awaitdevProcessExitConfirmed(Number(pid),listDevProcesses,signal,",
     ),
   );
+  assert(source.replace(/\s/g, "").includes("Math.min(5000,remaining())"));
 });
 
 Deno.test("process inventory accepts an empty snapshot and propagates command failures", async () => {

@@ -16,6 +16,7 @@ import {
   hubPanelMenuM3eFailure,
   hubPanelMenuM3eLaunchPids,
   hubPanelMenuM3eProcessExited,
+  hubPanelMenuM3eStatusStages,
   listHubPanelMenuM3eOwnedListeningPorts,
   ownedM3eProcesses,
   readHubPanelMenuM3eProcessRegistry,
@@ -406,7 +407,13 @@ async function startStartupRow(
     if (
       !status.completed || !status.success || !status.cleanupProven ||
       !status.stdout.includes("Connected to browser.")
-    ) throw new Error("M3e dev-tool status did not prove browser connectivity");
+    ) {
+      throw new Error(
+        `M3e dev-tool status did not prove browser connectivity; stages=${
+          JSON.stringify(hubPanelMenuM3eStatusStages(status.stderr))
+        }`,
+      );
+    }
     client = await connectHubPanelMenuM3eBrowser();
     await sendHubPanelMenuM3eBrowserCommand(client, "Marionette:SetContext", {
       value: "chrome",

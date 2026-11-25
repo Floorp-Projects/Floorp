@@ -17,6 +17,7 @@ import type {
   DevProcessInfo,
 } from "./dev_process_types.ts";
 import { MarionetteClient } from "./browser_connector.ts";
+import type { MarionetteStage } from "./browser_connector.types.ts";
 import { DEV_STATE_TOKEN_ENV } from "./dev_state_lock.ts";
 import { superviseM3dOwnedCommandOperations } from "./m3d_package_acquisition_command.ts";
 import { startedNoEarlier } from "./fdh_job_process.ts";
@@ -259,6 +260,10 @@ export async function runHubPanelMenuM3eOwnedCommand(
       FLOORP_TEST_PROFILE_DIR: profilePath,
       FLOORP_DEV_RUNTIME_DISTRIBUTION: "release",
       FLOORP_SKIP_PATCHER: "1",
+      ...(args.length === 3 && args[0] === "task" && args[1] === "dev-tool" &&
+          args[2] === "status"
+        ? { FLOORP_M3E_STATUS_DIAGNOSTICS: "1" }
+        : {}),
     },
     stdin: "null",
     stdout: "piped",
@@ -294,6 +299,16 @@ export async function runHubPanelMenuM3eOwnedCommand(
   return { ...result, exitCode };
 }
 
+export function hubPanelMenuM3eStatusStages(stderr: string): MarionetteStage[] {
+  const stages: MarionetteStage[] = [];
+  for (const line of stderr.slice(-OUTPUT_LIMIT).split("\n")) {
+    const match = /^\[m3e-status\] (connect|handshake|command|timeout)\r?$/
+      .exec(line);
+    if (match) stages.push(match[1] as MarionetteStage);
+  }
+  return stages.slice(-32);
+}
+
 export async function writeHubPanelMenuM3eCommandArtifacts(
   result: HubPanelMenuM3eOwnedCommandResult,
   stdoutLogPath: string,
@@ -310,7 +325,10 @@ export async function writeHubPanelMenuM3eCommandArtifacts(
   );
   await Deno.writeTextFile(
     stderrLogPath,
-    JSON.stringify({ omitted: "raw output" }),
+    JSON.stringify({
+      omitted: "raw output",
+      stages: hubPanelMenuM3eStatusStages(result.stderr),
+    }),
     { mode: 0o600 },
   );
   await Deno.writeTextFile(

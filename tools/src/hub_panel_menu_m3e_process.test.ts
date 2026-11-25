@@ -15,6 +15,7 @@ import {
   hubPanelMenuM3eLaunchEnvironment,
   hubPanelMenuM3eLaunchPids,
   hubPanelMenuM3eProcessExited,
+  hubPanelMenuM3eStatusStages,
   preexistingHubPanelMenuM3eProcesses,
   readHubPanelMenuM3eBoundedOutput,
   readHubPanelMenuM3eListeningPorts,
@@ -34,6 +35,43 @@ import type {
 import type { HubPanelMenuM3eOwnedCommandOperations } from "./hub_panel_menu_m3e_process.types.ts";
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
+
+Deno.test("M3e status diagnostics retain only bounded allowlisted stages, never error text or session identifiers", async () => {
+  assertEquals(hubPanelMenuM3eStatusStages(""), []);
+  const stderr =
+    "SECRET_SENTINEL sessionId=SECRET_SENTINEL\n[m3e-status] connect\n[m3e-status] handshake\r\n[m3e-status] command\n[m3e-status] timeout\n[m3e-status] SECRET_SENTINEL\n[m3e-status] command SECRET_SENTINEL";
+  assertEquals(hubPanelMenuM3eStatusStages(stderr), [
+    "connect",
+    "handshake",
+    "command",
+    "timeout",
+  ]);
+  assertEquals(
+    hubPanelMenuM3eStatusStages("[m3e-status] command\n".repeat(100)).length,
+    32,
+  );
+  const root = await Deno.makeTempDir();
+  try {
+    await writeHubPanelMenuM3eCommandArtifacts(
+      {
+        completed: true,
+        success: false,
+        cleanupProven: true,
+        stdout: "SECRET_SENTINEL",
+        stderr,
+      },
+      `${root}/out`,
+      `${root}/err`,
+      1,
+    );
+    assertEquals(JSON.parse(await Deno.readTextFile(`${root}/err`)), {
+      omitted: "raw output",
+      stages: ["connect", "handshake", "command", "timeout"],
+    });
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
 
 Deno.test("M3e launch ownership requires the unique kernel environment token and unchanged start ticks", async () => {
   const process: DevProcessInfo = {

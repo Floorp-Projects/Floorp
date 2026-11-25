@@ -3,12 +3,254 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import {
   createDevServerLog,
+  DEV_STARTUP_FINALIZE_MS,
+  DEV_STARTUP_TIMEOUT_MS,
   DevStartupFailure,
   nativeDevLogTarget,
+  pollDevStartup,
   safeDevStartupFailure,
   startDevBrowser,
+  waitForDevMarionette,
 } from "./dev_launch.ts";
 import { withDevStateLock } from "./dev_state_lock.ts";
+import { devProcessExitConfirmed } from "./dev_processes.ts";
+
+Deno.test("a listener cannot report ready before NewSession and DeleteSession; errors and cancelled late connections are closed", async () => {
+  const controller = new AbortController();
+  const connected = Promise.withResolvers<
+    { sendWithTimeout: () => Promise<void>; abort: () => void }
+  >();
+  const deleted = Promise.withResolvers<void>();
+  let closed = 0;
+  let ready = false;
+  const probe = waitForDevMarionette(
+    2828,
+    controller.signal,
+    () => 90000,
+    (port, budget, signal) => {
+      assertEquals([port, budget, signal], [2828, 90000, controller.signal]);
+      return connected.promise;
+    },
+  ).then(() => {
+    ready = true;
+  });
+  await Promise.resolve();
+  assertEquals(ready, false);
+  connected.resolve({
+    sendWithTimeout: () => deleted.promise,
+    abort: () => {
+      closed++;
+    },
+  });
+  await Promise.resolve();
+  assertEquals(ready, false);
+  deleted.resolve();
+  await probe;
+  assertEquals([ready, closed], [true, 1]);
+  for (const fails of [false, true]) {
+    const abort = new AbortController();
+    await assertRejects(
+      () =>
+        waitForDevMarionette(2828, abort.signal, () => 100, () => {
+          if (fails) return Promise.reject(new Error("connection rejected"));
+          abort.abort(new Error("cancelled"));
+          return Promise.resolve({
+            sendWithTimeout: () => Promise.resolve(),
+            abort: () => {
+              closed++;
+            },
+          });
+        }),
+      Error,
+      fails ? "connection rejected" : "cancelled",
+    );
+  }
+  assertEquals(closed, 2);
+  await assertRejects(
+    () =>
+      waitForDevMarionette(
+        2828,
+        controller.signal,
+        () => 100,
+        () =>
+          Promise.resolve({
+            sendWithTimeout: () => Promise.reject(new Error("delete rejected")),
+            abort: () => {
+              closed++;
+            },
+          }),
+      ),
+    Error,
+    "delete rejected",
+  );
+  assertEquals(closed, 3);
+  const cli = await Deno.readTextFile(
+    new URL("../dev-tool.ts", import.meta.url),
+  );
+  assertEquals(
+    cli.includes(
+      "await waitForDevMarionette(Number(port), signal, remaining);",
+    ),
+    true,
+  );
+});
+
+Deno.test("startup polling charges repeated inventory timeouts to its monotonic deadline and preserves reporting time", async () => {
+  let clock = 137;
+  const deadline = DEV_STARTUP_TIMEOUT_MS - DEV_STARTUP_FINALIZE_MS;
+  const budgets: number[] = [];
+  await assertRejects(
+    () =>
+      pollDevStartup(
+        async (signal, remaining, attempt) => {
+          if (attempt % 5 === 4) {
+            assertEquals(
+              await devProcessExitConfirmed(
+                81,
+                (pid, inventorySignal, timeoutMs) => {
+                  assertEquals(pid, 81);
+                  assertEquals(inventorySignal, signal);
+                  const budget = timeoutMs ?? 0;
+                  assertEquals(budget > 0, true);
+                  budgets.push(budget);
+                  clock += budget;
+                  return Promise.reject(
+                    new Error("Process inventory timed out"),
+                  );
+                },
+                signal,
+                Math.min(5000, remaining()),
+              ),
+              false,
+            );
+          }
+          return false;
+        },
+        deadline,
+        () => clock,
+        (ms) => {
+          clock += ms;
+          return Promise.resolve();
+        },
+      ),
+    DevStartupFailure,
+    "startup-timeout",
+  );
+  assertEquals(clock, deadline);
+  assertEquals(budgets.length, 11);
+  assertEquals(budgets.at(-1), 4863);
+  assertEquals(clock + 1000 + 5000 < DEV_STARTUP_TIMEOUT_MS, true);
+});
+
+Deno.test("startup polling cancels a stalled check; success, errors and exhausted budgets leave no timers", async () => {
+  let signal: AbortSignal | undefined;
+  await assertRejects(
+    () =>
+      pollDevStartup(
+        (current) => {
+          signal = current;
+          return new Promise((resolve) =>
+            current.addEventListener("abort", () => resolve(false), {
+              once: true,
+            })
+          );
+        },
+        performance.now() + 20,
+        undefined,
+        () => Promise.resolve(),
+      ),
+    DevStartupFailure,
+    "startup-timeout",
+  );
+  assertEquals(signal?.aborted, true);
+  let calls = 0;
+  await pollDevStartup(
+    () => {
+      calls++;
+      return Promise.resolve(true);
+    },
+    performance.now() + 1000,
+    undefined,
+    () => Promise.resolve(),
+  );
+  assertEquals(calls, 1);
+  await assertRejects(
+    () =>
+      pollDevStartup(() => {
+        calls++;
+        return Promise.resolve(true);
+      }, performance.now() + 20),
+    DevStartupFailure,
+    "startup-timeout",
+  );
+  assertEquals(calls, 1);
+  await assertRejects(
+    () =>
+      pollDevStartup(
+        () => Promise.reject(new Error("probe failed")),
+        performance.now() + 1000,
+        undefined,
+        () => Promise.resolve(),
+      ),
+    Error,
+    "probe failed",
+  );
+  await assertRejects(
+    () =>
+      pollDevStartup(() => {
+        calls++;
+        return Promise.resolve(true);
+      }, performance.now() - 1),
+    DevStartupFailure,
+    "startup-timeout",
+  );
+  assertEquals(calls, 1);
+  await assertRejects(
+    () => pollDevStartup(() => Promise.resolve(false), NaN),
+    TypeError,
+    "Invalid startup deadline",
+  );
+  const source =
+    (await Deno.readTextFile(new URL("../dev-tool.ts", import.meta.url)))
+      .replace(/\s/g, "");
+  assertEquals(
+    source.includes(
+      "performance.now()+DEV_STARTUP_TIMEOUT_MS-DEV_STARTUP_FINALIZE_MS",
+    ),
+    true,
+  );
+  assertEquals(
+    source.includes("settleWithin(reportDevStartupFailure(error),5000)"),
+    true,
+  );
+});
+
+Deno.test("a polling callback ignoring cancellation cannot hold startup past its bounded drain", async () => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await assertRejects(
+      () =>
+        Promise.race([
+          pollDevStartup(
+            () => new Promise<boolean>(() => {}),
+            performance.now() + 20,
+            undefined,
+            () => Promise.resolve(),
+          ),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(
+              () => reject(new Error("polling held the deadline")),
+              3000,
+            );
+          }),
+        ]),
+      DevStartupFailure,
+      "startup-timeout",
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+});
 
 Deno.test("launch startup retains the checkout lock through ready servers and registered browser, not browser lifetime", async () => {
   const root = await Deno.makeTempDir();

@@ -2,6 +2,7 @@
 
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { MarionetteClient } from "./browser_connector.ts";
+import type { MarionetteStage } from "./browser_connector.types.ts";
 
 Deno.test("Marionette deadlines cover connect, handshake, write and read, close sockets and clear timers", async () => {
   const original = Deno.connect;
@@ -25,8 +26,13 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
     for (
       const scenario of [
         "normal",
+        "normal-observer-failure",
         "connect",
+        "connect-cancel",
         "handshake",
+        "handshake-cancel",
+        "session-cancel",
+        "retry-cancel",
         "write",
         "read",
         "oversize",
@@ -40,6 +46,26 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
       ]
     ) {
       let closed = false;
+      const controller = new AbortController();
+      const cancelling = scenario.endsWith("-cancel");
+      const stages: MarionetteStage[] = [];
+      const onStage = (stage: MarionetteStage) => {
+        stages.push(stage);
+        if (
+          cancelling &&
+          stage ===
+            (scenario === "session-cancel"
+              ? "command"
+              : scenario === "handshake-cancel"
+              ? "handshake"
+              : "connect")
+        ) {
+          setTimeout(() => controller.abort(new Error("startup-cancelled")), 1);
+        }
+        if (scenario === "normal-observer-failure") {
+          throw new Error("observer sentinel");
+        }
+      };
       let reads = 0;
       let writes = 0;
       let resolveConnect: ((connection: Deno.TcpConn) => void) | undefined;
@@ -47,7 +73,11 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
       const connection = {
         read(buffer: Uint8Array): Promise<number | null> {
           reads++;
-          if (scenario === "handshake" || (scenario === "read" && reads > 2)) {
+          if (
+            scenario.startsWith("handshake") ||
+            (scenario === "session-cancel" && reads === 2) ||
+            (scenario === "read" && reads > 2)
+          ) {
             return new Promise((resolve) => {
               pendingRead = resolve;
             });
@@ -89,31 +119,48 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
         },
       } as unknown as Deno.TcpConn;
       Deno.connect = (() =>
-        scenario === "connect"
+        scenario.startsWith("connect")
           ? new Promise<Deno.TcpConn>((resolve) => {
             resolveConnect = resolve;
           })
+          : scenario === "retry-cancel"
+          ? Promise.reject(new Error("refused"))
           : Promise.resolve(connection)) as unknown as typeof Deno.connect;
-      if (scenario === "connect" || scenario === "handshake") {
+      if (scenario === "connect" || scenario === "handshake" || cancelling) {
         await assertRejects(() =>
-          MarionetteClient.connect(2828, 20)
+          MarionetteClient.connect(
+            2828,
+            cancelling ? 10000 : 20,
+            onStage,
+            controller.signal,
+          )
         );
         if (resolveConnect) {
           resolveConnect(connection);
           await Promise.resolve();
           await Promise.resolve();
         }
-        assert(closed, scenario);
+        assertEquals(closed, scenario !== "retry-cancel", scenario);
+        assertEquals(stages[0], "connect");
+        assertEquals(
+          stages.includes("handshake"),
+          scenario.startsWith("handshake") || scenario === "session-cancel",
+        );
+        assertEquals(stages.includes("timeout"), !cancelling);
       } else {
-        const client = await MarionetteClient.connect(2828, 100);
-        if (scenario === "normal") {
+        const client = await MarionetteClient.connect(2828, 100, onStage);
+        assertEquals(stages, ["connect", "handshake", "command"]);
+        if (scenario.startsWith("normal")) {
           assertEquals(await client.sendWithTimeout("test", {}, 20), {
             value: "héllo",
           });
           assertEquals(closed, false);
+          assertEquals(stages, ["connect", "handshake", "command", "command"]);
           client.abort();
         } else {
-          await assertRejects(() => client.sendWithTimeout("test", {}, 20));
+          await assertRejects(() =>
+            client.sendWithTimeout("test", {}, 20)
+          );
           if (scenario === "remote") {
             assertEquals(closed, false);
             client.abort();
