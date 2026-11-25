@@ -32,7 +32,23 @@ async function withCommandOutput(
       });
     }
     spawn() {
-      return { output: () => this.output(), kill() {} };
+      const result = this.output();
+      return {
+        status: result,
+        stdout: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await result).stdout);
+            controller.close();
+          },
+        }),
+        stderr: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await result).stderr);
+            controller.close();
+          },
+        }),
+        kill() {},
+      };
     }
   }
   Object.defineProperty(Deno, "Command", {
@@ -81,7 +97,19 @@ Deno.test("process inventory cancels its child, has its own deadline, and never 
     spawn() {
       spawned.resolve();
       return {
-        output: () => output.promise,
+        status: output.promise,
+        stdout: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await output.promise).stdout);
+            controller.close();
+          },
+        }),
+        stderr: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await output.promise).stderr);
+            controller.close();
+          },
+        }),
         kill() {
           kills++;
           output.resolve(empty);

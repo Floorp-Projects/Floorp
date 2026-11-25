@@ -6,6 +6,8 @@ import {
   DEV_STARTUP_FINALIZE_MS,
   DEV_STARTUP_TIMEOUT_MS,
   DevStartupFailure,
+  devStartupReady,
+  hasDevStartupReady,
   nativeDevLogTarget,
   pollDevStartup,
   probeDevMarionettePort,
@@ -150,8 +152,8 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
       "Invalid Marionette readiness port",
     );
   }
-  await assertRejects(() =>
-    probeDevMarionettePort(
+  assertEquals(
+    await probeDevMarionettePort(
       () => {
         throw new Deno.errors.NotFound("missing port file");
       },
@@ -159,7 +161,9 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
       () => 1000,
       register,
       probe,
-    ), Deno.errors.NotFound);
+    ),
+    "",
+  );
   assertEquals([registrations, probes], [3, 3]);
   await assertRejects(
     () =>
@@ -187,7 +191,7 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
   assertEquals(probes, 3);
   const source =
     (await Deno.readTextFile(new URL("../dev-tool.ts", import.meta.url)))
-      .replace(/\s/g, "");
+      .replace(/\s/g, "").replace(/,\)/g, ")");
   const existing = source.slice(
     source.indexOf("if(existingPid!==null)"),
     source.indexOf('console.log("Startingfeles-builddev..."'),
@@ -198,11 +202,13 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
     true,
   );
   assertEquals(
-    existing.includes("!!awaitcheckReadiness(signal,remaining)"),
+    existing.includes("readyPort=awaitcheckReadiness(signal,remaining,"),
     true,
   );
   assertEquals(
-    existing.includes("awaitDeno.remove(DEV_STARTUP_STATUS_FILE)"),
+    existing.includes(
+      "hasDevStartupReady(status,processes,pid,PATHS.profile_test,port)",
+    ),
     true,
   );
   assertEquals(existing.includes("reportDevStartupFailure(error)"), true);
@@ -215,6 +221,143 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
     source.includes("recordedProcesses:readDevProcesses(),signal,timeoutMs,"),
     true,
   );
+});
+
+Deno.test("reuse remembers readiness for the exact live launcher and browser, never for a failed start or a reused PID", async () => {
+  const server = {
+    pid: 10,
+    startTime: "start-1",
+    commandLine: "deno task feles-build dev",
+  };
+  const browser = {
+    pid: 11,
+    startTime: "start-2",
+    commandLine: "floorp --marionette --profile /isolated",
+  };
+  const processes = [server, browser];
+  const record = await devStartupReady(processes, 10, "/isolated", "2828");
+  assertEquals(
+    await hasDevStartupReady(record, processes, 10, "/isolated", "2828"),
+    true,
+  );
+  let connections = 0;
+  const probe = () => {
+    connections++;
+    return Promise.reject(new Error("active session closes new transport"));
+  };
+  assertEquals(
+    await probeDevMarionettePort(
+      () => "2828",
+      new AbortController().signal,
+      () => 1000,
+      undefined,
+      probe,
+      (port) => hasDevStartupReady(record, processes, 10, "/isolated", port),
+    ),
+    "2828",
+  );
+  assertEquals(connections, 0);
+  await assertRejects(
+    () =>
+      probeDevMarionettePort(
+        () => "2828",
+        new AbortController().signal,
+        () => 1000,
+        undefined,
+        probe,
+      ),
+    Error,
+    "active session closes new transport",
+  );
+  for (
+    const live of [
+      [server],
+      [browser],
+      [server, { ...browser, startTime: "reused" }],
+      [{ ...server, startTime: "reused" }, browser],
+      [server, { ...browser, commandLine: "different" }],
+    ]
+  ) {
+    assertEquals(
+      await hasDevStartupReady(record, live, 10, "/isolated", "2828"),
+      false,
+    );
+  }
+  for (
+    const invalid of [
+      null,
+      {},
+      { state: "failed", instances: record.instances },
+      { state: "ready", instances: [] },
+      { state: "ready", instances: [record.instances[0], 42] },
+      await devStartupReady([server], 10, "/isolated", "2828"),
+    ]
+  ) {
+    assertEquals(
+      await hasDevStartupReady(invalid, processes, 10, "/isolated", "2828"),
+      false,
+    );
+  }
+  assertEquals(
+    await hasDevStartupReady(record, processes, 10, "/different", "2828"),
+    false,
+  );
+  assertEquals(
+    await hasDevStartupReady(record, processes, 10, "/isolated", "2829"),
+    false,
+  );
+  const failed = { state: "failed", code: "startup-timeout" };
+  await assertRejects(
+    () =>
+      probeDevMarionettePort(
+        () => "2828",
+        new AbortController().signal,
+        () => 1000,
+        undefined,
+        probe,
+        (port) => hasDevStartupReady(failed, processes, 10, "/isolated", port),
+      ),
+    Error,
+    "active session closes new transport",
+  );
+  assertEquals(connections, 2);
+  assertEquals(JSON.stringify(record).includes(server.commandLine), false);
+});
+
+Deno.test("both readiness paths wait for a missing port file within the same deadline and propagate other read failures", async () => {
+  let clock = 0;
+  let probes = 0;
+  await pollDevStartup(
+    async (signal, remaining) =>
+      !!await probeDevMarionettePort(
+        () => {
+          if (clock < 2500) throw new Deno.errors.NotFound();
+          return "2828";
+        },
+        signal,
+        remaining,
+        undefined,
+        () => {
+          probes++;
+          return Promise.resolve();
+        },
+      ),
+    10000,
+    () => clock,
+    (ms) => {
+      clock += ms;
+      return Promise.resolve();
+    },
+  );
+  assertEquals([clock, probes], [3000, 1]);
+  await assertRejects(() =>
+    probeDevMarionettePort(
+      () => {
+        throw new Deno.errors.PermissionDenied();
+      },
+      new AbortController().signal,
+      () => 1000,
+    ), Deno.errors.PermissionDenied);
 });
 
 Deno.test("startup polling charges repeated inventory timeouts to its monotonic deadline and preserves reporting time", async () => {

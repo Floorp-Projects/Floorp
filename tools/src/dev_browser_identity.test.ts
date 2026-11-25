@@ -129,7 +129,18 @@ Deno.test("Windows listener registration cancels, kills and reaps both PowerShel
           reaped++;
           return value;
         }),
-        output: () => output.promise,
+        stdout: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await output.promise).stdout);
+            controller.close();
+          },
+        }),
+        stderr: new ReadableStream({
+          async start(controller) {
+            controller.enqueue((await output.promise).stderr);
+            controller.close();
+          },
+        }),
         kill() {
           killed++;
           output.resolve(result);

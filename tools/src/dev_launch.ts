@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { join } from "@std/path";
-import { PROJECT_ROOT } from "./defines.ts";
+import { PLATFORM, PROJECT_ROOT } from "./defines.ts";
+import { splitDevCommandLine } from "./dev_process_selection.ts";
+import type { DevProcessIdentity } from "./dev_process_types.ts";
 import { settleWithin } from "./async_utils.ts";
 import { MarionetteClient } from "./browser_connector.ts";
 
@@ -18,9 +20,16 @@ export async function probeDevMarionettePort(
     timeoutMs: number,
   ) => Promise<unknown> = () => Promise.resolve(),
   probe = waitForDevMarionette,
+  priorReady: (port: string) => Promise<boolean> = () => Promise.resolve(false),
 ): Promise<string> {
   signal.throwIfAborted();
-  const text = readPort().trim();
+  let text: string;
+  try {
+    text = readPort().trim();
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return "";
+    throw error;
+  }
   if (!text) return "";
   const port = Number(text);
   if (
@@ -28,6 +37,9 @@ export async function probeDevMarionettePort(
   ) {
     throw new Error("Invalid Marionette readiness port");
   }
+  const ready = await priorReady(text);
+  signal.throwIfAborted();
+  if (ready) return text;
   await register(port, signal, remaining());
   signal.throwIfAborted();
   await probe(port, signal, remaining);
@@ -62,6 +74,81 @@ export const DEV_STARTUP_STATUS_FILE = join(
   "_dist",
   "dev-startup-status.json",
 );
+
+async function readinessIdentity(
+  identity: DevProcessIdentity,
+  profile: string,
+  port: string,
+): Promise<string> {
+  const bytes = new TextEncoder().encode(
+    JSON.stringify([
+      identity.pid,
+      identity.startTime,
+      identity.commandLine,
+      profile,
+      port,
+    ]),
+  );
+  return Array.from(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+    (byte) => byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+export async function devStartupReady(
+  identities: readonly DevProcessIdentity[],
+  serverPid: number,
+  profile: string,
+  port: string,
+) {
+  const selected = [
+    ...new Map(
+      identities.filter((identity) =>
+        identity.pid === serverPid ||
+        splitDevCommandLine(identity.commandLine, PLATFORM).includes(
+          "--marionette",
+        )
+      ).map((identity) => [identity.pid, identity]),
+    ).values(),
+  ];
+  const complete = selected.some((identity) => identity.pid === serverPid) &&
+    selected.some((identity) => identity.pid !== serverPid);
+  return {
+    state: "ready",
+    instances: complete
+      ? await Promise.all(
+        selected.map((identity) => readinessIdentity(identity, profile, port)),
+      )
+      : [],
+  };
+}
+
+export async function hasDevStartupReady(
+  record: unknown,
+  processes: readonly DevProcessIdentity[],
+  serverPid: number,
+  profile: string,
+  port: string,
+): Promise<boolean> {
+  if (
+    typeof record !== "object" || record === null || !("state" in record) ||
+    record.state !== "ready" || !("instances" in record) ||
+    !Array.isArray(record.instances) || record.instances.length < 2
+  ) return false;
+  const server = processes.find((process) => process.pid === serverPid);
+  if (
+    !server ||
+    !record.instances.includes(await readinessIdentity(server, profile, port))
+  ) return false;
+  const live = new Set(
+    await Promise.all(
+      processes.map((process) => readinessIdentity(process, profile, port)),
+    ),
+  );
+  return record.instances.every((identity: unknown) =>
+    typeof identity === "string" && live.has(identity)
+  );
+}
 
 export function nativeDevLogTarget(platform: string): string {
   return platform === "windows" ? "NUL" : "/dev/null";

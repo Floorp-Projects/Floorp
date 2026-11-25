@@ -10,6 +10,8 @@ import {
   DEV_STARTUP_STATUS_FILE,
   DEV_STARTUP_TIMEOUT_MS,
   DevStartupFailure,
+  devStartupReady,
+  hasDevStartupReady,
   nativeDevLogTarget,
   pollDevStartup,
   probeDevMarionettePort,
@@ -220,7 +222,11 @@ async function cmdStart() {
     "_dist",
     "marionette-port.txt",
   );
-  const checkReadiness = (signal: AbortSignal, remaining: () => number) =>
+  const checkReadiness = (
+    signal: AbortSignal,
+    remaining: () => number,
+    priorReady?: (port: string) => Promise<boolean>,
+  ) =>
     probeDevMarionettePort(
       () => Deno.readTextFileSync(marionetteFile),
       signal,
@@ -246,6 +252,8 @@ async function cmdStart() {
           }
         }
       },
+      undefined,
+      priorReady,
     );
   // A stale PID file must not mistake a reused PID for this dev server.
   let existingPid: number | null = null;
@@ -257,25 +265,63 @@ async function cmdStart() {
   if (existingPid !== null) {
     const pid = existingPid;
     const processes = await listDevProcesses();
+    const recordedProcesses = readDevProcesses();
     if (
       selectDevProcesses(processes, {
         platform: PLATFORM,
         projectRoot: PROJECT_ROOT,
         profilePath: PATHS.profile_test,
         serverPid: pid,
-        recordedProcesses: readDevProcesses(),
+        recordedProcesses,
       }).includes(pid)
     ) {
       try {
+        let readyPort = "";
+        let priorReady = false;
         await pollDevStartup(
-          async (signal, remaining) =>
-            !!await checkReadiness(signal, remaining),
+          async (signal, remaining) => {
+            readyPort = await checkReadiness(
+              signal,
+              remaining,
+              async (port) => {
+                const status: unknown = await Deno.readTextFile(
+                  DEV_STARTUP_STATUS_FILE,
+                ).then(JSON.parse).catch(() => null);
+                priorReady = await hasDevStartupReady(
+                  status,
+                  processes,
+                  pid,
+                  PATHS.profile_test,
+                  port,
+                );
+                return priorReady;
+              },
+            );
+            return !!readyPort;
+          },
           startupDeadline,
         );
-        try {
-          await Deno.remove(DEV_STARTUP_STATUS_FILE);
-        } catch (error) {
-          if (!(error instanceof Deno.errors.NotFound)) throw error;
+        if (!priorReady) {
+          const identities = readDevProcesses().filter((identity) =>
+            processes.some((process) =>
+              matchesDevIdentity(process, identity)
+            ) || !recordedProcesses.some((previous) =>
+              previous.pid === identity.pid &&
+              previous.startTime === identity.startTime
+            )
+          );
+          await Deno.writeTextFile(
+            DEV_STARTUP_STATUS_FILE,
+            JSON.stringify(
+              await devStartupReady(
+                identities,
+                pid,
+                PATHS.profile_test,
+                readyPort,
+              ),
+            ),
+            { mode: 0o600 },
+          );
         }
       } catch (error) {
         await settleWithin(reportDevStartupFailure(error), 5000);
@@ -293,6 +339,7 @@ async function cmdStart() {
   }
 
   console.log("Starting feles-build dev...");
+  const previousProcesses = readDevProcesses();
 
   // Resolve the optional --port-offset before spawning so the log shows the
   // actual topology and the detached feles-build inherits a concrete number.
@@ -435,6 +482,24 @@ async function cmdStart() {
       }
       return false;
     }, startupDeadline);
+    const identities = readDevProcesses().filter((identity) =>
+      !previousProcesses.some((previous) =>
+        previous.pid === identity.pid &&
+        previous.startTime === identity.startTime
+      )
+    );
+    await Deno.writeTextFile(
+      DEV_STARTUP_STATUS_FILE,
+      JSON.stringify(
+        await devStartupReady(
+          identities,
+          Number(pid),
+          PATHS.profile_test,
+          readyPort,
+        ),
+      ),
+      { mode: 0o600 },
+    );
     console.log(`Browser ready! Marionette on port ${readyPort}.`);
     console.log(
       `Log: ${
