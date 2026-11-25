@@ -414,6 +414,8 @@ export class WorkspacesTabManager {
       // Set workspaceId if workspaceId is null
       const workspaceId = this.getWorkspaceIdFromAttribute(tab);
       if (!workspaceId) {
+        // Tabs hidden outside workspaces (session restore, extensions) stay hidden.
+        if ((tab as XULElement & { hidden?: boolean }).hidden) continue;
         this.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
       }
 

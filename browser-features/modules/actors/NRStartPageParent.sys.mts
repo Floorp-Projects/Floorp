@@ -4,6 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class NRStartPageParent extends JSWindowActorParent {
+  // Replies follow async work; the page may be gone or in bfcache by then.
+  private reply(name: string, data?: unknown): void {
+    try {
+      this.sendAsyncMessage(name, data);
+    } catch {
+      // Nothing to deliver to.
+    }
+  }
+
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
       case "NRStartPage:GetCurrentTopSites": {
@@ -30,7 +39,7 @@ export class NRStartPageParent extends JSWindowActorParent {
           );
         }
 
-        this.sendAsyncMessage(
+        this.reply(
           "NRStartPage:GetCurrentTopSites",
           JSON.stringify({
             topsites: topSites,
@@ -58,7 +67,7 @@ export class NRStartPageParent extends JSWindowActorParent {
         if (result == folderPicker.returnOK) {
           const file = folderPicker.file;
           const path = file.path;
-          this.sendAsyncMessage(
+          this.reply(
             "NRStartPage:GetFolderPathFromDialog",
             JSON.stringify({
               success: true,
@@ -66,7 +75,7 @@ export class NRStartPageParent extends JSWindowActorParent {
             }),
           );
         } else {
-          this.sendAsyncMessage(
+          this.reply(
             "NRStartPage:GetFolderPathFromDialog",
             JSON.stringify({
               success: false,
@@ -84,7 +93,7 @@ export class NRStartPageParent extends JSWindowActorParent {
         directory.initWithPath(folderPath.toString());
 
         if (!directory.exists() || !directory.isDirectory()) {
-          this.sendAsyncMessage(
+          this.reply(
             "NRStartPage:GetRandomImageFromFolder",
             JSON.stringify({
               success: false,
@@ -116,7 +125,7 @@ export class NRStartPageParent extends JSWindowActorParent {
         }
 
         if (imageFiles.length === 0) {
-          this.sendAsyncMessage(
+          this.reply(
             "NRStartPage:GetRandomImageFromFolder",
             JSON.stringify({
               success: false,
@@ -132,7 +141,7 @@ export class NRStartPageParent extends JSWindowActorParent {
         try {
           const dataUrl = this.fileToDataURL(randomFile);
           if (dataUrl) {
-            this.sendAsyncMessage(
+            this.reply(
               "NRStartPage:GetRandomImageFromFolder",
               JSON.stringify({
                 success: true,
@@ -141,7 +150,7 @@ export class NRStartPageParent extends JSWindowActorParent {
               }),
             );
           } else {
-            this.sendAsyncMessage(
+            this.reply(
               "NRStartPage:GetRandomImageFromFolder",
               JSON.stringify({
                 success: false,
@@ -151,7 +160,7 @@ export class NRStartPageParent extends JSWindowActorParent {
           }
         } catch (e) {
           console.error("Error converting file to data URL:", e);
-          this.sendAsyncMessage(
+          this.reply(
             "NRStartPage:GetRandomImageFromFolder",
             JSON.stringify({
               success: false,
