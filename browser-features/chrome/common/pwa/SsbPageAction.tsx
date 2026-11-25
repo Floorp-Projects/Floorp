@@ -49,7 +49,6 @@ export class SsbPageAction {
     const ssbPageAction = document?.getElementById("page-action-buttons");
     if (!starButtonBox || !ssbPageAction) return;
 
-    const tabContainer = globalThis.gBrowser.tabContainer;
     let manifestObserverRegistered = false;
     const onManifestCheck = () => {
       void this.onCheckPageHasManifest().catch((error) => {
@@ -73,7 +72,7 @@ export class SsbPageAction {
           "nora-pwa-check-page-has-manifest",
         );
       }
-      tabContainer.removeEventListener("TabSelect", onManifestCheck);
+      globalThis.removeEventListener("TabSwitchDone", onManifestCheck);
       if (this.popupHideFrame !== null) {
         globalThis.cancelAnimationFrame(this.popupHideFrame);
         this.popupHideFrame = null;
@@ -91,7 +90,8 @@ export class SsbPageAction {
       "nora-pwa-check-page-has-manifest",
     );
     manifestObserverRegistered = true;
-    tabContainer.addEventListener("TabSelect", onManifestCheck);
+    // Querying the content during a tab switch can drop its layers mid-switch.
+    globalThis.addEventListener("TabSwitchDone", onManifestCheck);
 
     addI18nObserver(() => {
       this.translations[1]({
