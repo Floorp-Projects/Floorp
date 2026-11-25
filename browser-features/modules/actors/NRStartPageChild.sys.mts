@@ -33,6 +33,9 @@ export class NRStartPageChild extends JSWindowActorChild {
       Cu.exportFunction(this.FocusUrlBar.bind(this), window, {
         defineAs: "NRFocusUrlBar",
       });
+      Cu.exportFunction(() => Cu.isInAutomation, window, {
+        defineAs: "NRIsInAutomation",
+      });
     }
   }
 
