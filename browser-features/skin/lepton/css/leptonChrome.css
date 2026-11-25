@@ -1802,6 +1802,7 @@
         --focus-outline-color: var(--blue-40) !important;
         --lwt-toolbarbutton-icon-fill-attention: var(--blue-40) !important;
         --download-progress-fill-color: var(--blue-40) !important;
+        --panel-banner-item-info-icon-bgcolor: var(--blue-30) !important;
         --lwt-brighttext-url-color: var(--blue-30) !important; /* Original: as primary bgcolor */
       }
       @media -moz-pref("userChrome.decoration.download_panel") {
@@ -16572,6 +16573,7 @@
     --focus-outline-color: var(--blue-40) !important;
     --lwt-toolbarbutton-icon-fill-attention: var(--blue-40) !important;
     --download-progress-fill-color: var(--blue-40) !important;
+    --panel-banner-item-info-icon-bgcolor: var(--blue-30) !important;
     --lwt-brighttext-url-color: var(--blue-30) !important; /* Original: as primary bgcolor */
   }
 }
