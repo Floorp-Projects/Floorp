@@ -3,7 +3,8 @@
 
 import { MacAppShimInstaller } from "../MacAppShimInstaller.sys.mts";
 import { AppRegistry } from "../AppRegistry.sys.mts";
-import { getMacAppBundle, MacOSSupport } from "../supports/MacOS.sys.mts";
+import { getMacAppBundle } from "../supports/MacOS.sys.mts";
+import { MockMacOSSupport as MacOSSupport } from "../supports/test/MockMacOSSupport.ts";
 import type { Manifest } from "../type.ts";
 import { buildSsbKey } from "#libs/pwa/ssbKeyUtils.ts";
 import type { NativeAppService } from "#libs/pwa/nativeAppRuntimeTypes.ts";
