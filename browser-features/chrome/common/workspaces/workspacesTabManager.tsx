@@ -748,7 +748,10 @@ export class WorkspacesTabManager {
             globalThis.gBrowser.selectedTab = tabToSelect;
           } else {
             // Priority 4: Claim an unattributed tab or create a new one.
-            const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
+            const nonWorkspaceTab = currentTab &&
+                !currentTab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)
+              ? currentTab
+              : this.isThereNoWorkspaceTabs();
             if (nonWorkspaceTab !== true) {
               globalThis.gBrowser.selectedTab = nonWorkspaceTab as XULElement;
               this.setWorkspaceIdToAttribute(
