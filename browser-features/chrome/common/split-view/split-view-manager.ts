@@ -25,6 +25,7 @@ import { initContextMenu } from "./patches/context-menu.js";
 import { initSplitViewEvents } from "./patches/event-listeners.js";
 import { initActivePaneTracker } from "./patches/active-pane-tracker.js";
 import { initSessionRestore } from "./patches/session-restore.js";
+import { initOpenTabsPickerEscape } from "./patches/opentabs-picker-escape.js";
 import {
   destroyPaneDrag,
   initPaneDrag,
@@ -75,6 +76,7 @@ export class SplitViewManager {
     initSplitViewEvents(this.logger);
     initActivePaneTracker(this.logger);
     initSessionRestore(this.logger);
+    initOpenTabsPickerEscape(this.logger);
     initPaneDrag(this.logger);
     initTabDrop(this.logger);
 

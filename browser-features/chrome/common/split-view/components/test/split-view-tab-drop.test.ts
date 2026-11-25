@@ -286,6 +286,7 @@ function setupDragScenario(options: DragScenarioOptions = {}): DragScenario {
     addTrustedTab() {
       return createTestTab("trusted", 20);
     },
+    removeTab() {},
     addTabSplitView() {
       addTabSplitViewCalls += 1;
       eventOrder.push("split-created");
