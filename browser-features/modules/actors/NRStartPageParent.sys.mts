@@ -3,7 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const START_PAGE_PREFS = new Set([
+  "floorp.newtab.configs",
+  "floorp.design.configs",
+]);
+
 export class NRStartPageParent extends JSWindowActorParent {
+  private canAccessPref(name: unknown): name is string {
+    if (typeof name !== "string" || !START_PAGE_PREFS.has(name)) {
+      return false;
+    }
+    const uri = this.manager?.documentURI;
+    if (!uri) {
+      return false;
+    }
+    const page = uri.spec.split(/[?#]/)[0];
+    return page === "about:newtab" || page === "about:home" ||
+      (uri.schemeIs("chrome") && uri.host === "noraneko-newtab");
+  }
+
   // Replies follow async work; the page may be gone or in bfcache by then.
   private reply(name: string, data?: unknown): void {
     try {
@@ -15,6 +33,26 @@ export class NRStartPageParent extends JSWindowActorParent {
 
   async receiveMessage(message: ReceiveMessageArgument) {
     switch (message.name) {
+      case "NRStartPage:GetStringPref": {
+        const { name } = message.data as { name: unknown };
+        if (
+          !this.canAccessPref(name) ||
+          Services.prefs.getPrefType(name) !== Services.prefs.PREF_STRING
+        ) {
+          return null;
+        }
+        return Services.prefs.getStringPref(name);
+      }
+      case "NRStartPage:SetStringPref": {
+        const { name, value } = message.data as {
+          name: unknown;
+          value: unknown;
+        };
+        if (this.canAccessPref(name) && typeof value === "string") {
+          Services.prefs.setStringPref(name, value);
+        }
+        return null;
+      }
       case "NRStartPage:GetCurrentTopSites": {
         // Debug: Log that we received the message to get current top sites
         const { NewTabUtils } = ChromeUtils.importESModule(

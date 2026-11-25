@@ -413,9 +413,11 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
 
 class CustomAboutPage {
   private _uri: nsIURI;
+  private _loadInContentProcess: boolean;
 
-  constructor(urlString: string) {
+  constructor(urlString: string, loadInContentProcess = false) {
     this._uri = Services.io.newURI(urlString);
+    this._loadInContentProcess = loadInContentProcess;
   }
 
   get uri(): nsIURI {
@@ -430,13 +432,27 @@ class CustomAboutPage {
       targetUri,
       loadInfo,
     );
-    new_ch.owner = Services.scriptSecurityManager.getSystemPrincipal();
+    if (this._loadInContentProcess) {
+      new_ch.originalURI = _uri;
+    } else {
+      new_ch.owner = Services.scriptSecurityManager.getSystemPrincipal();
+    }
     return new_ch;
   }
 
   getURIFlags(_uri: nsIURI): number {
     if (!this.uri) {
       throw new Error("URI is not defined");
+    }
+
+    if (this._loadInContentProcess) {
+      return (
+        (Ci.nsIAboutModule.ALLOW_SCRIPT as number) |
+        (Ci.nsIAboutModule.ENABLE_INDEXED_DB as number) |
+        (Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD as number) |
+        (Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS as number) |
+        (Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT as number)
+      );
     }
 
     return (
@@ -463,7 +479,14 @@ async function registerCustomAboutPages(): Promise<void> {
   for (const aboutKey in customAboutPages) {
     const AboutModuleFactory: nsIFactory = {
       createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
-        const page = new CustomAboutPage(customAboutPages[aboutKey]);
+        const url = customAboutPages[aboutKey];
+        // Floorp Start runs like Firefox Home: in the privileged about
+        // content process with a content principal.
+        const page = new CustomAboutPage(
+          url,
+          (aboutKey === "newtab" || aboutKey === "home") &&
+            url.startsWith("chrome://"),
+        );
         if (aboutKey === "newtab") {
           Object.defineProperty(page, "wrappedJSObject", {
             value: newTabRedirector,
