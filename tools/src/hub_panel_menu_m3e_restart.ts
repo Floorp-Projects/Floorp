@@ -263,7 +263,7 @@ export async function runHubPanelMenuM3eRestartRecovery(
     await traceWindows("after-close-windows", windows);
     return cleanup;
   };
-  const prepare = async (reopen: boolean) => {
+  const prepare = async (reopen: boolean, verificationDigest?: string) => {
     await traceWindows("before-prepare-windows");
     await lifecycle("prepare-windows", { reopen });
     await traceWindows(
@@ -283,10 +283,23 @@ export async function runHubPanelMenuM3eRestartRecovery(
         "pre-reopen evaluation or publication",
       );
     }
-    await call({
-      kind: reopen ? "reopen-host" : "create-host",
-      payload: { ...payload(), policy: bundle.policy },
-    });
+    const opened = record(
+      await call({
+        kind: reopen ? "reopen-host" : "create-host",
+        payload: { ...payload(), policy: bundle.policy, verificationDigest },
+      }),
+    );
+    if (verificationDigest) {
+      const verified = record(opened.signatureVerification);
+      check(
+        verified.packageSha256 === verificationDigest &&
+          verified.correctKeyVerified === true &&
+          verified.wrongKeyRejected === true &&
+          verified.rejection === "invalid-signature",
+        "signature-only verification control differs",
+      );
+      inert.signatureVerification = verified;
+    }
     return inert;
   };
   const install = async (withRollback: boolean) => {
@@ -412,7 +425,12 @@ export async function runHubPanelMenuM3eRestartRecovery(
         );
         evidence.restart = JSON.stringify(restart);
         evidence.checkpoint = "trusted-core-reopen";
-        const inert = await prepare(true);
+        const inert = await prepare(
+          true,
+          caseId === "reopen-enabled-reverified"
+            ? selected.packageSha256
+            : undefined,
+        );
         evidence.beforeTrustedReopen = JSON.stringify(inert);
         evidence.afterTrustedReopenHost = JSON.stringify(
           await call({

@@ -2,6 +2,7 @@
 
 import {
   executeHubPanelMenuM3eBrowserScript,
+  hubPanelMenuM3eProtocolError,
   runHubPanelMenuM3eGatedOperation,
   sendHubPanelMenuM3eBrowserCommand,
 } from "./hub_panel_menu_m3e_observations.ts";
@@ -12,6 +13,31 @@ export class HubPanelMenuM3eFocusFailure extends Error {
   constructor(readonly evidence: HubPanelMenuM3eLifecycleEvidence) {
     super("M3e focus verification failed; bounded observations retained");
   }
+}
+
+export async function withHubPanelMenuM3eFocusCleanup<T>(
+  operation: () => Promise<T>,
+  dispose: () => Promise<unknown>,
+): Promise<T> {
+  let primary: unknown;
+  let failed = false;
+  let result!: T;
+  try {
+    result = await operation();
+  } catch (error) {
+    failed = true;
+    primary = error;
+  }
+  try {
+    await dispose();
+  } catch (error) {
+    if (!failed) throw error;
+    if (primary instanceof HubPanelMenuM3eFocusFailure) {
+      Object.assign(primary.evidence, { disposalFailed: true });
+    }
+  }
+  if (failed) throw primary;
+  return result;
 }
 
 function check(value: unknown, message: string): asserts value {
@@ -58,7 +84,16 @@ export function assertHubPanelMenuM3eFocusResult(
       );
     } else {
       check(
-        result.activeButton === false &&
+        caseId === "focus-window-close-intent-cancellation"
+          ? result.closed === true
+          : result.closed !== true && result.buttonCount === 1,
+        "cancellation window state differs",
+      );
+      check(
+        result.claimLiveAtAction === true &&
+          typeof result.claimInvalidatedAt === "number" &&
+          result.claimInvalidatedAt >= Number(result.actionAt) &&
+          result.activeButton === false &&
           Number(result.actionAt) >= Number(result.preparedAt) &&
           Number(result.at) - Number(result.actionAt) < 2500,
         "cancellation restored focus or expired",
@@ -106,20 +141,10 @@ export async function runHubPanelMenuM3eFocus(
       params,
       10000,
       async (error) => {
-        const cause: unknown = error instanceof Error ? error.cause : error;
-        const detail = typeof cause === "object" && cause !== null
-          ? cause as Record<string, unknown>
-          : {};
         inputFailures.push({
           command,
           at: Date.now(),
-          name: String(
-            detail.name ?? (error instanceof Error ? error.name : "unknown"),
-          ).slice(0, 300),
-          message: String(
-            detail.message ??
-              (error instanceof Error ? error.message : "unknown"),
-          ).slice(0, 300),
+          ...hubPanelMenuM3eProtocolError(error),
         });
         await Deno.writeTextFile(
           context.inputDiagnosticsPath,
@@ -289,105 +314,99 @@ export async function runHubPanelMenuM3eFocus(
       let action: unknown;
       let terminal: unknown;
       let result: unknown;
-      try {
-        const target = bundle.packages["hub-menu-v2"].packageSha256;
-        terminal = await runHubPanelMenuM3eGatedOperation(call, {
-          ...payload,
-          txId: crypto.randomUUID(),
-          operation: "update",
-          expectedRevision: before.revision,
-          packageSha256: target,
-          targetVersion: target,
-          targetDigest: target,
-        }, async () => {
-          action = await focus("act", role, { caseId });
-          check(
-            record(action).precondition === true,
-            "gate focus conditions differ",
-          );
-          if (caseId === "focus-pointer-cancellation") {
-            const pointer = record(record(action).pointerTarget);
-            try {
-              await inputCommand(
-                "WebDriver:PerformActions",
-                {
-                  actions: [{
-                    type: "pointer",
-                    id: "hub-menu-focus-pointer",
-                    parameters: { pointerType: "mouse" },
-                    actions: [{
-                      type: "pointerMove",
-                      origin: "viewport",
-                      x: pointer.x,
-                      y: pointer.y,
-                      duration: 0,
-                    }],
-                  }],
-                },
-              );
-            } finally {
-              await inputCommand(
-                "WebDriver:ReleaseActions",
-                {},
-              );
-            }
-          }
-          if (
-            caseId === "focus-keyboard-cancellation" ||
-            caseId === "focus-movement-cancellation"
-          ) {
-            try {
-              await inputCommand(
-                "WebDriver:PerformActions",
-                {
-                  actions: [{
-                    type: "key",
-                    id: "hub-panel-menu-m3e-focus",
-                    actions: [
-                      { type: "keyDown", value: "\uE008" },
-                      ...(caseId === "focus-movement-cancellation"
-                        ? [{ type: "keyDown", value: "\uE004" }, {
-                          type: "keyUp",
-                          value: "\uE004",
-                        }]
-                        : []),
-                      {
-                        type: "keyUp",
-                        value: "\uE008",
-                      },
-                    ],
-                  }],
-                },
-              );
-            } finally {
-              await inputCommand(
-                "WebDriver:ReleaseActions",
-                {},
-              );
-            }
-          }
-        });
-        const outcome = record(record(record(terminal).terminal).outcome);
-        check(
-          outcome.status === "succeeded" && outcome.selectedDigest === target &&
-            outcome.expectedRevision === before.revision,
-          "gated terminal differs",
-        );
-        result = await focus("result", role);
-        assertHubPanelMenuM3eFocusResult(caseId, result);
-      } catch {
+      await withHubPanelMenuM3eFocusCleanup(async () => {
         try {
+          const target = bundle.packages["hub-menu-v2"].packageSha256;
+          terminal = await runHubPanelMenuM3eGatedOperation(call, {
+            ...payload,
+            txId: crypto.randomUUID(),
+            operation: "update",
+            expectedRevision: before.revision,
+            packageSha256: target,
+            targetVersion: target,
+            targetDigest: target,
+          }, async () => {
+            action = await focus("act", role, { caseId });
+            check(
+              record(action).precondition === true,
+              "gate focus conditions differ",
+            );
+            if (caseId === "focus-pointer-cancellation") {
+              const pointer = record(record(action).pointerTarget);
+              try {
+                await inputCommand(
+                  "WebDriver:PerformActions",
+                  {
+                    actions: [{
+                      type: "pointer",
+                      id: "hub-menu-focus-pointer",
+                      parameters: { pointerType: "mouse" },
+                      actions: [{
+                        type: "pointerMove",
+                        origin: "viewport",
+                        x: pointer.x,
+                        y: pointer.y,
+                        duration: 0,
+                      }],
+                    }],
+                  },
+                );
+              } finally {
+                await inputCommand(
+                  "WebDriver:ReleaseActions",
+                  {},
+                );
+              }
+            }
+            if (caseId === "focus-keyboard-cancellation") {
+              try {
+                await inputCommand(
+                  "WebDriver:PerformActions",
+                  {
+                    actions: [{
+                      type: "key",
+                      id: "hub-panel-menu-m3e-focus",
+                      actions: [
+                        { type: "keyDown", value: "\uE008" },
+                        {
+                          type: "keyUp",
+                          value: "\uE008",
+                        },
+                      ],
+                    }],
+                  },
+                );
+              } finally {
+                await inputCommand(
+                  "WebDriver:ReleaseActions",
+                  {},
+                );
+              }
+            }
+          });
+          const outcome = record(record(record(terminal).terminal).outcome);
+          check(
+            outcome.status === "succeeded" &&
+              outcome.selectedDigest === target &&
+              outcome.expectedRevision === before.revision,
+            "gated terminal differs",
+          );
           result = await focus("result", role);
-        } catch { /* Connection safety failures prohibit further commands. */ }
-        throw new HubPanelMenuM3eFocusFailure({
-          prepared: JSON.stringify(prepared),
-          action: JSON.stringify(action) ?? null,
-          terminal: JSON.stringify(terminal) ?? null,
-          result: JSON.stringify(result) ?? null,
-        });
-      } finally {
-        await focus("dispose", role);
-      }
+          assertHubPanelMenuM3eFocusResult(caseId, result);
+        } catch {
+          try {
+            result = await focus("result", role);
+          } catch {
+            /* Connection safety failures prohibit further commands. */
+          }
+          throw new HubPanelMenuM3eFocusFailure({
+            prepared: JSON.stringify(prepared),
+            action: JSON.stringify(action) ?? null,
+            terminal: JSON.stringify(terminal) ?? null,
+            result: JSON.stringify(result) ?? null,
+          });
+        }
+      }, () => focus("dispose", role));
       if (caseId === "focus-window-close-intent-cancellation") {
         await call({
           kind: "lifecycle",
@@ -404,13 +423,13 @@ export async function runHubPanelMenuM3eFocus(
       };
     });
   }
-  await runCase("focus-disable-cancellation", async () => {
+  await runCase("focus-disable-fallback-no-theft", async () => {
     const prepared = record(await prepareFocus());
     let disabled: unknown;
     let enabled: unknown;
     let fallback: unknown;
     let monitor: unknown;
-    try {
+    await withHubPanelMenuM3eFocusCleanup(async () => {
       disabled = await operation("disable");
       fallback = await focus("result");
       const atFallback = record(fallback);
@@ -429,9 +448,7 @@ export async function runHubPanelMenuM3eFocus(
         "re-enable stole focus or exceeded claim window",
       );
       monitor = await focus("monitor");
-    } finally {
-      await focus("dispose");
-    }
+    }, () => focus("dispose"));
     return {
       note:
         "Disable is serialized behind updates by M3cSerialQueue; this case proves disable fallback/no-theft, not interruption of a pending replacement claim.",

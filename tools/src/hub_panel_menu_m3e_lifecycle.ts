@@ -27,6 +27,29 @@ function same(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+export function assertHubPanelMenuM3eLateDelivery(value: unknown): void {
+  const snapshot = record(value);
+  const expected = record(snapshot.registryOwner);
+  const matches = (owner: unknown) => {
+    const actual = record(owner);
+    return actual.featureId === expected.featureId &&
+      actual.hostEpoch === expected.hostEpoch &&
+      actual.generation === expected.generation;
+  };
+  check(
+    Array.isArray(snapshot.lateDeliveries) &&
+      snapshot.lateDeliveries.length > 0,
+    "late delivery evidence missing",
+  );
+  const deliveries = snapshot.lateDeliveries.map(record);
+  check(
+    deliveries.every((entry) =>
+      entry.role === "late" && matches(entry.owner)
+    ) && deliveries.some((entry) => entry.acknowledgement === "rendered"),
+    "late adapter acknowledged a non-active generation",
+  );
+}
+
 export function assertHubPanelMenuM3eSignedState(
   value: unknown,
   expected: HubPanelMenuM3eLifecycleExpected,
@@ -473,6 +496,7 @@ export async function runHubPanelMenuM3eSignedLifecycle(
     current = record(await invoke("new-window"));
     normalWindows = 3;
     stateIs(current, v2, v2, true);
+    assertHubPanelMenuM3eLateDelivery(current);
     check(
       Array.isArray(before.ui) && Array.isArray(current.ui) &&
         before.ui.map(record).every((item) =>

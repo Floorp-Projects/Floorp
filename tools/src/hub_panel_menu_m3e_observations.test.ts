@@ -14,21 +14,47 @@ import {
   sendHubPanelMenuM3eBrowserCommand,
 } from "./hub_panel_menu_m3e_observations.ts";
 
-Deno.test("non-input protocol diagnostics retain bounded original category/message without changing public failures", async () => {
+Deno.test("non-input protocol diagnostics allowlist categories and omit arbitrary session/secret text", async () => {
+  assertEquals(
+    hubPanelMenuM3eProtocolError(
+      new Error("remote", {
+        cause: {
+          name: "no such window",
+          message: "Browsing context has been discarded",
+        },
+      }),
+    ),
+    {
+      category: "no such window",
+      message: "Browsing context has been discarded",
+    },
+  );
+  assertEquals(
+    hubPanelMenuM3eProtocolError(
+      new Error("remote", {
+        cause: {
+          name: "no such window",
+          message:
+            "Browsing context has been discarded SECRET session-id-sentinel",
+        },
+      }),
+    ),
+    { category: "no such window", message: "Diagnostic text omitted" },
+  );
   assertEquals(hubPanelMenuM3eProtocolError(null), {
     category: "unknown",
-    message: "unknown",
+    message: "Diagnostic text omitted",
   });
   assertEquals(hubPanelMenuM3eProtocolError(new Error("local")), {
     category: "Error",
-    message: "local",
+    message: "Diagnostic text omitted",
   });
   const error = new Error("public", {
     cause: { name: "x".repeat(301), message: "y".repeat(301) },
   });
   assertEquals(hubPanelMenuM3eProtocolError(error), {
-    category: "x".repeat(300),
-    message: "y".repeat(300),
+    category: "unknown",
+    message: "Diagnostic text omitted",
   });
   const root = await Deno.makeTempDir();
   try {
@@ -54,8 +80,12 @@ Deno.test("non-input protocol diagnostics retain bounded original category/messa
     const diagnostic = JSON.parse(await Deno.readTextFile(path));
     assertEquals(diagnostic.diagnosticsOnly, true);
     assertEquals(diagnostic.command, "WebDriver:ExecuteAsyncScript");
-    assertEquals(diagnostic.category, "x".repeat(300));
-    assertEquals(diagnostic.message, "y".repeat(300));
+    assertEquals(diagnostic.category, "unknown");
+    assertEquals(diagnostic.message, "Diagnostic text omitted");
+    assertEquals(
+      (await Deno.readTextFile(path)).includes("y".repeat(10)),
+      false,
+    );
     assert(aborted);
   } finally {
     await Deno.remove(root, { recursive: true });

@@ -27,6 +27,10 @@ const STARTUP_SELECTION = selectHubPanelMenuStartupMode(
 
 let hostStartup: Promise<void> | null = null;
 
+export function hubPanelMenuStartupSelectionForTests() {
+  return STARTUP_SELECTION;
+}
+
 export function initializeHubPanelMenuFeature(): void {
   if (STARTUP_SELECTION !== "pinned" || hostStartup) return;
   hostStartup = M0FeatureHost.openHubPanelMenu(true).then(

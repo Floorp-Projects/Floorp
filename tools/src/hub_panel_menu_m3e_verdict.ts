@@ -27,7 +27,7 @@ export const HUB_PANEL_MENU_M3E_REQUIRED_CASE_IDS = [
   "focus-movement-cancellation",
   "focus-blur-cancellation",
   "focus-menu-close-cancellation",
-  "focus-disable-cancellation",
+  "focus-disable-fallback-no-theft",
   "focus-navigation-cancellation",
   "focus-window-close-intent-cancellation",
   "focus-bounded-expiry",

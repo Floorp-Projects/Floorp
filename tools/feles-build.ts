@@ -19,6 +19,7 @@ import {
 } from "./src/port_offset.ts";
 import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import { Logger } from "./src/utils.ts";
+import { withDevStateLock } from "./src/dev_state_lock.ts";
 
 const logger = new Logger("feles-build");
 
@@ -350,7 +351,7 @@ async function main(): Promise<void> {
         );
         return;
       }
-      await runDev(await argvPortOffset(argv));
+      await withDevStateLock(async () => runDev(await argvPortOffset(argv)));
       break;
     }
     case "test": {

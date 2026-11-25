@@ -3,9 +3,16 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { BIN_PATH_EXE } from "./defines.ts";
 import {
+  serializeHubPanelMenuM3eReport,
+  writeReport,
+} from "./hub_panel_menu_m3e_acceptance.ts";
+import {
   assertHubPanelMenuM3eProcessProfile,
   assertHubPanelMenuM3eUserJsDoesNotOverride,
   captureHubPanelMenuM3eLaunchProcesses,
+  cleanupHubPanelMenuM3eLaunches,
+  hubPanelMenuM3eLaunchEnvironment,
+  hubPanelMenuM3eLaunchPids,
   hubPanelMenuM3eProcessExited,
   preexistingHubPanelMenuM3eProcesses,
   readHubPanelMenuM3eBoundedOutput,
@@ -14,6 +21,8 @@ import {
   refreshHubPanelMenuM3eProcessSnapshot,
   seedHubPanelMenuM3eProfile,
   superviseHubPanelMenuM3eOwnedCommandOperations,
+  withHubPanelMenuM3eCleanup,
+  writeHubPanelMenuM3eCommandArtifacts,
 } from "./hub_panel_menu_m3e_process.ts";
 import type {
   DevProcessIdentity,
@@ -22,6 +31,64 @@ import type {
 import type { HubPanelMenuM3eOwnedCommandOperations } from "./hub_panel_menu_m3e_process.types.ts";
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
+
+Deno.test("M3e launch ownership requires the unique kernel environment token and unchanged start ticks", async () => {
+  const process: DevProcessInfo = {
+    pid: 81,
+    ppid: 1,
+    name: "deno",
+    commandLine: "same checkout launch",
+    startTime: "boot:100",
+  };
+  const rows = [process, { ...process, pid: 82 }, { ...process, pid: 83 }];
+  const readText = (path: string): Promise<string> => {
+    if (path.includes("/82/")) {
+      return Promise.resolve("FLOORP_M3E_LAUNCH_TOKEN=peer\0");
+    }
+    if (path.endsWith("environ")) {
+      return Promise.resolve("FLOORP_M3E_LAUNCH_TOKEN=owned\0");
+    }
+    return Promise.resolve(
+      `81 (name with spaces) S ${Array(18).fill("0").join(" ")} ${
+        path.includes("/83/") ? "200" : "100"
+      }`,
+    );
+  };
+  assertEquals(await hubPanelMenuM3eLaunchPids(rows, "owned", readText), [81]);
+  assertEquals(await hubPanelMenuM3eLaunchPids([], "owned", readText), []);
+  assertEquals(
+    await hubPanelMenuM3eLaunchPids(
+      rows,
+      "owned",
+      () => Promise.reject(new Error("unreadable")),
+    ),
+    [],
+  );
+  await assertRejects(() => hubPanelMenuM3eLaunchPids(rows, "", readText));
+});
+
+Deno.test("M3e final cleanup retains failed-start launches and continues after a stop failure", async () => {
+  const launches = ["failed-start", "active", "already-stopped"];
+  const attempted: string[] = [];
+  assertEquals(
+    await cleanupHubPanelMenuM3eLaunches(launches, (launch) => {
+      attempted.push(launch);
+      return launch === "failed-start"
+        ? Promise.reject(new Error("retry required"))
+        : Promise.resolve(true);
+    }),
+    false,
+  );
+  assertEquals(attempted, launches);
+  assertEquals(
+    await cleanupHubPanelMenuM3eLaunches(launches, () => Promise.resolve(true)),
+    true,
+  );
+  assertEquals(
+    await cleanupHubPanelMenuM3eLaunches([], () => Promise.resolve(false)),
+    true,
+  );
+});
 
 Deno.test("M3e snapshots discard only kernel-proven exited rows and fail closed on unreadable state", async () => {
   const live: DevProcessInfo = {
@@ -297,9 +364,127 @@ Deno.test("M3e process ownership refuses checkout runtimes, not unrelated identi
       after,
       "/unique/m3e-profile",
       registered,
+      [73],
     ).map((identity) => identity.pid),
     [73],
   );
+  const peer = {
+    ...after[1],
+    pid: 74,
+    commandLine: `${BIN_PATH_EXE} --profile /peer`,
+    argv: [BIN_PATH_EXE, "--profile", "/peer"],
+  };
+  assertEquals(
+    captureHubPanelMenuM3eLaunchProcesses(
+      before,
+      [...after, peer],
+      "/unique/m3e-profile",
+      [...registered, peer],
+      [73],
+    ).map((identity) => identity.pid),
+    [73],
+  );
+  assertEquals(
+    captureHubPanelMenuM3eLaunchProcesses(
+      before,
+      after,
+      "/unique/m3e-profile",
+      registered,
+    ),
+    [],
+  );
+});
+
+Deno.test("M3e environment and all retained command artifacts exclude session and secret sentinels", async () => {
+  const marker = "SESSION_SECRET_SENTINEL";
+  assertEquals(
+    hubPanelMenuM3eLaunchEnvironment({
+      PATH: "/bin",
+      DISPLAY: ":0",
+      API_KEY: marker,
+      MARIONETTE_SESSION: marker,
+    }),
+    { PATH: "/bin", DISPLAY: ":0" },
+  );
+  const root = await Deno.makeTempDir();
+  try {
+    const report: Parameters<typeof writeReport>[1] = {
+      schemaVersion: 1,
+      runId: "test",
+      startedAt: "test",
+      completedAt: null,
+      passed: false,
+      cases: [],
+      launchFailures: [],
+      runFailure: null,
+      sharedProfileBefore: null,
+      sharedProfileAfter: null,
+      cleanup: {
+        launchOwnershipProven: false,
+        ownedProcessesStopped: false,
+        ownedPortsClosed: false,
+        fixtureClosed: false,
+        fixtureObservationsBounded: false,
+        profilesRemoved: false,
+        sharedProfileUnchanged: false,
+        ownedCommandCleanupProven: false,
+        reportWritten: false,
+      },
+      launches: [{
+        rowId: "C",
+        profilePath: "/owned",
+        identities: [{ pid: 81, startTime: "boot:100", commandLine: marker }],
+        ports: [],
+        failure: null,
+      }],
+      packageMetadata: [],
+      policyBinding: null,
+      reportPath: `${root}/report.json`,
+    };
+    await writeReport(`${root}/report.json`, report);
+    await Deno.writeTextFile(
+      `${root}/console.json`,
+      serializeHubPanelMenuM3eReport(report),
+    );
+    await writeHubPanelMenuM3eCommandArtifacts(
+      {
+        completed: true,
+        success: true,
+        cleanupProven: true,
+        stdout: `Connected to browser. ${marker}`,
+        stderr: marker,
+      },
+      `${root}/stdout`,
+      `${root}/stderr`,
+      0,
+    );
+    for await (const entry of Deno.readDir(root)) {
+      assertEquals(
+        (await Deno.readTextFile(`${root}/${entry.name}`)).includes(marker),
+        false,
+      );
+    }
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("M3e termination runs even when diagnostics or failed-start evidence writing rejects", async () => {
+  let stopped = 0;
+  for (
+    const diagnostic of [
+      () => Promise.resolve(),
+      () => Promise.reject(new Error("ENOSPC")),
+    ]
+  ) {
+    try {
+      await withHubPanelMenuM3eCleanup(diagnostic, () => {
+        stopped++;
+        return Promise.resolve();
+      });
+    } catch { /* Expected diagnostic failure. */ }
+  }
+  assertEquals(stopped, 2);
 });
 
 Deno.test("M3e teardown refreshes descendants only under verified owned roots", () => {

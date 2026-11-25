@@ -3,10 +3,15 @@
 import {
   assert,
   assertEquals,
+  assertRejects,
   assertStrictEquals,
   assertThrows,
 } from "@std/assert";
-import { assertHubPanelMenuM3eFocusResult } from "./hub_panel_menu_m3e_focus.ts";
+import {
+  assertHubPanelMenuM3eFocusResult,
+  HubPanelMenuM3eFocusFailure,
+  withHubPanelMenuM3eFocusCleanup,
+} from "./hub_panel_menu_m3e_focus.ts";
 import { HUB_PANEL_MENU_M3E_FOCUS_SCRIPT } from "./hub_panel_menu_m3e_focus_script.ts";
 
 Deno.test("focus oracles distinguish positive restoration, real timely cancellation, and expiry", () => {
@@ -51,15 +56,28 @@ Deno.test("focus oracles distinguish positive restoration, real timely cancellat
   ) {
     const cancellation = {
       ...positive,
+      closed: caseId === "focus-window-close-intent-cancellation",
+      buttonCount: caseId === "focus-window-close-intent-cancellation" ? 0 : 1,
       activeButton: false,
       actionAt: 1100,
+      claimLiveAtAction: true,
+      claimInvalidatedAt: 1101,
       events: [{ type, trusted: true, at: 1101, newButton: false }],
     };
     assertHubPanelMenuM3eFocusResult(caseId, cancellation);
     for (
-      const mutation of [{ activeButton: true }, { at: 4500 }, { events: [] }, {
-        events: [{ type, trusted: false, at: 1101 }],
-      }, { events: [{ type, trusted: true, at: 1101, newButton: true }] }]
+      const mutation of [
+        { claimLiveAtAction: false },
+        { claimInvalidatedAt: null },
+        { closed: true, buttonCount: 0, claimInvalidatedAt: null },
+        { activeButton: true },
+        { at: 4500 },
+        { events: [] },
+        {
+          events: [{ type, trusted: false, at: 1101 }],
+        },
+        { events: [{ type, trusted: true, at: 1101, newButton: true }] },
+      ]
     ) {
       assertThrows(() =>
         assertHubPanelMenuM3eFocusResult(caseId, {
@@ -216,11 +234,23 @@ Deno.test("generated pointer preparation validates a live fallback target withou
     getBoundingClientRect: () => ({ x: 20, y: 40, width, height: 20 }),
   };
   const trigger = { ...settings, id: "PanelUI-menu-button" };
+  const movement = {
+    ...settings,
+    id: "appMenu-new-tab-button2",
+    focus() {
+      win.document.activeElement = movement;
+    },
+  };
   const audit = {
     old: { isConnected: false },
     preparedAt: Date.now(),
     fallbackAt: Date.now(),
     actionAt: null,
+    claimListeners: new Map([[
+      {},
+      new Set(["keydown", "pointerdown", "pointermove"]),
+    ]]),
+    claimInvalidatedAt: null,
     events: [],
   };
   const win = {
@@ -238,6 +268,8 @@ Deno.test("generated pointer preparation validates a live fallback target withou
           ? present ? settings : null
           : id === trigger.id
           ? trigger
+          : id === movement.id
+          ? movement
           : null,
     },
     getComputedStyle: () => ({ display: "block", visibility: "visible" }),
@@ -249,15 +281,19 @@ Deno.test("generated pointer preparation validates a live fallback target withou
     "nodeId",
     `return (async () => { ${HUB_PANEL_MENU_M3E_FOCUS_SCRIPT} })();`,
   );
-  const execute = () =>
+  const execute = (caseId = "focus-pointer-cancellation") =>
     run(
-      { kind: "focus", action: "act", caseId: "focus-pointer-cancellation" },
+      { kind: "focus", action: "act", caseId },
       () => ({ windows: { initial: win }, focusProbe: audit }),
       { focus: { activeWindow: win, elementIsFocusable: () => true } },
       () => null,
     );
   assertEquals((await execute()).pointerTarget, { x: 25, y: 50 });
   assertEquals(audit.events, []);
+  const moved = await execute("focus-movement-cancellation");
+  assertEquals(moved.after.activeId, movement.id);
+  assertEquals(audit.events, []);
+  win.document.activeElement = settings;
   width = 0;
   let rejected = false;
   try {
@@ -268,4 +304,35 @@ Deno.test("generated pointer preparation validates a live fallback target withou
   assert(rejected);
   present = false;
   assertEquals((await execute()).precondition, false);
+});
+
+Deno.test("focus disposal preserves original evidence and surfaces a standalone disposal failure", async () => {
+  const primary = new HubPanelMenuM3eFocusFailure({
+    prepared: "original evidence",
+  });
+  const disposal = new Error("dispose failed");
+  const failure = await assertRejects(() =>
+    withHubPanelMenuM3eFocusCleanup(
+      () => Promise.reject(primary),
+      () => Promise.reject(disposal),
+    )
+  );
+  assertStrictEquals(failure, primary);
+  assertEquals(primary.evidence.disposalFailed, true);
+  assertStrictEquals(
+    await assertRejects(() =>
+      withHubPanelMenuM3eFocusCleanup(
+        () => Promise.resolve(),
+        () => Promise.reject(disposal),
+      )
+    ),
+    disposal,
+  );
+  assertEquals(
+    await withHubPanelMenuM3eFocusCleanup(
+      () => Promise.resolve(42),
+      () => Promise.resolve(),
+    ),
+    42,
+  );
 });

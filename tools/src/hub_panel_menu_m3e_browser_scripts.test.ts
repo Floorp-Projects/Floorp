@@ -5,7 +5,147 @@ import { HUB_PANEL_MENU_M3E_INITIAL_WINDOW_SCRIPT } from "./hub_panel_menu_m3e_l
 import {
   buildHubPanelMenuM3eBrowserScript,
   buildHubPanelMenuM3eBrowserScriptSuite,
+  HUB_PANEL_MENU_M3E_SIGNATURE_CONTROL_SCRIPT,
 } from "./hub_panel_menu_m3e_browser_scripts.ts";
+
+Deno.test("signature-only native control verifies the exact digest and rejects wrong-key acceptance and parse-only failures", async () => {
+  for (
+    const mode of ["normal", "accept-wrong-key", "parse-only", "wrong-digest"]
+  ) {
+    let closed = false;
+    const policy = { trustedKeys: [{ keyId: "key", publicKey: "abc" }] };
+    const run = new Function(
+      "ChromeUtils",
+      "window",
+      `${HUB_PANEL_MENU_M3E_SIGNATURE_CONTROL_SCRIPT};return signatureControl;`,
+    )({
+      importESModule: () => ({
+        openTestProfileFeaturePackageCache: () =>
+          Promise.resolve({
+            read(_digest: string, supplied: unknown) {
+              if (supplied === policy) {
+                return Promise.resolve({
+                  packageSha256: mode === "wrong-digest" ? "other" : "digest",
+                });
+              }
+              if (mode === "accept-wrong-key") {
+                return Promise.resolve({ packageSha256: "digest" });
+              }
+              return Promise.reject({
+                code: mode === "parse-only"
+                  ? "invalid-envelope"
+                  : "invalid-signature",
+              });
+            },
+            close() {
+              closed = true;
+              return Promise.resolve();
+            },
+          }),
+      }),
+    }, { crypto });
+    let result;
+    try {
+      result = await run("test", "digest", policy);
+    } catch {
+      result = null;
+    }
+    assertEquals(!!result, mode === "normal");
+    assertEquals(closed, true);
+  }
+});
+
+Deno.test("manual-only preference mutation probes the actual latched mode independently of UI and host state", async () => {
+  for (const selection of ["manual", "pinned"] as const) {
+    for (const live of [false, true]) {
+      const prefs = new Map<string, unknown>([["nora.startup.mode", "test"], [
+        "nora.dev.hub_menu_feature",
+        true,
+      ], ["nora.dev.hub_menu_manual_host", selection === "manual"]]);
+      const win = {
+        document: { querySelectorAll: () => [], getElementById: () => null },
+      };
+      const imports = {
+        setTimeout,
+        clearTimeout,
+        PrivateBrowsingUtils: { isWindowPrivate: () => false },
+        FileUtils: {},
+        getSharedAppMenuRegistry: () => ({
+          diagnosticsForTests: { published: false },
+        }),
+        hubPanelMenuStartupSelectionForTests: () =>
+          live
+            ? prefs.get("nora.dev.hub_menu_manual_host") ? "manual" : "pinned"
+            : selection,
+      };
+      const services = {
+        prefs: {
+          prefHasUserValue: (name: string) => prefs.has(name),
+          getStringPref: (name: string, fallback: string) =>
+            prefs.get(name) ?? fallback,
+          getBoolPref: (name: string, fallback: boolean) =>
+            prefs.get(name) ?? fallback,
+          setStringPref: (name: string, value: string) =>
+            prefs.set(name, value),
+          setBoolPref: (name: string, value: boolean) => prefs.set(name, value),
+          clearUserPref: (name: string) => prefs.delete(name),
+        },
+        wm: {
+          getEnumerator: () => {
+            let used = false;
+            return {
+              hasMoreElements: () => !used,
+              getNext: () => {
+                used = true;
+                return win;
+              },
+            };
+          },
+        },
+      };
+      const script = buildHubPanelMenuM3eBrowserScript({
+        kind: "post-start-immutability",
+        payload: {
+          testId: "00000000-0000-4000-8000-000000000000",
+          rowId: "C",
+          expectedSelection: selection,
+          toggleMode: "production",
+          toggleFeature: false,
+          toggleManual: false,
+        },
+      });
+      const result = await new Promise<Record<string, unknown>>((resolve) =>
+        new Function(
+          "ChromeUtils",
+          "Services",
+          "IOUtils",
+          "PathUtils",
+          "globalThis",
+          script,
+        )(
+          { importESModule: () => imports },
+          services,
+          { exists: () => Promise.resolve(false) },
+          {
+            profileDir: "/profile",
+            join: (...parts: string[]) => parts.join("/"),
+          },
+          {},
+          resolve,
+        )
+      );
+      assertEquals(!!result.scriptError, live);
+      if (!live) {
+        assertEquals(result.latchedBefore, selection);
+        assertEquals(result.latchedAfterManualOnly, selection);
+      }
+      assertEquals(
+        prefs.get("nora.dev.hub_menu_manual_host"),
+        selection === "manual",
+      );
+    }
+  }
+});
 
 Deno.test("generated preparation preserves the Marionette sandbox owner instead of enumeration order", () => {
   const first = { closed: false, private: false, browsingContext: {} };

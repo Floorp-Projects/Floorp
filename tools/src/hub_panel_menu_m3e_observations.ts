@@ -26,13 +26,40 @@ const protocolDiagnostics = new WeakMap<MarionetteClient, string>();
 export function hubPanelMenuM3eProtocolError(error: unknown) {
   const cause = error instanceof Error ? error.cause : error;
   const detail = isRecord(cause) ? cause : {};
+  const category = String(
+    detail.name ?? (error instanceof Error ? error.name : "unknown"),
+  );
+  const allowed = new Set([
+    "unknown",
+    "Error",
+    "TimeoutError",
+    "no such window",
+    "invalid argument",
+    "javascript error",
+    "timeout",
+    "invalid session id",
+    "unknown error",
+    "no such element",
+  ]);
+  const message = String(
+    detail.message ?? (error instanceof Error ? error.message : "unknown"),
+  );
+  const safeMessages = new Set([
+    "Browsing context has been discarded",
+    "Marionette operation timed out",
+    "Marionette connection closed",
+    "Marionette connection unavailable",
+    "Invalid Marionette response",
+    "Invalid Marionette frame length",
+    "Invalid Marionette frame prefix",
+    "Unexpected Marionette protocol",
+    "Marionette write closed",
+  ]);
   return {
-    category: String(
-      detail.name ?? (error instanceof Error ? error.name : "unknown"),
-    ).slice(0, 300),
-    message: String(
-      detail.message ?? (error instanceof Error ? error.message : "unknown"),
-    ).slice(0, 300),
+    category: allowed.has(category) ? category : "unknown",
+    message: safeMessages.has(message)
+      ? message.slice(0, 300)
+      : "Diagnostic text omitted",
   };
 }
 
@@ -132,9 +159,9 @@ export async function sendHubPanelMenuM3eBrowserCommand(
           2,
         ) + "\n",
         { mode: 0o600 },
-      );
+      ).catch(() => {});
     }
-    if (onError) await onError(error);
+    if (onError) await onError(error).catch(() => {});
     throw new HubPanelMenuM3eConnectionUnusableError();
   }
 }

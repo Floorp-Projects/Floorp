@@ -78,6 +78,31 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
         audit.removers.push(() => target.removeEventListener(type, listener, true));
       }
       task.focusProbe = audit;
+      audit.claimListeners = new Map();
+      audit.claimLiveAtAction = false;
+      audit.claimInvalidatedAt = null;
+      const document = win.document;
+      const add = document.addEventListener;
+      const remove = document.removeEventListener;
+      const addDescriptor = Object.getOwnPropertyDescriptor(document, "addEventListener");
+      const removeDescriptor = Object.getOwnPropertyDescriptor(document, "removeEventListener");
+      Object.defineProperty(document, "addEventListener", { configurable: true, value: function(type, listener, options) {
+        const result = add.call(this, type, listener, options);
+        if (options === true && ["keydown", "pointerdown", "pointermove"].includes(type)) {
+          const types = audit.claimListeners.get(listener) ?? new Set();
+          types.add(type); audit.claimListeners.set(listener, types);
+        }
+        return result;
+      } });
+      Object.defineProperty(document, "removeEventListener", { configurable: true, value: function(type, listener, options) {
+        const result = remove.call(this, type, listener, options);
+        if (options === true && audit.claimListeners.get(listener)?.size === 3 && ["keydown", "pointerdown", "pointermove"].includes(type)) audit.claimInvalidatedAt ??= Date.now();
+        return result;
+      } });
+      audit.removers.push(() => {
+        if (addDescriptor) Object.defineProperty(document, "addEventListener", addDescriptor); else delete document.addEventListener;
+        if (removeDescriptor) Object.defineProperty(document, "removeEventListener", removeDescriptor); else delete document.removeEventListener;
+      });
       return { ...observation(), preparedAt: audit.preparedAt };
     }
     requireFocus(task.focusProbe && win);
@@ -86,6 +111,8 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
       const atGate = observation();
       if (!(!win.closed && !audit.old.isConnected && atGate.foreground && atGate.popupOpen && atGate.activeSettings && atGate.fallbackVisible && audit.fallbackAt !== null && Date.now() - audit.preparedAt < 2500)) return { precondition: false, atGate, oldConnected: audit.old.isConnected, fallbackAt: audit.fallbackAt, elapsed: Date.now() - audit.preparedAt };
       audit.actionAt = Date.now();
+      audit.claimLiveAtAction = [...audit.claimListeners.values()].some((types) => types.size === 3) && audit.claimInvalidatedAt === null;
+      requireFocus(audit.claimLiveAtAction);
       let pointerTarget = null;
       if (input.caseId === "focus-pointer-cancellation") {
         const rect = win.document.getElementById("appMenu-settings-button").getBoundingClientRect();
@@ -93,6 +120,11 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
         requireFocus(rect.width > 0 && rect.height > 0 && Number.isFinite(pointerTarget.x) && Number.isFinite(pointerTarget.y) && pointerTarget.x >= 0 && pointerTarget.y >= 0 && pointerTarget.x < win.innerWidth && pointerTarget.y < win.innerHeight);
       } else if (input.caseId === "focus-movement-cancellation") {
         requireFocus(atGate.activeSettings);
+        const target = win.document.getElementById("appMenu-new-tab-button2");
+        audit.movementTarget = { present: !!target, visible: visible(target), focusable: !!target && Services.focus.elementIsFocusable(target, 0) };
+        requireFocus(audit.movementTarget.visible && audit.movementTarget.focusable);
+        target.focus();
+        requireFocus(win.document.activeElement === target);
       } else if (input.caseId === "focus-blur-cancellation") {
         task.windows.second.focus();
         await waitFor(() => !win.document.hasFocus(), 1000, "real window blur");
@@ -115,7 +147,7 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
     }
     if (input.action === "result") {
       const result = observation();
-      return { ...result, preparedAt: audit.preparedAt, actionAt: audit.actionAt, fallbackAt: audit.fallbackAt, oldConnected: win.closed ? false : audit.old.isConnected, oldNodeId: audit.oldNodeId, events: audit.events.map((entry) => ({ ...entry })), revocations: audit.revocations, focusCalls: audit.focusCalls };
+      return { ...result, movementTarget: audit.movementTarget ?? null, claimLiveAtAction: audit.claimLiveAtAction, claimInvalidatedAt: audit.claimInvalidatedAt, preparedAt: audit.preparedAt, actionAt: audit.actionAt, fallbackAt: audit.fallbackAt, oldConnected: win.closed ? false : audit.old.isConnected, oldNodeId: audit.oldNodeId, events: audit.events.map((entry) => ({ ...entry })), revocations: audit.revocations, focusCalls: audit.focusCalls };
     }
     if (input.action === "monitor") {
       requireFocus(audit.fallbackAt !== null);
@@ -128,7 +160,6 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
       return { ...observation(), fallbackAt: audit.fallbackAt, elapsed: Date.now() - audit.fallbackAt, events: audit.events.map((entry) => ({ ...entry })) };
     }
     if (input.action === "dispose") {
-      if (win.closed) { audit.removers[0](); delete task.focusProbe; delete task.windows[role]; return { disposed: true, windowClosed: true }; }
       for (const remove of audit.removers) remove();
       delete task.focusProbe;
       if (win.closed) { delete task.windows[role]; return { disposed: true, windowClosed: true }; }

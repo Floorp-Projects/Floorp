@@ -4,6 +4,7 @@
 import * as path from "@std/path";
 import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
+import { withDevStateLock } from "./src/dev_state_lock.ts";
 import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
   matchesDevIdentity,
@@ -135,17 +136,19 @@ const context = args.context as "chrome" | "content";
 async function main() {
   switch (command) {
     case "start":
-      await cmdStart();
+      await withDevStateLock(cmdStart);
       break;
     case "stop":
-      await cmdStop(args.all);
+      await withDevStateLock(() => cmdStop(args.all));
       break;
     case "restart":
-      await cmdStop();
-      await cmdStart();
+      await withDevStateLock(async () => {
+        await cmdStop();
+        await cmdStart();
+      });
       break;
     case "rebuild":
-      await cmdRebuild();
+      await withDevStateLock(cmdRebuild);
       break;
     case "smoke":
       await cmdSmoke();

@@ -2,6 +2,7 @@
 
 import { basename, dirname, isAbsolute, join, resolve } from "@std/path";
 import { PROJECT_ROOT } from "./defines.ts";
+import { withDevStateLock } from "./dev_state_lock.ts";
 import { snapshotProfileTree } from "./m3d_package_acquisition_acceptance_helpers.ts";
 import type { M3dPackageHttpsFixture } from "./m3d_package_https_fixture.types.ts";
 import {
@@ -10,7 +11,9 @@ import {
   assertHubPanelMenuM3eUserJsDoesNotOverride,
   assertNoPreexistingHubPanelMenuM3eProcesses,
   captureHubPanelMenuM3eLaunchProcesses,
+  cleanupHubPanelMenuM3eLaunches,
   connectHubPanelMenuM3eBrowser,
+  hubPanelMenuM3eLaunchPids,
   hubPanelMenuM3eProcessExited,
   listHubPanelMenuM3eOwnedListeningPorts,
   ownedM3eProcesses,
@@ -19,6 +22,7 @@ import {
   runHubPanelMenuM3eOwnedCommand,
   seedHubPanelMenuM3eProfile,
   terminateHubPanelMenuM3eOwnedProcesses,
+  withHubPanelMenuM3eCleanup,
 } from "./hub_panel_menu_m3e_process.ts";
 import {
   createHubPanelMenuM3eFixtureBundle,
@@ -32,8 +36,10 @@ import {
   bindHubPanelMenuM3eBrowserSandbox,
   closeHubPanelMenuM3eBrowser,
   executeHubPanelMenuM3eBrowserScript,
+  sendHubPanelMenuM3eBrowserCommand,
 } from "./hub_panel_menu_m3e_observations.ts";
 import type { MarionetteClient } from "./browser_connector.ts";
+
 import type {
   HubPanelMenuM3eAcceptanceReport,
   HubPanelMenuM3eCaseResult,
@@ -62,6 +68,7 @@ import {
   runHubPanelMenuM3eRestartRecovery,
 } from "./hub_panel_menu_m3e_restart.ts";
 
+const launchTokens = new WeakMap<HubPanelMenuM3eLaunchRecord, string>();
 const RUN_ROOT = join(PROJECT_ROOT, "_dist", "hub-panel-menu-m3e-runs");
 const SHARED_PROFILE = join(PROJECT_ROOT, "_dist", "profile", "test");
 const STARTUP_ROWS = [
@@ -267,6 +274,7 @@ async function runDevTool(
   profilePath: string,
   logPrefix: string,
   cleanup: MutableHubPanelMenuM3eCleanup,
+  launchToken?: string,
 ): Promise<HubPanelMenuM3eOwnedCommandResult> {
   const args = action === "start"
     ? ["task", "dev-tool", "start", "--port-offset", "auto"]
@@ -279,6 +287,7 @@ async function runDevTool(
       profilePath,
       `${logPrefix}.${action}.stdout.log`,
       `${logPrefix}.${action}.stderr.log`,
+      launchToken,
     );
   } catch (error) {
     cleanup.ownedCommandCleanupProven = false;
@@ -302,6 +311,7 @@ async function startStartupRow(
 ): Promise<HubPanelMenuM3eStartupSession> {
   const profilePath = join(profileRoot, row.id);
   const logPrefix = join(runDirectory, `browser-${launchId}`);
+  const launchToken = crypto.randomUUID();
   const launchRecord: HubPanelMenuM3eLaunchRecord = {
     rowId: row.id,
     profilePath,
@@ -310,6 +320,7 @@ async function startStartupRow(
     failure: null,
   };
   launches.push(launchRecord);
+  launchTokens.set(launchRecord, launchToken);
   let client: MarionetteClient | null = null;
   let identityCaptureProven = true;
   try {
@@ -323,7 +334,13 @@ async function startStartupRow(
     let startResult: HubPanelMenuM3eOwnedCommandResult | null = null;
     let startError: unknown = null;
     try {
-      startResult = await runDevTool("start", profilePath, logPrefix, cleanup);
+      startResult = await runDevTool(
+        "start",
+        profilePath,
+        logPrefix,
+        cleanup,
+        launchToken,
+      );
     } catch (error) {
       startError = error;
     }
@@ -334,6 +351,7 @@ async function startStartupRow(
         after,
         profilePath,
         await readHubPanelMenuM3eProcessRegistry(),
+        await hubPanelMenuM3eLaunchPids(after, launchToken),
       );
     } catch (error) {
       identityCaptureProven = false;
@@ -389,7 +407,9 @@ async function startStartupRow(
       !status.stdout.includes("Connected to browser.")
     ) throw new Error("M3e dev-tool status did not prove browser connectivity");
     client = await connectHubPanelMenuM3eBrowser();
-    await client.setContext("chrome");
+    await sendHubPanelMenuM3eBrowserCommand(client, "Marionette:SetContext", {
+      value: "chrome",
+    });
     bindHubPanelMenuM3eBrowserSandbox(
       client,
       taskId,
@@ -466,9 +486,9 @@ async function stopStartupRow(
 ): Promise<boolean> {
   let logPreserved = false;
   try {
-    await Deno.copyFile(
-      join(PROJECT_ROOT, "_dist", "dev-server.log"),
+    await Deno.writeTextFile(
       `${session.statusOutputPath}.dev-server.log`,
+      JSON.stringify({ omitted: "raw dev-server output" }),
     );
     logPreserved = true;
   } catch {
@@ -510,6 +530,27 @@ async function refreshAndStopOwnedLaunch(
     launch.identities,
     processes,
   );
+  const token = launchTokens.get(launch);
+  if (token) {
+    const pids = await hubPanelMenuM3eLaunchPids(processes, token);
+    const recovered = processes.filter((process) => pids.includes(process.pid))
+      .map(({ pid, startTime, commandLine }) => ({
+        pid,
+        startTime,
+        commandLine,
+      }));
+    launch.identities = [
+      ...new Map(
+        [...launch.identities, ...recovered].map((
+          identity,
+        ) => [identity.pid, identity]),
+      ).values(),
+    ];
+    refreshed = refreshHubPanelMenuM3eOwnedProcesses(
+      launch.identities,
+      processes,
+    );
+  }
   if (!refreshed.ownershipProven) {
     processes = await ownedM3eProcesses();
     refreshed = refreshHubPanelMenuM3eOwnedProcesses(
@@ -517,51 +558,57 @@ async function refreshAndStopOwnedLaunch(
       processes,
     );
   }
-  await Deno.writeTextFile(
-    `${logPath}.process-refresh.json`,
-    JSON.stringify(
-      {
-        ownershipProven: refreshed.ownershipProven,
-        identities: launch.identities.map((identity) => {
-          const current = processes.find((process) =>
-            process.pid === identity.pid
-          );
-          return {
-            pid: identity.pid,
-            expectedStartTime: identity.startTime,
-            observedStartTime: current?.startTime ?? null,
-            commandLineMatches: current
-              ? current.commandLine === identity.commandLine
-              : null,
-          };
-        }),
-        livePids: refreshed.liveIdentities.map((identity) => identity.pid),
-      },
-      null,
-      2,
-    ),
-    { mode: 0o600 },
-  );
+  let stopped = false;
+  let portInventoryProven = false;
+  try {
+    await withHubPanelMenuM3eCleanup(async () => {
+      const refreshedPorts = await listHubPanelMenuM3eOwnedListeningPorts(
+        refreshed.liveIdentities,
+        profilePath,
+        `${logPath}.owned-ports`,
+      );
+      launch.ports = [...new Set([...launch.ports, ...refreshedPorts])].sort((
+        left,
+        right,
+      ) => left - right);
+      portInventoryProven = true;
+      await Deno.writeTextFile(
+        `${logPath}.process-refresh.json`,
+        JSON.stringify(
+          {
+            ownershipProven: refreshed.ownershipProven,
+            identities: launch.identities.map((identity) => {
+              const current = processes.find((process) =>
+                process.pid === identity.pid
+              );
+              return {
+                pid: identity.pid,
+                expectedStartTime: identity.startTime,
+                observedStartTime: current?.startTime ?? null,
+                commandLineMatches: current
+                  ? current.commandLine === identity.commandLine
+                  : null,
+              };
+            }),
+            livePids: refreshed.liveIdentities.map((identity) => identity.pid),
+          },
+          null,
+          2,
+        ),
+        { mode: 0o600 },
+      );
+    }, async () => {
+      stopped = await terminateHubPanelMenuM3eOwnedProcesses(
+        refreshed.liveIdentities,
+      ).catch(() => false);
+    });
+  } catch {
+    launch.failure ??= "M3e teardown diagnostics failed";
+    cleanup.ownedCommandCleanupProven = false;
+  }
   launch.identities = refreshed.identities;
   cleanup.launchOwnershipProven = cleanup.launchOwnershipProven &&
     refreshed.ownershipProven;
-  let portInventoryProven = true;
-  try {
-    const refreshedPorts = await listHubPanelMenuM3eOwnedListeningPorts(
-      refreshed.liveIdentities,
-      profilePath,
-      `${logPath}.owned-ports`,
-    );
-    launch.ports = [...new Set([...launch.ports, ...refreshedPorts])].sort(
-      (left, right) => left - right,
-    );
-  } catch {
-    portInventoryProven = false;
-    cleanup.ownedCommandCleanupProven = false;
-  }
-  const stopped = await terminateHubPanelMenuM3eOwnedProcesses(
-    refreshed.liveIdentities,
-  ).catch(() => false);
   const portsClosed = portInventoryProven && stopped &&
     areHubPanelMenuM3ePortsClosed(launch.ports);
   cleanup.ownedProcessesStopped = cleanup.ownedProcessesStopped && stopped;
@@ -596,13 +643,34 @@ export function assertInertnessSnapshotsEqual(
   }
 }
 
-async function writeReport(
+export function serializeHubPanelMenuM3eReport(
+  report: HubPanelMenuM3eAcceptanceReport,
+): string {
+  const publicReport = {
+    ...report,
+    launches: report.launches.map((launch) => ({
+      ...launch,
+      identities: launch.identities.map(({ pid, startTime }) => ({
+        pid,
+        startTime,
+        commandLine: "omitted",
+      })),
+    })),
+  };
+  return JSON.stringify(publicReport, null, 2);
+}
+
+export async function writeReport(
   reportPath: string,
   report: HubPanelMenuM3eAcceptanceReport,
 ): Promise<void> {
-  await Deno.writeTextFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, {
-    mode: 0o600,
-  });
+  await Deno.writeTextFile(
+    reportPath,
+    `${serializeHubPanelMenuM3eReport(report)}\n`,
+    {
+      mode: 0o600,
+    },
+  );
 }
 
 async function main(): Promise<void> {
@@ -951,9 +1019,9 @@ async function main(): Promise<void> {
           JSON.stringify(restartEvidence, null, 2),
           { mode: 0o600 },
         );
-        await Deno.copyFile(
-          join(PROJECT_ROOT, "_dist", "dev-server.log"),
+        await Deno.writeTextFile(
           `${previous.statusOutputPath}.orderly-quit.dev-server.log`,
+          JSON.stringify({ omitted: "raw dev-server output" }),
         );
         const toolLaunch = {
           ...previous.launchRecord,
@@ -1034,6 +1102,20 @@ async function main(): Promise<void> {
         remainingBrowserCleanupProven = false;
       }
     }
+    const allLaunchesStopped = await cleanupHubPanelMenuM3eLaunches(
+      launches,
+      (launch) =>
+        refreshAndStopOwnedLaunch(
+          launch,
+          launch.profilePath,
+          join(
+            runDirectory,
+            `final-${launch.rowId}-${launches.indexOf(launch)}`,
+          ),
+          cleanup,
+        ),
+    );
+    remainingBrowserCleanupProven &&= allLaunchesStopped;
     cleanup.ownedProcessesStopped = cleanup.ownedProcessesStopped &&
       remainingBrowserCleanupProven && activeSessions.length === 0;
     cleanup.ownedPortsClosed = cleanup.ownedPortsClosed &&
@@ -1098,7 +1180,7 @@ async function main(): Promise<void> {
     runFailure ??= `M3e pre-cleanup report serialization failed: ${
       String(error)
     }`;
-    console.error(JSON.stringify(createReport(false), null, 2));
+    console.error(serializeHubPanelMenuM3eReport(createReport(false)));
     Deno.exitCode = 1;
     return;
   }
@@ -1161,11 +1243,11 @@ async function main(): Promise<void> {
   } catch (error) {
     cleanup.reportWritten = false;
     runFailure ??= `M3e final report serialization failed: ${String(error)}`;
-    console.error(JSON.stringify(createReport(false), null, 2));
+    console.error(serializeHubPanelMenuM3eReport(createReport(false)));
     Deno.exitCode = 1;
     return;
   }
-  console.log(JSON.stringify(report, null, 2));
+  console.log(serializeHubPanelMenuM3eReport(report));
   if (!passed) Deno.exitCode = 1;
 }
 
@@ -1174,6 +1256,6 @@ if (import.meta.main) {
     console.error("Refusing native M3e launches without --run-native");
     Deno.exitCode = 2;
   } else {
-    await main();
+    await withDevStateLock(main, crypto.randomUUID());
   }
 }

@@ -17,6 +17,7 @@ import type {
   DevProcessInfo,
 } from "./dev_process_types.ts";
 import { MarionetteClient } from "./browser_connector.ts";
+import { DEV_STATE_TOKEN_ENV } from "./dev_state_lock.ts";
 import { superviseM3dOwnedCommandOperations } from "./m3d_package_acquisition_command.ts";
 import { startedNoEarlier } from "./fdh_job_process.ts";
 import type {
@@ -29,6 +30,78 @@ import type { HubPanelMenuM3eOwnedCommandResult } from "./hub_panel_menu_m3e_acc
 const OUTPUT_LIMIT = 256 * 1024;
 const COMMAND_TIMEOUT_MS = 120_000;
 const CLEANUP_TIMEOUT_MS = 10_000;
+
+export function hubPanelMenuM3eLaunchEnvironment(
+  environment: Record<string, string>,
+): Record<string, string> {
+  const names = [
+    "PATH",
+    "HOME",
+    "USER",
+    "LANG",
+    "LC_ALL",
+    "DISPLAY",
+    "XAUTHORITY",
+    "XDG_RUNTIME_DIR",
+    "DBUS_SESSION_BUS_ADDRESS",
+    "DENO_DIR",
+    "DENO_INSTALL",
+    DEV_STATE_TOKEN_ENV,
+  ];
+  return Object.fromEntries(
+    names.filter((name) => environment[name] !== undefined).map((
+      name,
+    ) => [name, environment[name]]),
+  );
+}
+
+export async function hubPanelMenuM3eLaunchPids(
+  processes: readonly DevProcessInfo[],
+  token: string,
+  readText: (path: string) => Promise<string> = Deno.readTextFile,
+): Promise<number[]> {
+  if (!token) throw new Error("M3e launch token is missing");
+  const owned: number[] = [];
+  for (const process of processes) {
+    try {
+      const environment = (await readText(`/proc/${process.pid}/environ`))
+        .split("\0");
+      const stat = await readText(`/proc/${process.pid}/stat`);
+      const ticks = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19];
+      if (
+        environment.includes(`FLOORP_M3E_LAUNCH_TOKEN=${token}`) &&
+        process.startTime.endsWith(`:${ticks}`)
+      ) owned.push(process.pid);
+    } catch { /* Exited and unrelated processes are not ownership evidence. */ }
+  }
+  return owned;
+}
+
+export async function withHubPanelMenuM3eCleanup<T>(
+  diagnose: () => Promise<T>,
+  terminate: () => Promise<void>,
+): Promise<T> {
+  try {
+    return await diagnose();
+  } finally {
+    await terminate();
+  }
+}
+
+export async function cleanupHubPanelMenuM3eLaunches<T>(
+  launches: readonly T[],
+  stop: (launch: T) => Promise<boolean>,
+): Promise<boolean> {
+  let proven = true;
+  for (const launch of launches) {
+    try {
+      if (!await stop(launch)) proven = false;
+    } catch {
+      proven = false;
+    }
+  }
+  return proven;
+}
 
 export function readHubPanelMenuM3eBoundedOutput(
   stream: ReadableStream<Uint8Array>,
@@ -104,6 +177,7 @@ export async function runHubPanelMenuM3eOwnedCommand(
   profilePath: string,
   stdoutLogPath: string,
   stderrLogPath: string,
+  launchToken?: string,
 ): Promise<HubPanelMenuM3eOwnedCommandResult> {
   if (Deno.build.os !== "linux") {
     throw new Error("M3e native acceptance requires Linux");
@@ -114,7 +188,10 @@ export async function runHubPanelMenuM3eOwnedCommand(
   const child = new Deno.Command(command, {
     args: [...args],
     cwd: PROJECT_ROOT,
+    clearEnv: true,
     env: {
+      ...hubPanelMenuM3eLaunchEnvironment(Deno.env.toObject()),
+      ...(launchToken ? { FLOORP_M3E_LAUNCH_TOKEN: launchToken } : {}),
       FLOORP_TEST_PROFILE_DIR: profilePath,
       FLOORP_DEV_RUNTIME_DISTRIBUTION: "release",
       FLOORP_SKIP_PATCHER: "1",
@@ -144,8 +221,34 @@ export async function runHubPanelMenuM3eOwnedCommand(
   const result = await superviseHubPanelMenuM3eOwnedCommandOperations(
     operations,
   );
-  await Deno.writeTextFile(stdoutLogPath, result.stdout, { mode: 0o600 });
-  await Deno.writeTextFile(stderrLogPath, result.stderr, { mode: 0o600 });
+  await writeHubPanelMenuM3eCommandArtifacts(
+    result,
+    stdoutLogPath,
+    stderrLogPath,
+    exitCode,
+  );
+  return { ...result, exitCode };
+}
+
+export async function writeHubPanelMenuM3eCommandArtifacts(
+  result: HubPanelMenuM3eOwnedCommandResult,
+  stdoutLogPath: string,
+  stderrLogPath: string,
+  exitCode: number | null,
+): Promise<void> {
+  await Deno.writeTextFile(
+    stdoutLogPath,
+    JSON.stringify({
+      connected: result.stdout.includes("Connected to browser."),
+      omitted: "raw output",
+    }),
+    { mode: 0o600 },
+  );
+  await Deno.writeTextFile(
+    stderrLogPath,
+    JSON.stringify({ omitted: "raw output" }),
+    { mode: 0o600 },
+  );
   await Deno.writeTextFile(
     `${stdoutLogPath}.status.json`,
     JSON.stringify({
@@ -156,7 +259,6 @@ export async function runHubPanelMenuM3eOwnedCommand(
     }),
     { mode: 0o600 },
   );
-  return { ...result, exitCode };
 }
 
 export async function seedHubPanelMenuM3eProfile(
@@ -317,6 +419,7 @@ export function captureHubPanelMenuM3eLaunchProcesses(
   after: readonly DevProcessInfo[],
   profilePath: string,
   registered: readonly DevProcessIdentity[],
+  ownedPids: readonly number[] = [],
 ): readonly DevProcessIdentity[] {
   const selected = new Set(selectDevProcesses(after, {
     platform: PLATFORM,
@@ -326,7 +429,9 @@ export function captureHubPanelMenuM3eLaunchProcesses(
   }));
   const prior = new Map(before.map((process) => [process.pid, process]));
   const owned = after.filter((process) => {
-    if (!selected.has(process.pid)) return false;
+    if (!selected.has(process.pid) || !ownedPids.includes(process.pid)) {
+      return false;
+    }
     const previous = prior.get(process.pid);
     return !previous || !matchesDevIdentity(previous, {
       pid: process.pid,

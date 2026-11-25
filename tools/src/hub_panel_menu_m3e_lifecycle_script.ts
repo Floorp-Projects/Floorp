@@ -112,9 +112,29 @@ export const HUB_PANEL_MENU_M3E_LIFECYCLE_SCRIPT = `
       await waitFor(() => registry.diagnosticsForTests.connections === 2, 10000, "second real adapter");
     } else if (input.action === "new-window") {
       requireState(!task.windows.late);
+      const register = registry.registerAdapter;
+      const descriptor = Object.getOwnPropertyDescriptor(registry, "registerAdapter");
+      const restores = [];
+      task.lateDeliveries = [];
+      Object.defineProperty(registry, "registerAdapter", { configurable: true, value: function(win, adapter) {
+        const render = adapter.render;
+        const own = Object.getOwnPropertyDescriptor(adapter, "render");
+        Object.defineProperty(adapter, "render", { configurable: true, value: function(request) {
+          const acknowledgement = render.call(this, request);
+          task.lateDeliveries.push({ role: win === task.windows.late ? "late" : "other", owner: { ...request.owner }, acknowledgement });
+          return acknowledgement;
+        } });
+        restores.push(() => { if (own) Object.defineProperty(adapter, "render", own); else delete adapter.render; });
+        return register.call(this, win, adapter);
+      } });
+      try {
       task.windows.late = task.windows.initial.OpenBrowserWindow();
       await ready(task.windows.late, false);
       await waitFor(() => registry.diagnosticsForTests.connections === 3 && !!task.windows.late.document.getElementById("appMenu-floorp-hub-button"), 10000, "late signed adapter");
+      } finally {
+        if (descriptor) Object.defineProperty(registry, "registerAdapter", descriptor); else delete registry.registerAdapter;
+        for (const restore of restores) restore();
+      }
     } else if (input.action === "retain") {
       task.retained ??= Object.create(null);
       const service = Components.classes["@mozilla.org/eventlistenerservice;1"].getService(Components.interfaces.nsIEventListenerService);
@@ -270,6 +290,6 @@ export const HUB_PANEL_MENU_M3E_LIFECYCLE_SCRIPT = `
     input.__check = "snapshot-cache";
     const cache = await snapshotDirectory(PathUtils.join(PathUtils.profileDir, "floorp-signed-package-cache-v1", "tests", input.testId, "hub-panel-menu"));
     const journalSnapshot = await snapshotDirectory(root);
-    return { profileDir: PathUtils.profileDir, ui, registry: registry.diagnosticsForTests, registryOwner: registry.diagnosticsForTests.published ? task.registryOwners?.at(-1) ?? null : null, registryOwners: task.registryOwners ?? [], diagnostics: host ? host.diagnostics() : null, metadata: host ? host.metadata() : [], journal, cache, journalSnapshot, evaluationCount: hostModule.m0PayloadEvaluationsForTests(), canonicalRootExists: await IOUtils.exists(PathUtils.join(PathUtils.profileDir, "floorp-feature-hub-panel-menu")), cleanup: host ? host.cleanupDiagnosticsForTests() : null };
+    return { profileDir: PathUtils.profileDir, ui, lateDeliveries: task.lateDeliveries ?? [], registry: registry.diagnosticsForTests, registryOwner: registry.diagnosticsForTests.published ? task.registryOwners?.at(-1) ?? null : null, registryOwners: task.registryOwners ?? [], diagnostics: host ? host.diagnostics() : null, metadata: host ? host.metadata() : [], journal, cache, journalSnapshot, evaluationCount: hostModule.m0PayloadEvaluationsForTests(), canonicalRootExists: await IOUtils.exists(PathUtils.join(PathUtils.profileDir, "floorp-feature-hub-panel-menu")), cleanup: host ? host.cleanupDiagnosticsForTests() : null };
   }
 `;

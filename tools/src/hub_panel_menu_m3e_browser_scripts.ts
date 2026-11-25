@@ -12,6 +12,26 @@ export type {
   HubPanelMenuM3eBrowserScriptKind,
 } from "./hub_panel_menu_m3e_browser_scripts.types.ts";
 
+export const HUB_PANEL_MENU_M3E_SIGNATURE_CONTROL_SCRIPT = `
+  async function signatureControl(testId, digest, policy) {
+    const cacheModule = ChromeUtils.importESModule("resource://noraneko/modules/feature-host/package/FeaturePackageCache.sys.mjs");
+    const cache = await cacheModule.openTestProfileFeaturePackageCache("hub-panel-menu", testId);
+    try {
+      const verified = await cache.read(digest, policy);
+      if (verified.packageSha256 !== digest) throw new Error("verification digest differs");
+      const wrongKey = await window.crypto.subtle.generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
+      const wrongRaw = new Uint8Array(await window.crypto.subtle.exportKey("raw", wrongKey.publicKey));
+      const wrongPublicKey = btoa(String.fromCharCode(...wrongRaw)).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+      const wrongPolicy = { ...policy, trustedKeys: policy.trustedKeys.map((key) => ({ ...key, publicKey: wrongPublicKey })) };
+      let rejected = false;
+      try { await cache.read(digest, wrongPolicy); }
+      catch (error) { if (error?.code !== "invalid-signature") throw error; rejected = true; }
+      if (!rejected) throw new Error("signature-only negative control was accepted");
+      return { packageSha256: digest, correctKeyVerified: true, wrongKeyRejected: true, rejection: "invalid-signature" };
+    } finally { await cache.close(); }
+  }
+`;
+
 const scriptBody = `async function runHubPanelMenuM3e(input) {
   if (input.kind === "clear-task-state") {
     for (const task of Object.values(globalThis.__hubPanelMenuM3eStateByTask ?? {})) task.registryObserver?.restore();
@@ -30,6 +50,7 @@ const scriptBody = `async function runHubPanelMenuM3e(input) {
   const MAX_SNAPSHOT_FILE_BYTES = 4 * 1024 * 1024;
   const MAX_SNAPSHOT_TOTAL_BYTES = 16 * 1024 * 1024;
   const MAX_PINNED_STATE_BYTES = 256 * 1024;
+  ${HUB_PANEL_MENU_M3E_SIGNATURE_CONTROL_SCRIPT}
   ${HUB_PANEL_MENU_M3E_GATE_SCRIPT}
   function getTaskState(taskId, rowId) {
     input.__check = "task-state-key";
@@ -202,7 +223,7 @@ const scriptBody = `async function runHubPanelMenuM3e(input) {
     }
     input.__check = "startup-registry";
     const registry = registryModule.getSharedAppMenuRegistry().diagnosticsForTests;
-    const observedSelection = !bootstrap.usesExperimentalHubPanelMenu(mainWindow) ? "legacy" : pinnedRootExists && registry.published ? "pinned" : "manual";
+    const observedSelection = bootstrap.hubPanelMenuStartupSelectionForTests();
     return {
       startupMode, featureEnabled, manualHostEnabled, profileDir: PathUtils.profileDir,
       loaderStatus: Services.prefs.getStringPref("nora.startup.loader", ""),
@@ -233,6 +254,10 @@ const scriptBody = `async function runHubPanelMenuM3e(input) {
     const originals = prefNames.map((name) => ({ name, hasUserValue: Services.prefs.prefHasUserValue(name), type: name === "nora.startup.mode" ? "string" : "boolean", value: name === "nora.startup.mode" ? Services.prefs.getStringPref(name, "") : Services.prefs.getBoolPref(name, false) }));
     let observed;
     try {
+      const latchedBefore = bootstrap.hubPanelMenuStartupSelectionForTests();
+      Services.prefs.setBoolPref("nora.dev.hub_menu_manual_host", !Services.prefs.getBoolPref("nora.dev.hub_menu_manual_host", false));
+      const latchedAfterManualOnly = bootstrap.hubPanelMenuStartupSelectionForTests();
+      if (latchedBefore !== input.expectedSelection || latchedAfterManualOnly !== latchedBefore) throw new Error("latched selection changed");
       Services.prefs.setStringPref("nora.startup.mode", input.toggleMode);
       Services.prefs.setBoolPref("nora.dev.hub_menu_feature", input.toggleFeature);
       Services.prefs.setBoolPref("nora.dev.hub_menu_manual_host", input.toggleManual);
@@ -252,7 +277,7 @@ const scriptBody = `async function runHubPanelMenuM3e(input) {
         return { buttonPresent: !!button, buttonCount: buttonNodes.length, nodeId: nodeId(state, button), buttonId: button?.id ?? null, buttonEnabled: button ? !button.disabled : null, buttonLabel: button?.getAttribute("label") ?? null, immediatelyAfterSettings: !!button && button.parentElement === settings?.parentElement && button.previousElementSibling === settings };
       });
       const button = mainWindow?.document.getElementById("appMenu-floorp-hub-button") ?? null;
-      observed = { taskStateToken: state.token, selection: !mainWindow || !bootstrap.usesExperimentalHubPanelMenu(mainWindow) ? "legacy" : rootExists && registry.published ? "pinned" : "manual", rootExists, rootSnapshot, registry, buttonPresent: !!button, buttonNodeId: nodeId(state, button), ui };
+      observed = { taskStateToken: state.token, selection: bootstrap.hubPanelMenuStartupSelectionForTests(), latchedBefore, latchedAfterManualOnly, rootExists, rootSnapshot, registry, buttonPresent: !!button, buttonNodeId: nodeId(state, button), ui };
     } finally {
       for (const original of originals) {
         if (!original.hasUserValue) Services.prefs.clearUserPref(original.name);
@@ -320,6 +345,7 @@ const scriptBody = `async function runHubPanelMenuM3e(input) {
       },
     };
     const open = input.kind === "reopen-host" ? signedModule.reopenSignedFeatureHostForTests : signedModule.createSignedFeatureHostForTests;
+    const signatureVerification = input.verificationDigest ? await signatureControl(input.testId, input.verificationDigest, input.policy) : null;
     const host = await open(
       input.testId,
       "hub-panel-menu",
@@ -328,7 +354,7 @@ const scriptBody = `async function runHubPanelMenuM3e(input) {
       hooks,
     );
     state.hosts["hub-panel-menu"] = host;
-    return { diagnostics: host.diagnostics(), metadata: host.metadata() };
+    return { diagnostics: host.diagnostics(), metadata: host.metadata(), signatureVerification };
   }
   if (input.kind === "arm-barrier") {
     const state = getTaskState(input.testId, input.rowId ?? "C");

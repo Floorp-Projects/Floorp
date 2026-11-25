@@ -3,10 +3,32 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import { HUB_PANEL_MENU_M3E_LIFECYCLE_SCRIPT } from "./hub_panel_menu_m3e_lifecycle_script.ts";
 import {
+  assertHubPanelMenuM3eLateDelivery,
   assertHubPanelMenuM3eReplacement,
   assertHubPanelMenuM3eSignedState,
 } from "./hub_panel_menu_m3e_lifecycle.ts";
 import { HUB_PANEL_MENU_FIXTURES } from "../../browser-features/modules/modules/feature-host/HubPanelMenuFixtures.sys.mts";
+
+Deno.test("late-window evidence requires rendered active-v2 delivery and rejects any v1 delivery", () => {
+  const owner = {
+    featureId: "hub-panel-menu",
+    hostEpoch: "epoch",
+    generation: 2,
+  };
+  const entry = { role: "late", owner, acknowledgement: "rendered" };
+  const value = { registryOwner: owner, lateDeliveries: [entry] };
+  assertHubPanelMenuM3eLateDelivery(value);
+  for (
+    const lateDeliveries of [[], [{ ...entry, acknowledgement: "deferred" }], [{
+      ...entry,
+      owner: { ...owner, generation: 1 },
+    }], [entry, { ...entry, owner: { ...owner, hostEpoch: "old" } }]]
+  ) {
+    assertThrows(() =>
+      assertHubPanelMenuM3eLateDelivery({ ...value, lateDeliveries })
+    );
+  }
+});
 
 Deno.test("signed lifecycle oracle rejects wrong identity, journal, high-water, UI and private ownership", () => {
   const pkg = {
