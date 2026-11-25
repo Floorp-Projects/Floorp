@@ -12,6 +12,7 @@ import {
   DevStartupFailure,
   DevStartupReadinessUnknown,
   devStartupReady,
+  hasDevStartupReady,
   nativeDevLogTarget,
   pollDevStartup,
   probeDevMarionettePort,
@@ -297,10 +298,24 @@ async function cmdStart() {
                     port,
                     signal,
                     remaining,
-                    (signal, timeoutMs) =>
-                      listDevProcesses(undefined, signal, timeoutMs),
+                    async (signal, timeoutMs) => {
+                      const processes = await listDevProcesses(
+                        undefined,
+                        signal,
+                        timeoutMs,
+                      );
+                      if (
+                        !await hasDevStartupReady(
+                          status,
+                          processes,
+                          pid,
+                          PATHS.profile_test,
+                          port,
+                        )
+                      ) confirmedInvalid = true;
+                      return processes;
+                    },
                   );
-                  if (!priorReady) confirmedInvalid = true;
                   return priorReady;
                 },
               );

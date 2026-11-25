@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects, assertThrows } from "@std/assert";
 import * as path from "@std/path";
 import {
   captureWindowsBrowserListenerIdentity,
   listWindowsBrowserListeners,
   listWindowsBrowserProcesses,
   ownsDevBrowserListener,
+  parseDevBrowserLoopbackLsofOwners,
   parseWindowsBrowserProcessSnapshot,
   revalidateWindowsBrowserListenerIdentity,
   selectWindowsBrowserListenerIdentity,
@@ -28,7 +29,7 @@ const BIN = "C:\\Floorp\\_dist\\bin\\floorp\\floorp.exe";
 
 Deno.test({
   name:
-    "Linux listener ownership rejects a foreign replacement while the recorded process remains live",
+    "Linux ownership ignores unrelated addresses, rejects same-address replacement and tolerates only an absent IPv6 table",
   ignore: Deno.build.os !== "linux",
   fn: async () => {
     const fixture = async () => {
@@ -47,36 +48,135 @@ Deno.test({
           await ownsDevBrowserListener(port, [], signal, 5000),
           false,
         );
-        listener.close();
-        listening = false;
-        child = new Deno.Command(Deno.execPath(), {
-          args: [
-            "eval",
-            `const listener = Deno.listen({hostname: "127.0.0.1", port: ${port}}); console.log("ready"); await Deno.stdin.read(new Uint8Array(1)); listener.close();`,
-          ],
-          stdin: "piped",
-          stdout: "piped",
-          stderr: "null",
-        }).spawn();
-        reader = child.stdout.getReader();
-        const ready = await reader.read();
-        assertEquals(new TextDecoder().decode(ready.value).trim(), "ready");
-        assertEquals(
-          await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
-          false,
-        );
-        assertEquals(
-          await ownsDevBrowserListener(port, [child.pid], signal, 5000),
-          true,
-        );
-        const cancelled = new AbortController();
-        cancelled.abort(new Error("cancelled listener inspection"));
-        await assertRejects(
-          () =>
-            ownsDevBrowserListener(port, [child!.pid], cancelled.signal, 5000),
-          Error,
-          "cancelled listener inspection",
-        );
+        const read = Deno.readTextFile;
+        try {
+          const table = await read("/proc/net/tcp");
+          const local = `0100007F:${
+            port.toString(16).toUpperCase().padStart(4, "0")
+          }`;
+          const row = table.split("\n").find((line) =>
+            line.trim().split(/\s+/)[1] === local
+          )!;
+          for (
+            const [address, expected] of [
+              ["00000000000000000000000000000000", true],
+              ["0000000000000000FFFF00000100007F", true],
+              ["00000000000000000000000001000000", false],
+              ["0000000000000000FFFF00000200007F", false],
+            ] as const
+          ) {
+            Deno.readTextFile = (path, options) =>
+              path === "/proc/net/tcp"
+                ? Promise.resolve("header\n")
+                : path === "/proc/net/tcp6"
+                ? Promise.resolve(
+                  `header\n${
+                    row.replace(local, `${address}:${local.split(":")[1]}`)
+                  }\n`,
+                )
+                : read(path, options);
+            assertEquals(
+              await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+              expected,
+            );
+          }
+          for (
+            const error of [
+              new Deno.errors.NotFound("IPv6 disabled"),
+              new Deno.errors.PermissionDenied("unreadable table"),
+              new Error("table I/O failure"),
+            ]
+          ) {
+            Deno.readTextFile = (path, options) =>
+              path === "/proc/net/tcp6"
+                ? Promise.reject(error)
+                : read(path, options);
+            if (error instanceof Deno.errors.NotFound) {
+              assertEquals(
+                await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+                true,
+              );
+            } else {
+              await assertRejects(
+                () => ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+                Error,
+                error.message,
+              );
+            }
+          }
+          Deno.readTextFile = (path, options) =>
+            path === "/proc/net/tcp"
+              ? Promise.reject(new Deno.errors.NotFound("missing IPv4 table"))
+              : read(path, options);
+          await assertRejects(
+            () => ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+            Deno.errors.NotFound,
+            "missing IPv4 table",
+          );
+        } finally {
+          Deno.readTextFile = read;
+        }
+        const wildcard = Deno.listen({ hostname: "0.0.0.0", port: 0 });
+        try {
+          assertEquals(
+            await ownsDevBrowserListener(
+              wildcard.addr.port,
+              [Deno.pid],
+              signal,
+              5000,
+            ),
+            true,
+          );
+        } finally {
+          wildcard.close();
+        }
+        for (const hostname of ["127.0.0.2", "127.0.0.1"]) {
+          if (hostname === "127.0.0.1") {
+            listener.close();
+            listening = false;
+          }
+          child = new Deno.Command(Deno.execPath(), {
+            args: [
+              "eval",
+              `const listener = Deno.listen({hostname: ${
+                JSON.stringify(hostname)
+              }, port: ${port}}); console.log("ready"); await Deno.stdin.read(new Uint8Array(1)); listener.close();`,
+            ],
+            stdin: "piped",
+            stdout: "piped",
+            stderr: "null",
+          }).spawn();
+          reader = child.stdout.getReader();
+          const ready = await reader.read();
+          assertEquals(new TextDecoder().decode(ready.value).trim(), "ready");
+          assertEquals(
+            await ownsDevBrowserListener(port, [Deno.pid], signal, 5000),
+            hostname === "127.0.0.2",
+          );
+          assertEquals(
+            await ownsDevBrowserListener(port, [child.pid], signal, 5000),
+            hostname === "127.0.0.1",
+          );
+          const cancelled = new AbortController();
+          cancelled.abort(new Error("cancelled listener inspection"));
+          await assertRejects(
+            () =>
+              ownsDevBrowserListener(
+                port,
+                [child!.pid],
+                cancelled.signal,
+                5000,
+              ),
+            Error,
+            "cancelled listener inspection",
+          );
+          await child.stdin.close();
+          await child.status;
+          await reader.cancel();
+          reader.releaseLock();
+          child = undefined;
+          reader = undefined;
+        }
       } finally {
         if (listening) listener.close();
         if (child) {
@@ -107,6 +207,44 @@ Deno.test({
     }).output();
     assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
   },
+});
+
+Deno.test("lsof ownership selects only endpoints serving IPv4 loopback, including wildcards and mapped addresses", () => {
+  for (
+    const address of [
+      "127.0.0.1",
+      "0.0.0.0",
+      "*",
+      "[::]",
+      "[::ffff:127.0.0.1]",
+      "[::ffff:7f00:1]",
+    ]
+  ) {
+    assertEquals(
+      parseDevBrowserLoopbackLsofOwners(
+        `p11\nf3\nn${address}:2828\np12\nf4\nn127.0.0.2:2828\nn[::1]:2828\nn127.0.0.1:2829\n`,
+        2828,
+      ),
+      [11],
+    );
+  }
+  assertEquals(parseDevBrowserLoopbackLsofOwners("", 2828), []);
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners("p12\nn127.0.0.2:2828\n", 2828),
+    [],
+  );
+  assertEquals(
+    parseDevBrowserLoopbackLsofOwners(
+      "p11\nn*:2828\np12\nn127.0.0.1:2828\n",
+      2828,
+    ),
+    [11, 12],
+  );
+  assertThrows(
+    () => parseDevBrowserLoopbackLsofOwners("n127.0.0.1:2828\n", 2828),
+    Error,
+    "no process owner",
+  );
 });
 const PROFILE = "C:\\Floorp\\_dist\\profile\\test";
 const PARENT_START = "2026-11-15T03:00:00.000Z";

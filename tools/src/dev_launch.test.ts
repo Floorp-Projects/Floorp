@@ -209,11 +209,15 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
   );
   assertEquals(
     existing.includes(
-      "verifyDevStartupReady(status,pid,PATHS.profile_test,port,signal,remaining,(signal,timeoutMs)=>listDevProcesses(undefined,signal,timeoutMs))",
+      "verifyDevStartupReady(status,pid,PATHS.profile_test,port,signal,remaining,async(signal,timeoutMs)=>{constprocesses=awaitlistDevProcesses(undefined,signal,timeoutMs);if(!awaithasDevStartupReady(status,processes,pid,PATHS.profile_test,port))confirmedInvalid=true;returnprocesses;})",
     ),
     true,
   );
   assertEquals(existing.includes("reportDevStartupFailure(error)"), true);
+  assertEquals(
+    existing.includes("if(!priorReady)confirmedInvalid=true"),
+    false,
+  );
   assertEquals(
     existing.includes(
       "if(confirmedInvalid){awaitsettleWithin(reportDevStartupFailure(error),5000);}",
@@ -624,6 +628,66 @@ Deno.test("reuse rejects a swapped listener with unchanged recorded generations 
     ),
     false,
   );
+});
+
+Deno.test("listener mismatch preserves the marker after a failed full probe; confirmed generation replacement invalidates it", async () => {
+  const processes = [
+    { pid: 10, startTime: "server", commandLine: "deno task feles-build dev" },
+    { pid: 11, startTime: "browser", commandLine: "floorp --marionette" },
+  ];
+  const record = await devStartupReady(processes, 10, "/isolated", "2828");
+  for (const replaced of [false, true]) {
+    let confirmedInvalid = false;
+    let marker = JSON.stringify(record);
+    let probes = 0;
+    const snapshot = replaced
+      ? [processes[0], { ...processes[1], startTime: "replacement" }]
+      : processes;
+    await assertRejects(
+      () =>
+        probeDevMarionettePort(
+          () => "2828",
+          new AbortController().signal,
+          () => 1000,
+          undefined,
+          () => {
+            probes++;
+            return Promise.reject(new Error("session already open"));
+          },
+          (port) =>
+            verifyDevStartupReady(
+              record,
+              10,
+              "/isolated",
+              port,
+              new AbortController().signal,
+              () => 1000,
+              async () => {
+                if (
+                  !await hasDevStartupReady(
+                    record,
+                    snapshot,
+                    10,
+                    "/isolated",
+                    port,
+                  )
+                ) confirmedInvalid = true;
+                return snapshot;
+              },
+              () => Promise.resolve({ close() {} }),
+              () => Promise.resolve(false),
+            ),
+        ),
+      Error,
+      "session already open",
+    );
+    if (confirmedInvalid) marker = JSON.stringify({ state: "failed" });
+    assertEquals([probes, confirmedInvalid], [1, replaced]);
+    assertEquals(
+      marker,
+      JSON.stringify(replaced ? { state: "failed" } : record),
+    );
+  }
 });
 
 Deno.test("inconclusive inventory retries without protocol commands or readiness loss; exhausted unknown checks preserve proof", async () => {

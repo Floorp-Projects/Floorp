@@ -54,25 +54,36 @@ export async function ownsDevBrowserListener(
     if (PLATFORM === "darwin") {
       const output = await commandOutput(
         "lsof",
-        ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-Fp"],
+        ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-Fpn"],
         undefined,
         signal,
       );
       signal.throwIfAborted();
-      const rows = output.trim().split(/\r?\n/);
-      return rows.length > 0 &&
-        rows.every((row) =>
-          /^p\d+$/.test(row) && browserPids.includes(Number(row.slice(1)))
-        );
+      const owners = parseDevBrowserLoopbackLsofOwners(output, port);
+      return owners.length > 0 &&
+        owners.every((pid) => browserPids.includes(pid));
     }
     const inodes = new Set<string>();
     const hexPort = port.toString(16).toUpperCase().padStart(4, "0");
     for (const file of ["/proc/net/tcp", "/proc/net/tcp6"]) {
-      const content = await Deno.readTextFile(file, { signal });
+      let content: string;
+      try {
+        content = await Deno.readTextFile(file, { signal });
+      } catch (error) {
+        if (file.endsWith("/tcp6") && error instanceof Deno.errors.NotFound) {
+          continue;
+        }
+        throw error;
+      }
       for (const line of content.split("\n").slice(1)) {
         const fields = line.trim().split(/\s+/);
         if (
-          fields[1]?.endsWith(`:${hexPort}`) && fields[3] === "0A" && fields[9]
+          [
+            `0100007F:${hexPort}`,
+            `00000000:${hexPort}`,
+            `00000000000000000000000000000000:${hexPort}`,
+            `0000000000000000FFFF00000100007F:${hexPort}`,
+          ].includes(fields[1]) && fields[3] === "0A" && fields[9]
         ) inodes.add(fields[9]);
       }
     }
@@ -100,6 +111,36 @@ export async function ownsDevBrowserListener(
   }
 }
 
+export function parseDevBrowserLoopbackLsofOwners(
+  output: string,
+  port: number,
+): number[] {
+  let pid = 0;
+  const owners = new Set<number>();
+  const endpoints = new Set([
+    `127.0.0.1:${port}`,
+    `0.0.0.0:${port}`,
+    `*:${port}`,
+    `[::]:${port}`,
+    `[::ffff:127.0.0.1]:${port}`,
+    `[::ffff:7f00:1]:${port}`,
+  ]);
+  for (const row of output.split(/\r?\n/)) {
+    if (row.startsWith("p")) {
+      if (!/^p\d+$/.test(row)) {
+        throw new Error("Invalid listener process owner");
+      }
+      pid = Number(row.slice(1));
+    } else if (
+      row.startsWith("n") && endpoints.has(row.slice(1).toLowerCase())
+    ) {
+      if (pid <= 0) throw new Error("Listener endpoint has no process owner");
+      owners.add(pid);
+    }
+  }
+  return [...owners];
+}
+
 const WINDOWS_LISTENER_SNAPSHOT_SCRIPT = String.raw`
 $ErrorActionPreference = 'Stop'
 $port = 0
@@ -111,7 +152,10 @@ if ($port -lt 1 -or $port -gt 65535) {
 }
 $rows = @(
   Get-NetTCPConnection -State Listen -ErrorAction Stop |
-    Where-Object { [int]$_.LocalPort -eq $port } |
+    Where-Object {
+      [int]$_.LocalPort -eq $port -and
+        [string]$_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::', '::ffff:127.0.0.1', '::ffff:7f00:1')
+    } |
     ForEach-Object {
       [pscustomobject]@{
         localPort = [int]$_.LocalPort
