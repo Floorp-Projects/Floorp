@@ -42,7 +42,27 @@ export default class Workspaces extends NoraComponentBase {
     }
 
     const owner = getOwner();
-    migrateWorkspacesData().then(() => {
+    let disposed = false;
+    let startupObserverRegistered = false;
+    const onDelayedStartup = (subject: nsISupports | null) => {
+      if (subject !== window) return;
+      removeStartupObserver();
+      start();
+    };
+    const removeStartupObserver = () => {
+      if (!startupObserverRegistered) return;
+      startupObserverRegistered = false;
+      Services.obs.removeObserver(
+        onDelayedStartup,
+        "browser-delayed-startup-finished",
+      );
+    };
+    onCleanup(() => {
+      disposed = true;
+      removeStartupObserver();
+    });
+    const start = () => {
+      if (disposed || window.closed || !globalThis.gBrowser) return;
       const exec = () => {
         const iconCtx = new WorkspaceIcons();
         const dataManagerCtx = new WorkspacesDataManager();
@@ -89,6 +109,19 @@ export default class Workspaces extends NoraComponentBase {
       };
       if (owner) runWithOwner(owner, exec);
       else createRoot(exec);
+    };
+    migrateWorkspacesData().then(() => {
+      if (disposed || window.closed) return;
+      // A new window can run this before Firefox has installed gBrowser on it.
+      if (globalThis.gBrowser) {
+        start();
+        return;
+      }
+      Services.obs.addObserver(
+        onDelayedStartup,
+        "browser-delayed-startup-finished",
+      );
+      startupObserverRegistered = true;
     });
   }
 }
