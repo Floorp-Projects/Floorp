@@ -232,7 +232,10 @@ jobs:
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
-          sudo apt-get install -y openbox
+          sudo apt-get install -y openbox pulseaudio
+          # Audio tab tests need a sound server, as on Mozilla's Linux test workers.
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink
           xvfb-run -a -s "-screen 0 1600x1200x24" bash -c 'openbox & sleep 2; exec "$@"' _ \
             venv/bin/python -B floorp/tools/qa/native-bridge/run_product_cohort.py \
             --source runtime --support support --python venv/bin/python \
