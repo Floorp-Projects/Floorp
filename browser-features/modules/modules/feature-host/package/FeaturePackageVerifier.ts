@@ -286,6 +286,54 @@ function snapshotPolicy(
   };
 }
 
+export function snapshotFeaturePackagePolicy(
+  value: FeaturePackagePolicy,
+): FeaturePackagePolicy {
+  let snapshot: FeaturePackagePolicySnapshot;
+  try {
+    snapshot = snapshotPolicy(value);
+  } catch (error: unknown) {
+    if (error instanceof FeaturePackageError) throw error;
+    fail("invalid-policy");
+  }
+  return Object.freeze({
+    featureId: snapshot.featureId,
+    hostSchema: snapshot.hostSchema,
+    hostBuildId: snapshot.hostBuildId,
+    runtimeBuildId: snapshot.runtimeBuildId,
+    allowedCapabilities: Object.freeze([...snapshot.allowedCapabilities]),
+    minimumReleaseSequence: snapshot.minimumReleaseSequence,
+    trustedKeys: Object.freeze(snapshot.trustedKeys.map((key) =>
+      Object.freeze({
+        keyId: key.keyId,
+        publicKey: encodeBase64Url(key.publicKey),
+      })
+    )),
+  });
+}
+
+export function snapshotFeaturePackageBytes(input: Uint8Array): Uint8Array {
+  if (!isUint8Array(input)) fail("invalid-envelope");
+  try {
+    const inputByteLength: unknown = input.byteLength;
+    if (
+      typeof inputByteLength !== "number" ||
+      !Number.isSafeInteger(inputByteLength) || inputByteLength < 0
+    ) fail("invalid-envelope");
+    if (inputByteLength > FEATURE_PACKAGE_MAX_BYTES) fail("size-limit");
+    const snapshot = new Uint8Array(inputByteLength);
+    snapshot.set(input);
+    return snapshot;
+  } catch (error: unknown) {
+    if (error instanceof FeaturePackageError) throw error;
+    fail("invalid-envelope");
+  }
+}
+
+export function isValidFeaturePackageId(value: unknown): value is string {
+  return typeof value === "string" && isHubIdentifier(value);
+}
+
 function parseCompatibility(value: unknown): FeaturePackageCompatibility {
   if (
     !isRecord(value) || !hasExactKeys(value, [
@@ -613,21 +661,7 @@ export async function verifySignedFeaturePackage(
   inputBytes: Uint8Array,
   policyInput: FeaturePackagePolicy,
 ): Promise<VerifiedFeaturePackage> {
-  if (!isUint8Array(inputBytes)) fail("invalid-envelope");
-  let packageBytes: Uint8Array;
-  try {
-    const inputByteLength: unknown = inputBytes.byteLength;
-    if (
-      typeof inputByteLength !== "number" ||
-      !Number.isSafeInteger(inputByteLength) || inputByteLength < 0
-    ) fail("invalid-envelope");
-    if (inputByteLength > FEATURE_PACKAGE_MAX_BYTES) fail("size-limit");
-    packageBytes = new Uint8Array(inputByteLength);
-    packageBytes.set(inputBytes);
-  } catch (error: unknown) {
-    if (error instanceof FeaturePackageError) throw error;
-    fail("invalid-envelope");
-  }
+  const packageBytes = snapshotFeaturePackageBytes(inputBytes);
   let policy: FeaturePackagePolicySnapshot;
   try {
     policy = snapshotPolicy(policyInput);

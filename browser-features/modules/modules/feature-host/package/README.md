@@ -94,8 +94,41 @@ approval. The core API reports fixed `FeaturePackageError` codes and messages;
 the CLI maps failures to its own fixed error codes and messages without printing
 underlying exception details.
 
-This increment does not configure production trust, persist a sequence
-high-water mark, provide durable rollback admission, reverify a persistent
-cache, deliver key rotation or revocation, or integrate with the production
-loader. Those are later design increments. No network or production keys are
-involved; the existing pinned FeatureHost experiment remains active.
+M3a's verifier and CLI alone do not configure production trust, persist a
+sequence high-water mark, provide durable rollback admission, reverify a
+persistent cache, deliver key rotation or revocation, or integrate with the
+production loader. Those are later design increments. No network or production
+keys are involved; the existing pinned FeatureHost experiment remains active.
+
+## Verified package cache
+
+M3b stores exact canonical envelope bytes below the current profile in the
+dedicated `floorp-signed-package-cache-v1` namespace. A cache instance is bound
+to one validated feature ID; its test factory accepts only a lowercase UUID.
+Package filenames are the 64-character lowercase SHA-256 of the complete
+envelope. `put` verifies before writing, publishes through the fixed
+`candidate.tmp` staging file with create-only/flush and no-overwrite move, then
+bounded-reads and re-verifies the final file. `read` re-verifies on every call
+against that call's detached current-policy snapshot; cached results and package
+files do not grant trust.
+
+Each feature cache is limited to 32 envelopes and 1 MiB per envelope. New
+packages are rejected when the bounded incremental directory scan finds an
+unknown entry, unsafe file type, or exhausted capacity. The cache never evicts,
+executes source, modifies FeatureHost catalogs or journals, or persists policy
+or trust.
+
+Each root has one in-process owner reserved before initialization. Opening,
+open, and closing roots reject duplicate owners. The cache admits at most 16
+running-plus-queued operations; failed operations return their slots. Accepted
+operations reserve their FIFO position before synchronously snapshotting caller
+inputs and policy; storage and cryptographic work begin when that position
+reaches the head. close() stops admission synchronously and drains accepted work
+before releasing its owner. Storage checks controlled ancestors and entries for
+static links and non-directory types, uses create-only staging and a
+no-overwrite move, and re-verifies every read under the supplied current policy.
+
+These checks do not prevent same-user replacement races, provide generic
+multiprocess locking, or guarantee full power-loss durability. Dynamic
+activation, durable rollback/replay state, eviction and loader integration
+remain deferred to later increments.
