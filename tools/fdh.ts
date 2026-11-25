@@ -118,7 +118,12 @@ import {
   waitForJob,
 } from "./src/fdh_job.ts";
 import type { PlatformStepOptions } from "./src/fdh_job.ts";
-import { parsePlatform, payloadKindFor } from "./src/fdh_platform_qa.ts";
+import {
+  activePlatformJobs,
+  parsePlatform,
+  payloadKindFor,
+  validateStartUrl,
+} from "./src/fdh_platform_qa.ts";
 import {
   INTENT_OPS,
   type IntentOp,
@@ -1609,7 +1614,7 @@ async function platformStepOptions(
     evalScript,
     expect,
     startUrl: hasOption(parsed, "start-url")
-      ? requireOption(parsed, "start-url")
+      ? validateStartUrl(requireOption(parsed, "start-url"))
       : undefined,
   };
 }
@@ -1677,6 +1682,20 @@ async function cmdJob(parsed: ParsedArgs, sub: JobSubcommand): Promise<void> {
       const platform = step === "platform"
         ? await platformStepOptions(parsed)
         : undefined;
+      if (platform !== undefined) {
+        const active = activePlatformJobs(
+          state.worktree,
+          taskId,
+          platform.platform,
+        );
+        if (active.length > 0) {
+          throw new Error(
+            `platform job ${
+              active.join(", ")
+            } of this task is not finished on ${platform.platform}; wait for it or cancel it first`,
+          );
+        }
+      }
       const phase = step === "build"
         ? parseBuildPhase(
           hasOption(parsed, "phase")

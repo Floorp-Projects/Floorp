@@ -1,6 +1,6 @@
 {
   "schema": "fdh-platform-qa-report/v1",
-  "taskId": "kan-145-live",
+  "taskId": "kan-145-live2",
   "platform": "macos",
   "outcome": "passed",
   "reason": null,
@@ -32,8 +32,8 @@
     {
       "name": "payload",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:17.906Z",
-      "finishedAt": "2026-11-25T04:36:18.125Z",
+      "startedAt": "2026-11-25T04:47:40.049Z",
+      "finishedAt": "2026-11-25T04:47:40.278Z",
       "result": {
         "sha256": "e3520c1f553319ff704a821cbcc72dae49e544459843ba2e8fadaff8ce370629"
       }
@@ -41,15 +41,15 @@
     {
       "name": "preflight",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:18.125Z",
-      "finishedAt": "2026-11-25T04:36:18.809Z",
+      "startedAt": "2026-11-25T04:47:40.278Z",
+      "finishedAt": "2026-11-25T04:47:40.822Z",
       "result": {
         "ready": true,
         "blockers": [],
         "holder": null,
         "needsPrepare": false,
         "details": {
-          "freeBytes": 9288060928,
+          "freeBytes": 9261293568,
           "guiSession": true,
           "lockHolder": null,
           "marionettePortBusy": false,
@@ -63,8 +63,8 @@
     {
       "name": "acquire",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:18.809Z",
-      "finishedAt": "2026-11-25T04:36:19.195Z",
+      "startedAt": "2026-11-25T04:47:40.822Z",
+      "finishedAt": "2026-11-25T04:47:41.193Z",
       "result": {
         "ok": true,
         "acquired": true
@@ -73,8 +73,8 @@
     {
       "name": "stage",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:19.195Z",
-      "finishedAt": "2026-11-25T04:37:06.031Z",
+      "startedAt": "2026-11-25T04:47:41.193Z",
+      "finishedAt": "2026-11-25T04:48:16.064Z",
       "result": {
         "bytes": 260513224,
         "version": "12.21.1@159.0.1"
@@ -83,8 +83,8 @@
     {
       "name": "launch",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:06.031Z",
-      "finishedAt": "2026-11-25T04:37:21.538Z",
+      "startedAt": "2026-11-25T04:48:16.064Z",
+      "finishedAt": "2026-11-25T04:48:29.010Z",
       "result": {
         "version": "159.0.1"
       }
@@ -92,8 +92,8 @@
     {
       "name": "probe",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:21.538Z",
-      "finishedAt": "2026-11-25T04:37:22.139Z",
+      "startedAt": "2026-11-25T04:48:29.010Z",
+      "finishedAt": "2026-11-25T04:48:29.646Z",
       "result": {
         "app": "Floorp",
         "version": "159.0.1",
@@ -107,15 +107,15 @@
     {
       "name": "eval",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:22.139Z",
-      "finishedAt": "2026-11-25T04:37:22.489Z",
+      "startedAt": "2026-11-25T04:48:29.646Z",
+      "finishedAt": "2026-11-25T04:48:30.019Z",
       "result": "Floorp 12.21.1@159.0.1"
     },
     {
       "name": "screenshot",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:22.489Z",
-      "finishedAt": "2026-11-25T04:37:22.936Z",
+      "startedAt": "2026-11-25T04:48:30.019Z",
+      "finishedAt": "2026-11-25T04:48:30.409Z",
       "result": {
         "file": "macos.png",
         "sha256": "136647763fcfa4202e2199fe6296524769adb99589861ab1130dde50aee11be8"
@@ -124,8 +124,8 @@
     {
       "name": "cleanup",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:22.936Z",
-      "finishedAt": "2026-11-25T04:37:24.441Z",
+      "startedAt": "2026-11-25T04:48:30.409Z",
+      "finishedAt": "2026-11-25T04:48:31.887Z",
       "result": {
         "residualProcesses": 0,
         "taskDirRemoved": true,
@@ -134,6 +134,6 @@
       }
     }
   ],
-  "startedAt": "2026-11-25T04:36:17.906Z",
-  "finishedAt": "2026-11-25T04:37:24.441Z"
+  "startedAt": "2026-11-25T04:47:40.049Z",
+  "finishedAt": "2026-11-25T04:48:31.887Z"
 }

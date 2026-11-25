@@ -1,6 +1,6 @@
 {
   "schema": "fdh-platform-qa-report/v1",
-  "taskId": "kan-145-live",
+  "taskId": "kan-145-live2",
   "platform": "linux",
   "outcome": "passed",
   "reason": null,
@@ -32,8 +32,8 @@
     {
       "name": "payload",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:18.351Z",
-      "finishedAt": "2026-11-25T04:36:18.449Z",
+      "startedAt": "2026-11-25T04:47:40.549Z",
+      "finishedAt": "2026-11-25T04:47:40.637Z",
       "result": {
         "sha256": "584e4afd9865df3a5867b145ed75b7c3051a0a26d173da240056a4b355bfcad9"
       }
@@ -41,16 +41,16 @@
     {
       "name": "preflight",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:18.449Z",
-      "finishedAt": "2026-11-25T04:36:19.852Z",
+      "startedAt": "2026-11-25T04:47:40.637Z",
+      "finishedAt": "2026-11-25T04:47:42.055Z",
       "result": {
         "ready": true,
         "blockers": [],
         "holder": null,
         "needsPrepare": false,
         "details": {
-          "freeBytes": 172104568832,
-          "availableMemoryMb": 6303,
+          "freeBytes": 172104409088,
+          "availableMemoryMb": 6215,
           "imagePresent": true,
           "containerHolder": null,
           "ready": true,
@@ -62,8 +62,8 @@
     {
       "name": "acquire",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:19.852Z",
-      "finishedAt": "2026-11-25T04:36:21.109Z",
+      "startedAt": "2026-11-25T04:47:42.055Z",
+      "finishedAt": "2026-11-25T04:47:43.333Z",
       "result": {
         "ok": true,
         "acquired": true
@@ -72,8 +72,8 @@
     {
       "name": "stage",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:21.109Z",
-      "finishedAt": "2026-11-25T04:36:54.878Z",
+      "startedAt": "2026-11-25T04:47:43.333Z",
+      "finishedAt": "2026-11-25T04:48:13.307Z",
       "result": {
         "bytes": 108174124,
         "version": "12.21.1@159.0.1"
@@ -82,8 +82,8 @@
     {
       "name": "launch",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:54.878Z",
-      "finishedAt": "2026-11-25T04:36:59.730Z",
+      "startedAt": "2026-11-25T04:48:13.307Z",
+      "finishedAt": "2026-11-25T04:48:18.152Z",
       "result": {
         "version": "159.0.1"
       }
@@ -91,8 +91,8 @@
     {
       "name": "probe",
       "ok": true,
-      "startedAt": "2026-11-25T04:36:59.730Z",
-      "finishedAt": "2026-11-25T04:37:00.351Z",
+      "startedAt": "2026-11-25T04:48:18.152Z",
+      "finishedAt": "2026-11-25T04:48:18.712Z",
       "result": {
         "app": "Floorp",
         "version": "159.0.1",
@@ -106,15 +106,15 @@
     {
       "name": "eval",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:00.352Z",
-      "finishedAt": "2026-11-25T04:37:00.818Z",
+      "startedAt": "2026-11-25T04:48:18.712Z",
+      "finishedAt": "2026-11-25T04:48:19.170Z",
       "result": "Floorp 12.21.1@159.0.1"
     },
     {
       "name": "screenshot",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:00.818Z",
-      "finishedAt": "2026-11-25T04:37:01.337Z",
+      "startedAt": "2026-11-25T04:48:19.170Z",
+      "finishedAt": "2026-11-25T04:48:19.671Z",
       "result": {
         "file": "linux.png",
         "sha256": "1a39a68eae33de8fc24fc9d5d1d669f5e0ca52ceabfe9a37f580308bdec685dd"
@@ -123,14 +123,14 @@
     {
       "name": "cleanup",
       "ok": true,
-      "startedAt": "2026-11-25T04:37:01.337Z",
-      "finishedAt": "2026-11-25T04:37:02.204Z",
+      "startedAt": "2026-11-25T04:48:19.671Z",
+      "finishedAt": "2026-11-25T04:48:20.223Z",
       "result": {
         "containerRemoved": true,
         "clean": true
       }
     }
   ],
-  "startedAt": "2026-11-25T04:36:18.351Z",
-  "finishedAt": "2026-11-25T04:37:02.204Z"
+  "startedAt": "2026-11-25T04:47:40.549Z",
+  "finishedAt": "2026-11-25T04:48:20.223Z"
 }

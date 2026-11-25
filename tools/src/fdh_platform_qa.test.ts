@@ -242,6 +242,23 @@ Deno.test("platform QA: host names are redacted from the report", async () => {
   assertEquals(redact({ a: "x@h.example" }, ["h.example"]), {
     a: "x@<redacted>",
   });
+  // Whole words in values only: no partial IPs, no rewritten keys or fields.
+  assertEquals(
+    redact({ mac: "macos on mac, 10.0.0.50 and 10.0.0.5" }, [
+      "mac",
+      "10.0.0.5",
+    ]),
+    { mac: "macos on <redacted>, 10.0.0.50 and <redacted>" },
+  );
+  assertEquals(
+    redact(["/Users/qa/vm/key: denied", "root@h1 said"], [
+      "/Users/qa/vm",
+      "root@h1",
+      "h1",
+      "root",
+    ]),
+    ["<redacted>/key: denied", "<redacted> said"],
+  );
 });
 
 Deno.test("platform QA: helpers", () => {
@@ -347,4 +364,93 @@ Deno.test("platform QA CLI: run prints the summary and exits by outcome", async 
   const fail = await run("nope");
   assertEquals(fail.exitCode, 1);
   assertEquals(JSON.parse(fail.stdout).reason, "eval-expect-not-found");
+});
+
+Deno.test("platform QA: losing the lock after preflight is blocked, with no cleanup", async () => {
+  for (const code of ["lock-held", "container-held"]) {
+    const { target, calls } = fakeTarget();
+    target.acquire = () => {
+      calls.push("acquire");
+      return Promise.reject(
+        new QaTargetError("Fake", "acquire", { ok: false, error: code }),
+      );
+    };
+    const report = await runPlatformQa(target, RUN, memoryIo().io);
+    assertEquals(report.outcome, "blocked", code);
+    assertEquals(report.reason, `blocked: ${code}`);
+    assertEquals(calls, ["preflight", "acquire"]);
+  }
+  // Any other acquire failure is ours to clean up, and a failure.
+  const { target, calls } = fakeTarget({ failAt: "acquire" });
+  const report = await runPlatformQa(target, RUN, memoryIo().io);
+  assertEquals(report.outcome, "failed");
+  assertEquals(calls.at(-1), "cleanup");
+});
+
+Deno.test("platform QA CLI: help, empty values and a bad start URL", async () => {
+  assertEquals((await runPlatformQaCli(["run", "--help"])).exitCode, 0);
+  assertEquals((await runPlatformQaCli(["cleanup", "--help"])).exitCode, 0);
+  const base = [
+    "run",
+    "--platform=linux",
+    `--task-id=${TASK}`,
+    "--target=c.json",
+    `--target-sha256=${SHA}`,
+    "--payload=f.tar.xz",
+    `--payload-sha256=${SHA}`,
+    "--out=/out",
+  ];
+  for (
+    const extra of [
+      ["--eval=return 1;", "--expect="],
+      ["--eval="],
+      ["--start-url=file:///etc/passwd"],
+    ]
+  ) {
+    const result = await runPlatformQaCli([...base, ...extra], {
+      readTextFile: () => Promise.reject(new Error("must not read")),
+    });
+    assertEquals(result.exitCode, 2, extra.join(" "));
+  }
+});
+
+Deno.test("platform QA CLI: unexpected errors still end in a redacted failed summary", async () => {
+  const result = await runPlatformQaCli([
+    "run",
+    "--platform=linux",
+    `--task-id=${TASK}`,
+    "--target=c.json",
+    `--target-sha256=${SHA}`,
+    "--payload=/home/someone/builds/f.tar.xz",
+    `--payload-sha256=${SHA}`,
+    "--out=/out",
+  ], {
+    readTextFile: () =>
+      Promise.reject(new Error("cannot read /home/someone/builds/x")),
+  });
+  assertEquals(result.exitCode, 1);
+  const summary = JSON.parse(result.stdout);
+  assertEquals(summary.outcome, "failed");
+  assertStringIncludes(summary.reason, "internal:");
+  assert(!result.stdout.includes("someone"));
+});
+
+Deno.test("platform QA CLI: cleanup is refused while a platform job of the task runs", async () => {
+  let created = 0;
+  const result = await runPlatformQaCli([
+    "cleanup",
+    "--platform=macos",
+    `--task-id=${TASK}`,
+    "--target=c.json",
+  ], {
+    readTextFile: () => Promise.resolve("{}"),
+    activeJobs: () => ["platform-20261125t000000z-abcdef"],
+    createTarget: () => {
+      created++;
+      throw new Error("unreachable");
+    },
+  });
+  assertEquals(result.exitCode, 1);
+  assertStringIncludes(result.stdout, "not finished");
+  assertEquals(created, 0);
 });

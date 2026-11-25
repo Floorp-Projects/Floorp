@@ -29,6 +29,7 @@ import {
 import type { LinuxPayloadKind } from "./fdh_qa_linux_types.ts";
 import { QaTargetError } from "./fdh_qa_remote.ts";
 import { validateTaskId } from "./fdh_task.ts";
+import { isTerminal, listJobIds, readJob } from "./fdh_executor.ts";
 import type {
   PlatformQaOutcome,
   PlatformQaPreflight,
@@ -121,16 +122,71 @@ export function evalText(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value) ?? "null";
 }
 
-/** Replaces every occurrence of the given strings (host names) in a value. */
+/**
+ * Replaces the given strings (host names, users, key paths) inside every
+ * string value, as whole words: "10.0.0.5" does not match inside "10.0.0.50",
+ * and an alias "mac" leaves "macos" alone. Object keys are kept. Longer words
+ * go first, so "user@host" is replaced before "host".
+ */
 export function redact<T>(value: T, secrets: readonly string[]): T {
-  const words = secrets.filter((s) => s.length >= 3);
+  const words = [...new Set(secrets.filter((s) => s.length >= 3))]
+    .sort((a, b) => b.length - a.length);
   if (words.length === 0) return value;
-  let text = JSON.stringify(value);
-  if (text === undefined) return value;
-  for (const word of words) {
-    text = text.replaceAll(JSON.stringify(word).slice(1, -1), "<redacted>");
+  const patterns = words.map((word) =>
+    new RegExp(
+      `(?<![A-Za-z0-9_])${
+        word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      }(?![A-Za-z0-9_])`,
+      "g",
+    )
+  );
+  const walk = (v: unknown): unknown => {
+    if (typeof v === "string") {
+      return patterns.reduce((text, re) => text.replace(re, "<redacted>"), v);
+    }
+    if (Array.isArray(v)) return v.map(walk);
+    if (v !== null && typeof v === "object") {
+      return Object.fromEntries(
+        Object.entries(v as Record<string, unknown>).map((
+          [k, x],
+        ) => [k, walk(x)]),
+      );
+    }
+    return v;
+  };
+  return walk(value) as T;
+}
+
+/** Same rule as the targets' launch scripts, checked before a job starts. */
+export function validateStartUrl(startUrl: string): string {
+  if (!/^(about:[a-z-]+|https?:\/\/[A-Za-z0-9.:/_-]{1,200})$/.test(startUrl)) {
+    throw new Error("--start-url must be about:<page> or a plain http(s) URL");
   }
-  return JSON.parse(text) as T;
+  return startUrl;
+}
+
+/**
+ * Platform jobs of a task that are not finished. The task id is the target's
+ * only lock identity, so a second run of the same task and platform must not
+ * start (its reset would remove the live run's target) while one is listed.
+ */
+export function activePlatformJobs(
+  worktree: string,
+  taskId: string,
+  platform: QaPlatform,
+): string[] {
+  return listJobIds(worktree, taskId).filter((jobId) => {
+    const job = readJob(worktree, taskId, jobId);
+    return job.kind === "platform" && !isTerminal(job.state) &&
+      (job.step?.commands ?? []).some((c) =>
+        c.argv.includes(`--platform=${platform}`)
+      );
+  });
+}
+
+function userOf(sshDestination: string): string | null {
+  const at = sshDestination.lastIndexOf("@");
+  return at > 0 ? sshDestination.slice(0, at) : null;
 }
 
 function hostOf(sshDestination: string): string {
@@ -216,7 +272,18 @@ export async function createPlatformTarget(
           ? "dmg"
           : payloadKindFor("macos", payloadFile) as MacosPayloadKind,
       ),
-      redactions: [hostOf(c.hostSsh), c.guestAddress],
+      redactions: [
+        c.hostSsh,
+        hostOf(c.hostSsh),
+        userOf(c.hostSsh),
+        c.guestAddress,
+        c.vmDir,
+        c.guestKeyFile,
+        c.guestKnownHostsFile,
+        c.guestUser,
+        c.testUser,
+        c.qaRoot,
+      ].filter((s): s is string => s !== null),
     };
   }
   const c = parseLinuxQaTargetConfig(config);
@@ -227,7 +294,9 @@ export async function createPlatformTarget(
         ? "tar.xz"
         : payloadKindFor("linux", payloadFile) as LinuxPayloadKind,
     ),
-    redactions: [hostOf(c.hostSsh)],
+    redactions: [c.hostSsh, hostOf(c.hostSsh), userOf(c.hostSsh)].filter((
+      s,
+    ): s is string => s !== null),
   };
 }
 
@@ -349,8 +418,21 @@ export async function runPlatformQa(
       blocked = true;
       throw error;
     }
+    try {
+      await step("acquire", () => target.acquire(taskId));
+    } catch (error) {
+      const last = steps.at(-1)?.result as Record<string, unknown> | undefined;
+      if (last?.error === "lock-held" || last?.error === "container-held") {
+        // Another task took the target after preflight: nothing of ours is
+        // on it, so there is nothing to clean up.
+        blocked = true;
+        reason = `blocked: ${String(last.error)}`;
+      } else {
+        acquired = true;
+      }
+      throw error;
+    }
     acquired = true;
-    await step("acquire", () => target.acquire(taskId));
     const staged = await step(
       "stage",
       async () =>
@@ -526,6 +608,7 @@ export interface PlatformQaCliDeps {
   io?: PlatformQaIo;
   readTextFile?: (file: string) => Promise<string>;
   createTarget?: typeof createPlatformTarget;
+  activeJobs?: typeof activePlatformJobs;
 }
 
 /** `fdh platform-qa <run|cleanup> ...` (argv without the leading word). */
@@ -539,6 +622,9 @@ export async function runPlatformQaCli(
   const [sub, ...rest] = argv;
   if (sub === undefined || sub === "--help" || sub === "help") {
     return { exitCode: sub === undefined ? 2 : 0, stdout: PLATFORM_QA_HELP };
+  }
+  if (rest.includes("--help")) {
+    return { exitCode: 0, stdout: PLATFORM_QA_HELP };
   }
   let options: Map<string, string>;
   try {
@@ -560,6 +646,13 @@ export async function runPlatformQaCli(
       if (options.has("expect") && !options.has("eval")) {
         throw new Error("--expect needs --eval");
       }
+      for (const key of ["eval", "expect"]) {
+        if (options.get(key) === "") {
+          throw new Error(`--${key} must not be empty`);
+        }
+      }
+      const startUrl = options.get("start-url");
+      if (startUrl !== undefined) validateStartUrl(startUrl);
     }
   } catch (error) {
     return {
@@ -572,70 +665,112 @@ export async function runPlatformQaCli(
   const platform = parsePlatform(need(options, "platform"));
   const taskId = need(options, "task-id");
   const targetFile = need(options, "target");
-  const configText = await readTextFile(targetFile);
   const payloadFile = options.get("payload");
+  // Local paths (they hold the user's profile name) never reach a report.
+  let redactions: string[] = payloadFile === undefined
+    ? []
+    : [payloadFile, path.resolve(payloadFile)].flatMap((
+      file,
+    ) => [file, path.dirname(file)]);
+  const failed = (why: unknown): PlatformQaCliResult => ({
+    exitCode: 1,
+    stdout: JSON.stringify(redact({
+      platform,
+      outcome: "failed",
+      reason: `internal: ${why instanceof Error ? why.message : String(why)}`,
+    }, redactions)),
+  });
+  try {
+    return await runParsed();
+  } catch (error) {
+    return failed(error);
+  }
 
-  if (sub === "cleanup") {
-    const { target, redactions } = await createTarget(
+  async function runParsed(): Promise<PlatformQaCliResult> {
+    const configText = (await readTextFile(targetFile)).replace(/^\uFEFF/, "");
+
+    if (sub === "cleanup") {
+      const active = (deps.activeJobs ?? activePlatformJobs)(
+        Deno.cwd(),
+        taskId,
+        platform,
+      );
+      if (active.length > 0) {
+        return {
+          exitCode: 1,
+          stdout: JSON.stringify({
+            platform,
+            cleanup: null,
+            refused: `platform job ${
+              active.join(", ")
+            } of this task is not finished; cancel it first (fdh job cancel)`,
+          }),
+        };
+      }
+      const created = await createTarget(
+        platform,
+        JSON.parse(configText),
+        payloadFile,
+      );
+      const target = created.target;
+      redactions = [...redactions, ...created.redactions];
+      try {
+        const result = redact(await target.cleanup(taskId), redactions);
+        return {
+          exitCode: result.clean ? 0 : 1,
+          stdout: JSON.stringify({ platform, cleanup: result }),
+        };
+      } catch (error) {
+        return {
+          exitCode: 1,
+          stdout: JSON.stringify(
+            redact({ platform, cleanup: failureOf(error) }, redactions),
+          ),
+        };
+      }
+    }
+
+    const targetSha = encodeHex(
+      await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(configText),
+      ),
+    );
+    const outDir = need(options, "out");
+    if (targetSha !== options.get("target-sha256")) {
+      return {
+        exitCode: 1,
+        stdout: JSON.stringify({
+          platform,
+          outcome: "failed",
+          reason: "target config changed since the job started",
+        }),
+      };
+    }
+    const created = await createTarget(
       platform,
       JSON.parse(configText),
       payloadFile,
     );
-    try {
-      const result = redact(await target.cleanup(taskId), redactions);
-      return {
-        exitCode: result.clean ? 0 : 1,
-        stdout: JSON.stringify({ platform, cleanup: result }),
-      };
-    } catch (error) {
-      return {
-        exitCode: 1,
-        stdout: JSON.stringify(
-          redact({ platform, cleanup: failureOf(error) }, redactions),
-        ),
-      };
-    }
-  }
-
-  const targetSha = encodeHex(
-    await crypto.subtle.digest(
-      "SHA-256",
-      new TextEncoder().encode(configText),
-    ),
-  );
-  const outDir = need(options, "out");
-  if (targetSha !== options.get("target-sha256")) {
+    const target = created.target;
+    redactions = [...redactions, ...created.redactions];
+    const report = await runPlatformQa(
+      target,
+      {
+        taskId,
+        payloadPath: need(options, "payload"),
+        payloadSha256: need(options, "payload-sha256"),
+        outDir,
+        evalScript: options.get("eval"),
+        expect: options.get("expect"),
+        startUrl: options.get("start-url"),
+      },
+      io,
+      redactions,
+    );
     return {
-      exitCode: 1,
-      stdout: JSON.stringify({
-        platform,
-        outcome: "failed",
-        reason: "target config changed since the job started",
-      }),
+      exitCode: report.outcome === "passed" ? 0 : 1,
+      stdout: summaryLine(report, `${platform}-report.json`),
     };
   }
-  const { target, redactions } = await createTarget(
-    platform,
-    JSON.parse(configText),
-    payloadFile,
-  );
-  const report = await runPlatformQa(
-    target,
-    {
-      taskId,
-      payloadPath: need(options, "payload"),
-      payloadSha256: need(options, "payload-sha256"),
-      outDir,
-      evalScript: options.get("eval"),
-      expect: options.get("expect"),
-      startUrl: options.get("start-url"),
-    },
-    io,
-    redactions,
-  );
-  const reportFile = path.join(outDir, `${platform}-report.json`);
-  return {
-    exitCode: report.outcome === "passed" ? 0 : 1,
-    stdout: summaryLine(report, reportFile),
-  };
 }

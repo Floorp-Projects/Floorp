@@ -507,7 +507,9 @@ content-sandbox level), the optional `--eval` (chrome context; the script must
 `return` its value) with `--expect`, a screenshot, and cleanup, which always
 runs once the target was taken. Results go to
 `_dist/fdh/platform/<task-id>/<platform>-report.json` and `<platform>.png`;
-the job log ends with a one-line summary. Host addresses are redacted from both.
+the job log ends with a one-line summary. Host names, SSH users, the VM
+directory, key-file names and the local payload path are redacted from both; an
+`--eval` value is recorded as it is.
 
 Outcomes, in the report and the summary line:
 
@@ -518,8 +520,14 @@ Outcomes, in the report and the summary line:
   disk, no GUI session, a foreign Floorp running). The change was not tested;
   say so, and count it neither as a pass nor as a product failure.
 
-Both `failed` and `blocked` make the job (and the assertion) fail; read the
-report to tell them apart.
+Both `failed` and `blocked` make the job fail and record a failed
+`platform-qa-<platform>` assertion, so the evidence state stays `failed` until
+a later run of that platform passes. Read the report to tell them apart, and
+for `blocked` rerun when the target is free or report the step as not run.
+
+One platform job per task and platform at a time: the task id is the target's
+lock identity, so `job start --step platform` is refused while an earlier job
+of the same task and platform has not finished.
 
 When to run it:
 
@@ -529,9 +537,18 @@ When to run it:
   exists for that platform. Run it whenever the user asks.
 - Skip it for `tools/`, `docs/` and CI-only changes, and state in the final
   report that it was skipped and why.
-- The payload is the agent's input: a packaged build of this change (for
-  example a PR's CI package, or a local package build). fdh records its SHA-256
-  and version, but cannot tell which commit it was built from.
+- The payload is the agent's input: a packaged build of this change from this
+  repository's own CI (never a build from a fork's PR) or a local package
+  build. The macOS VM is shared and not reset between runs, so do not run
+  builds of unknown origin there. fdh records the SHA-256 and version, but
+  cannot tell which commit it was built from.
+
+`--eval` runs arbitrary code with chrome privileges as the target's test user.
+Use it only for read-only probes of the change (a pref, a label, a DOM state):
+no spawning processes, writing files, network access, or reading environment
+variables, files or credentials. Its value goes into the report verbatim, and
+reports may be committed. Cleanup on macOS stops only processes under the task
+directory; anything an eval started elsewhere would survive it.
 
 Target configs are JSON files outside the repository (they name the hosts and
 key files); never commit them. Their hashes and the payload hash are fixed when
@@ -540,7 +557,9 @@ something else.
 
 A lost executor is handled by the normal reconcile: the next attempt reruns the
 whole command, which first removes what this task left on the target. If the
-job gave up or was cancelled, free the target with:
+job gave up or was cancelled, free the target with the command below. Run it
+from the worktree root: it is refused while a platform job of that task and
+platform is still unfinished (cancel it first with `fdh job cancel`).
 
 ```sh
 deno run -A tools/fdh.ts platform-qa cleanup --platform <macos|linux> \

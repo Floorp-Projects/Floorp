@@ -39,6 +39,7 @@ import {
   updateJob,
 } from "./fdh_executor.ts";
 import { readQuotaLedger } from "./fdh_quota.ts";
+import { activePlatformJobs } from "./fdh_platform_qa.ts";
 import { lockPathFor, withFileLock } from "./fdh_lock.ts";
 import {
   createTaskState,
@@ -119,6 +120,34 @@ Deno.test("fdh job: a platform step runs one platform-qa command with fixed hash
     ),
   );
   assertThrows(() => stepSpecFor("platform", "/wt"));
+});
+
+Deno.test("fdh job: an unfinished platform job is listed per platform", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = await taskIn(dir);
+    const git = fakeGit({ head: "h1", diff: "", untracked: "" });
+    const job = await startStepJob({
+      state,
+      kind: "platform",
+      platform: {
+        platform: "linux",
+        targetFile: "/cfg/linux.json",
+        targetSha256: "c".repeat(64),
+        payloadFile: "/p/floorp-linux-x86_64.tar.xz",
+        payloadSha256: "d".repeat(64),
+      },
+      git,
+      spawn: () => 1,
+    });
+    assertEquals(job.kind, "platform");
+    assertEquals(activePlatformJobs(dir, "t1", "linux"), [job.jobId]);
+    assertEquals(activePlatformJobs(dir, "t1", "macos"), []);
+    await cancelAndSettle(state, job.jobId, "test", { git, spawn: () => 1 });
+    assertEquals(activePlatformJobs(dir, "t1", "linux"), []);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 });
 
 Deno.test("fdh job: the inputs bind HEAD, guard env and the uncommitted state", async () => {
