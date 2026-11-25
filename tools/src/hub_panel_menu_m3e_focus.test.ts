@@ -9,6 +9,7 @@ import {
 } from "@std/assert";
 import {
   assertHubPanelMenuM3eFocusResult,
+  assertHubPanelMenuM3eGatedCancellation,
   HubPanelMenuM3eFocusFailure,
   withHubPanelMenuM3eFocusCleanup,
 } from "./hub_panel_menu_m3e_focus.ts";
@@ -62,6 +63,15 @@ Deno.test("focus oracles distinguish positive restoration, real timely cancellat
       actionAt: 1100,
       claimLiveAtAction: true,
       claimInvalidatedAt: 1101,
+      gatedCancellation: {
+        actionAt: 1100,
+        gateCheckedAt: 1150,
+        claimLiveAtAction: true,
+        claimInvalidatedAt: 1101,
+        buttonCount: 0,
+        activeButton: false,
+        events: [{ type, trusted: true, at: 1101 }],
+      },
       events: [{ type, trusted: true, at: 1101, newButton: false }],
     };
     assertHubPanelMenuM3eFocusResult(caseId, cancellation);
@@ -110,6 +120,39 @@ Deno.test("focus oracles distinguish positive restoration, real timely cancellat
   for (const malformed of [null, {}, { ...positive, at: null }]) {
     assertThrows(() =>
       assertHubPanelMenuM3eFocusResult("focus-restoration", malformed)
+    );
+  }
+});
+
+Deno.test("cancellation must be proven with its named trusted event before replacement render is released", () => {
+  const proof = {
+    actionAt: 1000,
+    gateCheckedAt: 1100,
+    claimLiveAtAction: true,
+    claimInvalidatedAt: 1010,
+    buttonCount: 0,
+    activeButton: false,
+    events: [{ type: "pointermove", trusted: true, at: 1010 }],
+  };
+  assertHubPanelMenuM3eGatedCancellation("focus-pointer-cancellation", proof);
+  for (
+    const invalid of [
+      null,
+      {},
+      { ...proof, claimInvalidatedAt: null },
+      { ...proof, claimInvalidatedAt: 1200 },
+      { ...proof, buttonCount: 1 },
+      { ...proof, events: [] },
+      { ...proof, events: [{ type: "keydown", trusted: true, at: 1010 }] },
+      { ...proof, events: [{ type: "pointermove", trusted: false, at: 1010 }] },
+      { ...proof, events: [{ type: "pointermove", trusted: true, at: 1200 }] },
+    ]
+  ) {
+    assertThrows(() =>
+      assertHubPanelMenuM3eGatedCancellation(
+        "focus-pointer-cancellation",
+        invalid,
+      )
     );
   }
 });

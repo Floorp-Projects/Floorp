@@ -20,6 +20,7 @@ import {
   refreshHubPanelMenuM3eOwnedProcesses,
   refreshHubPanelMenuM3eProcessSnapshot,
   seedHubPanelMenuM3eProfile,
+  serializeHubPanelMenuM3eEvidence,
   superviseHubPanelMenuM3eOwnedCommandOperations,
   withHubPanelMenuM3eCleanup,
   writeHubPanelMenuM3eCommandArtifacts,
@@ -414,7 +415,22 @@ Deno.test("M3e environment and all retained command artifacts exclude session an
       startedAt: "test",
       completedAt: null,
       passed: false,
-      cases: [],
+      cases: [{
+        id: "reopen-enabled-reverified",
+        status: "failed",
+        startedAt: null,
+        completedAt: null,
+        failure: null,
+        observations: {
+          applicationQuit: JSON.stringify({
+            browserIdentities: [{ commandLine: marker }],
+          }),
+          launch: JSON.stringify({
+            identities: [{ commandLine: marker }],
+            sessionId: marker,
+          }),
+        },
+      }],
       launchFailures: [],
       runFailure: null,
       sharedProfileBefore: null,
@@ -442,6 +458,12 @@ Deno.test("M3e environment and all retained command artifacts exclude session an
       reportPath: `${root}/report.json`,
     };
     await writeReport(`${root}/report.json`, report);
+    await Deno.writeTextFile(
+      `${root}/orderly-restarts.json`,
+      serializeHubPanelMenuM3eEvidence([{
+        browserIdentities: [{ commandLine: marker }],
+      }]),
+    );
     await Deno.writeTextFile(
       `${root}/console.json`,
       serializeHubPanelMenuM3eReport(report),

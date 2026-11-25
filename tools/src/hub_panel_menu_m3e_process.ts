@@ -55,6 +55,19 @@ export function hubPanelMenuM3eLaunchEnvironment(
   );
 }
 
+export function serializeHubPanelMenuM3eEvidence(value: unknown): string {
+  return JSON.stringify(value, (key, item: unknown) => {
+    if (["commandLine", "sessionId"].includes(key)) return "omitted";
+    if (typeof item === "string" && /^[\[{]/.test(item)) {
+      try {
+        const parsed: unknown = JSON.parse(item);
+        return serializeHubPanelMenuM3eEvidence(parsed);
+      } catch { /* Not encoded JSON evidence. */ }
+    }
+    return item;
+  }, 2);
+}
+
 export async function hubPanelMenuM3eLaunchPids(
   processes: readonly DevProcessInfo[],
   token: string,

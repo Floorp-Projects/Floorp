@@ -145,9 +145,10 @@ export const HUB_PANEL_MENU_M3E_FOCUS_SCRIPT = `
       } else requireFocus(["focus-restoration", "focus-keyboard-cancellation"].includes(input.caseId));
       return { precondition: true, before: atGate, after: observation(), actionAt: audit.actionAt, pointerTarget };
     }
-    if (input.action === "result") {
+    if (input.action === "gate-result" || input.action === "result") {
       const result = observation();
-      return { ...result, movementTarget: audit.movementTarget ?? null, claimLiveAtAction: audit.claimLiveAtAction, claimInvalidatedAt: audit.claimInvalidatedAt, preparedAt: audit.preparedAt, actionAt: audit.actionAt, fallbackAt: audit.fallbackAt, oldConnected: win.closed ? false : audit.old.isConnected, oldNodeId: audit.oldNodeId, events: audit.events.map((entry) => ({ ...entry })), revocations: audit.revocations, focusCalls: audit.focusCalls };
+      if (input.action === "gate-result") audit.gatedCancellation = { gateCheckedAt: Date.now(), actionAt: audit.actionAt, claimLiveAtAction: audit.claimLiveAtAction, claimInvalidatedAt: audit.claimInvalidatedAt, events: audit.events.map((entry) => ({ ...entry })), buttonCount: result.buttonCount, activeButton: result.activeButton };
+      return { ...result, gatedCancellation: audit.gatedCancellation ?? null, movementTarget: audit.movementTarget ?? null, claimLiveAtAction: audit.claimLiveAtAction, claimInvalidatedAt: audit.claimInvalidatedAt, preparedAt: audit.preparedAt, actionAt: audit.actionAt, fallbackAt: audit.fallbackAt, oldConnected: win.closed ? false : audit.old.isConnected, oldNodeId: audit.oldNodeId, events: audit.events.map((entry) => ({ ...entry })), revocations: audit.revocations, focusCalls: audit.focusCalls };
     }
     if (input.action === "monitor") {
       requireFocus(audit.fallbackAt !== null);

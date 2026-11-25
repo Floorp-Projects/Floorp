@@ -13,6 +13,41 @@ export type {
 } from "./hub_panel_menu_m3e_browser_scripts.types.ts";
 
 export const HUB_PANEL_MENU_M3E_SIGNATURE_CONTROL_SCRIPT = `
+  async function observeReopenVerification(open, digest) {
+    const cacheModule = ChromeUtils.importESModule("resource://noraneko/modules/feature-host/package/FeaturePackageCache.sys.mjs");
+    const subtle = Components.utils.getGlobalForObject(cacheModule.openTestProfileFeaturePackageCache).crypto.subtle;
+    const nativeDigest = subtle.digest;
+    const nativeVerify = subtle.verify;
+    const digestDescriptor = Object.getOwnPropertyDescriptor(subtle, "digest");
+    const verifyDescriptor = Object.getOwnPropertyDescriptor(subtle, "verify");
+    const signatures = new Set();
+    const observed = [];
+    try {
+    Object.defineProperty(subtle, "digest", { configurable: true, value: async function(algorithm, data) {
+      const result = await nativeDigest.call(this, algorithm, data);
+      const hash = Array.from(new Uint8Array(result), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      if (hash === digest) {
+        const envelope = JSON.parse(new TextDecoder().decode(data));
+        if (typeof envelope.signature !== "string") throw new Error("reopen digest was not an envelope");
+        signatures.add(envelope.signature);
+      }
+      return result;
+    } });
+    Object.defineProperty(subtle, "verify", { configurable: true, value: async function(algorithm, key, signature, data) {
+      const valid = await nativeVerify.call(this, algorithm, key, signature, data);
+      const encoded = btoa(String.fromCharCode(...new Uint8Array(signature))).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+      if (algorithm.name === "Ed25519" && signatures.has(encoded)) observed.push({ packageSha256: digest, verified: valid === true });
+      return valid;
+    } });
+      const host = await open();
+      if (!observed.length || !observed.every((entry) => entry.verified)) throw new Error("real reopen signature verification unobserved");
+      return { host, observed };
+    } finally {
+      if (digestDescriptor) Object.defineProperty(subtle, "digest", digestDescriptor); else delete subtle.digest;
+      if (verifyDescriptor) Object.defineProperty(subtle, "verify", verifyDescriptor); else delete subtle.verify;
+    }
+  }
+
   async function signatureControl(testId, digest, policy) {
     const cacheModule = ChromeUtils.importESModule("resource://noraneko/modules/feature-host/package/FeaturePackageCache.sys.mjs");
     const cache = await cacheModule.openTestProfileFeaturePackageCache("hub-panel-menu", testId);
@@ -346,13 +381,16 @@ const scriptBody = `async function runHubPanelMenuM3e(input) {
     };
     const open = input.kind === "reopen-host" ? signedModule.reopenSignedFeatureHostForTests : signedModule.createSignedFeatureHostForTests;
     const signatureVerification = input.verificationDigest ? await signatureControl(input.testId, input.verificationDigest, input.policy) : null;
-    const host = await open(
+    const reopen = () => open(
       input.testId,
       "hub-panel-menu",
       true,
       { trustKind: "core-system-principal", policy: input.policy },
       hooks,
     );
+    const actual = input.verificationDigest ? await observeReopenVerification(reopen, input.verificationDigest) : { host: await reopen(), observed: null };
+    const host = actual.host;
+    if (signatureVerification) signatureVerification.reopenVerification = actual.observed;
     state.hosts["hub-panel-menu"] = host;
     return { diagnostics: host.diagnostics(), metadata: host.metadata(), signatureVerification };
   }

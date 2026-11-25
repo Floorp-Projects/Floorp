@@ -55,6 +55,70 @@ Deno.test("signature-only native control verifies the exact digest and rejects w
   }
 });
 
+Deno.test("real reopen observation requires exact-envelope signature verification during open and restores crypto on every exit", async () => {
+  const key = await crypto.subtle.generateKey({ name: "Ed25519" }, false, [
+    "sign",
+    "verify",
+  ]) as CryptoKeyPair;
+  const message = new TextEncoder().encode("signed content");
+  const signature = await crypto.subtle.sign(
+    "Ed25519",
+    key.privateKey,
+    message,
+  );
+  const encoded = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+  const bytes = new TextEncoder().encode(
+    JSON.stringify({ signature: encoded }),
+  );
+  const digest = Array.from(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+    (byte) => byte.toString(16).padStart(2, "0"),
+  ).join("");
+  const run = new Function(
+    "ChromeUtils",
+    "Components",
+    `${HUB_PANEL_MENU_M3E_SIGNATURE_CONTROL_SCRIPT};return observeReopenVerification;`,
+  )(
+    { importESModule: () => ({ openTestProfileFeaturePackageCache() {} }) },
+    { utils: { getGlobalForObject: () => ({ crypto }) } },
+  );
+  for (
+    const mode of ["normal", "skip", "digest-only", "other-envelope", "throws"]
+  ) {
+    const nativeDigest = crypto.subtle.digest;
+    const nativeVerify = crypto.subtle.verify;
+    let result;
+    try {
+      result = await run(async () => {
+        if (mode === "throws") throw new Error("open failed");
+        if (mode !== "skip") {
+          await crypto.subtle.digest(
+            "SHA-256",
+            mode === "other-envelope"
+              ? new TextEncoder().encode("other")
+              : bytes,
+          );
+        }
+        if (!["skip", "digest-only"].includes(mode)) {
+          await crypto.subtle.verify(
+            { name: "Ed25519" },
+            key.publicKey,
+            signature,
+            message,
+          );
+        }
+        return { reopened: true };
+      }, digest);
+    } catch {
+      result = null;
+    }
+    assertEquals(!!result, mode === "normal");
+    assertEquals(crypto.subtle.digest, nativeDigest);
+    assertEquals(crypto.subtle.verify, nativeVerify);
+  }
+});
+
 Deno.test("manual-only preference mutation probes the actual latched mode independently of UI and host state", async () => {
   for (const selection of ["manual", "pinned"] as const) {
     for (const live of [false, true]) {

@@ -5,6 +5,7 @@ import * as path from "@std/path";
 import { parseArgs } from "@std/cli/parse-args";
 import { withBrowser } from "./src/browser_connector.ts";
 import { withDevStateLock } from "./src/dev_state_lock.ts";
+import { nativeDevLogTarget } from "./src/dev_launch.ts";
 import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
   matchesDevIdentity,
@@ -232,7 +233,17 @@ async function cmdStart() {
   console.log(`[dev-tool] Using ${describeLaunchPorts(offset)}`);
   const spawnCommandArgs = ` --port-offset ${offset}`;
 
-  const logFile = path.join(PROJECT_ROOT, "_dist", "dev-server.log");
+  const nativeLaunch = !!Deno.env.get("FLOORP_M3E_LAUNCH_TOKEN");
+  const logFile = nativeLaunch
+    ? nativeDevLogTarget(PLATFORM)
+    : path.join(PROJECT_ROOT, "_dist", "dev-server.log");
+  if (nativeLaunch) {
+    await Deno.writeTextFile(
+      path.join(PROJECT_ROOT, "_dist", "dev-server.log"),
+      JSON.stringify({ omitted: "raw native browser output" }),
+      { mode: 0o600 },
+    );
+  }
   const marionetteFile = path.join(
     PROJECT_ROOT,
     "_dist",

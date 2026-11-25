@@ -21,6 +21,7 @@ import {
   refreshHubPanelMenuM3eOwnedProcesses,
   runHubPanelMenuM3eOwnedCommand,
   seedHubPanelMenuM3eProfile,
+  serializeHubPanelMenuM3eEvidence,
   terminateHubPanelMenuM3eOwnedProcesses,
   withHubPanelMenuM3eCleanup,
 } from "./hub_panel_menu_m3e_process.ts";
@@ -646,18 +647,7 @@ export function assertInertnessSnapshotsEqual(
 export function serializeHubPanelMenuM3eReport(
   report: HubPanelMenuM3eAcceptanceReport,
 ): string {
-  const publicReport = {
-    ...report,
-    launches: report.launches.map((launch) => ({
-      ...launch,
-      identities: launch.identities.map(({ pid, startTime }) => ({
-        pid,
-        startTime,
-        commandLine: "omitted",
-      })),
-    })),
-  };
-  return JSON.stringify(publicReport, null, 2);
+  return serializeHubPanelMenuM3eEvidence(report);
 }
 
 export async function writeReport(
@@ -972,11 +962,16 @@ async function main(): Promise<void> {
           commandLine,
         }));
         const requestedAt = Date.now();
-        await previous.client.sendWithTimeout("WebDriver:ExecuteScript", {
-          script:
-            "Services.tm.dispatchToMainThread(() => Services.startup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit)); return true;",
-          args: [],
-        }, 5000);
+        await sendHubPanelMenuM3eBrowserCommand(
+          previous.client,
+          "WebDriver:ExecuteScript",
+          {
+            script:
+              "Services.tm.dispatchToMainThread(() => Services.startup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit)); return true;",
+            args: [],
+          },
+          5000,
+        );
         previous.client.abort();
         let exited = false;
         const deadline = Date.now() + 30000;
@@ -1016,7 +1011,7 @@ async function main(): Promise<void> {
         restartEvidence.push(proof);
         await Deno.writeTextFile(
           join(runDirectory, "orderly-restarts.json"),
-          JSON.stringify(restartEvidence, null, 2),
+          serializeHubPanelMenuM3eEvidence(restartEvidence),
           { mode: 0o600 },
         );
         await Deno.writeTextFile(
@@ -1063,11 +1058,11 @@ async function main(): Promise<void> {
         );
         activeSessions.push(restartSession);
         return {
-          applicationQuit: JSON.stringify(proof),
+          applicationQuit: serializeHubPanelMenuM3eEvidence(proof),
           mutation: JSON.stringify(mutation),
           sameProfile: restartSession.profilePath === previous.profilePath,
           startup: JSON.stringify(restartSession.startupEvidence),
-          launch: JSON.stringify(restartSession.launchRecord),
+          launch: serializeHubPanelMenuM3eEvidence(restartSession.launchRecord),
         };
       },
     });

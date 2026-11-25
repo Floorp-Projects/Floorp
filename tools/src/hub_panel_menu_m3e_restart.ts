@@ -292,6 +292,15 @@ export async function runHubPanelMenuM3eRestartRecovery(
     if (verificationDigest) {
       const verified = record(opened.signatureVerification);
       check(
+        Array.isArray(verified.reopenVerification) &&
+          verified.reopenVerification.length > 0 &&
+          verified.reopenVerification.map(record).every((entry) =>
+            entry.packageSha256 === verificationDigest &&
+            entry.verified === true
+          ),
+        "real reopen did not verify selected signature",
+      );
+      check(
         verified.packageSha256 === verificationDigest &&
           verified.correctKeyVerified === true &&
           verified.wrongKeyRejected === true &&

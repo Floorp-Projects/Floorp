@@ -15,6 +15,42 @@ export class HubPanelMenuM3eFocusFailure extends Error {
   }
 }
 
+export function assertHubPanelMenuM3eGatedCancellation(
+  caseId: string,
+  value: unknown,
+): void {
+  const proof = record(value);
+  const expected = ({
+    "focus-pointer-cancellation": "pointermove",
+    "focus-keyboard-cancellation": "keydown",
+    "focus-movement-cancellation": "focusin",
+    "focus-blur-cancellation": "blur",
+    "focus-menu-close-cancellation": "popuphidden",
+    "focus-navigation-cancellation": "focusin",
+    "focus-window-close-intent-cancellation": "unload",
+  } as Record<string, string>)[caseId];
+  check(
+    !!expected && proof.claimLiveAtAction === true &&
+      typeof proof.claimInvalidatedAt === "number" &&
+      typeof proof.actionAt === "number" &&
+      typeof proof.gateCheckedAt === "number" &&
+      proof.actionAt <= proof.claimInvalidatedAt &&
+      proof.claimInvalidatedAt <= proof.gateCheckedAt &&
+      proof.gateCheckedAt - proof.actionAt < 2500 && proof.buttonCount === 0 &&
+      proof.activeButton === false,
+    "claim was not cancelled while OLD_STOPPED remained gated",
+  );
+  check(
+    Array.isArray(proof.events) &&
+      proof.events.map(record).some((event) =>
+        event.type === expected && event.trusted === true &&
+        Number(event.at) >= Number(proof.actionAt) &&
+        Number(event.at) <= Number(proof.gateCheckedAt)
+      ),
+    "named trusted cancellation event missing before gate release",
+  );
+}
+
 export async function withHubPanelMenuM3eFocusCleanup<T>(
   operation: () => Promise<T>,
   dispose: () => Promise<unknown>,
@@ -98,6 +134,7 @@ export function assertHubPanelMenuM3eFocusResult(
           Number(result.at) - Number(result.actionAt) < 2500,
         "cancellation restored focus or expired",
       );
+      assertHubPanelMenuM3eGatedCancellation(caseId, result.gatedCancellation);
       check(Array.isArray(result.events), "event audit missing");
       const events = result.events.map(record);
       const expectedType = ({
@@ -382,6 +419,16 @@ export async function runHubPanelMenuM3eFocus(
                   {},
                 );
               }
+            }
+            if (
+              caseId !== "focus-restoration" &&
+              caseId !== "focus-bounded-expiry"
+            ) {
+              const gated = record(await focus("gate-result", role));
+              assertHubPanelMenuM3eGatedCancellation(
+                caseId,
+                gated.gatedCancellation,
+              );
             }
           });
           const outcome = record(record(record(terminal).terminal).outcome);

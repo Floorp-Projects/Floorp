@@ -34,6 +34,7 @@ function printFirefoxLog(line: string) {
 }
 
 export interface BrowserLaunchOptions {
+  onStarted?: () => void;
   /** Record the child for checkout-scoped dev-tool stop. */
   recordProcess?: boolean;
   binaryPath?: string;
@@ -594,11 +595,10 @@ export async function run(
       printFirefoxLog(line.trim());
     },
     environment,
-    options.recordProcess
-      ? async (child) => {
-        await recordDevProcess(child.pid);
-      }
-      : undefined,
+    async (child) => {
+      if (options.recordProcess) await recordDevProcess(child.pid);
+      options.onStarted?.();
+    },
   );
 
   console.log(`[launcher@native-exit] ${

@@ -127,7 +127,7 @@ export class MarionetteClient {
     timeoutMs: number,
     // deno-lint-ignore no-explicit-any
   ): Promise<any> {
-    return await this.#withDeadline(async () => {
+    const response = await this.#withDeadline(async () => {
       const id = this.#msgId++;
       const msg = JSON.stringify([0, id, command, params]);
       // Marionette uses byte-length prefix, not character-length
@@ -145,25 +145,32 @@ export class MarionetteClient {
 
       const resp = await this.#readPacket();
       // Response: [1, msgId, error, result]
-      if (!Array.isArray(resp) || resp[0] !== 1 || resp[1] !== id) {
+      if (
+        !Array.isArray(resp) || resp.length !== 4 || resp[0] !== 1 ||
+        resp[1] !== id ||
+        (resp[2] !== null &&
+          (typeof resp[2] !== "object" || typeof resp[2]?.error !== "string" ||
+            typeof resp[2]?.message !== "string"))
+      ) {
         throw new Error("Invalid Marionette response");
       }
-      if (resp[2]) {
-        const err = resp[2];
-        throw new Error(
-          `Marionette error (${err.error}): ${
-            err.message ?? JSON.stringify(err)
-          }`,
-          {
-            cause: {
-              name: String(err.error),
-              message: String(err.message ?? ""),
-            },
-          },
-        );
-      }
-      return resp[3];
+      return resp;
     }, timeoutMs);
+    if (response[2]) {
+      const err = response[2];
+      throw new Error(
+        `Marionette error (${err.error}): ${
+          err.message ?? JSON.stringify(err)
+        }`,
+        {
+          cause: {
+            name: String(err.error),
+            message: String(err.message ?? ""),
+          },
+        },
+      );
+    }
+    return response[3];
   }
 
   async setContext(context: "chrome" | "content"): Promise<void> {

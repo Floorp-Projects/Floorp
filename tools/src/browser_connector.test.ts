@@ -32,6 +32,8 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
         "oversize",
         "invalid-prefix",
         "malformed",
+        "malformed-error",
+        "truncated",
         "remote",
         "wrong-id",
         "empty",
@@ -61,6 +63,10 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
             ? encoder.encode("123456789")
             : scenario === "malformed"
             ? encoder.encode("1:{")
+            : scenario === "malformed-error"
+            ? packet([1, 1, { error: "invalid argument", message: 42 }, null])
+            : scenario === "truncated"
+            ? packet([1, 1])
             : scenario === "remote"
             ? packet([1, 1, {
               error: "invalid argument",
@@ -108,13 +114,71 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
           client.abort();
         } else {
           await assertRejects(() => client.sendWithTimeout("test", {}, 20));
-          assert(closed, scenario);
+          if (scenario === "remote") {
+            assertEquals(closed, false);
+            client.abort();
+          } else assert(closed, scenario);
           if (
             scenario === "oversize" || scenario === "invalid-prefix"
           ) assertEquals(reads, 3);
         }
       }
     }
+  } finally {
+    Deno.connect = original;
+  }
+});
+
+Deno.test("valid command errors preserve the connection for ReleaseActions and preference cleanup", async () => {
+  const original = Deno.connect;
+  let reads = 0;
+  let closed = false;
+  const commands: string[] = [];
+  const connection = {
+    read(buffer: Uint8Array) {
+      const response = reads === 0
+        ? { marionetteProtocol: 3 }
+        : reads === 2
+        ? [1, 1, { error: "invalid argument", message: "bad action" }, null]
+        : [1, reads - 1, null, {}];
+      reads++;
+      const text = JSON.stringify(response);
+      const bytes = new TextEncoder().encode(
+        `${new TextEncoder().encode(text).length}:${text}`,
+      );
+      buffer.set(bytes);
+      return Promise.resolve(bytes.length);
+    },
+    write(bytes: Uint8Array) {
+      const text = new TextDecoder().decode(bytes);
+      commands.push(JSON.parse(text.slice(text.indexOf(":") + 1))[2]);
+      return Promise.resolve(bytes.length);
+    },
+    close() {
+      closed = true;
+    },
+  } as unknown as Deno.TcpConn;
+  Deno.connect =
+    (() => Promise.resolve(connection)) as unknown as typeof Deno.connect;
+  try {
+    const client = await MarionetteClient.connect(2828, 100);
+    await assertRejects(
+      () => client.send("WebDriver:PerformActions"),
+      Error,
+      "invalid argument",
+    );
+    assertEquals(closed, false);
+    await client.send("WebDriver:ReleaseActions");
+    await client.executeScript("Services.prefs.clearUserPref('test.pref');");
+    await client.close();
+    assertEquals(commands, [
+      "WebDriver:NewSession",
+      "WebDriver:PerformActions",
+      "WebDriver:ReleaseActions",
+      "WebDriver:ExecuteScript",
+      "WebDriver:DeleteSession",
+    ]);
+    assertEquals(closed, true);
   } finally {
     Deno.connect = original;
   }

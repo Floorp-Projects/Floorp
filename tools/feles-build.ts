@@ -11,7 +11,6 @@ import * as DevServer from "./src/dev_server.ts";
 import * as Injector from "./src/injector.ts";
 import * as BrowserLauncher from "./src/browser_launcher.ts";
 import * as DevEnvManager from "./src/dev_env_manager.ts";
-import { DEV_SERVER } from "./src/defines.ts";
 import {
   describeLaunchPorts,
   parsePortOffsetSpec,
@@ -20,6 +19,7 @@ import {
 import { devHttpOrigin } from "#libs/shared/dev-ports/defines.ts";
 import { Logger } from "./src/utils.ts";
 import { withDevStateLock } from "./src/dev_state_lock.ts";
+import { startDevBrowser } from "./src/dev_launch.ts";
 
 const logger = new Logger("feles-build");
 
@@ -42,40 +42,6 @@ async function argvPortOffset(argv: string[]): Promise<number> {
   const offset = spec === "auto" ? await resolveAutoDevPortOffset() : spec;
   logger.info(`Dev/test port offset: ${describeLaunchPorts(offset)}`);
   return offset;
-}
-
-type ReadyPipe = {
-  on(event: "data", cb: (chunk: string) => void): void;
-  write(chunk: Uint8Array | string): void;
-  end(): void;
-};
-
-function createReadyPipe(): ReadyPipe {
-  class ReadyPipeImpl implements ReadyPipe {
-    private listeners: Array<(chunk: string) => void> = [];
-
-    on(event: "data", cb: (chunk: string) => void) {
-      if (event === "data") this.listeners.push(cb);
-    }
-
-    write(chunk: Uint8Array | string) {
-      const s = typeof chunk === "string"
-        ? chunk
-        : new TextDecoder().decode(chunk);
-      for (const cb of this.listeners) cb(s);
-    }
-
-    end() {
-      // no-op
-    }
-  }
-
-  return new ReadyPipeImpl();
-}
-
-function isDevServerReady(chunk: string): boolean {
-  const s = chunk.toString().trim();
-  return s === DEV_SERVER.ready_string || s.includes("nora-");
 }
 
 async function runDev(portOffset = 0): Promise<void> {
@@ -121,37 +87,25 @@ async function runDev(portOffset = 0): Promise<void> {
     Deno.exit(130);
   });
 
-  const pipe = createReadyPipe();
-
-  pipe.on("data", (chunk: string) => {
-    if (isDevServerReady(chunk)) {
-      logger.success("Dev servers are ready.");
-      // Launch browser; when it exits (or fails to launch), take the dev
-      // servers down with it — otherwise they keep listening on their
-      // ports and the next run dies with "port already in use".
+  await startDevBrowser(
+    () => DevServer.run(() => {}, { portOffset }),
+    (onStarted) =>
       BrowserLauncher.run({
         initialUrl: devHttpOrigin("settings", "/", portOffset),
         recordProcess: true,
-      }).then(() => {
-        logger.info("Browser closed — shutting down dev servers.");
-        DevServer.shutdown();
-        Deno.exit(0);
-        // deno-lint-ignore no-explicit-any
-      }).catch((e: any) => {
-        logger.error(`Browser launcher failed: ${e?.message ?? e}`);
-        DevServer.shutdown();
-        Deno.exit(1);
-      });
-    }
-  });
-
-  // Start dev server (it will write to the writer and end it)
-  // DevServer.run expects a writable-like object.
-  // deno-lint-ignore no-explicit-any
-  DevServer.run(pipe as any, { portOffset }).catch((e: any) => {
-    logger.error(`Dev server failed: ${e?.message ?? e}`);
-    Deno.exit(1);
-  });
+        onStarted,
+      }),
+    DevServer.shutdown,
+    () => {
+      logger.info("Browser closed — shutting down dev servers.");
+      DevServer.shutdown();
+      Deno.exit(0);
+    },
+    (error) => {
+      logger.error(`Browser launcher failed: ${error}`);
+      Deno.exit(1);
+    },
+  );
 }
 
 async function runStage(
@@ -197,35 +151,21 @@ async function runStage(
     Deno.exit(130);
   });
 
-  const pipe = createReadyPipe();
-
-  pipe.on("data", (chunk: string) => {
-    if (isDevServerReady(chunk)) {
-      logger.success("Dev servers are ready.");
-      // Launch browser; when it exits (or fails to launch), take the dev
-      // servers down with it — otherwise ~9 vite servers keep listening
-      // on 5170-5190 after "Browser Closed" and the next stage run fails
-      // with "Port 5181 is already in use".
-      BrowserLauncher.run({ marionette }).then(() => {
-        logger.info("Browser closed — shutting down dev servers.");
-        DevServer.shutdown();
-        Deno.exit(0);
-        // deno-lint-ignore no-explicit-any
-      }).catch((e: any) => {
-        logger.error(`Browser launcher failed: ${e?.message ?? e}`);
-        DevServer.shutdown();
-        Deno.exit(1);
-      });
-    }
-  });
-
-  // Start dev server (it will write to the writer and end it)
-  // DevServer.run expects a writable-like object.
-  // deno-lint-ignore no-explicit-any
-  DevServer.run(pipe as any, { portOffset }).catch((e: any) => {
-    logger.error(`Dev server failed: ${e?.message ?? e}`);
-    Deno.exit(1);
-  });
+  await startDevBrowser(
+    () => DevServer.run(() => {}, { portOffset }),
+    (onStarted) =>
+      BrowserLauncher.run({ marionette, recordProcess: true, onStarted }),
+    DevServer.shutdown,
+    () => {
+      logger.info("Browser closed — shutting down dev servers.");
+      DevServer.shutdown();
+      Deno.exit(0);
+    },
+    (error) => {
+      logger.error(`Browser launcher failed: ${error}`);
+      Deno.exit(1);
+    },
+  );
 }
 
 async function runTest(
@@ -260,29 +200,19 @@ async function runTest(
     Deno.exit(130);
   });
 
-  const pipe = createReadyPipe();
-
-  pipe.on("data", (chunk: string) => {
-    if (isDevServerReady(chunk)) {
-      logger.success(
-        "Dev servers are ready. Launching browser in test mode...",
-      );
+  await startDevBrowser(
+    () => DevServer.run(() => {}, { portOffset }),
+    (onStarted) =>
       BrowserLauncher.run({
         marionette: true,
         ownLinuxSession: ownNativeSession,
-      }).catch((e: unknown) => {
-        logger.error(
-          `Browser launcher failed: ${e instanceof Error ? e.message : e}`,
-        );
-      });
-    }
-  });
-
-  // deno-lint-ignore no-explicit-any
-  DevServer.run(pipe as any, { portOffset }).catch((e: any) => {
-    logger.error(`Dev server failed: ${e?.message ?? e}`);
-    Deno.exit(1);
-  });
+        recordProcess: true,
+        onStarted,
+      }),
+    DevServer.shutdown,
+    () => {},
+    (error) => logger.error(`Browser launcher failed: ${error}`),
+  );
 }
 
 async function runBuild(phase?: string): Promise<void> {
@@ -364,9 +294,11 @@ async function main(): Promise<void> {
         );
         return;
       }
-      await runTest(
-        argv.includes("--own-native-session"),
-        await argvPortOffset(argv),
+      await withDevStateLock(async () =>
+        runTest(
+          argv.includes("--own-native-session"),
+          await argvPortOffset(argv),
+        )
       );
       break;
     }
@@ -377,10 +309,12 @@ async function main(): Promise<void> {
         );
         return;
       }
-      await runStage({
-        marionette: argv.includes("--marionette"),
-        portOffset: await argvPortOffset(argv),
-      });
+      await withDevStateLock(async () =>
+        runStage({
+          marionette: argv.includes("--marionette"),
+          portOffset: await argvPortOffset(argv),
+        })
+      );
       break;
     }
     case "build": {
