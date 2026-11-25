@@ -376,6 +376,8 @@ export class WorkspacesTabManager {
       const wsId = this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();
       if (!this.getWorkspaceIdFromAttribute(tab)) {
+        // Session restore opens tabs it hid already hidden; leave them alone.
+        if ((tab as XULElement & { hidden?: boolean }).hidden) return;
         this.setWorkspaceIdToAttribute(tab, wsId);
       }
     } catch {
