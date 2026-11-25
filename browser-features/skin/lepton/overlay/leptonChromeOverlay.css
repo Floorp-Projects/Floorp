@@ -19,3 +19,13 @@
  * declare no default namespace, and do not use @import (dropped in dev).
  * See ../README.md.
  */
+
+/* Lepton transitions flex and margin-inline-start on tabs, which keeps the
+ * tab strip moving after Firefox has scrolled or measured it. Keep only
+ * Firefox's own tab width transition. */
+#tabbrowser-tabs:not([movingtab]) .tabbrowser-tab:is(:not([collapsed]), [pinned]) {
+  transition: none !important;
+}
+#tabbrowser-tabs[orient="horizontal"]:not([movingtab]) .tabbrowser-tab:not([pinned], [collapsed]) {
+  transition: var(--tab-width-transition) !important;
+}
