@@ -28,7 +28,7 @@ import {
 } from "./fdh_qa_linux.ts";
 import type { LinuxPayloadKind } from "./fdh_qa_linux_types.ts";
 import { QaTargetError } from "./fdh_qa_remote.ts";
-import { validateTaskId } from "./fdh_task.ts";
+import { taskStatePath, validateTaskId } from "./fdh_task.ts";
 import { isTerminal, listJobIds, readJob } from "./fdh_executor.ts";
 import type {
   PlatformQaOutcome,
@@ -131,7 +131,6 @@ export function evalText(value: unknown): string {
 export function redact<T>(value: T, secrets: readonly string[]): T {
   const words = [...new Set(secrets.filter((s) => s.length >= 3))]
     .sort((a, b) => b.length - a.length);
-  if (words.length === 0) return value;
   const patterns = words.map((word) =>
     new RegExp(
       `(?<![A-Za-z0-9_])${
@@ -142,7 +141,9 @@ export function redact<T>(value: T, secrets: readonly string[]): T {
   );
   const walk = (v: unknown): unknown => {
     if (typeof v === "string") {
-      return patterns.reduce((text, re) => text.replace(re, "<redacted>"), v);
+      return patterns.reduce((text, re) => text.replace(re, "<redacted>"), v)
+        // ssh names the resolved address when hostSsh is an alias.
+        .replace(IPV4, "<redacted>");
     }
     if (Array.isArray(v)) return v.map(walk);
     if (v !== null && typeof v === "object") {
@@ -156,6 +157,9 @@ export function redact<T>(value: T, secrets: readonly string[]): T {
   };
   return walk(value) as T;
 }
+
+/** Any IPv4 address, not part of a longer dotted number. */
+const IPV4 = /(?<![0-9.])(?:\d{1,3}\.){3}\d{1,3}(?![0-9.])/g;
 
 /** Same rule as the targets' launch scripts, checked before a job starts. */
 export function validateStartUrl(startUrl: string): string {
@@ -606,7 +610,8 @@ export interface PlatformQaCliResult {
 
 export interface PlatformQaCliDeps {
   io?: PlatformQaIo;
-  readTextFile?: (file: string) => Promise<string>;
+  readFile?: (file: string) => Promise<Uint8Array>;
+  taskStateExists?: (taskId: string) => boolean;
   createTarget?: typeof createPlatformTarget;
   activeJobs?: typeof activePlatformJobs;
 }
@@ -617,7 +622,15 @@ export async function runPlatformQaCli(
   deps: PlatformQaCliDeps = {},
 ): Promise<PlatformQaCliResult> {
   const io = deps.io ?? DENO_IO;
-  const readTextFile = deps.readTextFile ?? Deno.readTextFile;
+  const readFile = deps.readFile ?? Deno.readFile;
+  const taskStateExists = deps.taskStateExists ??
+    ((id: string) => {
+      try {
+        return Deno.statSync(taskStatePath(Deno.cwd(), id)).isFile;
+      } catch {
+        return false;
+      }
+    });
   const createTarget = deps.createTarget ?? createPlatformTarget;
   const [sub, ...rest] = argv;
   if (sub === undefined || sub === "--help" || sub === "help") {
@@ -687,9 +700,24 @@ export async function runPlatformQaCli(
   }
 
   async function runParsed(): Promise<PlatformQaCliResult> {
-    const configText = (await readTextFile(targetFile)).replace(/^\uFEFF/, "");
+    // Hash the bytes, as job start does; decoding drops a UTF-8 BOM.
+    const configBytes = await readFile(targetFile);
+    const configText = new TextDecoder().decode(configBytes);
 
     if (sub === "cleanup") {
+      // The running-job check reads this worktree's journals, so it only
+      // means something from the worktree that holds the task.
+      if (!taskStateExists(taskId)) {
+        return {
+          exitCode: 1,
+          stdout: JSON.stringify({
+            platform,
+            cleanup: null,
+            refused:
+              "no fdh task state for this task here; run cleanup from the task's worktree root",
+          }),
+        };
+      }
       const active = (deps.activeJobs ?? activePlatformJobs)(
         Deno.cwd(),
         taskId,
@@ -731,10 +759,7 @@ export async function runPlatformQaCli(
     }
 
     const targetSha = encodeHex(
-      await crypto.subtle.digest(
-        "SHA-256",
-        new TextEncoder().encode(configText),
-      ),
+      await crypto.subtle.digest("SHA-256", new Uint8Array(configBytes)),
     );
     const outDir = need(options, "out");
     if (targetSha !== options.get("target-sha256")) {

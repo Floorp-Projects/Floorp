@@ -508,7 +508,8 @@ content-sandbox level), the optional `--eval` (chrome context; the script must
 runs once the target was taken. Results go to
 `_dist/fdh/platform/<task-id>/<platform>-report.json` and `<platform>.png`;
 the job log ends with a one-line summary. Host names, SSH users, the VM
-directory, key-file names and the local payload path are redacted from both; an
+directory, key-file names, any IPv4 address and the local payload path are
+redacted from both; an
 `--eval` value is recorded as it is.
 
 Outcomes, in the report and the summary line:
@@ -558,7 +559,8 @@ something else.
 A lost executor is handled by the normal reconcile: the next attempt reruns the
 whole command, which first removes what this task left on the target. If the
 job gave up or was cancelled, free the target with the command below. Run it
-from the worktree root: it is refused while a platform job of that task and
+from the task's worktree root (it is refused where that task has no state) and
+not while a platform job of that task and
 platform is still unfinished (cancel it first with `fdh job cancel`).
 
 ```sh

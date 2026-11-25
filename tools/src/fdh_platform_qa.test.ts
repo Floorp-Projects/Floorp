@@ -17,6 +17,7 @@ import type { PlatformQaPreflight } from "./fdh_platform_qa_types.ts";
 import { QaTargetError } from "./fdh_qa_remote.ts";
 
 const SHA = "a".repeat(64);
+const bytes = (text: string) => new TextEncoder().encode(text);
 const TASK = "kan-145-t1";
 
 interface FakeOptions {
@@ -244,11 +245,11 @@ Deno.test("platform QA: host names are redacted from the report", async () => {
   });
   // Whole words in values only: no partial IPs, no rewritten keys or fields.
   assertEquals(
-    redact({ mac: "macos on mac, 10.0.0.50 and 10.0.0.5" }, [
+    redact({ mac: "macos on mac, xh1.lan, h1.lan2 and h1.lan" }, [
       "mac",
-      "10.0.0.5",
+      "h1.lan",
     ]),
-    { mac: "macos on <redacted>, 10.0.0.50 and <redacted>" },
+    { mac: "macos on <redacted>, xh1.lan, h1.lan2 and <redacted>" },
   );
   assertEquals(
     redact(["/Users/qa/vm/key: denied", "root@h1 said"], [
@@ -283,9 +284,9 @@ Deno.test("platform QA: helpers", () => {
 Deno.test("platform QA CLI: bad arguments exit 2 before anything is read", async () => {
   let reads = 0;
   const deps = {
-    readTextFile: () => {
+    readFile: () => {
       reads++;
-      return Promise.resolve("{}");
+      return Promise.resolve(bytes("{}"));
     },
   };
   for (
@@ -316,7 +317,7 @@ Deno.test("platform QA CLI: a changed target config fails without contacting it"
     `--payload-sha256=${SHA}`,
     "--out=/out",
   ], {
-    readTextFile: () => Promise.resolve("{}"),
+    readFile: () => Promise.resolve(bytes("{}")),
     createTarget: () => {
       created++;
       throw new Error("unreachable");
@@ -349,7 +350,7 @@ Deno.test("platform QA CLI: run prints the summary and exits by outcome", async 
   const run = async (evalValue: unknown) =>
     await runPlatformQaCli(argv, {
       io: memoryIo().io,
-      readTextFile: () => Promise.resolve(config),
+      readFile: () => Promise.resolve(bytes(config)),
       createTarget: () =>
         Promise.resolve({
           target: fakeTarget({ evalValue }).target,
@@ -408,7 +409,7 @@ Deno.test("platform QA CLI: help, empty values and a bad start URL", async () =>
     ]
   ) {
     const result = await runPlatformQaCli([...base, ...extra], {
-      readTextFile: () => Promise.reject(new Error("must not read")),
+      readFile: () => Promise.reject(new Error("must not read")),
     });
     assertEquals(result.exitCode, 2, extra.join(" "));
   }
@@ -425,7 +426,7 @@ Deno.test("platform QA CLI: unexpected errors still end in a redacted failed sum
     `--payload-sha256=${SHA}`,
     "--out=/out",
   ], {
-    readTextFile: () =>
+    readFile: () =>
       Promise.reject(new Error("cannot read /home/someone/builds/x")),
   });
   assertEquals(result.exitCode, 1);
@@ -443,7 +444,8 @@ Deno.test("platform QA CLI: cleanup is refused while a platform job of the task 
     `--task-id=${TASK}`,
     "--target=c.json",
   ], {
-    readTextFile: () => Promise.resolve("{}"),
+    readFile: () => Promise.resolve(bytes("{}")),
+    taskStateExists: () => true,
     activeJobs: () => ["platform-20261125t000000z-abcdef"],
     createTarget: () => {
       created++;
@@ -453,4 +455,65 @@ Deno.test("platform QA CLI: cleanup is refused while a platform job of the task 
   assertEquals(result.exitCode, 1);
   assertStringIncludes(result.stdout, "not finished");
   assertEquals(created, 0);
+});
+
+Deno.test("platform QA CLI: cleanup outside the task's worktree is refused", async () => {
+  let checked = 0;
+  const result = await runPlatformQaCli([
+    "cleanup",
+    "--platform=linux",
+    `--task-id=${TASK}`,
+    "--target=c.json",
+  ], {
+    readFile: () => Promise.resolve(bytes("{}")),
+    taskStateExists: () => false,
+    activeJobs: () => {
+      checked++;
+      return [];
+    },
+    createTarget: () => {
+      throw new Error("unreachable");
+    },
+  });
+  assertEquals(result.exitCode, 1);
+  assertStringIncludes(result.stdout, "task's worktree root");
+  assertEquals(checked, 0);
+});
+
+Deno.test("platform QA CLI: a target config with a BOM hashes as its bytes", async () => {
+  const raw = new Uint8Array([0xef, 0xbb, 0xbf, ...bytes("{}")]);
+  const sha = Array.from(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", raw)),
+  ).map((b) => b.toString(16).padStart(2, "0")).join("");
+  let parsed: unknown = undefined;
+  const result = await runPlatformQaCli([
+    "run",
+    "--platform=linux",
+    `--task-id=${TASK}`,
+    "--target=c.json",
+    `--target-sha256=${sha}`,
+    "--payload=f.tar.xz",
+    `--payload-sha256=${SHA}`,
+    "--out=/out",
+  ], {
+    io: memoryIo().io,
+    readFile: () => Promise.resolve(raw),
+    createTarget: (_platform, config) => {
+      parsed = config;
+      return Promise.resolve({ target: fakeTarget().target, redactions: [] });
+    },
+  });
+  assertEquals(result.exitCode, 0);
+  assertEquals(parsed, {});
+});
+
+Deno.test("platform QA: any IPv4 address is redacted, versions are not", () => {
+  assertEquals(
+    redact(
+      { e: "ssh: connect to host 100.64.1.2 port 22: timed out", v: "159.0.1" },
+      [],
+    ),
+    { e: "ssh: connect to host <redacted> port 22: timed out", v: "159.0.1" },
+  );
+  assertEquals(redact({ v: "1.2.3.4.5" }, []), { v: "1.2.3.4.5" });
 });
