@@ -1,8 +1,31 @@
-import { launchDevPorts } from "./dev_port_offset.ts";
-
-/** Launch-local dev port resolver (FDH Gate 2 task 2-B): dev URLs of this
- * launch resolve to the ports actually served. */
-const launchDevPort = launchDevPorts();
+/**
+ * Dev-mode-only settings page URL builder.
+ *
+ * NOTE: this file is loaded through Services.scriptloader.loadSubScript as a
+ * CLASSIC script (see NRAboutPreferencesChild). Any static `import` at top
+ * level is a SyntaxError in a classic script, which kills the whole file and
+ * nothing gets injected into about:preferences. The tsdown multi-entry build
+ * extracts modules shared with chrome_root.ts into separate chunks, so even
+ * a single static import of a shared module breaks everything. Keep this
+ * file free of static imports.
+ *
+ * The logic below mirrors devPort()/devHttpOrigin() for the "settings" entry
+ * of libs/shared/dev-ports/defines.ts (base port 5183 + launch offset), used
+ * only in dev-mode click handlers. If the dev port table changes, update the
+ * base port here as well.
+ */
+function devSettingsUrl(pathname: string): string {
+  let offset = 0;
+  try {
+    const value = Services.prefs.getIntPref("nora.dev.port_offset", 0);
+    if (Number.isInteger(value) && value >= 0) {
+      offset = value;
+    }
+  } catch {
+    // pref unavailable; fall back to the base port
+  }
+  return `http://localhost:${5183 + offset}${pathname}`;
+}
 
 interface FirefoxWindow extends Window {
   gBrowser: {
@@ -226,11 +249,7 @@ function openFloorpHub(): void {
   if (import.meta.env.MODE === "dev") {
     logFloorpHub("Opening Floorp Hub in development mode.");
     // Use globalThis in environments where `window` may not be defined.
-    (globalThis as unknown as Window).location.href = launchDevPort
-      .httpOrigin(
-        "settings",
-        "/",
-      );
+    (globalThis as unknown as Window).location.href = devSettingsUrl("/");
     return;
   }
 
@@ -797,11 +816,9 @@ function createFloorpStartWarning(): void {
   button.setAttribute("label", defaultStartWarningTexts.buttonLabel);
   button.addEventListener("click", () => {
     if (import.meta.env.MODE === "dev") {
-      (globalThis as unknown as Window).location.href = launchDevPort
-        .httpOrigin(
-          "settings",
-          "/#/features/design",
-        );
+      (globalThis as unknown as Window).location.href = devSettingsUrl(
+        "/#/features/design",
+      );
       return;
     }
     const win = Services.wm.getMostRecentWindow(
