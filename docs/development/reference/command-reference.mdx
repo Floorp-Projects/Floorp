@@ -1,7 +1,7 @@
 ---
 title: "Command Reference"
 sidebar_label: "Commands"
-floorp_commit: "ba225e0a202c592e5a26d67e4fc8c4a7835d4233"
+floorp_commit: "c5a9bb7420ae7427f083efed30a9250be2efa2ce"
 generated: true
 ---
 # Command Reference
@@ -276,7 +276,7 @@ Source: `deno.json:86`
 deno task test:host
 ```
 
-Implementation: `deno test --allow-read --allow-write tools/src/ tools/design-matrix/`
+Implementation: `deno test --allow-read --allow-write tools/src/ tools/design-matrix/ tools/workflow-research/`
 
 Source: `deno.json:87`
 
@@ -288,7 +288,7 @@ deno task test:integration
 
 Implementation: `deno task test && deno task test:os-api --quick`
 
-Source: `deno.json:96`
+Source: `deno.json:98`
 
 ### `deno task test:os-api`
 
@@ -359,6 +359,26 @@ deno task test:tab-stacks-session
 Implementation: `deno run -A tools/tab-stacks-session-regression.ts`
 
 Source: `deno.json:90`
+
+### `deno task test:workflow-research`
+
+```bash
+deno task test:workflow-research
+```
+
+Implementation: `deno test --allow-read --allow-write tools/workflow-research/`
+
+Source: `deno.json:97`
+
+### `deno task workflow-research`
+
+```bash
+deno task workflow-research
+```
+
+Implementation: `deno run --allow-read --allow-write tools/workflow-research/mod.ts`
+
+Source: `deno.json:96`
 
 ## feles-build Commands
 
