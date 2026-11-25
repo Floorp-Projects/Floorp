@@ -1,0 +1,40 @@
+diff --git a/moz-src/toolkit/components/search/SearchEngineSelector.sys.mjs b/moz-src/toolkit/components/search/SearchEngineSelector.sys.mjs
+--- a/moz-src/toolkit/components/search/SearchEngineSelector.sys.mjs
++++ b/moz-src/toolkit/components/search/SearchEngineSelector.sys.mjs
+@@ -128,6 +128,18 @@
+     return this.#configuration;
+   }
+
++  async #getContextualSearchConfiguration() {
++    try {
++      if (!this.#configuration) {
++        await this.getEngineConfiguration();
++      }
++      return this.#configuration;
++    } catch (error) {
++      lazy.logConsole.warn("Could not load contextual search configuration", error);
++      return [];
++    }
++  }
++
+   /**
+    * Finds an engine configuration that has a matching host.
+    *
+@@ -138,7 +150,7 @@
+    *   The configuration data for an engine.
+    */
+   async findContextualSearchEngineByHost(host) {
+-    for (let config of this.#configuration) {
++    for (let config of await this.#getContextualSearchConfiguration()) {
+       if (config.recordType !== "engine") {
+         continue;
+       }
+@@ -165,7 +177,7 @@
+    *   The configuration data for an engine.
+    */
+   async findContextualSearchEngineById(id) {
+-    for (let config of this.#configuration) {
++    for (let config of await this.#getContextualSearchConfiguration()) {
+       if (config.recordType !== "engine") {
+         continue;
+       }

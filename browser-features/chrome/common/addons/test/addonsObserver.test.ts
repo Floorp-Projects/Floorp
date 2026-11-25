@@ -2,24 +2,44 @@
 // @colocated-env browser
 
 import {
-  getChromeWebStoreInstallInfo,
-  clearChromeWebStoreInstallInfo,
-  createCWSObserver,
+  clearChromeWebStoreInstallInfo as clearChromeWebStoreInstallInfoForWindow,
+  createCWSObserver as createCWSObserverForWindow,
+  getChromeWebStoreInstallInfo as getChromeWebStoreInstallInfoForWindow,
+  overrideInstallConfirmation as overrideInstallConfirmationForWindow,
   removeCWSObserver,
-  overrideInstallConfirmation,
-  saveOriginalDescriptionChildren,
+  saveOriginalDescriptionChildren as saveOriginalDescriptionChildrenForWindow,
 } from "../observer.ts";
 import { NotificationCustomizer } from "../notification-customizer.ts";
+import Addons from "../index.ts";
 import type {
   ChromeWebStoreInstallInfo,
+  ChromeWebStoreWindow,
   CWSObserver,
   XPInstallObserver,
 } from "../types.ts";
 import {
-  type TestCase,
   assert,
   assertEquals,
+  type TestCase,
 } from "../../../test/utils/test_harness.ts";
+
+import { createAddonInstance, createAddonWindow } from "./fixtures.ts";
+
+const fixture = createAddonWindow("addons observer tests", true);
+const window = fixture.win;
+const document = window.document;
+const getChromeWebStoreInstallInfo = () =>
+  getChromeWebStoreInstallInfoForWindow(window);
+const clearChromeWebStoreInstallInfo = () =>
+  clearChromeWebStoreInstallInfoForWindow(window);
+const saveOriginalDescriptionChildren = () =>
+  saveOriginalDescriptionChildrenForWindow(window);
+const createCWSObserver = (
+  ...args: Parameters<typeof createCWSObserverForWindow>
+) => createCWSObserverForWindow(args[0], args[1], args[2], window);
+const overrideInstallConfirmation = (
+  ...args: Parameters<typeof overrideInstallConfirmationForWindow>
+) => overrideInstallConfirmationForWindow(args[0], args[1], args[2], window);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -34,6 +54,13 @@ const ANOTHER_CWS_INFO: ChromeWebStoreInstallInfo = {
   name: "Another Extension",
   id: "another-ext-id-456",
 };
+
+const liveCustomizers: NotificationCustomizer[] = [];
+function createCustomizer(): NotificationCustomizer {
+  const customizer = new NotificationCustomizer(window);
+  liveCustomizers.push(customizer);
+  return customizer;
+}
 
 /** Mock state object matching InstallInfoState interface */
 function createMockState() {
@@ -58,8 +85,7 @@ function createMockWebExtPermissionDOM(): HTMLDivElement {
   const notification = document!.createElement("div");
   notification.id = "addon-webext-permissions-notification";
 
-  const popupContent = document!.createElement("div");
-  popupContent.className = "popupnotificationcontent";
+  const popupContent = document!.createElement("popupnotificationcontent");
   notification.appendChild(popupContent);
 
   const descContainer = document!.createElement("div");
@@ -82,8 +108,7 @@ function createMockInstallConfirmationDOM(): HTMLDivElement {
   const notification = document!.createElement("div");
   notification.id = "addon-install-confirmation-notification";
 
-  const popupContent = document!.createElement("div");
-  popupContent.className = "popupnotificationcontent";
+  const popupContent = document!.createElement("popupnotificationcontent");
   notification.appendChild(popupContent);
 
   const descContainer = document!.createElement("div");
@@ -120,12 +145,18 @@ function cleanupWindowGlobals(): void {
 
 /** Clean up the global addons context to prevent state leakage between tests */
 function cleanupGlobalContext(): void {
-  try {
-    const global = Cu.getGlobalForObject(Services) as Record<string, unknown>;
-    delete global.__floorpAddonsContext;
-  } catch {
-    // Cu may not be available in all contexts
+  const win = window as ChromeWebStoreWindow;
+  const ctx = win.__floorpAddonsContext;
+  removeCWSObserver(ctx?.observer ?? null);
+  if (ctx) {
+    for (const frame of ctx.animationFrames) win.cancelAnimationFrame(frame);
+    ctx.animationFrames.clear();
+    ctx.savedDescriptionChildren = null;
+    ctx.customizer = null;
+    ctx.logger = null;
   }
+  delete win.__floorpAddonsContext;
+  delete win.__chromeWebStoreInstallInfo;
 }
 
 /**
@@ -219,7 +250,7 @@ function testInstallInfoOverwriteViaWindow(): void {
 
 function testCreateCWSObserverReturnsObject(): void {
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const observer = createCWSObserver(state, customizer, logger);
@@ -247,7 +278,7 @@ function testRemoveCWSObserverDoesNotThrow(): void {
 
 function testCWSObserverReusedOnSecondCall(): void {
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const observer1 = createCWSObserver(state, customizer, logger);
@@ -263,12 +294,14 @@ function testCWSObserverReusedOnSecondCall(): void {
 
 function testCWSObserverHandlesInstallStartedTopic(): void {
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const observer = createCWSObserver(state, customizer, logger);
 
   // Simulate the observer receiving the install-started topic
+  (window as ChromeWebStoreWindow).__chromeWebStoreInstallInfo =
+    SAMPLE_CWS_INFO;
   const subject = { wrappedJSObject: SAMPLE_CWS_INFO };
   observer.observe(subject, "floorp-chrome-web-store-install-started", null);
 
@@ -284,7 +317,7 @@ function testCWSObserverHandlesInstallStartedTopic(): void {
 
 function testCWSObserverIgnoresUnknownTopic(): void {
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const observer = createCWSObserver(state, customizer, logger);
@@ -300,13 +333,18 @@ function testCWSObserverIgnoresUnknownTopic(): void {
 
 function testCWSObserverHandlesMissingWrappedJSObject(): void {
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const observer = createCWSObserver(state, customizer, logger);
 
   // Subject without wrappedJSObject
   observer.observe({}, "floorp-chrome-web-store-install-started", null);
+  observer.observe(
+    { wrappedJSObject: {} },
+    "floorp-chrome-web-store-install-started",
+    null,
+  );
   assertEquals(
     state.pendingChromeWebStoreInstall,
     null,
@@ -341,7 +379,7 @@ function testSaveOriginalDescriptionChildrenWithNotification(): void {
 function testOverrideInstallConfirmationNoXPInstallObserver(): void {
   cleanupWindowGlobals();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const result = overrideInstallConfirmation(state, customizer, logger);
@@ -355,7 +393,7 @@ function testOverrideInstallConfirmationNoXPInstallObserver(): void {
 function testOverrideInstallConfirmationReplacesShowInstall(): void {
   cleanupWindowGlobals();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   let originalCalled = false;
@@ -385,7 +423,7 @@ function testOverrideInstallConfirmationReplacesShowInstall(): void {
 function testOverrideInstallConfirmationCleanupRestores(): void {
   cleanupWindowGlobals();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   let originalCallCount = 0;
@@ -456,11 +494,14 @@ function testFullInstallInfoLifecycle(): void {
 function testObserverInstallStartedUpdatesState(): void {
   clearChromeWebStoreInstallInfo();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const observer = createCWSObserver(state, customizer, logger);
 
+  // The actor marks the owner window before its shared notification.
+  (window as ChromeWebStoreWindow).__chromeWebStoreInstallInfo =
+    SAMPLE_CWS_INFO;
   // First install
   observer.observe(
     { wrappedJSObject: SAMPLE_CWS_INFO },
@@ -478,6 +519,8 @@ function testObserverInstallStartedUpdatesState(): void {
   );
 
   // Overwrite with another install
+  (window as ChromeWebStoreWindow).__chromeWebStoreInstallInfo =
+    ANOTHER_CWS_INFO;
   observer.observe(
     { wrappedJSObject: ANOTHER_CWS_INFO },
     "floorp-chrome-web-store-install-started",
@@ -501,7 +544,7 @@ function testOverrideInstallConfirmationWithCWSInfo(): void {
   cleanupWindowGlobals();
   cleanupDOM();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   // Set up CWS info
@@ -547,7 +590,7 @@ function testOverrideInstallConfirmationWithCWSInfo(): void {
 function testOverrideInstallConfirmationCleanupClearsInstallInfo(): void {
   cleanupWindowGlobals();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   state.pendingChromeWebStoreInstall = SAMPLE_CWS_INFO;
@@ -581,7 +624,7 @@ function testOverrideInstallConfirmationWithoutCWSInfo(): void {
   cleanupWindowGlobals();
   cleanupDOM();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   // No CWS info set
@@ -590,8 +633,9 @@ function testOverrideInstallConfirmationWithoutCWSInfo(): void {
   createMockInstallConfirmationDOM();
 
   let customizeCalled = false;
-  const _originalCustomize =
-    customizer.customizeNotificationContent.bind(customizer);
+  const _originalCustomize = customizer.customizeNotificationContent.bind(
+    customizer,
+  );
   customizer.customizeNotificationContent = () => {
     customizeCalled = true;
   };
@@ -619,7 +663,7 @@ function testOverrideInstallConfirmationWithoutCWSInfo(): void {
 async function testObserverWebExtPermissionPromptWithCWSInfo(): Promise<void> {
   cleanupDOM();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   // Set up CWS info
@@ -631,7 +675,11 @@ async function testObserverWebExtPermissionPromptWithCWSInfo(): Promise<void> {
   const observer = createCWSObserver(state, customizer, logger);
 
   // Trigger the permission prompt topic
-  observer.observe(null, "webextension-permission-prompt", null);
+  observer.observe(
+    { wrappedJSObject: { target: { documentGlobal: window } } },
+    "webextension-permission-prompt",
+    null,
+  );
 
   // Wait for any async updates to complete
   // Use setTimeout instead of rAF for CI reliability
@@ -656,10 +704,12 @@ async function testObserverWebExtPermissionPromptWithCWSInfo(): Promise<void> {
   cleanupDOM();
 }
 
-async function testObserverWebExtPermissionPromptWithoutCWSInfo(): Promise<void> {
+async function testObserverWebExtPermissionPromptWithoutCWSInfo(): Promise<
+  void
+> {
   cleanupDOM();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   // No CWS info
@@ -681,7 +731,11 @@ async function testObserverWebExtPermissionPromptWithoutCWSInfo(): Promise<void>
   const observer = createCWSObserver(state, customizer, logger);
 
   // Trigger the permission prompt topic
-  observer.observe(null, "webextension-permission-prompt", null);
+  observer.observe(
+    { wrappedJSObject: { target: { documentGlobal: window } } },
+    "webextension-permission-prompt",
+    null,
+  );
 
   // Wait for async cleanup to complete (double-nested requestAnimationFrame)
   await waitForAsync(500);
@@ -708,7 +762,7 @@ async function testObserverWebExtPermissionPromptWithoutCWSInfo(): Promise<void>
 function testGlobalContextPreservesPendingInstall(): void {
   clearChromeWebStoreInstallInfo();
   const state1 = createMockState();
-  const customizer1 = new NotificationCustomizer();
+  const customizer1 = createCustomizer();
   const logger1 = createMockLogger();
 
   // Set initial state
@@ -722,7 +776,7 @@ function testGlobalContextPreservesPendingInstall(): void {
   (
     state2 as { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null }
   ).pendingChromeWebStoreInstall = null; // Initially null
-  const customizer2 = new NotificationCustomizer();
+  const customizer2 = createCustomizer();
   const logger2 = createMockLogger();
 
   const observer2 = createCWSObserver(state2, customizer2, logger2);
@@ -745,7 +799,7 @@ function testGlobalContextPreservesPendingInstall(): void {
 function testObserverStateUpdateWithNullPendingInstall(): void {
   clearChromeWebStoreInstallInfo();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   // Initially null
@@ -756,6 +810,8 @@ function testObserverStateUpdateWithNullPendingInstall(): void {
   const observer = createCWSObserver(state, customizer, logger);
 
   // Update via observer
+  (window as ChromeWebStoreWindow).__chromeWebStoreInstallInfo =
+    SAMPLE_CWS_INFO;
   observer.observe(
     { wrappedJSObject: SAMPLE_CWS_INFO },
     "floorp-chrome-web-store-install-started",
@@ -779,7 +835,7 @@ function testObserverStateUpdateWithNullPendingInstall(): void {
 function testMultipleObserverCreationReturnsSameInstance(): void {
   clearChromeWebStoreInstallInfo();
   const state = createMockState();
-  const customizer = new NotificationCustomizer();
+  const customizer = createCustomizer();
   const logger = createMockLogger();
 
   const observer1 = createCWSObserver(state, customizer, logger);
@@ -805,22 +861,23 @@ function testMultipleObserverCreationReturnsSameInstance(): void {
 // Tests: Addons class structure
 // ---------------------------------------------------------------------------
 
-async function testAddonsClassStructure(): Promise<void> {
+function testAddonsClassStructure(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
 
   try {
-    const { default: Addons } = await import("../index.ts");
-
     // Test that Addons extends NoraComponentBase by checking it has the required structure
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     assert(
       addonsInstance !== null && typeof addonsInstance === "object",
       "should create instance",
     );
-    assert(typeof addonsInstance.init === "function", "should have init method");
+    assert(
+      typeof addonsInstance.init === "function",
+      "should have init method",
+    );
     assert(
       typeof (addonsInstance as unknown as { cleanup: unknown }).cleanup ===
         "function",
@@ -842,7 +899,7 @@ async function testAddonsClassStructure(): Promise<void> {
   }
 }
 
-async function testAddonsInitDocumentReadyComplete(): Promise<void> {
+function testAddonsInitDocumentReadyComplete(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -854,14 +911,15 @@ async function testAddonsInitDocumentReadyComplete(): Promise<void> {
   });
 
   try {
-    const { default: Addons } = await import("../index.ts");
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Spy on initCustomization by checking state after init
     // Since initCustomization is private, we verify its effects
     const state = (
       addonsInstance as unknown as {
-        state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
+        state: {
+          pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null;
+        };
       }
     ).state;
 
@@ -889,7 +947,7 @@ async function testAddonsInitDocumentReadyComplete(): Promise<void> {
   }
 }
 
-async function testAddonsInitDocumentNotComplete(): Promise<void> {
+function testAddonsInitDocumentNotComplete(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -901,10 +959,8 @@ async function testAddonsInitDocumentNotComplete(): Promise<void> {
   });
 
   try {
-    const { default: Addons } = await import("../index.ts");
-
     // Create instance - init should add event listener
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Verify instance was created successfully
     assert(
@@ -929,7 +985,7 @@ async function testAddonsInitDocumentNotComplete(): Promise<void> {
   }
 }
 
-async function testAddonsInitCreatesCWSObserver(): Promise<void> {
+function testAddonsInitCreatesCWSObserver(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -940,24 +996,22 @@ async function testAddonsInitCreatesCWSObserver(): Promise<void> {
   });
 
   try {
-    const { default: Addons } = await import("../index.ts");
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Access private cwsObserver property
     const cwsObserver = (
       addonsInstance as unknown as { cwsObserver: CWSObserver | null }
     ).cwsObserver;
 
-    // The cwsObserver may be null if SolidJS onCleanup already ran in test context.
-    // Verify the class can be instantiated without error.
     assert(addonsInstance instanceof Addons, "should instantiate Addons class");
-    // If observer exists, verify it has the expected shape
-    if (cwsObserver !== null) {
-      assert(
-        typeof cwsObserver.observe === "function",
-        "observer should have observe method",
-      );
-    }
+    assert(
+      cwsObserver !== null,
+      "constructor retains the observer created during super",
+    );
+    assert(
+      typeof cwsObserver.observe === "function",
+      "observer has observe method",
+    );
 
     // Explicitly cleanup the Addons instance
     (addonsInstance as unknown as { cleanup: () => void }).cleanup();
@@ -972,7 +1026,7 @@ async function testAddonsInitCreatesCWSObserver(): Promise<void> {
   }
 }
 
-async function testAddonsCleanupRemovesObserver(): Promise<void> {
+function testAddonsCleanupRemovesObserver(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -983,8 +1037,7 @@ async function testAddonsCleanupRemovesObserver(): Promise<void> {
   });
 
   try {
-    const { default: Addons } = await import("../index.ts");
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Call cleanup — should not throw
     (addonsInstance as unknown as { cleanup: () => void }).cleanup();
@@ -1005,7 +1058,7 @@ async function testAddonsCleanupRemovesObserver(): Promise<void> {
   }
 }
 
-async function testAddonsCleanupClearsInstallConfirmation(): Promise<void> {
+function testAddonsCleanupClearsInstallConfirmation(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -1023,22 +1076,17 @@ async function testAddonsCleanupClearsInstallConfirmation(): Promise<void> {
     (window as Record<string, unknown>).gXPInstallObserver =
       mockXPInstallObserver;
 
-    const { default: Addons } = await import("../index.ts");
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Verify cleanup function was created
-    // Note: cleanupInstallConfirmation is only set when readyState is "complete"
-    // AND initCustomization runs, which requires gXPInstallObserver.
-    // It may remain null if conditions are not met.
     const cleanupInstallConfirmation = (
       addonsInstance as unknown as {
         cleanupInstallConfirmation: (() => void) | null;
       }
     ).cleanupInstallConfirmation;
     assert(
-      typeof cleanupInstallConfirmation === "function" ||
-        cleanupInstallConfirmation === null,
-      "should have cleanupInstallConfirmation function or null if not initialized",
+      typeof cleanupInstallConfirmation === "function",
+      "constructor retains the native confirmation cleanup handle",
     );
 
     // Call cleanup
@@ -1066,7 +1114,7 @@ async function testAddonsCleanupClearsInstallConfirmation(): Promise<void> {
   }
 }
 
-async function testAddonsMultipleInitCalls(): Promise<void> {
+function testAddonsMultipleInitCalls(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -1077,23 +1125,26 @@ async function testAddonsMultipleInitCalls(): Promise<void> {
   });
 
   try {
-    const { default: Addons } = await import("../index.ts");
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Get first observer
-    const _firstObserver = (
+    const firstObserver = (
       addonsInstance as unknown as { cwsObserver: CWSObserver | null }
     ).cwsObserver;
 
-    // Call init again (should create new observer)
+    // Repeated init must preserve the existing owner and subscription.
     addonsInstance.init();
 
     const secondObserver = (
       addonsInstance as unknown as { cwsObserver: CWSObserver | null }
     ).cwsObserver;
 
-    // Should create a new observer instance
     assert(secondObserver !== null, "should have observer after second init");
+    assertEquals(
+      secondObserver,
+      firstObserver,
+      "repeated init keeps the same observer",
+    );
 
     // Explicitly cleanup the Addons instance
     (addonsInstance as unknown as { cleanup: () => void }).cleanup();
@@ -1108,7 +1159,7 @@ async function testAddonsMultipleInitCalls(): Promise<void> {
   }
 }
 
-async function testAddonsStateInitialization(): Promise<void> {
+function testAddonsStateInitialization(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -1119,13 +1170,14 @@ async function testAddonsStateInitialization(): Promise<void> {
   });
 
   try {
-    const { default: Addons } = await import("../index.ts");
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Verify state structure
     const state = (
       addonsInstance as unknown as {
-        state: { pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null };
+        state: {
+          pendingChromeWebStoreInstall: ChromeWebStoreInstallInfo | null;
+        };
       }
     ).state;
 
@@ -1152,7 +1204,7 @@ async function testAddonsStateInitialization(): Promise<void> {
   }
 }
 
-async function testAddonsHasLogger(): Promise<void> {
+function testAddonsHasLogger(): void {
   cleanupDOM();
   cleanupWindowGlobals();
   cleanupGlobalContext();
@@ -1163,18 +1215,21 @@ async function testAddonsHasLogger(): Promise<void> {
   });
 
   try {
-    const { default: Addons } = await import("../index.ts");
-    const addonsInstance = new Addons();
+    const addonsInstance = createAddonInstance(window);
 
     // Verify logger exists and has expected methods
-    // deno-lint-ignore no-explicit-any
-    const logger: any = (addonsInstance as unknown as { logger: unknown }).logger;
+    const logger = (addonsInstance as unknown as {
+      logger: { debug: unknown; warn: unknown; info: unknown };
+    }).logger;
 
     assert(
       logger !== null && typeof logger === "object",
       "should have logger object",
     );
-    assert(typeof logger.debug === "function", "logger should have debug method");
+    assert(
+      typeof logger.debug === "function",
+      "logger should have debug method",
+    );
     assert(typeof logger.warn === "function", "logger should have warn method");
     assert(typeof logger.info === "function", "logger should have info method");
 
@@ -1196,173 +1251,187 @@ async function testAddonsHasLogger(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function runAllTests(): Promise<void> {
-  const tests: TestCase[] = [
-    // getChromeWebStoreInstallInfo / clearChromeWebStoreInstallInfo
-    {
-      name: "initial install info is null",
-      fn: testGetInstallInfoInitiallyNull,
-    },
-    { name: "clear install info no-op", fn: testClearInstallInfoNoOp },
-    { name: "get install info return type", fn: testGetInstallInfoReturnType },
-    {
-      name: "set and get install info via window",
-      fn: testSetAndGetInstallInfoViaWindow,
-    },
-    {
-      name: "clear install info removes window data",
-      fn: testClearInstallInfoRemovesWindowData,
-    },
-    {
-      name: "install info overwrite via window",
-      fn: testInstallInfoOverwriteViaWindow,
-    },
+  try {
+    const tests: TestCase[] = [
+      // getChromeWebStoreInstallInfo / clearChromeWebStoreInstallInfo
+      {
+        name: "initial install info is null",
+        fn: testGetInstallInfoInitiallyNull,
+      },
+      { name: "clear install info no-op", fn: testClearInstallInfoNoOp },
+      {
+        name: "get install info return type",
+        fn: testGetInstallInfoReturnType,
+      },
+      {
+        name: "set and get install info via window",
+        fn: testSetAndGetInstallInfoViaWindow,
+      },
+      {
+        name: "clear install info removes window data",
+        fn: testClearInstallInfoRemovesWindowData,
+      },
+      {
+        name: "install info overwrite via window",
+        fn: testInstallInfoOverwriteViaWindow,
+      },
 
-    // createCWSObserver / removeCWSObserver
-    {
-      name: "createCWSObserver returns observer object",
-      fn: testCreateCWSObserverReturnsObject,
-    },
-    {
-      name: "removeCWSObserver does not throw",
-      fn: testRemoveCWSObserverDoesNotThrow,
-    },
-    {
-      name: "CWS observer reused on second call",
-      fn: testCWSObserverReusedOnSecondCall,
-    },
-    {
-      name: "CWS observer handles install-started topic",
-      fn: testCWSObserverHandlesInstallStartedTopic,
-    },
-    {
-      name: "CWS observer ignores unknown topic",
-      fn: testCWSObserverIgnoresUnknownTopic,
-    },
-    {
-      name: "CWS observer handles missing wrappedJSObject",
-      fn: testCWSObserverHandlesMissingWrappedJSObject,
-    },
+      // createCWSObserver / removeCWSObserver
+      {
+        name: "createCWSObserver returns observer object",
+        fn: testCreateCWSObserverReturnsObject,
+      },
+      {
+        name: "removeCWSObserver does not throw",
+        fn: testRemoveCWSObserverDoesNotThrow,
+      },
+      {
+        name: "CWS observer reused on second call",
+        fn: testCWSObserverReusedOnSecondCall,
+      },
+      {
+        name: "CWS observer handles install-started topic",
+        fn: testCWSObserverHandlesInstallStartedTopic,
+      },
+      {
+        name: "CWS observer ignores unknown topic",
+        fn: testCWSObserverIgnoresUnknownTopic,
+      },
+      {
+        name: "CWS observer handles missing wrappedJSObject",
+        fn: testCWSObserverHandlesMissingWrappedJSObject,
+      },
 
-    // saveOriginalDescriptionChildren
-    {
-      name: "save original children - no notification",
-      fn: testSaveOriginalDescriptionChildrenNoNotification,
-    },
-    {
-      name: "save original children - with notification",
-      fn: testSaveOriginalDescriptionChildrenWithNotification,
-    },
+      // saveOriginalDescriptionChildren
+      {
+        name: "save original children - no notification",
+        fn: testSaveOriginalDescriptionChildrenNoNotification,
+      },
+      {
+        name: "save original children - with notification",
+        fn: testSaveOriginalDescriptionChildrenWithNotification,
+      },
 
-    // overrideInstallConfirmation
-    {
-      name: "overrideInstallConfirmation returns null without gXPInstallObserver",
-      fn: testOverrideInstallConfirmationNoXPInstallObserver,
-    },
-    {
-      name: "overrideInstallConfirmation replaces showInstallConfirmation",
-      fn: testOverrideInstallConfirmationReplacesShowInstall,
-    },
-    {
-      name: "overrideInstallConfirmation cleanup restores original",
-      fn: testOverrideInstallConfirmationCleanupRestores,
-    },
-    {
-      name: "overrideInstallConfirmation with CWS info",
-      fn: testOverrideInstallConfirmationWithCWSInfo,
-    },
-    {
-      name: "overrideInstallConfirmation cleanup clears install info",
-      fn: testOverrideInstallConfirmationCleanupClearsInstallInfo,
-    },
-    {
-      name: "overrideInstallConfirmation without CWS info",
-      fn: testOverrideInstallConfirmationWithoutCWSInfo,
-    },
+      // overrideInstallConfirmation
+      {
+        name:
+          "overrideInstallConfirmation returns null without gXPInstallObserver",
+        fn: testOverrideInstallConfirmationNoXPInstallObserver,
+      },
+      {
+        name: "overrideInstallConfirmation replaces showInstallConfirmation",
+        fn: testOverrideInstallConfirmationReplacesShowInstall,
+      },
+      {
+        name: "overrideInstallConfirmation cleanup restores original",
+        fn: testOverrideInstallConfirmationCleanupRestores,
+      },
+      {
+        name: "overrideInstallConfirmation with CWS info",
+        fn: testOverrideInstallConfirmationWithCWSInfo,
+      },
+      {
+        name: "overrideInstallConfirmation cleanup clears install info",
+        fn: testOverrideInstallConfirmationCleanupClearsInstallInfo,
+      },
+      {
+        name: "overrideInstallConfirmation without CWS info",
+        fn: testOverrideInstallConfirmationWithoutCWSInfo,
+      },
 
-    // Observer webextension-permission-prompt topic
-    {
-      name: "observer webext-permission-prompt with CWS info",
-      fn: testObserverWebExtPermissionPromptWithCWSInfo,
-    },
-    {
-      name: "observer webext-permission-prompt without CWS info",
-      fn: testObserverWebExtPermissionPromptWithoutCWSInfo,
-    },
+      // Observer webextension-permission-prompt topic
+      {
+        name: "observer webext-permission-prompt with CWS info",
+        fn: testObserverWebExtPermissionPromptWithCWSInfo,
+      },
+      {
+        name: "observer webext-permission-prompt without CWS info",
+        fn: testObserverWebExtPermissionPromptWithoutCWSInfo,
+      },
 
-    // Integration lifecycle
-    { name: "full install info lifecycle", fn: testFullInstallInfoLifecycle },
-    {
-      name: "observer install-started updates state",
-      fn: testObserverInstallStartedUpdatesState,
-    },
+      // Integration lifecycle
+      { name: "full install info lifecycle", fn: testFullInstallInfoLifecycle },
+      {
+        name: "observer install-started updates state",
+        fn: testObserverInstallStartedUpdatesState,
+      },
 
-    // Edge cases and state management
-    {
-      name: "global context preserves pending install",
-      fn: testGlobalContextPreservesPendingInstall,
-    },
-    {
-      name: "observer state update with null pending install",
-      fn: testObserverStateUpdateWithNullPendingInstall,
-    },
-    {
-      name: "multiple observer creation returns same instance",
-      fn: testMultipleObserverCreationReturnsSameInstance,
-    },
+      // Edge cases and state management
+      {
+        name: "global context preserves pending install",
+        fn: testGlobalContextPreservesPendingInstall,
+      },
+      {
+        name: "observer state update with null pending install",
+        fn: testObserverStateUpdateWithNullPendingInstall,
+      },
+      {
+        name: "multiple observer creation returns same instance",
+        fn: testMultipleObserverCreationReturnsSameInstance,
+      },
 
-    // Addons class structure
-    { name: "Addons class structure", fn: testAddonsClassStructure },
-    {
-      name: "Addons init with document readyState complete",
-      fn: testAddonsInitDocumentReadyComplete,
-    },
-    {
-      name: "Addons init with document not complete",
-      fn: testAddonsInitDocumentNotComplete,
-    },
-    {
-      name: "Addons init creates CWS observer",
-      fn: testAddonsInitCreatesCWSObserver,
-    },
-    {
-      name: "Addons cleanup removes observer",
-      fn: testAddonsCleanupRemovesObserver,
-    },
-    {
-      name: "Addons cleanup clears install confirmation",
-      fn: testAddonsCleanupClearsInstallConfirmation,
-    },
-    {
-      name: "Addons multiple init calls",
-      fn: testAddonsMultipleInitCalls,
-    },
-    {
-      name: "Addons state initialization",
-      fn: testAddonsStateInitialization,
-    },
-    {
-      name: "Addons has logger",
-      fn: testAddonsHasLogger,
-    },
-  ];
+      // Addons class structure
+      { name: "Addons class structure", fn: testAddonsClassStructure },
+      {
+        name: "Addons init with document readyState complete",
+        fn: testAddonsInitDocumentReadyComplete,
+      },
+      {
+        name: "Addons init with document not complete",
+        fn: testAddonsInitDocumentNotComplete,
+      },
+      {
+        name: "Addons init creates CWS observer",
+        fn: testAddonsInitCreatesCWSObserver,
+      },
+      {
+        name: "Addons cleanup removes observer",
+        fn: testAddonsCleanupRemovesObserver,
+      },
+      {
+        name: "Addons cleanup clears install confirmation",
+        fn: testAddonsCleanupClearsInstallConfirmation,
+      },
+      {
+        name: "Addons multiple init calls",
+        fn: testAddonsMultipleInitCalls,
+      },
+      {
+        name: "Addons state initialization",
+        fn: testAddonsStateInitialization,
+      },
+      {
+        name: "Addons has logger",
+        fn: testAddonsHasLogger,
+      },
+    ];
 
-  const failures: string[] = [];
+    const failures: string[] = [];
 
-  for (const test of tests) {
-    try {
-      await test.fn();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      failures.push(`${test.name}: ${message}`);
+    for (const test of tests) {
+      try {
+        await test.fn();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        failures.push(`${test.name}: ${message}`);
+      } finally {
+        cleanupGlobalContext();
+      }
     }
-  }
 
-  // Clean up any leftover DOM / observers / global context
-  cleanupDOM();
-  cleanupWindowGlobals();
-  cleanupGlobalContext();
+    // Clean up any leftover DOM / observers / global context
+    cleanupDOM();
+    cleanupWindowGlobals();
+    cleanupGlobalContext();
 
-  if (failures.length > 0) {
-    throw new Error(`addonsObserver.test.ts failures: ${failures.join(" | ")}`);
+    if (failures.length > 0) {
+      throw new Error(
+        `addonsObserver.test.ts failures: ${failures.join(" | ")}`,
+      );
+    }
+  } finally {
+    cleanupGlobalContext();
+    for (const customizer of liveCustomizers.splice(0)) customizer.destroy();
+    fixture.close();
   }
 }

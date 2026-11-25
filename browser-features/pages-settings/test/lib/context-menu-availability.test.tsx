@@ -45,6 +45,7 @@ function enrolled(
     start: undefined,
     end: undefined,
     isActive: true,
+    isReady: true,
     enrollmentStatus: "enrolled",
     currentVariantId: "enabled",
     experimentData: { id: "context_menu_customization" },
@@ -210,6 +211,44 @@ async function renderAvailability(initialRoute: string) {
 const tests: TestCase[] = [
   {
     name:
+      "A failed manifest refresh denies a stale enabled editor until recovery",
+    fn: async () => {
+      let rows = [enrolled()];
+      const stub = stubRpc(() => Promise.resolve(rows));
+      const view = await renderAvailability(CONTEXT_MENU_SETTINGS_ROUTE);
+      try {
+        assert(view.host.querySelector("[data-editor]"), "ready editor mounts");
+        rows = [enrolled({ isReady: false })];
+        await view.changed();
+        assertEquals(
+          view.availability(),
+          "unavailable",
+          "stale enabled row is denied",
+        );
+        assertEquals(
+          view.pathname(),
+          "/overview/home",
+          "stale editor redirects",
+        );
+        assert(
+          !view.sidebarVisible(),
+          "stale enrollment is hidden from navigation",
+        );
+        rows = [enrolled()];
+        await view.changed();
+        await view.navigate(CONTEXT_MENU_SETTINGS_ROUTE);
+        assert(
+          view.host.querySelector("[data-editor]"),
+          "a fresh snapshot restores the editor",
+        );
+      } finally {
+        view.cleanup();
+        stub.restore();
+      }
+    },
+  },
+  {
+    name:
       "Focus and same-route query changes preserve an approved editor's local state",
     fn: async () => {
       const pending = Promise.withResolvers<AvailableExperiment[]>();
@@ -323,6 +362,8 @@ const tests: TestCase[] = [
         { rows: [], policy: "default" },
         { rows: [enrolled({ id: "different_experiment" })], policy: "default" },
         { rows: [enrolled({ isActive: false })], policy: "default" },
+        { rows: [enrolled({ isReady: false })], policy: "default" },
+        { rows: [enrolled({ isReady: undefined })], policy: "default" },
         {
           rows: [enrolled({ enrollmentStatus: "disabled" })],
           policy: "default",

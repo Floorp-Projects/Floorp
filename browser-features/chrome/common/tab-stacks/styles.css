@@ -42,7 +42,7 @@ tab-group[data-floorp-stack] .tab-group-label-container {
   /* Exactly a tab's flex: `flex: 100 100` (basis 0) is what .tabbrowser-tab
      uses, so the chip grows and shrinks in lockstep with its neighbours. */
   flex: 100 100 0% !important;
-  min-width: var(--tab-min-width, 76px) !important;
+  min-width: var(--floorp-tab-min-width, var(--tab-min-width, 76px)) !important;
   /* NO !important on max-width — deliberately. When a drag starts, native
      freezes every strip cell with an INLINE max-width at its current
      width, then pulls the dragged tab out of flow. An !important here
@@ -288,7 +288,7 @@ tab-group[data-floorp-stack] .tab-group-label[data-floorp-count]::after {
    everything compresses without ever overflowing. */
 .floorp-stack-tab {
   flex: 0 1 180px !important;
-  min-width: var(--tab-min-width, 76px) !important;
+  min-width: var(--floorp-tab-min-width, var(--tab-min-width, 76px)) !important;
   max-width: 200px;
 }
 

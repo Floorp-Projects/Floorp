@@ -31,18 +31,40 @@ on:
       deb_url:
         description: "Direct download URL for the floorp-<version>.deb to publish"
         type: string
-        required: true
+        required: false
       nr_version:
         description: "Version string (e.g. 12.3.4)"
         type: string
         required: true
+      metadata_only:
+        description: "Re-sign the existing index using the withholding policy; preserve all DEBs"
+        type: boolean
+        required: false
+        default: false
+      deb_sha256:
+        description: "Verified GitHub Release DEB SHA256 (required for metadata-only candidate)"
+        type: string
+        required: false
 
 jobs:
   publish_deb:
     runs-on: ubuntu-latest
+    concurrency:
+      group: floorp-ppa-publication
+      cancel-in-progress: false
     steps:
+      - name: Checkout publication policy
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Test PPA index policy
+        run: |
+          python3 .github/scripts/test_ppa_index.py
+          bash -n .github/scripts/hold_ppa_index.sh
+
       - name: Download Linux DEB artifact (PPA) from provided run
-        if: ${{ inputs.artifact_run_id != '' }}
+        if: ${{ !inputs.metadata_only && inputs.artifact_run_id != '' }}
         uses: actions/download-artifact@v4
         with:
           name: floorp-Linux-x64-deb
@@ -51,7 +73,7 @@ jobs:
           path: ~/noraneko-publish/linux-deb
 
       - name: Download Linux DEB artifact (PPA) from current run
-        if: ${{ inputs.artifact_run_id == '' && inputs.deb_url == '' }}
+        if: ${{ !inputs.metadata_only && inputs.artifact_run_id == '' && inputs.deb_url == '' }}
         uses: actions/download-artifact@v4
         with:
           name: floorp-Linux-x64-deb
@@ -59,7 +81,7 @@ jobs:
 
       - name: Download Linux DEB from URL
         # Only run this when explicitly triggered via workflow_dispatch AND a deb_url was provided.
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deb_url != '' }}
+        if: ${{ !inputs.metadata_only && github.event_name == 'workflow_dispatch' && inputs.deb_url != '' }}
         run: |
           set -eux
           # inputs.deb_url is required for this branch; guard is present in the if above but
@@ -75,6 +97,7 @@ jobs:
           sha256sum "$TARGET" > "$TARGET.sha256"
 
       - name: Validate legacy DEB filename
+        if: ${{ !inputs.metadata_only }}
         # Ensure we only accept the historical floorp-<version_display>.deb naming.
         run: |
           set -eux
@@ -109,6 +132,8 @@ jobs:
               exit 1
             fi
           fi
+          python3 "$GITHUB_WORKSPACE/.github/scripts/ppa_index.py" check-new \
+            "$GITHUB_WORKSPACE/.github/ppa-withheld-versions.json" "$(dpkg-deb -f "$DEB_FILE" Version)"
 
       - name: Install PPA tooling
         run: |
@@ -116,6 +141,7 @@ jobs:
           sudo apt-get install -y dpkg-dev ftp gnupg apt-utils lftp jq
 
       - name: Publish Linux DEB to PPA
+        if: ${{ !inputs.metadata_only }}
         env:
           KEYMASK: ${{ secrets.KEYMASK }}
           GPG_SEC: ${{ secrets.GPG_SEC }}
@@ -288,6 +314,9 @@ jobs:
             echo "[publish_ppa] ERROR: Packages omits an existing DEB; refusing to publish an incomplete index." >&2
             exit 1
           fi
+          # Preserve the archive completeness check, then omit only explicit holds.
+          python3 "$GITHUB_WORKSPACE/.github/scripts/ppa_index.py" filter \
+            "$GITHUB_WORKSPACE/.github/ppa-withheld-versions.json" Packages
           gzip -k -f Packages
           apt-ftparchive release . > Release
           gpg --default-key "$GPG_SSB" -abs -o - Release > Release.gpg
@@ -388,3 +417,35 @@ jobs:
           echo "[publish_ppa] Cleanup directory listing:" 
           ls -la "$WORKDIR" || true
           rm -f init_script.txt finish_script.txt Floorp_sec.asc
+
+      - name: Re-sign withheld PPA offers without changing DEBs
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.metadata_only }}
+        env:
+          KEYMASK: ${{ secrets.KEYMASK }}
+          GPG_SEC: ${{ secrets.GPG_SEC }}
+          GPG_SSB: ${{ secrets.GPG_SSB }}
+          PPA_FTP_URL: ${{ secrets.PPA_FTP_URL }}
+          PPA_FTP_USER: ${{ secrets.PPA_FTP_USER }}
+          PPA_FTP_PASS: ${{ secrets.PPA_FTP_PASS }}
+          PPA_CANDIDATE: ${{ inputs.nr_version }}
+          PPA_CANDIDATE_SHA256: ${{ inputs.deb_sha256 }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF" != refs/heads/main ] || [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+            echo "Metadata-only publication requires the exact main source." >&2
+            exit 1
+          fi
+          PPA_LATEST_MAIN=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$PPA_LATEST_MAIN" != "$GITHUB_SHA" ]; then
+            echo "Refusing stale PPA metadata publication." >&2
+            exit 1
+          fi
+          bash .github/scripts/hold_ppa_index.sh
+
+      - name: Save public PPA withholding evidence
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.metadata_only && success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppa-hold-public-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/floorp-ppa-hold-public-evidence
+          if-no-files-found: error

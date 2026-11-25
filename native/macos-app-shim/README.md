@@ -35,6 +35,21 @@ window. WindowServer ownership is checked without capturing the screen. Tests
 also exercise atomic layer transactions, raw compositor geometry, and the
 Japanese text-input cache. They do not access a user browser profile.
 
+The conversion tests retain AppKit's selected clause across Gecko's collapsed
+composition-caret acknowledgements, including repeated candidate changes and
+commit, unmark, cancellation, empty composition, blur, and disconnection.
+`tools/app-shim/test-ime.py --browser /path/to/TestCopy.app --shim /path/to/floorp-app-shim`
+also exercises the installed Japanese input method with native hardware-key
+events in an isolated profile. It checks repeated Space conversion, Return
+commit, trusted composition events, ordinary Space after commit, and cancelling
+with Escape or Backspace before typing again, including deleting all committed
+text and cancelling another composition in the empty editor. Empty marked text is
+forwarded as an empty commit so Gecko ends the composition before the next one
+starts. Japanese input must be enabled in macOS and native input needs existing
+event-posting permission. Run both `--editor textarea` and `--editor contenteditable`; candidate
+text can vary with the input method's dictionary, so the test checks conversion
+and composition behavior without requiring a particular candidate spelling.
+
 For a compiled, signed Runtime, `tools/app-shim/test-runtime.py --browser /path/to/Nightly.app`
 creates an isolated profile and signed temporary Shim bundle. It requires an
 authenticated second process, WindowServer ownership, real Gecko compositor

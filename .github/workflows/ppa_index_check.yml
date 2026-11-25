@@ -1,0 +1,80 @@
+name: PPA index regression checks
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/publish_ppa.yml'
+      - '.github/workflows/ppa_index_check.yml'
+      - '.github/ppa-withheld-versions.json'
+      - '.github/scripts/ppa_index.py'
+      - '.github/scripts/test_ppa_index.py'
+      - '.github/scripts/hold_ppa_index.sh'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish_ppa.yml'
+      - '.github/workflows/ppa_index_check.yml'
+      - '.github/ppa-withheld-versions.json'
+      - '.github/scripts/ppa_index.py'
+      - '.github/scripts/test_ppa_index.py'
+      - '.github/scripts/hold_ppa_index.sh'
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Verify the authenticated public PPA candidate and withholding policy
+        run: |
+          set -euo pipefail
+          PPA_FIXTURE="$RUNNER_TEMP/ppa-public-fixture"
+          mkdir -p "$PPA_FIXTURE"
+          for metadata in Packages Packages.gz Release Release.gpg InRelease; do
+            curl -fsSL --connect-timeout 15 --max-time 45 \
+              "https://ppa.floorp.app/amd64/$metadata" -o "$PPA_FIXTURE/$metadata"
+          done
+          curl -fsSL --connect-timeout 15 --max-time 45 \
+            https://raw.githubusercontent.com/Floorp-Projects/Floorp-PPA/6a2e588c8d85ec151b69da84bea5263ac776cd35/amd64/KEY.gpg \
+            -o "$PPA_FIXTURE/KEY.gpg"
+          gpg --batch --dearmor --output "$PPA_FIXTURE/trusted-keyring.gpg" "$PPA_FIXTURE/KEY.gpg"
+          gpgv --keyring "$PPA_FIXTURE/trusted-keyring.gpg" "$PPA_FIXTURE/Release.gpg" "$PPA_FIXTURE/Release"
+          gpgv --keyring "$PPA_FIXTURE/trusted-keyring.gpg" --output "$PPA_FIXTURE/authenticated-release" "$PPA_FIXTURE/InRelease"
+          cmp "$PPA_FIXTURE/Release" "$PPA_FIXTURE/authenticated-release"
+          python3 .github/scripts/ppa_index.py verify-release "$PPA_FIXTURE"
+          python3 - "$PPA_FIXTURE/Packages" <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0, '.github/scripts')
+          from ppa_index import filter_index, latest_candidate, paragraphs, product_version, verify_apt_candidates, withheld_versions
+          before = pathlib.Path(sys.argv[1]).read_bytes()
+          policy = withheld_versions('.github/ppa-withheld-versions.json')
+          after, removed = filter_index(before, policy)
+          candidate = latest_candidate(after)
+          release_version = product_version(candidate['Version'])
+          filter_index(before, policy, release_version, candidate['SHA256'])
+          verify_apt_candidates(after, release_version, candidate['Version'])
+          result = {'authenticatedRecords': len(paragraphs(before)), 'retainedRecords': len(paragraphs(after)), 'withheldDEBs': removed, 'candidate': candidate['Version'], 'candidateProductVersion': release_version, 'candidateSHA256': candidate['SHA256']}
+          pathlib.Path(sys.argv[1]).with_name('hold-regression-result.json').write_text(json.dumps(result, indent=2) + '\n')
+          print(json.dumps(result, indent=2))
+          PY
+          PPA_PUBLIC_PRODUCT_VERSION=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["candidateProductVersion"])' "$PPA_FIXTURE/hold-regression-result.json")
+          PPA_PUBLIC_SHA256=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["candidateSHA256"])' "$PPA_FIXTURE/hold-regression-result.json")
+          PPA_PUBLIC_DEBIAN_VERSION=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["candidate"])' "$PPA_FIXTURE/hold-regression-result.json")
+          curl -fsSL --connect-timeout 15 --max-time 180 \
+            "https://ppa.floorp.app/amd64/floorp-$PPA_PUBLIC_PRODUCT_VERSION.deb" -o "$RUNNER_TEMP/ppa-candidate.deb"
+          test "$(sha256sum "$RUNNER_TEMP/ppa-candidate.deb" | cut -d' ' -f1)" = "$PPA_PUBLIC_SHA256"
+          test "$(dpkg-deb -f "$RUNNER_TEMP/ppa-candidate.deb" Version)" = "$PPA_PUBLIC_DEBIAN_VERSION"
+          echo "Verified public DEB $PPA_PUBLIC_DEBIAN_VERSION against authenticated index SHA256 $PPA_PUBLIC_SHA256."
+      - name: Save authenticated public fixture
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppa-authenticated-fixture-${{ github.run_id }}
+          path: ${{ runner.temp }}/ppa-public-fixture
+          if-no-files-found: error
+      - name: Test withholding and real APT candidates
+        run: python3 .github/scripts/test_ppa_index.py
+      - name: Check publisher shell syntax
+        run: bash -n .github/scripts/hold_ppa_index.sh

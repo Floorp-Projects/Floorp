@@ -1,0 +1,747 @@
+Task test:host deno test --allow-read --allow-write tools/src/
+Check tools/src/bookmark_workspace_containers.test.ts
+Check tools/src/browser_launcher.test.ts
+Check tools/src/browser_test_collector.test.ts
+Check tools/src/builder.test.ts
+Check tools/src/chrome_extras_sidebar_patch.test.ts
+Check tools/src/colocated_test_runner.test.ts
+Check tools/src/colocated_test_runner_prefs.test.ts
+Check tools/src/contextual_search_patch.test.ts
+Check tools/src/custom_app_icons.test.ts
+Check tools/src/dev_env_manager.test.ts
+Check tools/src/dev_process_selection.test.ts
+Check tools/src/dev_processes.test.ts
+Check tools/src/downloaded_firefox_runner_contract.test.ts
+Check tools/src/fdh_evidence.test.ts
+Check tools/src/fdh_task.test.ts
+Check tools/src/g5_desktop_process_controller.test.ts
+Check tools/src/g5_desktop_two_client_executor.test.ts
+Check tools/src/g5_desktop_two_client_lifecycle_contract.test.ts
+Check tools/src/g5_execution_boundary.test.ts
+Check tools/src/initializer.test.ts
+Check tools/src/injector.test.ts
+Check tools/src/jar-manifest.test.ts
+Check tools/src/lang_pack_match.test.ts
+Check tools/src/localization_targets.test.ts
+Check tools/src/notes_record.test.ts
+Check tools/src/notes_storage.test.ts
+Check tools/src/notes_ui_contract.test.ts
+Check tools/src/open_external.test.ts
+Check tools/src/patcher.test.ts
+Check tools/src/port_offset.test.ts
+Check tools/src/release_notes.test.ts
+Check tools/src/release_provenance.test.ts
+Check tools/src/runtime_archive.test.ts
+Check tools/src/runtime_compatibility.test.ts
+Check tools/src/runtime_lock.test.ts
+Check tools/src/smoke_runner.test.ts
+Check tools/src/startup_test_bootstrap.test.ts
+Check tools/src/startup_test_run_owner.test.ts
+Check tools/src/tab_context_menu_sections_patch.test.ts
+Check tools/src/ui_custom_searchbar_layout.test.ts
+Check tools/src/update.test.ts
+Check tools/src/utils.test.ts
+Check tools/src/workspace_container_lifecycle_patch.test.ts
+Check tools/src/workspace_container_localization.test.ts
+Check tools/src/workspace_external_containers_cleanup.test.ts
+Check tools/src/workspace_external_containers_patch.test.ts
+Check tools/src/workspace_last_tab_patch.test.ts
+Check tools/src/xhtml_injection.test.ts
+running 3 tests from ./tools/src/bookmark_workspace_containers.test.ts
+bookmark container creation preserves privacy and disabled-feature policies ... ok (2ms)
+bookmark container creation rejects deleted, internal and malformed identities ... ok (401µs)
+bookmark workspace default remains pending until its controller and mapping are ready ... ok (228µs)
+running 20 tests from ./tools/src/browser_launcher.test.ts
+isolated browser launch owns a fresh private profile and Marionette port ... ok (3ms)
+isolated launcher rejects invalid Marionette ports ... ok (381µs)
+isolated launcher cleanup is idempotent and removes its profile ... ok (564µs)
+isolated browser pair rejects shared ports and owns distinct profiles ... ok (3ms)
+isolated browser process clears inherited secrets and cleans its profile ... ok (7ms)
+isolated Windows browser normalizes safe environment names and delegates owned-tree termination ... ok (2ms)
+isolated browser retains its profile when the owned process cannot be confirmed stopped ... ok (3ms)
+isolated browser retries a failed verified stop ... ok (1ms)
+isolated browser retains its profile when ownership capture fails after spawn ... ok (2ms)
+isolated browser cleans its profile when capture abort is verified ... ok (1ms)
+isolated browser prevents external profile cleanup after spawn ... ok (807µs)
+isolated browser pair removes the first profile if the second spawn fails ... ok (1ms)
+isolated browser pair attempts both stops and retains only an unverified profile ... ok (978µs)
+isolated browser pair retries after one verified stop fails ... ok (662µs)
+isolated browser pair retains a profile whose ownership capture fails ... ok (1ms)
+isolated browser refuses to spawn without an ownership controller ... ok (480µs)
+browser command retains the ordinary single-profile default ... ok (22µs)
+ordinary browser default Marionette launch scopes system access to its child ...
+------- post-test output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile --marionette --remote-allow-system-access
+[launcher@native-exit] %7B%22command%22%3A%5B%22%2Fmock%2Ffloorp%22%2C%22--profile%22%2C%22%2Fmock%2Fprofile%22%2C%22--marionette%22%2C%22--remote-allow-system-access%22%5D%2C%22launchCommand%22%3A%5B%22%2Fmock%2Ffloorp%22%2C%22--profile%22%2C%22%2Fmock%2Fprofile%22%2C%22--marionette%22%2C%22--remote-allow-system-access%22%5D%2C%22ownLinuxSession%22%3Afalse%2C%22exitCode%22%3A0%7D
+[launcher] Browser Closed
+----- post-test output end -----
+ordinary browser default Marionette launch scopes system access to its child ... ok (2ms)
+ordinary browser enabled Marionette launch scopes system access to its child ...
+------- post-test output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile --marionette --remote-allow-system-access
+[launcher@native-exit] %7B%22command%22%3A%5B%22%2Fmock%2Ffloorp%22%2C%22--profile%22%2C%22%2Fmock%2Fprofile%22%2C%22--marionette%22%2C%22--remote-allow-system-access%22%5D%2C%22launchCommand%22%3A%5B%22%2Fmock%2Ffloorp%22%2C%22--profile%22%2C%22%2Fmock%2Fprofile%22%2C%22--marionette%22%2C%22--remote-allow-system-access%22%5D%2C%22ownLinuxSession%22%3Afalse%2C%22exitCode%22%3A0%7D
+[launcher] Browser Closed
+----- post-test output end -----
+ordinary browser enabled Marionette launch scopes system access to its child ... ok (84µs)
+ordinary browser disabled Marionette launch scopes system access to its child ...
+------- post-test output -------
+[launcher] Launching browser with command: /mock/floorp --profile /mock/profile
+[launcher@native-exit] %7B%22command%22%3A%5B%22%2Fmock%2Ffloorp%22%2C%22--profile%22%2C%22%2Fmock%2Fprofile%22%5D%2C%22launchCommand%22%3A%5B%22%2Fmock%2Ffloorp%22%2C%22--profile%22%2C%22%2Fmock%2Fprofile%22%5D%2C%22ownLinuxSession%22%3Afalse%2C%22exitCode%22%3A0%7D
+[launcher] Browser Closed
+----- post-test output end -----
+ordinary browser disabled Marionette launch scopes system access to its child ... ok (74µs)
+running 9 tests from ./tools/src/browser_test_collector.test.ts
+collector keeps \u0022 syntactic until the outer JSON parse ... ok (2ms)
+collector keeps \u005c syntactic until the outer JSON parse ... ok (506µs)
+collector maps \x22 to syntactic \u0022 ... ok (776µs)
+collector maps \x5c to syntactic \u005c ... ok (397µs)
+collector preserves literal backslash-xNN pref payloads ... ok (538µs)
+collectBrowserTestResultsFromPrefs returns matching runId done state ... ok (400µs)
+collectBrowserTestResultsFromPrefs rejects a matching error promptly ... ok (762µs)
+collectBrowserTestResultsFromPrefs ignores a stale mismatched error until fresh done ... ok (1s)
+collectBrowserTestResultsFromPrefs ignores a stale mismatched error until fresh error ... ok (1s)
+running 2 tests from ./tools/src/builder.test.ts
+packageVersion returns a non-empty semver-like string ... ok (416µs)
+packageVersion returns consistent results on repeated calls ... ok (210µs)
+running 1 test from ./tools/src/chrome_extras_sidebar_patch.test.ts
+Chrome Extras: development and packaging header patches agree ... ok (595µs)
+running 41 tests from ./tools/src/colocated_test_runner.test.ts
+browser detection uses the abort-bounded TCP reachability helper ... ok (1ms)
+isTestFile detects supported test patterns ... ok (152µs)
+isTestFile ignores non-test and excluded paths ... ok (32µs)
+detectLayer resolves known layer roots ... ok (32µs)
+detectLayer returns null for unknown paths ... ok (100µs)
+parseLayer accepts aliases and rejects invalid values ... ok (346µs)
+escapeRegExp escapes regex control characters ... ok (80µs)
+normalizeBrowserResultPath maps known aliases and prefixes ... ok (67µs)
+isResultMatchTarget matches normalized browser paths ... ok (41µs)
+parseOptions applies default timeout values ... ok (506µs)
+parseOptions accepts explicit timeout and startup values ... ok (195µs)
+parseOptions rejects unknown options ... ok (124µs)
+parseOptions rejects invalid timeout values ... ok (174µs)
+parseOptions rejects --near with positional path ... ok (119µs)
+parseOptions supports help mode ... ok (81µs)
+browser test control is versioned, expiring, and cleared by owner ... ok (4ms)
+host cleanup removes its control file even when prefs cleanup fails ... ok (881µs)
+Windows snapshot parsers accept singleton and array JSON shapes ... ok (200µs)
+Windows snapshot parsers fail closed on blank, null, and missing fields ... ok (148µs)
+Windows preflight rejects the exact test executable only ... ok (149µs)
+Windows Deno capture requires path, opaque creation date, and task marker ... ok (187µs)
+Windows listener ownership accepts dual-stack rows for one verified root ... ok (144µs)
+Windows listener ownership rejects multiple owners and content roots ... ok (199µs)
+Windows listener ownership accepts only a previously captured reparented root ... ok (164µs)
+Windows readiness preserves the verified launcher ancestor of the listener root ... ok (178µs)
+Windows readiness owns an exact-path sibling currently descended from verified Deno ... ok (99µs)
+Windows readiness blocks a present previously-owned identity mismatch ... ok (134µs)
+Windows ownership expands exact-path children by ancestry and -parentPid ... ok (120µs)
+Windows ownership treats a second root outside the listener tree as ambiguous ... ok (113µs)
+Windows ownership never grants a new child through a stale -parentPid ... ok (70µs)
+Windows teardown always cleans verified survivors after diagnostic root taskkill ... ok (296µs)
+Windows teardown records but never kills an unlinked exact-path process ... ok (195µs)
+Windows teardown disables Deno tree kill when a sibling is ambiguous ... ok (426µs)
+Windows teardown revalidates Floorp identity immediately before taskkill ... ok (98µs)
+Windows teardown revalidates the captured Deno command line before taskkill ... ok (96µs)
+Windows teardown fails when the captured port remains reachable ... ok (57µs)
+Windows teardown detects an IPv6 listener even when IPv4 connect fails ... ok (57µs)
+Windows teardown fails closed when the final listener query fails ... ok (134µs)
+Windows root-only fallback uses the spawned child control ... ok (64µs)
+Windows verified teardown failure invokes root-only child fallback and stays failed ... ok (181µs)
+Windows verified teardown combines root-only fallback failure ... ok (115µs)
+running 3 tests from ./tools/src/colocated_test_runner_prefs.test.ts
+replaceStringPref appends pref on a fresh line ... ok (332µs)
+replaceStringPref replaces an existing pref ... ok (57µs)
+browserFilterTargetsForRun keeps full all-runs unfiltered ... ok (70µs)
+running 1 test from ./tools/src/contextual_search_patch.test.ts
+contextual search initialization matches source and extracted builds ... ok (750µs)
+running 3 tests from ./tools/src/custom_app_icons.test.ts
+browser icon picker source and runtime patches stay in sync ... ok (1ms)
+localization source and runtime patches stay in sync ... ok (546µs)
+icon manager source and runtime patches stay in sync ... ok (386µs)
+running 5 tests from ./tools/src/dev_env_manager.test.ts
+savePrefs enables chrome baseline CSP opt-out only for HTTP loader profiles ...
+------- post-test output -------
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/ff722d277135f8c6/profile/user.js[0m
+----- post-test output end -----
+savePrefs enables chrome baseline CSP opt-out only for HTTP loader profiles ... ok (1ms)
+savePrefs omits chrome baseline CSP opt-out for stage profiles ...
+------- post-test output -------
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/c0939380ca7aecff/profile/user.js[0m
+----- post-test output end -----
+savePrefs omits chrome baseline CSP opt-out for stage profiles ... ok (643µs)
+savePrefs keeps the user.js byte-identical without a port offset ...
+------- post-test output -------
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/a8d3370e80ffab37/profile/user.js[0m
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/5616e6918d070100/profile/user.js[0m
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/3b852994c3b70c19/profile/user.js[0m
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/42b2619095478022/profile/user.js[0m
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/75ba06e698838dac/profile/user.js[0m
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/f1beaed1854b28c3/profile/user.js[0m
+----- post-test output end -----
+savePrefs keeps the user.js byte-identical without a port offset ... ok (4ms)
+savePrefs clears stale launch prefs from a reused prefs.js at offset 0 ...
+------- post-test output -------
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/1e241c19124a7835/profile/user.js[0m
+[32m[dev-env] SUCCESS: Cleared stale launch prefs from /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/1e241c19124a7835/profile/prefs.js[0m
+----- post-test output end -----
+savePrefs clears stale launch prefs from a reused prefs.js at offset 0 ... ok (872µs)
+savePrefs writes the offset pref and a disjoint Marionette port ...
+------- post-test output -------
+[32m[dev-env] SUCCESS: user.js written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/36d515bad274a35e/profile/user.js[0m
+----- post-test output end -----
+savePrefs writes the offset pref and a disjoint Marionette port ... ok (505µs)
+running 24 tests from ./tools/src/dev_process_selection.test.ts
+stop selects only this checkout's tree, recorded orphans and exact browser profile ... ok (956µs)
+stop accepts Windows case, separators, dot segments and trailing separator ... ok (111µs)
+stop rejects a profile with suffix -other ... ok (57µs)
+stop rejects a profile with suffix \child ... ok (39µs)
+stop rejects a profile with suffix  extra ... ok (37µs)
+stop rejects a profile with suffix "suffix ... ok (33µs)
+stop requires a real profile option and Floorp executable ... ok (72µs)
+stop rejects a reused recorded PID even with the same command line ... ok (39µs)
+stop rejects changed or missing identity ... ok (44µs)
+stale PID file without checkout evidence cannot select an unrelated tree ... ok (33µs)
+legacy Windows PID file is accepted with this checkout's absolute log path ... ok (42µs)
+Windows stale parent PID does not claim a child older than the parent ... ok (27µs)
+--all explicitly restores machine-wide Windows recovery and descendants ... ok (123µs)
+stop never selects excluded caller PIDs, even with --all ... ok (30µs)
+linux: mixed checkout trees and orphan identities stay isolated ... ok (318µs)
+linux: POSIX profiles remain case sensitive and exact ... ok (66µs)
+darwin: mixed checkout trees and orphan identities stay isolated ... ok (67µs)
+darwin: POSIX profiles remain case sensitive and exact ... ok (68µs)
+Linux argv preserves profile argument boundaries including spaces ... ok (59µs)
+macOS unquoted ps profile with spaces requires a complete argument ... ok (168µs)
+Windows argument parser handles quoted executable, empty args and escaped quotes ... ok (85µs)
+registry parser rejects malformed entries and missing start times ... ok (321µs)
+Unix ps parser preserves spaces in command lines and single-digit dates ... ok (183µs)
+normalization uses the supplied platform, independent of the test host ... ok (18µs)
+running 5 tests from ./tools/src/dev_processes.test.ts
+process recorder writes identity atomically and preserves orphan records ... ok (4ms)
+process reader tolerates a missing checkout registry ... ok (338µs)
+Windows process snapshot handles zero and one entries and rejects malformed data ... ignored (0ms)
+port conflict diagnostics query the reported port and print its PID and recovery command ... ok (209µs)
+normal startup logs do not query port owners ... ok (44µs)
+running 9 tests from ./tools/src/downloaded_firefox_runner_contract.test.ts
+current browser test control is consumed exactly once ... ok (3ms)
+test control uses PathUtils.profileDir when dirsvc is absent or throws ... ok (1ms)
+stale or mismatched browser test control becomes a full run ... ok (1ms)
+browser control cleanup attempts both invalidation channels ... ok (938µs)
+runBrowserTests propagates test control consumption failures ... ok (518µs)
+unmarked import-only browser modules keep existing success semantics ... ok (3ms)
+downloaded marker applies prefs lazily, records tasks, and restores prefs ... ok (385µs)
+downloaded marker fails closed on zero or mismatched tasks and restores prefs ... ok (354µs)
+downloaded task failures retain per-task evidence ... ok (188µs)
+running 8 tests from ./tools/src/fdh_evidence.test.ts
+builds a valid manifest with all seven entities and five core relationships ... ok (4ms)
+no assertions yields a validating running manifest, not a pass ... ok (1ms)
+a failed assertion maps to a failed state and valid transition ... ok (2ms)
+a broken-then-fixed build ends succeeded while the failed attempt stays visible ... ok (1ms)
+a browser pass followed by a fail keeps the browser-UNVERIFIED limitation ... ok (1ms)
+a cancelled state uses the cancel_requested transition and not-required approval ... ok (1ms)
+writeEvidenceManifest writes JSON that re-validates ... ok (3ms)
+builder surfaces schema violations as EvidenceValidationError ... ok (1ms)
+running 9 tests from ./tools/src/fdh_task.test.ts
+validateTaskId enforces the documented pattern ... ok (557µs)
+task state round-trips through <worktree>/_dist/fdh/tasks ... ok (1ms)
+events, operations and assertions persist ... ok (1ms)
+runRecordedCommand records operation, event and assertion ... ok (1ms)
+a failing command records a failed assertion ... ok (1ms)
+resume re-verifies local state without external operations ... ok (1ms)
+resume fails when the recorded base commit is gone ... ok (969µs)
+requireWorktree rejects a subdirectory / non-root ... ok (310µs)
+createTaskState rejects invalid input ... ok (108µs)
+running 14 tests from ./tools/src/g5_desktop_process_controller.test.ts
+G5 desktop controller captures only complete high-resolution ownership proof ... ok (711µs)
+G5 desktop controller fails closed for incomplete capture proof ... ok (403µs)
+G5 desktop controller stops only after its supervisor proves tree and port absence ... ok (172µs)
+G5 desktop controller reserves a captured tree before concurrent termination ... ok (173µs)
+G5 desktop controller keeps a supervisor failure reserved and rejects duplicate action ... ok (138µs)
+G5 desktop controller keeps a port-residual proof reserved and rejects duplicate action ... ok (91µs)
+G5 desktop controller rejects malformed termination proof ... ok (59µs)
+G5 desktop controller keeps an owned-tree-residual proof reserved ... ok (70µs)
+G5 desktop controller invalidates captured ownership after a successful abort ... ok (59µs)
+G5 desktop controller rejects forged or unknown ownership before stopping ... ok (67µs)
+G5 desktop controller requires non-secret opaque run and executor identities ... ok (243µs)
+G5 desktop controller has an exact compile-time desktop platform contract ... ok (35µs)
+G5 desktop controller rejects unsupported Deno targets before requesting capture proof ... ok (68µs)
+G5 desktop controller is a pure injected lifecycle adapter ... ok (626µs)
+running 10 tests from ./tools/src/g5_desktop_two_client_executor.test.ts
+offline fixture accepts exactly two fictional data clients and only returns a withheld G5 result ... ok (1ms)
+offline fixture accepts canonical client key order and distinct port/PID domains ... ok (157µs)
+offline fixture rejects arbitrary functions without invoking them ... ok (350µs)
+offline fixture rejects getters, Proxies, and foreign prototypes without observing them ... ok (106µs)
+offline fixture rejects duplicate identity, proof, PID, port, generation, and profile data before use ... ok (234µs)
+offline fixture rejects noncanonical or non-fictional input before construction ... ok (333µs)
+offline fixture is single-use ... ok (115µs)
+offline fixture source scanner ignores type-only modules but retains runtime modules ... ok (375µs)
+offline fixture source scanner rejects runtime imports despite trivia or semicolon evasions ... ok (250µs)
+offline fixture has no executable imports, capabilities, or live surface ... ok (1ms)
+running 8 tests from ./tools/src/g5_desktop_two_client_lifecycle_contract.test.ts
+G5 two-client lifecycle accepts complete distinct pair evidence without authorizing execution ... ok (737µs)
+G5 two-client lifecycle rejects duplicate client identities, PIDs, ports, and generations ... ok (177µs)
+G5 two-client lifecycle rejects cross-pair binding and proof reuse ... ok (200µs)
+G5 two-client lifecycle rejects malformed and incomplete termination proof ... ok (198µs)
+G5 two-client lifecycle accepts a complete abort proof only with its exact result ... ok (69µs)
+G5 two-client lifecycle requires canonical JSON and a canonical client ordering ... ok (140µs)
+G5 two-client lifecycle rejects non-string, getter, and Proxy inputs without observing them ... ok (40µs)
+G5 two-client lifecycle contract is pure and has no execution-capable surface ... ok (409µs)
+running 14 tests from ./tools/src/g5_execution_boundary.test.ts
+G5 boundary admits a GitHub-hosted macOS candidate only for independent verification ... ok (596µs)
+G5 boundary requires a nonblank executor-instance correlation ID ... ok (97µs)
+G5 boundary rejects malformed runtime facts without coercion ... ok (203µs)
+G5 boundary fails closed rather than throwing for a revoked Proxy ... ok (162µs)
+G5 boundary rejects a live Proxy that forges complete ownership facts ... ok (267µs)
+G5 boundary rejects duplicate JSON keys at every accepted object layer ... ok (165µs)
+G5 boundary rejects every noncanonical representation independently ... ok (81µs)
+G5 boundary freezes every returned assessment surface ... ok (46µs)
+G5 boundary blocks every incomplete local ownership proof ... ok (126µs)
+G5 boundary blocks absent or blank run and executor-instance identities ... ok (47µs)
+G5 boundary requires an independent verifier before execution ... ok (37µs)
+G5 boundary reports every independent ownership failure ... ok (41µs)
+G5 boundary blocks unrecognized runtime facts ... ok (23µs)
+G5 boundary policy accepts no raw destruction attestation or process cleanup input ... ok (441µs)
+running 48 tests from ./tools/src/initializer.test.ts
+filterRuntimeEntries returns empty array for null/undefined data ... ok (4ms)
+filterRuntimeEntries filters out non-file entries ... ok (72µs)
+filterRuntimeEntries handles entries with missing name ... ok (50µs)
+scoreRuntimeEntry gives platform points for windows keyword ... ok (69µs)
+scoreRuntimeEntry gives platform points for darwin keyword ... ok (29µs)
+scoreRuntimeEntry gives zero for unmatched entry ... ok (39µs)
+scoreRuntimeEntry adds bonus for .zip extension ... ok (41µs)
+scoreRuntimeEntry adds bonus for artifact keyword ... ok (21µs)
+pickRuntimeEntry picks the highest-scored entry ... ok (53µs)
+pickRuntimeEntry throws when entries array is empty ... ok (306µs)
+pickRuntimeEntry returns first entry when no strong match ...
+------- post-test output -------
+[33m[initializer] WARN: No strong runtime artifact match found. Using the first available entry: unknown-file.dat[0m
+----- post-test output end -----
+pickRuntimeEntry returns first entry when no strong match ... ok (130µs)
+Debug Runtime selection requires the exact FTP platform bundle ... ok (120µs)
+locked Runtime public download URLs encode locked path segments ... ok (64µs)
+locked Runtime public download URLs reject unsafe fields ... ok (118µs)
+run uses locked initialization by default ... ok (131µs)
+run selects the Debug FTP initializer without loading the Release lock ... ok (43µs)
+run ignores legacy environment and initializer hooks ... ok (75µs)
+run does not save preferences when locked installation fails ... ok (105µs)
+run does not install or save when the Runtime lock fails to load ... ok (83µs)
+combined browser workflow does not require a Runtime opt-in ... ok (481µs)
+locked Runtime native target mapping fails closed ... ok (85µs)
+debug macOS Runtime copies only the expected app from the DMG root ... ok (5ms)
+debug macOS Runtime plist commits final paths before staging swap ... ok (1ms)
+locked Runtime install validates then swaps and retains recovery state ...
+------- post-test output -------
+[32m[initializer] SUCCESS: Installed locked Runtime 152.0.7/20260718112318.[0m
+[34m[initializer] INFO: Previous Runtime retained for recovery at /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/c1cbb9b37ce0aedf/bin.runtime-backup-success.[0m
+----- post-test output end -----
+locked Runtime install validates then swaps and retains recovery state ... FAILED (8ms)
+locked macOS Runtime commits only final developer paths ...
+------- post-test output -------
+[32m[initializer] SUCCESS: Installed locked Runtime 152.0.7/20260718112318.[0m
+[34m[initializer] INFO: Locked Runtime 152.0.7/20260718112318 is already installed.[0m
+[33m[initializer] WARN: Existing locked Runtime needs replacement: Locked macOS Info.plist MozillaDeveloperRepoPath did not verify as the final Runtime path /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/c921d9b28b3a506c/bin/floorp.[0m
+----- post-test output end -----
+locked macOS Runtime commits only final developer paths ... ok (5ms)
+locked macOS Runtime preserves dollar replacement tokens in final developer paths ...
+------- post-test output -------
+[32m[initializer] SUCCESS: Installed locked Runtime 152.0.7/20260718112318.[0m
+----- post-test output end -----
+locked macOS Runtime preserves dollar replacement tokens in final developer paths ... ok (6ms)
+locked macOS plist patch failure aborts before swap and invalidates control ... ok (6ms)
+locked Runtime ignores release metadata download URLs ...
+------- post-test output -------
+[32m[initializer] SUCCESS: Installed locked Runtime 152.0.7/20260718112318.[0m
+----- post-test output end -----
+locked Runtime ignores release metadata download URLs ... ok (3ms)
+trusted Runtime metadata validation uses scoped optional auth ... ok (1ms)
+trusted Runtime metadata validation fails closed on lock drift ... ok (349µs)
+trusted Runtime metadata errors redact token and redirect URL ... ok (211µs)
+public Runtime downloads support direct and redirected HTTPS responses ... ok (4ms)
+public Runtime download failures redact signed redirect URLs ... ok (759µs)
+browser CI keeps Runtime downloads tokenless ... ok (169µs)
+locked Runtime waits for all failed downloads before cleanup ... ok (126ms)
+locked Runtime waits for all failed hashes before cleanup ... ok (47ms)
+locked Runtime digest mismatch leaves the live tree untouched ... ok (9ms)
+locked Runtime BuildID mismatch leaves the live tree untouched ... ok (7ms)
+locked Runtime extraction failure leaves the live tree untouched ... ok (6ms)
+locked Runtime missing executable leaves the live tree untouched ... ok (5ms)
+locked Runtime control backup collision rejects without deleting preexisting recovery data ... ok (5ms)
+locked Runtime transaction collision invalidates control without deleting recovery data ... ok (3ms)
+locked Runtime swap failure restores the previous live tree ... ok (10ms)
+locked Runtime failure removes live control when quarantine rename fails ... ok (3ms)
+locked Runtime failure reports live and recovery paths when control invalidation fails ... ok (5ms)
+matching locked Runtime reuse preserves current test control state ...
+------- post-test output -------
+[32m[initializer] SUCCESS: Installed locked Runtime 152.0.7/20260718112318.[0m
+[34m[initializer] INFO: Locked Runtime 152.0.7/20260718112318 is already installed.[0m
+----- post-test output end -----
+matching locked Runtime reuse preserves current test control state ... ok (4ms)
+matching locked Runtime marker still validates the installed tree ...
+------- post-test output -------
+[32m[initializer] SUCCESS: Installed locked Runtime 152.0.7/20260718112318.[0m
+[34m[initializer] INFO: Locked Runtime 152.0.7/20260718112318 is already installed.[0m
+[33m[initializer] WARN: Existing locked Runtime needs replacement: Locked Runtime executable is missing or empty: /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/2671ecd079240282/bin/floorp/floorp.exe[0m
+----- post-test output end -----
+matching locked Runtime marker still validates the installed tree ... ok (4ms)
+locked Runtime rollback failure retains the recovery backup path ... ok (4ms)
+running 4 tests from ./tools/src/injector.test.ts
+XHTML injection defaults to denying the browser HTTP loader ... ok (329µs)
+XHTML injection maps development-only options deterministically ... ok (63µs)
+stage and production options keep the browser HTTP loader denied ... ok (36µs)
+feles-build and dev-tool use the explicit CSP option matrix ... ok (428µs)
+running 1 test from ./tools/src/jar-manifest.test.ts
+noraneko-skin jar.mn uses nora-skin prefix (not broken %/) ... ok (909µs)
+running 3 tests from ./tools/src/lang_pack_match.test.ts
+matches a Japanese language pack after upgrading an existing profile ... ok (441µs)
+does not substitute an unrelated regional language pack ... ok (52µs)
+prefers a matching region when the request includes a script ... ok (74µs)
+running 3 tests from ./tools/src/localization_targets.test.ts
+About Dialog is an exact f18n file target ... ok (717µs)
+Noraneko locale keys stay in parity ... ok (984µs)
+Noraneko page uses locale keys instead of raw visible text ... ok (138µs)
+running 14 tests from ./tools/src/notes_record.test.ts
+Notes remote ordering includes reserved IDs in the acknowledged base ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+----- post-test output end -----
+Notes remote ordering includes reserved IDs in the acknowledged base ... ok (802µs)
+Notes wire format preserves identities, rich text, and timestamps ... ok (174µs)
+Only an explicit valid empty Notes record represents deletion ... ok (357µs)
+Remote Notes rejects absent, non-array, and unequal parallel arrays ... ok (317µs)
+Notes rejects null or incorrectly typed entries even during migration ... ok (545µs)
+Notes rejects duplicate and blank identities rather than regenerating them ... ok (115µs)
+Notes rejects negative, fractional, unsafe, and non-numeric timestamps ... ok (251µs)
+Legacy migration fills only metadata arrays that are entirely missing ... ok (182µs)
+Legacy migration still requires valid title and body arrays ... ok (169µs)
+Legacy migration rejects present but malformed metadata arrays ... ok (170µs)
+Notes base retains only the acknowledged user content and timestamp ... ok (59µs)
+Notes base preserves reserved property names as ordinary own identities ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Notes base preserves reserved property names as ordinary own identities ... ok (204µs)
+Empty or rejected Notes bases retain a safe ordinary object prototype ... ok (86µs)
+Malformed or absent Notes bases never authorize a remote deletion ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Malformed or absent Notes bases never authorize a remote deletion ... ok (822µs)
+running 16 tests from ./tools/src/notes_storage.test.ts
+Notes consumers see current unauthenticated create, title and body snapshots before storage notification ... ok (5ms)
+Notes consumers retain external provenance and one revision per native change ... ok (1ms)
+Notes early consumers retain incoming source and acknowledge each delivery once ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- post-test output end -----
+Notes early consumers retain incoming source and acknowledge each delivery once ... ok (1ms)
+Notes closed-page merge retains offline edits, conflicts and deletions ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+----- post-test output end -----
+Notes closed-page merge retains offline edits, conflicts and deletions ... ok (3ms)
+Notes remote-only changes converge and valid empty records delete ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Notes remote-only changes converge and valid empty records delete ... ok (1ms)
+Notes actual identical delivery acknowledges base without a pref-change event ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Notes actual identical delivery acknowledges base without a pref-change event ... ok (1ms)
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=true
+----- post-test output end -----
+Notes local compare-and-merge preserves another window and never acknowledges cloud delivery ... ok (1ms)
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 2 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- post-test output end -----
+Notes repeated local flushes preserve unseen CAS additions and deliberate visible deletions ... ok (1ms)
+Notes failed native setters and account changes cannot acknowledge incoming state ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- post-test output end -----
+Notes failed native setters and account changes cannot acknowledge incoming state ... ok (3ms)
+Notes start-over during account lookup fences old incoming before writes ... ok (2ms)
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+[Floorp Notes] Account unavailable; retaining local notes. Error: FxA unavailable
+    at Object.getSignedInUser (file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:126:44)
+    at file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:95:51
+    at readAccount (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:104:6)
+    at Object.readSyncState (file:///private/tmp/fdh-gate4/regression/browser-features/modules/modules/notes/FloorpNotesStorage.sys.mts?profile=1:244:19)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:472:32
+    at async innerWrapped (ext:cli/40_test.js:300:5)
+    at async exitSanitizer (ext:cli/40_test.js:201:27)
+    at async outerWrapped (ext:cli/40_test.js:239:22)
+----- post-test output end -----
+Notes cold account mismatch fences old base and unavailable FxA permits local saves ... ok (2ms)
+Notes profile shutdown removes its preference and account observers ... ok (1ms)
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 0 notes, hadConflicts=false
+----- post-test output end -----
+Notes successful outgoing payload acknowledgement prevents later delete resurrection ... ok (1ms)
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ...
+------- post-test output -------
+[Floorp Notes] Three-way merge result: 1 notes, hadConflicts=false
+----- post-test output end -----
+Notes outgoing acknowledgement records exact accepted bytes while later edits remain local ... ok (2ms)
+Notes outgoing base write failure remains visible to native retry handling ... ok (2ms)
+Notes outgoing acknowledgement cannot cross an account epoch during lookup ... ok (1ms)
+running 1 test from ./tools/src/notes_ui_contract.test.ts
+Notes production UI exposes stable automation hooks ... ok (923µs)
+running 1 test from ./tools/src/open_external.test.ts
+external link handoff accepts web URLs and rejects other schemes ... ok (800µs)
+running 3 tests from ./tools/src/patcher.test.ts
+patchAppliesToCurrentPlatform accepts generic patch files ... ok (271µs)
+patchAppliesToCurrentPlatform accepts unified patch files on all platforms ... ok (37µs)
+patchAppliesToCurrentPlatform filters platform-specific patch files ... ok (43µs)
+running 9 tests from ./tools/src/port_offset.test.ts
+--port-offset omitted or empty defaults to 0 ... ok (355µs)
+--port-offset auto stays the auto spec ... ok (21µs)
+--port-offset accepts admissible non-negative offsets ... ok (107µs)
+--port-offset rejects invalid values with a user-facing error ... ok (398µs)
+getPortFor shifts managed dev servers by the offset ... ok (18ms)
+auto prefers offset 0 when the base topology is free ... ok (456µs)
+auto skips a partially busy offset-0 topology ... ok (65µs)
+auto skips every busy ladder rung ... ok (67µs)
+auto candidates are 0 plus the non-overlap ladder ... ok (95ms)
+running 6 tests from ./tools/src/release_notes.test.ts
+release notes: unconfirmed choices never restrict extensions or suppress notes ... ok (175µs)
+release notes: existing-user notice appears once, never for new or confirmed users ... ok (36µs)
+release notes: only new profiles preselect support without applying it ... ok (48µs)
+release notes: confirmed selections survive reopening setup ... ok (38µs)
+release notes: an absent new preference does not make an existing user new ... ok (36µs)
+release notes: development patch matches packaged Runtime changes ... ok (539µs)
+running 21 tests from ./tools/src/release_provenance.test.ts
+canonicalJson recursively sorts object keys and preserves arrays ... ok (336µs)
+manifest identity is byte-compatible with the Floorp-Updates golden fixture ... ok (1ms)
+validates a completed successful Runtime run and exact immutable artifacts ... ok (1ms)
+Runtime trust boundaries reject extra fields, mixing, stale artifacts, and bad BuildIDs ... ok (902µs)
+full-version parser requires one adjacent pair and extracts Firefox version ... ok (349µs)
+UUID validation only accepts lowercase RFC UUIDv7 shape ... ok (111µs)
+record-native-verification binds native output to raw Runtime manifest ... ok (3ms)
+five native records reject Runtime/package mixing and mac disagreement ... ok (1ms)
+assembles and revalidates four Updates-v2 metadata files from real files ... ok (14ms)
+stub source is strict and binds the inherited asset bytes ... ok (16ms)
+production rejects unsigned verification and descriptor schema extras ... ok (7ms)
+validation mode accepts consistently marked unsigned artifacts ... ok (10ms)
+bundle validation rejects metadata tampering ... ok (11ms)
+errors remain diagnostic without exposing descriptor contents ... ok (149µs)
+workflow artifact handoffs normalize upload digests to REST form ... ok (735µs)
+legacy stub updater refuses to mutate provenance-v2 releases ... ok (105µs)
+production package entrypoint enforces Floorp and Runtime default refs ... ok (317µs)
+exact Runtime artifact download uses the flat consolidated layout ... ok (211µs)
+Runtime staging references outputs defined by its provenance producer ... ok (411µs)
+mac validation verifier only allows arm64 linker-signed ad-hoc metadata ... ok (170µs)
+release publication is serialized across source workflow runs ... ok (98µs)
+running 11 tests from ./tools/src/runtime_archive.test.ts
+archive paths reject platform escapes and unsafe Windows names ... ok (7ms)
+strict ZIP32 extractor accepts stored and deflated files under the expected root ... ok (6ms)
+confined ZIP extractor rejects escapes and case collisions without touching outside sentinels ... ok (3ms)
+strict ZIP32 rejects symlink and special Unix metadata ... ok (3ms)
+strict ZIP32 rejects ambiguous or inconsistent archive structure ... ok (17ms)
+strict ZIP expected root rejects extra top-level members ... ok (1ms)
+tar listing accepts only regular files and directories in the Floorp root ... ok (401µs)
+tar listing rejects links and special filesystem members ... ok (454µs)
+tar listing rejects unsafe paths and case-fold collisions ... ok (166µs)
+DMG-like safe copy selects one app and preserves outside sentinel ... ok (2ms)
+DMG-like safe copy rejects source symlinks without touching their targets ... ok (1ms)
+running 2 tests from ./tools/src/runtime_compatibility.test.ts
+Firefox 159 session and split patches match in production and local builds ... ok (925µs)
+Workspace Sync engine registration matches in production and local builds ... ok (177µs)
+running 13 tests from ./tools/src/runtime_lock.test.ts
+Runtime browser lock rejects non-browser harness tests ... ok (1ms)
+canonical Runtime lock pins the complete reviewed source closure ... ok (291µs)
+canonical Runtime lock pins each platform's own binary identity ... ok (110µs)
+loadRuntimeLock validates an explicit local file without network ... ok (2ms)
+loadRuntimeLock reports malformed JSON as a lock validation error ... ok (419µs)
+parseRuntimeLock rejects unknown keys at every level ... ok (1ms)
+parseRuntimeLock rejects unsafe and root-escaping material paths ... ok (901µs)
+parseRuntimeLock rejects malformed source and material identities ... ok (2ms)
+parseRuntimeLock rejects material totals, duplicates, and drift ... ok (1ms)
+parseRuntimeLock rejects task, manifest, and support closure drift ... ok (2ms)
+parseRuntimeLock rejects incomplete or unexpected platform tuples ... ok (1ms)
+parseRuntimeLock rejects malformed or duplicate release assets ... ok (3ms)
+parseRuntimeLock preserves canonical two- and three-component versions ... ok (595µs)
+running 12 tests from ./tools/src/smoke_runner.test.ts
+resolveMode returns 'all' when value is undefined ... ok (264µs)
+resolveMode returns 'all' for empty string ... ok (20µs)
+resolveMode accepts 'all' ... ok (30µs)
+resolveMode accepts 'unit' ... ok (14µs)
+resolveMode accepts 'runtime' ... ok (39µs)
+resolveMode is case-insensitive ... ok (21µs)
+resolveMode maps 'browser' to 'runtime' for backward compatibility ... ok (31µs)
+resolveMode throws on invalid value ... ok (281µs)
+createSmokeSteps('unit') returns only unit steps ... ok (104µs)
+createSmokeSteps('runtime') returns only runtime steps ... ok (43µs)
+createSmokeSteps('all') returns both unit and runtime steps ... ok (33µs)
+createSmokeSteps steps have non-empty name and args ... ok (27µs)
+running 5 tests from ./tools/src/startup_test_bootstrap.test.ts
+test bootstrap success leaves failure diagnostics untouched ... ok (666µs)
+test bootstrap publishes an exact failure state for the captured run ... ok (308µs)
+test bootstrap does not publish uncorrelated failure state ... ok (172µs)
+diagnostic persistence failure cannot mask bootstrap failure ... ok (135µs)
+run-id read failure remains uncorrelated and preserves startup failure ... ok (78µs)
+running 2 tests from ./tools/src/startup_test_run_owner.test.ts
+separate window bootstraps claim a shared browser process only once ... ok (310µs)
+ownership survives a failed owner and resets with the browser process ... ok (21µs)
+running 1 test from ./tools/src/tab_context_menu_sections_patch.test.ts
+tab context menu sections match in production and extracted Runtime patches ... ok (1ms)
+running 1 test from ./tools/src/ui_custom_searchbar_layout.test.ts
+top findbar preserves the Firefox 156 browser grid ... ok (892µs)
+running 4 tests from ./tools/src/update.test.ts
+generateUpdateXml produces valid XML with correct metadata ...
+------- post-test output -------
+[update] update.xml generated at /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/e49cef8cd140bf03/update.xml
+----- post-test output end -----
+generateUpdateXml produces valid XML with correct metadata ... ok (1ms)
+writeBuildid2 and readBuildid2 round-trip ...
+------- post-test output -------
+[update] Build ID written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/13bb72944ca8a39/buildid2.txt
+----- post-test output end -----
+writeBuildid2 and readBuildid2 round-trip ... ok (644µs)
+readBuildid2 returns null for non-existent file ... ok (345µs)
+writeBuildid2 creates parent directories ...
+------- post-test output -------
+[update] Build ID written to /var/folders/f_/12lnwl4j4tqddkryz5zkjkjr0000gn/T/235c2293f70ce9b7/nested/dir/buildid2.txt
+----- post-test output end -----
+writeBuildid2 creates parent directories ... ok (496µs)
+running 7 tests from ./tools/src/utils.test.ts
+resolveFromRoot returns absolute path under PROJECT_ROOT ... ok (180µs)
+resolveFromRoot with nested path ... ok (150µs)
+platform returns a valid value ... ok (142µs)
+arch returns a valid value ... ok (33µs)
+exists returns true for existing file ... ok (727µs)
+exists returns false for non-existing file ... ok (932µs)
+PROJECT_ROOT is a valid directory ... ok (177µs)
+running 12 tests from ./tools/src/workspace_container_lifecycle_patch.test.ts
+container lifecycle patches agree for packaging and extracted artifacts ... ok (798µs)
+settings removal waits for persisted protection before closing any tab ... ok (650µs)
+extension removal waits too without adding an unsolicited close-all ... ok (263µs)
+failed durable preparation waits for siblings before cancelling and never destroys ... ok (538µs)
+cancelled settings tab closure keeps the identity and finishes as cancelled ... ok (186µs)
+direct mapped removal is guarded and tokens cannot authorize another identity ... ok (189µs)
+disable snapshots all identities and protects before close/clear/reset ... ok (229µs)
+cancellation disarms a token before completion persistence finishes ... ok (212µs)
+failed or refused disable restores enabled pref without clearing identity data ... ok (1ms)
+reenabling during persistence cancels disable before the first closure ... ok (476µs)
+ordinary close-all does not acquire a removal lifecycle ... ok (251µs)
+a disable requested during cancellation persistence receives a new preflight ... ok (340µs)
+running 1 test from ./tools/src/workspace_container_localization.test.ts
+Japanese workspace container keys and interpolation stay in parity ... ok (5ms)
+running 2 tests from ./tools/src/workspace_external_containers_cleanup.test.ts
+a failed content cleanup still closes its tab and the client after restoring the profile ... ok (549µs)
+profile restoration and tab failures do not skip the remaining cleanup phases ... ok (98µs)
+running 15 tests from ./tools/src/workspace_external_containers_patch.test.ts
+external workspace Runtime patches agree for development and packaging ... ok (773µs)
+Firefox's valid default-container guess stays distinct from no host guess ... ok (221µs)
+external opens before Workspace initialization use the persisted default workspace ... ok (373µs)
+the target window's selected workspace overrides the profile default ... ok (117µs)
+external workspace fallback respects disabled workspaces, disabled containers and forced default ... ok (302µs)
+external workspace fallback never introduces a container into private browsing ... ok (101µs)
+external workspace fallback rejects missing, deleted and malformed identities ... ok (143µs)
+external workspace fallback tolerates unavailable or malformed persisted state ... ok (237µs)
+container-capable cold opens and pending live defaults defer without choosing jar 0 ... ok (120µs)
+external URL is retained on a blank placeholder until the actual workspace is ready ... ok (563µs)
+repurposed external placeholder is kept and its pending request is cancelled ... ok (302µs)
+deferred external request follows its placeholder workspace and respects background ... ok (220µs)
+cold external queue waits for delayed startup and disposes observers on window close ... ok (138µs)
+cold external request survives initial document replacement before browser startup ... ok (148µs)
+a partially failed external replay is not automatically submitted twice ...
+------- post-test output -------
+[WorkspacesSync] Deferred external open is still pending
+----- post-test output end -----
+a partially failed external replay is not automatically submitted twice ... ok (262µs)
+running 1 test from ./tools/src/workspace_last_tab_patch.test.ts
+workspace last-tab protection matches in production and local Runtime patches ... ok (627µs)
+running 19 tests from ./tools/src/xhtml_injection.test.ts
+browser XHTML strict-to-dev adds only the exact HTTP loader origin ... ok (7ms)
+browser XHTML dev-to-dev is byte-stable and deduplicates loader origins ... ok (748µs)
+browser XHTML removes a previous offset loader origin when switching offsets ... ok (453µs)
+browser XHTML preserves case-variant CSP content attributes ... ok (614µs)
+browser XHTML rejects case-variant duplicate attributes ... ok (1ms)
+browser XHTML dev-to-stage removes the origin from the same source ... ok (445µs)
+browser XHTML dev-to-production removes the development origin ... ok (961µs)
+browser XHTML stage-to-stage is byte-stable ... ok (317µs)
+browser XHTML requires exactly one CSP meta ... ok (235µs)
+browser XHTML requires exactly one usable script-src directive ... ok (243µs)
+browser XHTML rejects malformed XML before DOM recovery ... ok (90µs)
+browser XHTML rejects the loader origin in non-script directives ... ok (119µs)
+browser XHTML injection leaves source bytes unchanged on validation failure ... ok (2ms)
+browser XHTML owns exactly one startup script after repeated injection ... ok (316µs)
+development preferences XHTML rewrites the CSP meta after a non-CSP meta ... ok (184µs)
+development preferences XHTML preserves case-variant CSP content attributes ... ok (304µs)
+development preferences XHTML requires exactly one CSP meta ... ok (142µs)
+development preferences XHTML injection leaves source unchanged on CSP validation failure ... ok (1ms)
+XHTML CLI keeps browser HTTP permission explicit and off by default ... ok (139µs)
+
+ ERRORS 
+
+locked Runtime install validates then swaps and retains recovery state => ./tools/src/initializer.test.ts:757:6
+error: AssertionError: Values are not equal.
+
+
+    [Diff] Actual / Expected
+
+
+-   000
++   002
+
+
+  throw new AssertionError(message);
+        ^
+    at assertEquals (https://jsr.io/@std/assert/1.0.19/equals.ts:67:9)
+    at file:///private/tmp/fdh-gate4/regression/tools/src/initializer.test.ts:788:5
+
+ FAILURES 
+
+locked Runtime install validates then swaps and retains recovery state => ./tools/src/initializer.test.ts:757:6
+
+FAILED | 425 passed | 1 failed | 1 ignored (4s)
+
+error: Test failed

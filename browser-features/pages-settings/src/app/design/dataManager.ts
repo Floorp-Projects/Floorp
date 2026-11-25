@@ -5,6 +5,12 @@ import {
   type ChromeExtrasKey,
   type ChromeExtrasSettings,
 } from "#features-chrome/common/designs/chrome-extras.ts";
+import {
+  normalizeTabbarStyle,
+  resolveTabbarStyleFromNative,
+  type TabbarStyle,
+  VERTICAL_TABS_PREF,
+} from "#features-chrome/common/designs/utils/tabbar-style-sync.ts";
 
 const SPLIT_VIEW_DND_CREATE_PREF = "floorp.splitView.dragToSplitCreate.enabled";
 const DEFAULT_SPLIT_VIEW_DND_CREATE = false;
@@ -125,94 +131,159 @@ async function saveDesignSettingsUnqueued(
     return;
   }
 
-  const result = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
-  if (!result) {
-    return null;
-  }
-  const oldData = JSON.parse(result);
-
-  const newData = {
-    ...oldData,
-    globalConfigs: {
-      ...oldData.globalConfigs,
-      userInterface: settings.design,
-      faviconColor: settings.faviconColor,
-    },
-    tabbar: {
-      ...oldData.tabbar,
-      tabbarPosition: settings.position,
-      tabbarStyle: settings.style,
-      multiRowTabBar: {
-        ...oldData.tabbar.multiRowTabBar,
-        maxRowEnabled: settings.maxRowEnabled,
-        maxRow: settings.maxRow,
-      },
-    },
-    tab: {
-      ...oldData.tab,
-      tabScroll: {
-        ...oldData.tab.tabScroll,
-        reverse: settings.tabScrollReverse,
-        wrap: settings.tabScrollWrap,
-        enabled: settings.tabScroll,
-      },
-      tabOpenPosition: settings.tabOpenPosition,
-      tabMinHeight: settings.tabMinHeight,
-      tabMinWidth: settings.tabMinWidth,
-      tabPinTitle: settings.tabPinTitle,
-      tabDoubleClickToClose: settings.tabDoubleClickToClose,
-    },
-    uiCustomization: {
-      ...oldData.uiCustomization,
-      navbar: {
-        ...oldData.uiCustomization.navbar,
-        position: settings.navbarPosition,
-        searchBarTop: settings.searchBarTop,
-      },
-      display: {
-        ...oldData.uiCustomization.display,
-        disableFullscreenNotification: settings.disableFullscreenNotification,
-        deleteBrowserBorder: settings.deleteBrowserBorder,
-      },
-      special: {
-        ...oldData.uiCustomization.special,
-        optimizeForTreeStyleTab: settings.optimizeForTreeStyleTab,
-        hideForwardBackwardButton: settings.hideForwardBackwardButton,
-        stgLikeWorkspaces: settings.stgLikeWorkspaces,
-      },
-      multirowTab: {
-        ...oldData.uiCustomization.multirowTab,
-        newtabInsideEnabled: settings.multirowTabNewtabInside,
-      },
-      bookmarkBar: {
-        ...oldData.uiCustomization.bookmarkBar,
-        focusExpand: settings.bookmarkBarFocusExpand,
-        position: settings.bookmarkBarPosition,
-      },
-      qrCode: {
-        ...oldData.uiCustomization.qrCode,
-        disableButton: settings.disableQRCodeButton,
-      },
-      disableFloorpStart: settings.disableFloorpStart,
-    },
-  };
-  delete newData.tab.tabDubleClickToClose;
-  await rpc.setStringPref(DESIGN_CONFIGS_PREF, JSON.stringify(newData));
-  await rpc.setBoolPref(
-    SPLIT_VIEW_DND_CREATE_PREF,
-    settings.tabDragToSplitCreate,
-  );
-
   const { hasTabStyleChanged = false } = options;
-
-  if (hasTabStyleChanged && settings.style !== undefined) {
-    const isVertical = settings.style === "vertical";
-    await rpc.setBoolPref("sidebar.verticalTabs", isVertical);
-
-    if (!isVertical) {
-      await rpc.setBoolPref("sidebar.revamp", false);
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const result = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
+    if (!result) {
+      return null;
     }
+    const oldData = JSON.parse(result);
+
+    // Keep the stored style authoritative unless the user changed it. Reading
+    // the native pref here prevents an unrelated edit from writing back a style
+    // that a Firefox-side toggle already changed in another window.
+    const storedStyle = normalizeTabbarStyle(oldData.tabbar?.tabbarStyle);
+    const requestedStyle = normalizeTabbarStyle(settings.style ?? storedStyle);
+    const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+    const tabbarStyle = hasTabStyleChanged
+      ? requestedStyle
+      : nativeVerticalTabs !== null
+      ? resolveTabbarStyleFromNative(nativeVerticalTabs, storedStyle)
+      : storedStyle;
+
+    const newData = {
+      ...oldData,
+      globalConfigs: {
+        ...oldData.globalConfigs,
+        userInterface: settings.design,
+        faviconColor: settings.faviconColor,
+      },
+      tabbar: {
+        ...oldData.tabbar,
+        tabbarPosition: settings.position,
+        tabbarStyle,
+        multiRowTabBar: {
+          ...oldData.tabbar.multiRowTabBar,
+          maxRowEnabled: settings.maxRowEnabled,
+          maxRow: settings.maxRow,
+        },
+      },
+      tab: {
+        ...oldData.tab,
+        tabScroll: {
+          ...oldData.tab.tabScroll,
+          reverse: settings.tabScrollReverse,
+          wrap: settings.tabScrollWrap,
+          enabled: settings.tabScroll,
+        },
+        tabOpenPosition: settings.tabOpenPosition,
+        tabMinHeight: settings.tabMinHeight,
+        tabMinWidth: settings.tabMinWidth,
+        tabPinTitle: settings.tabPinTitle,
+        tabDoubleClickToClose: settings.tabDoubleClickToClose,
+      },
+      uiCustomization: {
+        ...oldData.uiCustomization,
+        navbar: {
+          ...oldData.uiCustomization.navbar,
+          position: settings.navbarPosition,
+          searchBarTop: settings.searchBarTop,
+        },
+        display: {
+          ...oldData.uiCustomization.display,
+          disableFullscreenNotification: settings.disableFullscreenNotification,
+          deleteBrowserBorder: settings.deleteBrowserBorder,
+        },
+        special: {
+          ...oldData.uiCustomization.special,
+          optimizeForTreeStyleTab: settings.optimizeForTreeStyleTab,
+          hideForwardBackwardButton: settings.hideForwardBackwardButton,
+          stgLikeWorkspaces: settings.stgLikeWorkspaces,
+        },
+        multirowTab: {
+          ...oldData.uiCustomization.multirowTab,
+          newtabInsideEnabled: settings.multirowTabNewtabInside,
+        },
+        bookmarkBar: {
+          ...oldData.uiCustomization.bookmarkBar,
+          focusExpand: settings.bookmarkBarFocusExpand,
+          position: settings.bookmarkBarPosition,
+        },
+        qrCode: {
+          ...oldData.uiCustomization.qrCode,
+          disableButton: settings.disableQRCodeButton,
+        },
+        disableFloorpStart: settings.disableFloorpStart,
+      },
+    };
+    delete newData.tab.tabDubleClickToClose;
+    // Another Hub window can commit after either read above. Do not replace
+    // its config with this snapshot; re-read both config and native state.
+    const { updated } = await rpc.compareAndSetStringPref(
+      DESIGN_CONFIGS_PREF,
+      result,
+      JSON.stringify(newData),
+    );
+    if (!updated) continue;
+    // The native pref can flip between the read above and this commit: a
+    // style toggle committed by another window in that gap leaves a stale
+    // style stored, and the pref observer only runs on later changes.
+    // Reconcile just the tab style against fresh native state — restarting the
+    // whole save here would overwrite edits another window committed after
+    // our CAS.
+    if (!hasTabStyleChanged) {
+      let nativeSeen = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+      let lastWritten = tabbarStyle;
+      if (nativeSeen !== null && nativeSeen !== nativeVerticalTabs) {
+        for (let r = 0; r < 8; r++) {
+          const latest = await rpc.getStringPref(DESIGN_CONFIGS_PREF);
+          if (!latest) break;
+          const latestData = JSON.parse(latest);
+          const latestStored = normalizeTabbarStyle(
+            latestData.tabbar?.tabbarStyle,
+          );
+          // If our own write is still the stored style, the value it replaced
+          // was a concurrent intent; reconcile that one. Anything else means
+          // another writer has since landed, which is authoritative.
+          const reconciled = latestStored === lastWritten
+            ? resolveTabbarStyleFromNative(nativeSeen, storedStyle)
+            : latestStored;
+          if (reconciled !== latestStored) {
+            latestData.tabbar = {
+              ...latestData.tabbar,
+              tabbarStyle: reconciled,
+            };
+            const { updated } = await rpc.compareAndSetStringPref(
+              DESIGN_CONFIGS_PREF,
+              latest,
+              JSON.stringify(latestData),
+            );
+            if (!updated) continue;
+            lastWritten = reconciled;
+          }
+          // A toggle landing between the first read and this CAS wrote
+          // against an interim pref state the observer never saw; reconcile
+          // again until the stored style matches a verified pref value.
+          const confirmed = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+          if (confirmed === null || confirmed === nativeSeen) break;
+          nativeSeen = confirmed;
+        }
+      }
+    }
+    await rpc.setBoolPref(
+      SPLIT_VIEW_DND_CREATE_PREF,
+      settings.tabDragToSplitCreate,
+    );
+
+    if (hasTabStyleChanged && settings.style !== undefined) {
+      // Firefox derives `sidebar.revamp` from `sidebar.verticalTabs` by itself,
+      // so this is the only pref to write. Writing `sidebar.revamp` here used to
+      // break that invariant.
+      await rpc.setBoolPref(VERTICAL_TABS_PREF, requestedStyle === "vertical");
+    }
+    return;
   }
+  throw new Error("[DesignSettings] Config changed repeatedly while saving");
 }
 
 export async function getDesignSettings(): Promise<DesignFormData | null> {
@@ -225,10 +296,18 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
   const splitViewDndCreateEnabled = await rpc.getBoolPref(
     SPLIT_VIEW_DND_CREATE_PREF,
   );
+  // `null` means the pref does not exist in this build, in which case the
+  // stored design config is authoritative.
+  const nativeVerticalTabs = await rpc.getBoolPref(VERTICAL_TABS_PREF);
+  const tabbarStyle: TabbarStyle = normalizeTabbarStyle(
+    data.tabbar?.tabbarStyle,
+  );
   const formData: DesignFormData = {
     design: data.globalConfigs.userInterface,
     position: data.tabbar.tabbarPosition,
-    style: data.tabbar.tabbarStyle,
+    style: nativeVerticalTabs === null
+      ? tabbarStyle
+      : resolveTabbarStyleFromNative(nativeVerticalTabs, tabbarStyle),
     tabOpenPosition: data.tab.tabOpenPosition,
     tabMinHeight: data.tab.tabMinHeight,
     tabMinWidth: data.tab.tabMinWidth,
@@ -263,43 +342,4 @@ export async function getDesignSettings(): Promise<DesignFormData | null> {
     disableFloorpStart: data.uiCustomization.disableFloorpStart,
   };
   return formData;
-}
-
-// Tab Sleep Exclusion Settings
-const TAB_SLEEP_EXCLUSION_PREF = "floorp.tabs.sleep.exclusion";
-
-export interface TabSleepExclusionSettings {
-  enabled: boolean;
-  patterns: string[];
-}
-
-const DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS: TabSleepExclusionSettings = {
-  enabled: true,
-  patterns: [],
-};
-
-export async function getTabSleepExclusionSettings(): Promise<
-  TabSleepExclusionSettings
-> {
-  try {
-    const result = await rpc.getStringPref(TAB_SLEEP_EXCLUSION_PREF);
-    if (!result) {
-      return { ...DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS };
-    }
-    const data = JSON.parse(result);
-    return {
-      enabled: data.enabled ?? DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS.enabled,
-      patterns: Array.isArray(data.patterns)
-        ? data.patterns
-        : DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS.patterns,
-    };
-  } catch {
-    return { ...DEFAULT_TAB_SLEEP_EXCLUSION_SETTINGS };
-  }
-}
-
-export async function saveTabSleepExclusionSettings(
-  settings: TabSleepExclusionSettings,
-): Promise<void> {
-  await rpc.setStringPref(TAB_SLEEP_EXCLUSION_PREF, JSON.stringify(settings));
 }

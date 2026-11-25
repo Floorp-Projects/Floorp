@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { createEffect, createRoot, createSignal, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
+import { createRootHMR } from "@nora/solid-xul";
 import { type TPwaConfig, zPwaConfig } from "./type";
 import { defaultEnabled, strDefaultConfig } from "./default-pref";
 import { isRight } from "fp-ts/Either";
@@ -17,12 +18,12 @@ if (!Services.prefs.prefHasUserValue("floorp.browser.ssb.config")) {
   Services.prefs.setStringPref("floorp.browser.ssb.config", strDefaultConfig);
 }
 
-class PwaConfig {
+export class PwaConfig {
   private static instance: PwaConfig;
   public enabled!: ReturnType<typeof createSignal<boolean>>;
   public config!: ReturnType<typeof createSignal<TPwaConfig>>;
-  private constructor() {
-    createRoot(() => {
+  private constructor(lifecycleTarget?: EventTarget | null) {
+    const initialize = () => {
       this.enabled = createSignal(
         Services.prefs.getBoolPref(
           "floorp.browser.ssb.enabled",
@@ -78,7 +79,10 @@ class PwaConfig {
         this.enabled[1](
           Services.prefs.getBoolPref("floorp.browser.ssb.enabled"),
         );
-      Services.prefs.addObserver("floorp.browser.ssb.enabled", enabledObserver);
+      Services.prefs.addObserver(
+        "floorp.browser.ssb.enabled",
+        enabledObserver,
+      );
       onCleanup(() => {
         Services.prefs.removeObserver(
           "floorp.browser.ssb.enabled",
@@ -104,7 +108,8 @@ class PwaConfig {
           configObserver,
         );
       });
-    });
+    };
+    createRootHMR(initialize, import.meta.hot, lifecycleTarget);
   }
 
   public static getInstance(): PwaConfig {

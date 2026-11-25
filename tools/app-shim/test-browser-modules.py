@@ -60,7 +60,8 @@ def main():
             if bidi:
                 command.append("--remote-debugging-port=0")
             command.append("about:blank")
-            host = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1"})
+            host = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
+                env={**os.environ, "MOZ_CRASHREPORTER_DISABLE": "1", "MOZ_REMOTE_ALLOW_SYSTEM_ACCESS": "1"})
 
             def connect():
                 if host.poll() is not None:

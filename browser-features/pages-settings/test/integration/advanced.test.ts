@@ -56,6 +56,8 @@ const chromeExtrasFields = [
   ["tabbar-one-liner", "tabbarOneLiner"],
   ["sidebar-overlap", "sidebarOverlap"],
 ] as const;
+
+/** Opens the UI customization section of the design settings. */
 async function chromeExtras() {
   await route("features/design", "#favicon-color");
   await button("Open UI extension settings");
@@ -68,9 +70,13 @@ async function chromeExtras() {
     "UI extension settings are still loading",
   );
 }
+
+/** Opens the gesture settings section. */
 async function gesture() {
   await route("features/gesture", '[data-setting="mouse-gesture-enabled"]');
 }
+
+/** Registers the advanced settings integration tests. */
 export async function runAdvancedTests() {
   await until(
     () => document.querySelector('a[href="/features/design"]'),
@@ -205,30 +211,47 @@ export async function runAdvancedTests() {
     },
   });
   tests.push({
-    name: "Tab sleep exclusion toggles and adds/removes patterns",
+    name: "Tab auto unload toggles, edits numbers, and manages patterns",
     fn: async () => {
-      const key = "floorp.tabs.sleep.exclusion";
-      await route("features/design", "#tab-sleep-exclusion-enabled");
-      await toggle("#tab-sleep-exclusion-enabled", key, "enabled");
-      await toggle("#tab-sleep-exclusion-enabled", key, "enabled");
+      const key = "floorp.tabs.autoUnload";
+      await route("features/performance", "#tab-auto-unload-enabled");
+      await toggle("#tab-auto-unload-enabled", key, "enabled");
+
+      await input("#tab-auto-unload-memory-threshold", "4096");
+      element<HTMLInputElement>("#tab-auto-unload-memory-threshold").blur();
+      await until(
+        () => valueAt(key, "memoryThresholdMB") === 4096,
+        "Memory threshold not saved",
+      );
+
+      await input("#tab-auto-unload-min-inactive", "20");
+      element<HTMLInputElement>("#tab-auto-unload-min-inactive").blur();
+      await until(
+        () => valueAt(key, "minInactiveMinutes") === 20,
+        "Inactive time not saved",
+      );
+
+      await toggle("#tab-auto-unload-enabled", key, "enabled");
+      await toggle("#tab-auto-unload-enabled", key, "enabled");
+
       await input(
-        'input[aria-label="Exclusion Patterns"]',
+        'input[aria-label="URLs excluded from unloading"]',
         "  *.example.test  ",
       );
       await button("Add");
       await until(
-        () => (json(key).patterns as string[]).includes("*.example.test"),
+        () =>
+          (json(key).excludePatterns as string[]).includes("*.example.test"),
         "Pattern not saved",
       );
-      await route("features/design", "#tab-sleep-exclusion-enabled");
+      await route("features/performance", "#tab-auto-unload-enabled");
       assert(
         document.body.textContent!.includes("*.example.test"),
         "Pattern not reloaded",
       );
       await click('button[aria-label="Remove"]');
-      assertEquals(
-        (json(key).patterns as string[]).length,
-        0,
+      await until(
+        () => (json(key).excludePatterns as string[]).length === 0,
         "Pattern removed",
       );
     },
@@ -574,15 +597,39 @@ export async function runAdvancedTests() {
   tests.push({
     name: "Account sync and profile manager links call browser actions",
     fn: async () => {
-      await route("features/accounts", "main a");
-      for (
-        const [text, target] of [[
-          "Manage Firefox Feature Sync",
-          "about:preferences#sync",
-        ], ["Open Profile Manager", "about:profiles"]]
-      ) {
-        const link = [...document.querySelectorAll<HTMLAnchorElement>("main a")]
+      const actions = [[
+        "Manage Firefox Feature Sync",
+        "about:preferences#sync",
+      ], ["Open Profile Manager", "about:profiles"]] as const;
+      const folderText = "Open Profile Save Location";
+      const findLink = (text: string) =>
+        [...document.querySelectorAll<HTMLAnchorElement>("main a")]
           .find((link) => link.textContent?.trim() === text);
+      try {
+        await route(
+          "features/accounts",
+          'main a[href="https://accounts.firefox.com/signin"]',
+        );
+        await until(
+          () =>
+            actions.every(([text]) => findLink(text)) && findLink(folderText),
+          "Account action links did not render",
+        );
+      } catch (error) {
+        throw new Error(`${String(error)}; account route: ${
+          JSON.stringify({
+            pathname: location.pathname,
+            hash: location.hash,
+            lang: document.documentElement.lang,
+            links: [...document.querySelectorAll("main a")].map((link) =>
+              link.textContent?.trim()
+            ),
+            main: document.querySelector("main")?.outerHTML.slice(0, 4000),
+          })
+        }`);
+      }
+      for (const [text, target] of actions) {
+        const link = findLink(text);
         assert(link, `Missing ${text}`);
         link.click();
         await pause();
@@ -593,10 +640,7 @@ export async function runAdvancedTests() {
           `${target} not opened`,
         );
       }
-      const folder = [...document.querySelectorAll<HTMLAnchorElement>("main a")]
-        .find((link) =>
-          link.textContent?.trim() === "Open Profile Save Location"
-        );
+      const folder = findLink(folderText);
       assert(folder, "Profile folder link missing");
       folder.click();
       await pause();
@@ -608,6 +652,8 @@ export async function runAdvancedTests() {
   });
   await executeCases(tests);
 }
+
+/** Runs the advanced settings integration tests. */
 export async function runAllTests() {
   await runFixture(
     "http://localhost:5196/test/integration/index.html?suite=advanced",

@@ -35,6 +35,8 @@ export interface ActiveExperiment {
 }
 
 export interface AvailableExperiment {
+  /** The fetched snapshot reflects completed initialization and current policy. */
+  isReady?: boolean;
   id: string;
   name: string | undefined;
   description: string | undefined;

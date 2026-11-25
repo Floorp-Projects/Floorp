@@ -7,6 +7,7 @@
         "welcomeContent": "¡Bienvenido a Notas {{productName}}! Te explicamos cómo utilizarlo.\n\nNotas {{productName}} es una función para tomar notas que puede sincronizarse entre dispositivos. Para activar la sincronización, debes iniciar sesión en {{productName}} con una cuenta de Mozilla.\nLas notas {{productName}} se almacenan en {{productName}} y se sincronizan entre dispositivos utilizando Firefox Sync. Firefox Sync cifra el contenido de la sincronización con la contraseña de tu cuenta de Mozilla, para que nadie pueda conocer su contenido.",
         "new": "Nueva nota",
         "reorder": "Reordenar",
+        "export": "Export as Markdown",
         "done": "Listo",
         "emptyTitle": "Sin título",
         "emptyContent": "No hay contenido",
@@ -64,6 +65,7 @@
     "error": {
         "loadFailed": "Error al cargar los datos de la nota",
         "saveFailed": "Error al cargar los datos de la nota",
+        "exportFailed": "Failed to export note",
         "indexOutOfRange": "Índice {{index}} está fuera de rango"
     }
 }

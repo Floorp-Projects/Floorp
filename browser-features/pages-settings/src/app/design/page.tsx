@@ -12,7 +12,6 @@ import { Interface } from "@/app/design/components/Interface.tsx";
 import { Tabbar } from "@/app/design/components/Tabbar.tsx";
 import { Tab } from "@/app/design/components/Tab.tsx";
 import { UICustomization } from "@/app/design/components/UICustomization.tsx";
-import { TabSleepExclusion } from "@/app/design/components/TabSleepExclusion.tsx";
 import { TabWindowBehavior } from "@/app/design/components/TabWindowBehavior.tsx";
 import { TabStacks } from "@/app/design/components/TabStacks.tsx";
 import type { DesignFormData } from "@/types/pref.ts";
@@ -43,14 +42,17 @@ export default function Page() {
 
   React.useEffect(() => {
     let active = true;
+    let fetching = false;
     mountedRef.current = true;
     const fetchDefaultValues = async () => {
+      if (fetching) return;
       // Preserve pending or failed edits when the window regains focus.
       if (
         pendingRef.current ||
         JSON.stringify(lastRequestedSettingsRef.current) !==
           JSON.stringify(lastSavedSettingsRef.current)
       ) return;
+      fetching = true;
       try {
         const values = await getDesignSettings();
         if (!active) return;
@@ -69,14 +71,23 @@ export default function Page() {
         if (!active) return;
         console.error("[Settings:design] Load failed", error);
         setLoadError(true);
+      } finally {
+        fetching = false;
       }
     };
     fetchDefaultValues();
     globalThis.addEventListener("focus", fetchDefaultValues);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchDefaultValues();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       active = false;
       mountedRef.current = false;
       globalThis.removeEventListener("focus", fetchDefaultValues);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [cloneDesignSettings, reset]);
 
@@ -189,7 +200,6 @@ export default function Page() {
             <Tab />
             <TabWindowBehavior />
             <TabStacks vertical={watchAll.style === "vertical"} />
-            <TabSleepExclusion />
             <UICustomization />
           </fieldset>
         </form>

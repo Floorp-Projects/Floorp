@@ -1,0 +1,53 @@
+{
+  "phase": "GREEN-after-production-fix",
+  "command": [
+    "/usr/bin/prlimit",
+    "--as=536870912",
+    "--cpu=15",
+    "--fsize=8388608",
+    "--",
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    ".github/workflows/scripts",
+    "-p",
+    "test_qa3_mozlog.py",
+    "-v"
+  ],
+  "cwd": "/workspace/qa-review-v030/repos/Floorp-Runtime",
+  "exit": 0,
+  "timeout": false,
+  "seconds": 0.219,
+  "limits": {
+    "AS": 536870912,
+    "CPU": 15,
+    "FSIZE": 8388608,
+    "wall": 30
+  },
+  "envKeys": [
+    "GIT_CONFIG_GLOBAL",
+    "GIT_CONFIG_NOSYSTEM",
+    "LANG",
+    "PATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "TMPDIR"
+  ],
+  "files": {
+    "qa3_mozlog.py": {
+      "sha256": "670a7ea7cf69db66801ec98d1932136ae8dbe6f1b2ae0bed34063a437eb078ff",
+      "bytes": 7839
+    },
+    "test_qa3_mozlog.py": {
+      "sha256": "a915698dc2089ea3fc27620a0d4e5d2d4d757697545dab1a6f00b49fcd957e15",
+      "bytes": 13991,
+      "testMethods": 21
+    }
+  },
+  "log": "/workspace/qa-review-v030/fix-qa309/evidence/mozlog-green-01.log",
+  "logSha256": "6b75f8692c749825e1b4ffbbb3cb3ff61490523fb2ac73cf9d67abc7a0a482fe",
+  "native": false,
+  "network": false
+}

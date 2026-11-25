@@ -1,0 +1,25 @@
+Check tools/src/notes_record.test.ts
+Check tools/src/notes_storage.test.ts
+Check tools/src/notes_ui_contract.test.ts
+TS2307 [ERROR]: Cannot find module 'file:///private/tmp/fdh-gate4/regression/browser-features/modules/common/notes-record.ts'.
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_record.test.ts:9:8
+
+TS2307 [ERROR]: Cannot find module 'file:///private/tmp/fdh-gate4/regression/browser-features/modules/common/notes-storage-types.ts'.
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:9:42
+
+TS7006 [ERROR]: Parameter 'merged' implicitly has an 'any' type.
+      store.applyIncoming(encodeNotes(remote), async (merged) => {
+                                                      ~~~~~~
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:150:55
+
+TS7006 [ERROR]: Parameter 'merged' implicitly has an 'any' type.
+        p.store.applyIncoming(encodeNotes([note("remote", 4)]), (merged) => {
+                                                                 ~~~~~~
+    at file:///private/tmp/fdh-gate4/regression/tools/src/notes_storage.test.ts:283:66
+
+Found 4 errors.
+
+error: Type checking failed.
+
+  [33minfo:[39m The program failed type-checking, but it still might work correctly.
+  [36mhint:[39m Re-run with [4m--no-check[24m to skip type-checking.

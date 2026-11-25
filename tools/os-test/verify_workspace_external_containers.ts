@@ -135,7 +135,7 @@ return {url: location.href, ready: document.readyState === 'complete' && !!windo
     }
     assert(
       await this.chrome<boolean>(
-        `const helper = ChromeUtils.importESModule('resource:///modules/BrowserContentHandler.sys.mjs');
+        `const helper = ChromeUtils.importESModule('moz-src:///browser/components/BrowserContentHandler.sys.mjs');
       return typeof helper.getWorkspaceUserContextIdForExternalOpen === 'function' &&
         (!arguments[0] || typeof window.workspacesFuncs?.getCurrentWorkspaceUserContextId === 'function');`,
         [requireOverlay],
@@ -575,6 +575,7 @@ async function cold(binary: string): Promise<void> {
         ...(privateWindow ? ["--private-window"] : []),
         ...urls,
       ],
+      env: { MOZ_REMOTE_ALLOW_SYSTEM_ACCESS: "1" },
       stdout: "null",
       stderr: "null",
     }).spawn();

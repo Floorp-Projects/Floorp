@@ -6,7 +6,8 @@
 import { noraComponent, NoraComponentBase } from "#features-chrome/utils/base";
 import { ContextMenuUtils } from "#features-chrome/utils/context-menu.tsx";
 import { onCleanup } from "solid-js";
-import { ContextMenuController } from "./controller.ts";
+import { ContextMenuRuntime } from "./runtime.ts";
+import { FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE } from "./style.ts";
 
 export * from "./config.ts";
 export * from "./types.ts";
@@ -14,29 +15,36 @@ export * from "./types.ts";
 @noraComponent(import.meta.hot)
 export default class ContextMenu extends NoraComponentBase {
   // NoraComponentBase invokes init() from its constructor. `declare` avoids a
-  // derived-class field initializer overwriting the controller created there.
-  declare private controller: ContextMenuController | null | undefined;
+  // derived-class field initializer overwriting the runtime created there.
+  declare private runtime: ContextMenuRuntime | null | undefined;
   declare private cleanupController: (() => void) | undefined;
 
   init(): void {
-    if (this.controller) return;
-    const contentAreaContextMenu = ContextMenuUtils.contentAreaContextMenu();
-    contentAreaContextMenu?.addEventListener(
-      "popupshowing",
-      ContextMenuUtils.onPopupShowing,
-    );
-    this.controller = new ContextMenuController({ window });
-    this.controller.attach();
+    if (this.runtime) return;
+    // This native menu repair predates customization and remains available
+    // regardless of enrollment. Only the customizer's controller is gated.
+    const popup = ContextMenuUtils.contentAreaContextMenu();
+    popup?.addEventListener("popupshowing", ContextMenuUtils.onPopupShowing);
+    this.runtime = new ContextMenuRuntime({ window });
+    this.runtime.start();
 
     const cleanup = () => {
       globalThis.removeEventListener("unload", cleanup);
       if (this.cleanupController !== cleanup) return;
-      contentAreaContextMenu?.removeEventListener(
+      this.runtime?.destroy();
+      popup?.removeEventListener(
         "popupshowing",
         ContextMenuUtils.onPopupShowing,
       );
-      this.controller?.destroy();
-      this.controller = null;
+      for (
+        const separator of popup?.querySelectorAll(
+          `[${FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE}]`,
+        ) ?? []
+      ) {
+        (separator as XULElement).hidden = false;
+        separator.removeAttribute(FLOORP_LEGACY_SEPARATOR_HIDDEN_ATTRIBUTE);
+      }
+      this.runtime = null;
       this.cleanupController = undefined;
     };
     this.cleanupController = cleanup;
