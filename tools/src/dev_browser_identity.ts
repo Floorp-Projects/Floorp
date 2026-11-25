@@ -7,6 +7,7 @@ import {
   splitDevCommandLine,
 } from "./dev_process_selection.ts";
 import type { DevProcessIdentity } from "./dev_process_types.ts";
+import { commandOutput } from "./dev_process_command.ts";
 import type {
   DevBrowserListenerRecord,
   DevBrowserProcessRecord,
@@ -63,20 +64,32 @@ ConvertTo-Json -InputObject $rows -Compress -Depth 3
 async function runPowerShellJson(
   script: string,
   environment: Record<string, string> = {},
+  signal?: AbortSignal,
+  timeoutMs = 5000,
 ): Promise<string> {
-  const output = await new Deno.Command("powershell", {
-    args: ["-NoProfile", "-NonInteractive", "-Command", script],
-    env: environment,
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  if (!output.success) {
-    throw new Error(
-      "PowerShell inspection failed: " +
-        new TextDecoder().decode(output.stderr).trim(),
-    );
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new TypeError("Invalid listener inspection timeout");
   }
-  return new TextDecoder().decode(output.stdout);
+  const controller = new AbortController();
+  const abort = () => controller.abort(signal?.reason);
+  signal?.addEventListener("abort", abort, { once: true });
+  if (signal?.aborted) abort();
+  const timer = setTimeout(
+    () => controller.abort(new Error("Listener inspection timed out")),
+    timeoutMs,
+  );
+  try {
+    return await commandOutput(
+      "powershell",
+      ["-NoProfile", "-NonInteractive", "-Command", script],
+      undefined,
+      controller.signal,
+      environment,
+    );
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", abort);
+  }
 }
 
 function objectRows(raw: string, label: string): Record<string, unknown>[] {
@@ -191,22 +204,37 @@ export function parseWindowsBrowserProcessSnapshot(
 
 export async function listWindowsBrowserListeners(
   port: number,
+  signal?: AbortSignal,
+  timeoutMs = 5000,
 ): Promise<DevBrowserListenerRecord[]> {
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error("Listener port must be an integer in 1..65535");
   }
   return parseWindowsBrowserListenerSnapshot(
-    await runPowerShellJson(WINDOWS_LISTENER_SNAPSHOT_SCRIPT, {
-      DEV_BROWSER_LISTENER_PORT: String(port),
-    }),
+    await runPowerShellJson(
+      WINDOWS_LISTENER_SNAPSHOT_SCRIPT,
+      {
+        DEV_BROWSER_LISTENER_PORT: String(port),
+      },
+      signal,
+      timeoutMs,
+    ),
   );
 }
 
-export async function listWindowsBrowserProcesses(): Promise<
+export async function listWindowsBrowserProcesses(
+  signal?: AbortSignal,
+  timeoutMs = 5000,
+): Promise<
   DevBrowserProcessRecord[]
 > {
   return parseWindowsBrowserProcessSnapshot(
-    await runPowerShellJson(WINDOWS_PROCESS_SNAPSHOT_SCRIPT),
+    await runPowerShellJson(
+      WINDOWS_PROCESS_SNAPSHOT_SCRIPT,
+      {},
+      signal,
+      timeoutMs,
+    ),
   );
 }
 
@@ -393,47 +421,83 @@ export async function captureWindowsBrowserListenerIdentity(
 ): Promise<WindowsBrowserListenerIdentity> {
   const retryCount = target.retryCount ?? DEFAULT_RETRY_COUNT;
   const retryDelayMs = target.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
+  const timeoutMs = target.timeoutMs ?? 30_000;
   if (
     !Number.isInteger(retryCount) || retryCount < 1 || retryCount > 100 ||
     !Number.isInteger(retryDelayMs) || retryDelayMs < 0 || retryDelayMs > 5000
   ) {
     throw new Error("Listener retry budget must be finite and bounded");
   }
-  let lastError: unknown;
-  for (let attempt = 0; attempt < retryCount; attempt++) {
-    try {
-      const [listeners, processes] = await Promise.all([
-        deps.listListeners(target.port),
-        deps.listProcesses(),
-      ]);
-      const identity = selectWindowsBrowserListenerIdentity({
-        port: target.port,
-        expectedBinaryPath: target.expectedBinaryPath,
-        expectedProfilePath: target.expectedProfilePath,
-        recordedProcesses: target.recordedProcesses,
-        listeners,
-        processes,
-      });
-      const fresh = await deps.listProcesses();
-      const current = fresh.find((process) => process.pid === identity.pid);
-      if (!revalidateWindowsBrowserListenerIdentity(identity, current)) {
-        throw new Error(
-          "Listener candidate identity changed before persistence",
-        );
-      }
-      const alreadyRegistered = target.recordedProcesses.find((entry) =>
-        entry.pid === identity.pid && matchesRecordedIdentity(current!, entry)
-      );
-      if (!alreadyRegistered && !(await deps.recordIdentity(identity))) {
-        throw new Error("Listener identity could not be recorded");
-      }
-      return identity;
-    } catch (error) {
-      lastError = error;
-      if (attempt + 1 < retryCount) await deps.sleep(retryDelayMs);
-    }
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new TypeError("Invalid listener registration timeout");
   }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Windows browser listener identity capture failed");
+  const controller = new AbortController();
+  const abort = () => controller.abort(target.signal?.reason);
+  target.signal?.addEventListener("abort", abort, { once: true });
+  if (target.signal?.aborted) abort();
+  const deadline = performance.now() + timeoutMs;
+  const timeout = new Error("Listener registration timed out");
+  const remaining = () => {
+    const budget = deadline - performance.now();
+    if (budget <= 0) controller.abort(timeout);
+    controller.signal.throwIfAborted();
+    return budget;
+  };
+  const timer = setTimeout(() => controller.abort(timeout), timeoutMs);
+  const signal = controller.signal;
+  try {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < retryCount; attempt++) {
+      remaining();
+      try {
+        const [listeners, processes] = await Promise.allSettled([
+          Promise.resolve().then(() =>
+            deps.listListeners(target.port, signal, remaining())
+          ),
+          Promise.resolve().then(() => deps.listProcesses(signal, remaining())),
+        ]);
+        remaining();
+        if (listeners.status === "rejected") throw listeners.reason;
+        if (processes.status === "rejected") throw processes.reason;
+        const identity = selectWindowsBrowserListenerIdentity({
+          port: target.port,
+          expectedBinaryPath: target.expectedBinaryPath,
+          expectedProfilePath: target.expectedProfilePath,
+          recordedProcesses: target.recordedProcesses,
+          listeners: listeners.value,
+          processes: processes.value,
+        });
+        const fresh = await deps.listProcesses(signal, remaining());
+        remaining();
+        const current = fresh.find((process) => process.pid === identity.pid);
+        if (!revalidateWindowsBrowserListenerIdentity(identity, current)) {
+          throw new Error(
+            "Listener candidate identity changed before persistence",
+          );
+        }
+        const alreadyRegistered = target.recordedProcesses.find((entry) =>
+          entry.pid === identity.pid && matchesRecordedIdentity(current!, entry)
+        );
+        if (
+          !alreadyRegistered && !(await deps.recordIdentity(identity, signal))
+        ) {
+          throw new Error("Listener identity could not be recorded");
+        }
+        remaining();
+        return identity;
+      } catch (error) {
+        signal.throwIfAborted();
+        lastError = error;
+        if (attempt + 1 < retryCount) {
+          await deps.sleep(Math.min(retryDelayMs, remaining()), signal);
+        }
+      }
+    }
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("Windows browser listener identity capture failed");
+  } finally {
+    clearTimeout(timer);
+    target.signal?.removeEventListener("abort", abort);
+  }
 }

@@ -3,7 +3,8 @@
 import * as path from "@std/path";
 import { basename as posixBasename } from "@std/path/posix";
 import { PLATFORM, PROJECT_ROOT } from "./defines.ts";
-import { settleWithin } from "./async_utils.ts";
+import { sleep } from "./async_utils.ts";
+import { commandOutput } from "./dev_process_command.ts";
 import {
   matchesDevIdentity,
   parseDevProcessRegistry,
@@ -28,60 +29,6 @@ export const DEV_PROCESSES_FILE = path.join(
   "_dist",
   "dev-processes.json",
 );
-
-async function commandOutput(
-  cmd: string,
-  args: string[],
-  input?: string,
-  signal?: AbortSignal,
-): Promise<string> {
-  const command = new Deno.Command(cmd, {
-    args,
-    stdin: input === undefined ? "null" : "piped",
-    stdout: "piped",
-    stderr: "piped",
-    env: { LC_ALL: "C" },
-  });
-  let output: Deno.CommandOutput;
-  if (signal) {
-    signal.throwIfAborted();
-    const child = command.spawn();
-    const cancelled = Promise.withResolvers<never>();
-    const abort = () => {
-      try {
-        child.kill("SIGKILL");
-      } catch { /* Already exited. */ }
-      cancelled.reject(signal.reason);
-    };
-    signal.addEventListener("abort", abort, { once: true });
-    if (signal.aborted) abort();
-    const pending = Promise.resolve().then(() => child.output());
-    try {
-      output = await Promise.race([pending, cancelled.promise]);
-    } catch (error) {
-      abort();
-      await settleWithin(pending, 1000);
-      throw error;
-    } finally {
-      signal.removeEventListener("abort", abort);
-    }
-  } else if (input === undefined) {
-    output = await command.output();
-  } else {
-    const child = command.spawn();
-    const writer = child.stdin.getWriter();
-    await writer.write(new TextEncoder().encode(input));
-    await writer.close();
-    output = await child.output();
-  }
-  signal?.throwIfAborted();
-  if (!output.success) {
-    throw new Error(
-      `${cmd}: ${new TextDecoder().decode(output.stderr).trim()}`,
-    );
-  }
-  return new TextDecoder().decode(output.stdout);
-}
 
 export async function listDevProcesses(
   pid?: number,
@@ -288,16 +235,15 @@ export async function registerWindowsBrowserListenerIdentity(
   return await captureWindowsBrowserListenerIdentity(target, {
     listListeners: listWindowsBrowserListeners,
     listProcesses: listWindowsBrowserProcesses,
-    async recordIdentity(identity) {
+    async recordIdentity(identity, signal) {
       return await recordDevProcess(
         identity.pid,
         DEV_PROCESSES_FILE,
         identity,
+        signal,
       );
     },
-    async sleep(ms) {
-      await new Promise((resolve) => setTimeout(resolve, ms));
-    },
+    sleep,
   });
 }
 

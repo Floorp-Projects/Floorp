@@ -8,6 +8,7 @@ import {
   DevStartupFailure,
   nativeDevLogTarget,
   pollDevStartup,
+  probeDevMarionettePort,
   safeDevStartupFailure,
   startDevBrowser,
   waitForDevMarionette,
@@ -89,8 +90,129 @@ Deno.test("a listener cannot report ready before NewSession and DeleteSession; e
   );
   assertEquals(
     cli.includes(
-      "await waitForDevMarionette(Number(port), signal, remaining);",
+      "probeDevMarionettePort(",
     ),
+    true,
+  );
+});
+
+Deno.test("fresh and existing-instance starts share a readiness gate: empty, invalid, missing and timed-out ports never succeed on rerun", async () => {
+  const controller = new AbortController();
+  let usable = false;
+  let probes = 0;
+  let registrations = 0;
+  const probe = () => {
+    probes++;
+    return usable
+      ? Promise.resolve()
+      : Promise.reject(new DevStartupFailure("startup-timeout"));
+  };
+  const register = (port: number, signal: AbortSignal, budget: number) => {
+    assertEquals([port, signal, budget], [2828, controller.signal, 1000]);
+    registrations++;
+    return Promise.resolve();
+  };
+  const check = () =>
+    probeDevMarionettePort(
+      () => "2828",
+      controller.signal,
+      () => 1000,
+      register,
+      probe,
+    );
+  await assertRejects(check, DevStartupFailure, "startup-timeout");
+  await assertRejects(check, DevStartupFailure, "startup-timeout");
+  assertEquals([registrations, probes], [2, 2]);
+  usable = true;
+  assertEquals(await check(), "2828");
+  assertEquals([registrations, probes], [3, 3]);
+  assertEquals(
+    await probeDevMarionettePort(
+      () => " ",
+      controller.signal,
+      () => 1000,
+      register,
+      probe,
+    ),
+    "",
+  );
+  for (const text of ["abc", "0", "65536", "-1", "1.5", "0x1234"]) {
+    await assertRejects(
+      () =>
+        probeDevMarionettePort(
+          () => text,
+          controller.signal,
+          () => 1000,
+          register,
+          probe,
+        ),
+      Error,
+      "Invalid Marionette readiness port",
+    );
+  }
+  await assertRejects(() =>
+    probeDevMarionettePort(
+      () => {
+        throw new Deno.errors.NotFound("missing port file");
+      },
+      controller.signal,
+      () => 1000,
+      register,
+      probe,
+    ), Deno.errors.NotFound);
+  assertEquals([registrations, probes], [3, 3]);
+  await assertRejects(
+    () =>
+      probeDevMarionettePort(
+        () => "2828",
+        controller.signal,
+        () => 1000,
+        () => Promise.reject(new Error("registration failed")),
+        probe,
+      ),
+    Error,
+    "registration failed",
+  );
+  assertEquals(probes, 3);
+  const cancelled = new AbortController();
+  await assertRejects(
+    () =>
+      probeDevMarionettePort(() => "2828", cancelled.signal, () => 1000, () => {
+        cancelled.abort(new Error("cancelled registration"));
+        return Promise.resolve();
+      }, probe),
+    Error,
+    "cancelled registration",
+  );
+  assertEquals(probes, 3);
+  const source =
+    (await Deno.readTextFile(new URL("../dev-tool.ts", import.meta.url)))
+      .replace(/\s/g, "");
+  const existing = source.slice(
+    source.indexOf("if(existingPid!==null)"),
+    source.indexOf('console.log("Startingfeles-builddev..."'),
+  );
+  assertEquals(
+    existing.indexOf("awaitpollDevStartup(") <
+      existing.indexOf("Devserveralreadyrunning"),
+    true,
+  );
+  assertEquals(
+    existing.includes("!!awaitcheckReadiness(signal,remaining)"),
+    true,
+  );
+  assertEquals(
+    existing.includes("awaitDeno.remove(DEV_STARTUP_STATUS_FILE)"),
+    true,
+  );
+  assertEquals(existing.includes("reportDevStartupFailure(error)"), true);
+  assertEquals(existing.includes("throwerror;"), true);
+  assertEquals(
+    source.includes("constport=awaitcheckReadiness(signal,remaining)"),
+    true,
+  );
+  assertEquals(
+    source.includes("recordedProcesses:readDevProcesses(),signal,timeoutMs,"),
     true,
   );
 });

@@ -4,6 +4,8 @@ import { assert, assertEquals, assertRejects } from "@std/assert";
 import * as path from "@std/path";
 import {
   captureWindowsBrowserListenerIdentity,
+  listWindowsBrowserListeners,
+  listWindowsBrowserProcesses,
   parseWindowsBrowserProcessSnapshot,
   revalidateWindowsBrowserListenerIdentity,
   selectWindowsBrowserListenerIdentity,
@@ -14,7 +16,12 @@ import type {
   WindowsBrowserIdentityDeps,
   WindowsBrowserListenerSelection,
 } from "./dev_browser_identity_types.ts";
-import { readDevProcesses, recordDevProcess } from "./dev_processes.ts";
+import {
+  readDevProcesses,
+  recordDevProcess,
+  registerWindowsBrowserListenerIdentity,
+} from "./dev_processes.ts";
+import { sleep } from "./async_utils.ts";
 
 const BIN = "C:\\Floorp\\_dist\\bin\\floorp\\floorp.exe";
 const PROFILE = "C:\\Floorp\\_dist\\profile\\test";
@@ -88,6 +95,183 @@ function deps(
     ...overrides,
   };
 }
+
+Deno.test("Windows listener registration cancels, kills and reaps both PowerShell snapshots before returning, without retries or persistence", async () => {
+  const descriptor = Object.getOwnPropertyDescriptor(Deno, "Command")!;
+  let spawned = 0;
+  let killed = 0;
+  let reaped = 0;
+  let stall = true;
+  let fail = false;
+  const started = Promise.withResolvers<void>();
+  class MockCommand {
+    constructor(command: string) {
+      assertEquals(command, "powershell");
+    }
+    spawn() {
+      spawned++;
+      if (spawned === 2) started.resolve();
+      const status = Promise.withResolvers<Deno.CommandStatus>();
+      const output = Promise.withResolvers<Deno.CommandOutput>();
+      const result = {
+        success: !fail,
+        code: fail ? 1 : 0,
+        signal: null,
+        stdout: new TextEncoder().encode("[]"),
+        stderr: new TextEncoder().encode("probe failed"),
+      };
+      if (!stall) {
+        status.resolve(result);
+        output.resolve(result);
+      }
+      return {
+        status: status.promise.then((value) => {
+          reaped++;
+          return value;
+        }),
+        output: () => output.promise,
+        kill() {
+          killed++;
+          output.resolve(result);
+          setTimeout(() => status.resolve(result), spawned % 2 === 0 ? 10 : 1);
+        },
+      };
+    }
+  }
+  try {
+    Object.defineProperty(Deno, "Command", {
+      configurable: true,
+      value: MockCommand,
+    });
+    const target = {
+      port: 5200,
+      expectedBinaryPath: BIN,
+      expectedProfilePath: PROFILE,
+      recordedProcesses: [recordedParent],
+      timeoutMs: 1000,
+    };
+    const controller = new AbortController();
+    const pending = registerWindowsBrowserListenerIdentity({
+      ...target,
+      signal: controller.signal,
+    });
+    await started.promise;
+    controller.abort(new Error("cancelled startup"));
+    await assertRejects(() => pending, Error, "cancelled startup");
+    assertEquals([spawned, killed, reaped], [2, 2, 2]);
+    await assertRejects(
+      () =>
+        registerWindowsBrowserListenerIdentity({ ...target, timeoutMs: 20 }),
+      Error,
+      "Listener registration timed out",
+    );
+    assertEquals([spawned, killed, reaped], [4, 4, 4]);
+    await assertRejects(
+      () =>
+        registerWindowsBrowserListenerIdentity({
+          ...target,
+          signal: controller.signal,
+        }),
+      Error,
+      "cancelled startup",
+    );
+    for (const timeoutMs of [0, -1, NaN, Infinity]) {
+      await assertRejects(
+        () => registerWindowsBrowserListenerIdentity({ ...target, timeoutMs }),
+        TypeError,
+        "Invalid listener registration timeout",
+      );
+    }
+    assertEquals(spawned, 4);
+    await assertRejects(
+      () => listWindowsBrowserListeners(5200, undefined, 20),
+      Error,
+      "Listener inspection timed out",
+    );
+    await assertRejects(
+      () => listWindowsBrowserProcesses(undefined, 20),
+      Error,
+      "Listener inspection timed out",
+    );
+    assertEquals([spawned, killed, reaped], [6, 6, 6]);
+    stall = false;
+    assertEquals(await listWindowsBrowserListeners(5200), []);
+    assertEquals(await listWindowsBrowserProcesses(), []);
+    fail = true;
+    await assertRejects(
+      () => listWindowsBrowserListeners(5200),
+      Error,
+      "powershell: probe failed",
+    );
+  } finally {
+    Object.defineProperty(Deno, "Command", descriptor);
+  }
+});
+
+Deno.test("listener registration forwards remaining time and cancellation through revalidation, backoff and persistence", async () => {
+  const target = {
+    port: 5200,
+    expectedBinaryPath: BIN,
+    expectedProfilePath: PROFILE,
+    recordedProcesses: [recordedParent],
+    timeoutMs: 1000,
+  };
+  const controller = new AbortController();
+  let inspections = 0;
+  let writes = 0;
+  await assertRejects(
+    () =>
+      captureWindowsBrowserListenerIdentity(
+        { ...target, signal: controller.signal },
+        deps({
+          listProcesses(signal, budget) {
+            assert(signal);
+            assert(budget! > 0 && budget! <= 1000);
+            inspections++;
+            return Promise.resolve([parent, child]);
+          },
+          recordIdentity(_identity, signal) {
+            assert(signal);
+            controller.abort(new Error("cancelled persistence"));
+            signal.throwIfAborted();
+            writes++;
+            return Promise.resolve(true);
+          },
+        }),
+      ),
+    Error,
+    "cancelled persistence",
+  );
+  assertEquals([inspections, writes], [2, 0]);
+  const retry = new AbortController();
+  let attempts = 0;
+  await assertRejects(
+    () =>
+      captureWindowsBrowserListenerIdentity(
+        { ...target, signal: retry.signal },
+        deps({
+          listListeners() {
+            attempts++;
+            return Promise.reject(new Error("not ready"));
+          },
+          sleep(ms, signal) {
+            retry.abort(new Error("cancelled backoff"));
+            return sleep(ms, signal);
+          },
+        }),
+      ),
+    Error,
+    "cancelled backoff",
+  );
+  assertEquals(attempts, 1);
+  const source =
+    (await Deno.readTextFile(new URL("./dev_processes.ts", import.meta.url)))
+      .replace(/\s/g, "");
+  assert(
+    /recordDevProcess\(identity\.pid,DEV_PROCESSES_FILE,identity,signal,?\)/
+      .test(source),
+  );
+});
 
 Deno.test("unverifiable Windows system rows do not poison the owned process snapshot", () => {
   const raw = JSON.stringify([

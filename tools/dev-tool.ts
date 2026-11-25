@@ -12,8 +12,8 @@ import {
   DevStartupFailure,
   nativeDevLogTarget,
   pollDevStartup,
+  probeDevMarionettePort,
   reportDevStartupFailure,
-  waitForDevMarionette,
 } from "./src/dev_launch.ts";
 import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
@@ -215,9 +215,47 @@ function parsePidFromOutput(output: string): string {
 async function cmdStart() {
   const startupDeadline = performance.now() + DEV_STARTUP_TIMEOUT_MS -
     DEV_STARTUP_FINALIZE_MS;
+  const marionetteFile = path.join(
+    PROJECT_ROOT,
+    "_dist",
+    "marionette-port.txt",
+  );
+  const checkReadiness = (signal: AbortSignal, remaining: () => number) =>
+    probeDevMarionettePort(
+      () => Deno.readTextFileSync(marionetteFile),
+      signal,
+      remaining,
+      async (port, signal, timeoutMs) => {
+        if (PLATFORM === "windows") {
+          try {
+            await registerWindowsBrowserListenerIdentity({
+              port,
+              expectedBinaryPath: BIN_PATH_EXE,
+              expectedProfilePath: PATHS.profile_test,
+              recordedProcesses: readDevProcesses(),
+              signal,
+              timeoutMs,
+            });
+          } catch (error) {
+            signal.throwIfAborted();
+            console.error(
+              "[dev-tool] Actual browser listener identity was not registered:",
+              error,
+            );
+            throw new DevStartupFailure("registration-failed");
+          }
+        }
+      },
+    );
   // A stale PID file must not mistake a reused PID for this dev server.
+  let existingPid: number | null = null;
   try {
-    const pid = Number(Deno.readTextFileSync(PID_FILE).trim());
+    existingPid = Number(Deno.readTextFileSync(PID_FILE).trim());
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) throw error;
+  }
+  if (existingPid !== null) {
+    const pid = existingPid;
     const processes = await listDevProcesses();
     if (
       selectDevProcesses(processes, {
@@ -228,14 +266,30 @@ async function cmdStart() {
         recordedProcesses: readDevProcesses(),
       }).includes(pid)
     ) {
+      try {
+        await pollDevStartup(
+          async (signal, remaining) =>
+            !!await checkReadiness(signal, remaining),
+          startupDeadline,
+        );
+        try {
+          await Deno.remove(DEV_STARTUP_STATUS_FILE);
+        } catch (error) {
+          if (!(error instanceof Deno.errors.NotFound)) throw error;
+        }
+      } catch (error) {
+        await settleWithin(reportDevStartupFailure(error), 5000);
+        console.error(
+          "Existing dev server did not prove browser readiness. Use 'dev-tool stop' or 'dev-tool restart'.",
+        );
+        throw error;
+      }
       console.log(`Dev server already running (PID ${pid}).`);
       console.log(
         "Use 'dev-tool stop' to stop it first, or 'dev-tool restart'.",
       );
       return;
     }
-  } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) throw error;
   }
 
   console.log("Starting feles-build dev...");
@@ -258,12 +312,6 @@ async function cmdStart() {
       { mode: 0o600 },
     );
   }
-  const marionetteFile = path.join(
-    PROJECT_ROOT,
-    "_dist",
-    "marionette-port.txt",
-  );
-
   // Remove stale state files
   for (const f of [marionetteFile, PID_FILE, DEV_STARTUP_STATUS_FILE]) {
     try {
@@ -352,31 +400,14 @@ async function cmdStart() {
         );
       }
       try {
-        const port = Deno.readTextFileSync(marionetteFile).trim();
+        const port = await checkReadiness(signal, remaining);
         if (port) {
-          if (PLATFORM === "windows") {
-            try {
-              await registerWindowsBrowserListenerIdentity({
-                port: Number(port),
-                expectedBinaryPath: BIN_PATH_EXE,
-                expectedProfilePath: PATHS.profile_test,
-                recordedProcesses: readDevProcesses(),
-              });
-            } catch (error) {
-              signal.throwIfAborted();
-              console.error(
-                "[dev-tool] Actual browser listener identity was not registered:",
-                error,
-              );
-              Deno.exit(1);
-            }
-          }
-          signal.throwIfAborted();
-          await waitForDevMarionette(Number(port), signal, remaining);
           readyPort = port;
           return true;
         }
-      } catch {
+      } catch (error) {
+        signal.throwIfAborted();
+        if (error instanceof DevStartupFailure) throw error;
         // not yet
       }
       const log = await Deno.readTextFile(logFile).catch(() => "");

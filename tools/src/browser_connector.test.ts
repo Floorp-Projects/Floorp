@@ -3,6 +3,77 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { MarionetteClient } from "./browser_connector.ts";
 import type { MarionetteStage } from "./browser_connector.types.ts";
+import { waitForDevMarionette } from "./dev_launch.ts";
+
+Deno.test("malformed NewSession wire successes cannot report startup ready and always close the socket", async () => {
+  const original = Deno.connect;
+  const valid = { sessionId: "session-secret-sentinel", capabilities: {} };
+  try {
+    for (
+      const session of [
+        null,
+        42,
+        "invalid",
+        [],
+        {},
+        { sessionId: "id" },
+        { capabilities: {} },
+        { ...valid, sessionId: "" },
+        { ...valid, sessionId: "  " },
+        { ...valid, sessionId: 42 },
+        { ...valid, capabilities: null },
+        { ...valid, capabilities: [] },
+        { ...valid, capabilities: "invalid" },
+        valid,
+      ]
+    ) {
+      let reads = 0;
+      let closed = false;
+      const commands: string[] = [];
+      const connection = {
+        read(buffer: Uint8Array) {
+          const response = reads === 0
+            ? { marionetteProtocol: 3 }
+            : [1, reads - 1, null, reads === 1 ? session : null];
+          reads++;
+          const text = JSON.stringify(response);
+          const bytes = new TextEncoder().encode(
+            `${new TextEncoder().encode(text).length}:${text}`,
+          );
+          buffer.set(bytes);
+          return Promise.resolve(bytes.length);
+        },
+        write(bytes: Uint8Array) {
+          const text = new TextDecoder().decode(bytes);
+          commands.push(JSON.parse(text.slice(text.indexOf(":") + 1))[2]);
+          return Promise.resolve(bytes.length);
+        },
+        close() {
+          closed = true;
+        },
+      } as unknown as Deno.TcpConn;
+      Deno.connect = (() =>
+        Promise.resolve(connection)) as unknown as typeof Deno.connect;
+      const probe = () =>
+        waitForDevMarionette(2828, new AbortController().signal, () => 100);
+      if (session === valid) await probe();
+      else {await assertRejects(
+          probe,
+          Error,
+          "Invalid Marionette NewSession result",
+        );}
+      assertEquals(
+        commands,
+        session === valid
+          ? ["WebDriver:NewSession", "WebDriver:DeleteSession"]
+          : ["WebDriver:NewSession"],
+      );
+      assertEquals(closed, true);
+    }
+  } finally {
+    Deno.connect = original;
+  }
+});
 
 Deno.test("Marionette deadlines cover connect, handshake, write and read, close sockets and clear timers", async () => {
   const original = Deno.connect;
@@ -86,7 +157,10 @@ Deno.test("Marionette deadlines cover connect, handshake, write and read, close 
           const bytes = reads === 1
             ? packet({ marionetteProtocol: 3 })
             : reads === 2
-            ? packet([1, 0, null, { sessionId: "session-secret-sentinel" }])
+            ? packet([1, 0, null, {
+              sessionId: "session-secret-sentinel",
+              capabilities: {},
+            }])
             : scenario === "oversize"
             ? encoder.encode("16777217:")
             : scenario === "invalid-prefix"
@@ -185,6 +259,11 @@ Deno.test("valid command errors preserve the connection for ReleaseActions and p
     read(buffer: Uint8Array) {
       const response = reads === 0
         ? { marionetteProtocol: 3 }
+        : reads === 1
+        ? [1, 0, null, {
+          sessionId: "session-secret-sentinel",
+          capabilities: {},
+        }]
         : reads === 2
         ? [1, 1, { error: "invalid argument", message: "bad action" }, null]
         : [1, reads - 1, null, {}];

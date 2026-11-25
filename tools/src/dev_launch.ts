@@ -8,6 +8,33 @@ import { MarionetteClient } from "./browser_connector.ts";
 export const DEV_STARTUP_TIMEOUT_MS = 120_000;
 export const DEV_STARTUP_FINALIZE_MS = 10_000;
 
+export async function probeDevMarionettePort(
+  readPort: () => string,
+  signal: AbortSignal,
+  remaining: () => number,
+  register: (
+    port: number,
+    signal: AbortSignal,
+    timeoutMs: number,
+  ) => Promise<unknown> = () => Promise.resolve(),
+  probe = waitForDevMarionette,
+): Promise<string> {
+  signal.throwIfAborted();
+  const text = readPort().trim();
+  if (!text) return "";
+  const port = Number(text);
+  if (
+    !/^\d+$/.test(text) || !Number.isInteger(port) || port < 1 || port > 65535
+  ) {
+    throw new Error("Invalid Marionette readiness port");
+  }
+  await register(port, signal, remaining());
+  signal.throwIfAborted();
+  await probe(port, signal, remaining);
+  signal.throwIfAborted();
+  return text;
+}
+
 export async function waitForDevMarionette(
   port: number,
   signal: AbortSignal,

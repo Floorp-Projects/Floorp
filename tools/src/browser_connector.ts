@@ -129,19 +129,36 @@ export class MarionetteClient {
         console.error("[marionette] Connected (protocol v3)");
 
         // Create session with timeout
+        let session: unknown;
         try {
-          await client.sendWithTimeout(
+          session = await client.sendWithTimeout(
             "WebDriver:NewSession",
             {},
             Math.max(1, deadline - Date.now()),
           );
-          console.error("[marionette] Session established");
         } catch {
           client.#conn.close();
           throw new Error(
             "NewSession timed out — browser may be busy or BiDi conflict",
           );
         }
+
+        if (
+          typeof session !== "object" || session === null ||
+          Array.isArray(session)
+        ) {
+          throw new Error("Invalid Marionette NewSession result");
+        }
+        const result = session as Record<string, unknown>;
+        if (
+          typeof result.sessionId !== "string" || !result.sessionId.trim() ||
+          typeof result.capabilities !== "object" ||
+          result.capabilities === null ||
+          Array.isArray(result.capabilities)
+        ) {
+          throw new Error("Invalid Marionette NewSession result");
+        }
+        console.error("[marionette] Session established");
 
         return client;
       }, Math.max(1, deadline - Date.now()));
