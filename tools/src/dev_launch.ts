@@ -133,7 +133,8 @@ export async function hasDevStartupReady(
   if (
     typeof record !== "object" || record === null || !("state" in record) ||
     record.state !== "ready" || !("instances" in record) ||
-    !Array.isArray(record.instances) || record.instances.length < 2
+    !Array.isArray(record.instances) || record.instances.length < 2 ||
+    new Set(record.instances).size !== record.instances.length
   ) return false;
   const server = processes.find((process) => process.pid === serverPid);
   if (
@@ -148,6 +149,52 @@ export async function hasDevStartupReady(
   return record.instances.every((identity: unknown) =>
     typeof identity === "string" && live.has(identity)
   );
+}
+
+export async function verifyDevStartupReady(
+  record: unknown,
+  serverPid: number,
+  profile: string,
+  port: string,
+  signal: AbortSignal,
+  remaining: () => number,
+  inspect: (
+    signal: AbortSignal,
+    timeoutMs: number,
+  ) => Promise<readonly DevProcessIdentity[]>,
+  connect: (
+    port: number,
+    signal: AbortSignal,
+  ) => Promise<Pick<Deno.TcpConn, "close">> = (port, signal) =>
+    Deno.connect({ hostname: "127.0.0.1", port, signal }),
+): Promise<boolean> {
+  signal.throwIfAborted();
+  const timeoutMs = Math.min(5000, remaining());
+  if (timeoutMs <= 0) throw new DevStartupFailure("startup-timeout");
+  const processes = await inspect(signal, timeoutMs);
+  signal.throwIfAborted();
+  if (!await hasDevStartupReady(record, processes, serverPid, profile, port)) {
+    return false;
+  }
+  const cancelled = Promise.withResolvers<never>();
+  const abort = () => cancelled.reject(signal.reason);
+  signal.addEventListener("abort", abort, { once: true });
+  try {
+    signal.throwIfAborted();
+    const pending = connect(Number(port), signal).then((connection) => {
+      if (signal.aborted) {
+        connection.close();
+        signal.throwIfAborted();
+      }
+      return connection;
+    });
+    const connection = await Promise.race([pending, cancelled.promise]);
+    connection.close();
+    signal.throwIfAborted();
+    return true;
+  } finally {
+    signal.removeEventListener("abort", abort);
+  }
 }
 
 export function nativeDevLogTarget(platform: string): string {

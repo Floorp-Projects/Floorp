@@ -11,11 +11,11 @@ import {
   DEV_STARTUP_TIMEOUT_MS,
   DevStartupFailure,
   devStartupReady,
-  hasDevStartupReady,
   nativeDevLogTarget,
   pollDevStartup,
   probeDevMarionettePort,
   reportDevStartupFailure,
+  verifyDevStartupReady,
 } from "./src/dev_launch.ts";
 import { BIN_PATH_EXE, PATHS, PLATFORM, PROJECT_ROOT } from "./src/defines.ts";
 import {
@@ -287,12 +287,15 @@ async function cmdStart() {
                 const status: unknown = await Deno.readTextFile(
                   DEV_STARTUP_STATUS_FILE,
                 ).then(JSON.parse).catch(() => null);
-                priorReady = await hasDevStartupReady(
+                priorReady = await verifyDevStartupReady(
                   status,
-                  processes,
                   pid,
                   PATHS.profile_test,
                   port,
+                  signal,
+                  remaining,
+                  (signal, timeoutMs) =>
+                    listDevProcesses(undefined, signal, timeoutMs),
                 );
                 return priorReady;
               },

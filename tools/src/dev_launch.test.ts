@@ -13,6 +13,7 @@ import {
   probeDevMarionettePort,
   safeDevStartupFailure,
   startDevBrowser,
+  verifyDevStartupReady,
   waitForDevMarionette,
 } from "./dev_launch.ts";
 import { withDevStateLock } from "./dev_state_lock.ts";
@@ -207,7 +208,7 @@ Deno.test("fresh and existing-instance starts share a readiness gate: empty, inv
   );
   assertEquals(
     existing.includes(
-      "hasDevStartupReady(status,processes,pid,PATHS.profile_test,port)",
+      "verifyDevStartupReady(status,pid,PATHS.profile_test,port,signal,remaining,(signal,timeoutMs)=>listDevProcesses(undefined,signal,timeoutMs))",
     ),
     true,
   );
@@ -290,6 +291,7 @@ Deno.test("reuse remembers readiness for the exact live launcher and browser, ne
       { state: "failed", instances: record.instances },
       { state: "ready", instances: [] },
       { state: "ready", instances: [record.instances[0], 42] },
+      { state: "ready", instances: [record.instances[0], record.instances[0]] },
       await devStartupReady([server], 10, "/isolated", "2828"),
     ]
   ) {
@@ -322,6 +324,227 @@ Deno.test("reuse remembers readiness for the exact live launcher and browser, ne
   );
   assertEquals(connections, 2);
   assertEquals(JSON.stringify(record).includes(server.commandLine), false);
+});
+
+Deno.test("cached reuse refreshes inventory after polling; a browser that exits during the wait cannot skip the protocol probe", async () => {
+  const server = {
+    pid: 10,
+    startTime: "server",
+    commandLine: "deno task feles-build dev",
+  };
+  const browser = {
+    pid: 11,
+    startTime: "browser",
+    commandLine: "floorp --marionette",
+  };
+  const initial = [server, browser];
+  const record = await devStartupReady(initial, 10, "/isolated", "2828");
+  let live = initial;
+  let clock = 0;
+  let inventories = 0;
+  let connections = 0;
+  let probes = 0;
+  assertEquals(
+    await hasDevStartupReady(record, initial, 10, "/isolated", "2828"),
+    true,
+  );
+  await assertRejects(
+    () =>
+      pollDevStartup(
+        async (signal, remaining) =>
+          !!await probeDevMarionettePort(
+            () => "2828",
+            signal,
+            remaining,
+            undefined,
+            () => {
+              probes++;
+              return Promise.reject(new Error("browser listener closed"));
+            },
+            (port) =>
+              verifyDevStartupReady(
+                record,
+                10,
+                "/isolated",
+                port,
+                signal,
+                remaining,
+                (inventorySignal, budget) => {
+                  assertEquals(inventorySignal, signal);
+                  assertEquals(budget, 5000);
+                  inventories++;
+                  return Promise.resolve(live);
+                },
+                () => {
+                  connections++;
+                  return Promise.resolve({ close() {} });
+                },
+              ),
+          ),
+        10000,
+        () => clock,
+        (ms) => {
+          clock += ms;
+          live = [server];
+          return Promise.resolve();
+        },
+      ),
+    Error,
+    "browser listener closed",
+  );
+  assertEquals([clock, inventories, connections, probes], [1000, 1, 0, 1]);
+  for (
+    const snapshot of [[], [server], [browser], [server, {
+      ...browser,
+      startTime: "replacement",
+    }]]
+  ) {
+    assertEquals(
+      await verifyDevStartupReady(
+        record,
+        10,
+        "/isolated",
+        "2828",
+        new AbortController().signal,
+        () => 1000,
+        () => Promise.resolve(snapshot),
+        () => {
+          connections++;
+          return Promise.resolve({ close() {} });
+        },
+      ),
+      false,
+    );
+  }
+  await assertRejects(
+    () =>
+      verifyDevStartupReady(
+        record,
+        10,
+        "/isolated",
+        "2828",
+        new AbortController().signal,
+        () => 1000,
+        () => Promise.reject(new Error("inventory unknown")),
+        () => {
+          connections++;
+          return Promise.resolve({ close() {} });
+        },
+      ),
+    Error,
+    "inventory unknown",
+  );
+  assertEquals(connections, 0);
+});
+
+Deno.test("cached identities also require an accepting TCP port without opening a Marionette session", async () => {
+  const processes = [
+    { pid: 10, startTime: "server", commandLine: "deno task feles-build dev" },
+    { pid: 11, startTime: "browser", commandLine: "floorp --marionette" },
+  ];
+  const listener = Deno.listen({ hostname: "127.0.0.1", port: 0 });
+  const port = String(listener.addr.port);
+  const record = await devStartupReady(processes, 10, "/isolated", port);
+  let listening = true;
+  try {
+    for (const remaining of [17, 9000]) {
+      const controller = new AbortController();
+      assertEquals(
+        await verifyDevStartupReady(
+          record,
+          10,
+          "/isolated",
+          port,
+          controller.signal,
+          () => remaining,
+          (signal, budget) => {
+            assertEquals(signal, controller.signal);
+            assertEquals(budget, Math.min(5000, remaining));
+            return Promise.resolve(processes);
+          },
+        ),
+        true,
+      );
+      const connection = await listener.accept();
+      const byte = new Uint8Array(1);
+      assertEquals(await connection.read(byte), null);
+      connection.close();
+    }
+    listener.close();
+    listening = false;
+    await assertRejects(
+      () =>
+        verifyDevStartupReady(
+          record,
+          10,
+          "/isolated",
+          port,
+          new AbortController().signal,
+          () => 1000,
+          () => Promise.resolve(processes),
+        ),
+      Error,
+    );
+  } finally {
+    if (listening) listener.close();
+  }
+});
+
+Deno.test("cancelled cached checks close late TCP connections and cannot accept late inventory", async () => {
+  const processes = [
+    { pid: 10, startTime: "server", commandLine: "deno task feles-build dev" },
+    { pid: 11, startTime: "browser", commandLine: "floorp --marionette" },
+  ];
+  const record = await devStartupReady(processes, 10, "/isolated", "2828");
+  const connected = Promise.withResolvers<{ close(): void }>();
+  const started = Promise.withResolvers<void>();
+  const controller = new AbortController();
+  let closed = 0;
+  const check = verifyDevStartupReady(
+    record,
+    10,
+    "/isolated",
+    "2828",
+    controller.signal,
+    () => 1000,
+    () => Promise.resolve(processes),
+    (port, signal) => {
+      assertEquals([port, signal], [2828, controller.signal]);
+      started.resolve();
+      return connected.promise;
+    },
+  );
+  await started.promise;
+  controller.abort(new Error("cancelled TCP proof"));
+  await assertRejects(() => check, Error, "cancelled TCP proof");
+  connected.resolve({
+    close() {
+      closed++;
+    },
+  });
+  await Promise.resolve();
+  assertEquals(closed, 1);
+  const cancelled = new AbortController();
+  await assertRejects(
+    () =>
+      verifyDevStartupReady(
+        record,
+        10,
+        "/isolated",
+        "2828",
+        cancelled.signal,
+        () => 1000,
+        () => {
+          cancelled.abort(new Error("cancelled inventory"));
+          return Promise.resolve(processes);
+        },
+        () => {
+          throw new Error("late inventory must not connect");
+        },
+      ),
+    Error,
+    "cancelled inventory",
+  );
 });
 
 Deno.test("both readiness paths wait for a missing port file within the same deadline and propagate other read failures", async () => {
