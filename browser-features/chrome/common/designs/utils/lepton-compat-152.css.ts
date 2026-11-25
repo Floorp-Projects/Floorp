@@ -155,6 +155,17 @@ export const LEPTON_COMPAT_152_CSS = `
  * Loaded AFTER leptonChrome.css; equal specificity wins by source order.
  * ======================================================================= */
 
+/* Gecko 154 renamed the native tab margin consumer. Lepton still writes
+ * --tab-block-margin (including its density overrides). Forward that value
+ * only for its horizontal padding mode; native vertical spacing is separate.
+ * Do not force a number or override theme-provided !important values. */
+@media -moz-pref("userChrome.tab.lepton_like_padding") and
+  (not -moz-pref("sidebar.verticalTabs")) {
+  :root {
+    --tab-margin-block: var(--tab-block-margin);
+  }
+}
+
 /* No built-in light/dark palette override here. An earlier no-theme rule
  * set only the legacy --lwt-accent-color / --toolbar-bgcolor tokens. Gecko
  * 159 paints the selected tab, #browser and (for protonfix) #nav-bar from
@@ -272,6 +283,21 @@ export const LEPTON_COMPAT_152_CSS = `
 }
 `;
 
+export const LEPTON_CONTAINER_GEOMETRY_CSS = `
+/* Lepton/Firefox UI Fix replace the native line with .tab-content::before.
+ * Its selected width still reads the pre-152 padding/margin token names.
+ * Resolve these aliases at the consuming element, where native tab tokens
+ * are available, rather than inheriting an already-invalid root alias. */
+@media -moz-pref("userChrome.tab.container") and
+  (not -moz-pref("userChrome.tab.photon_like_contextline")) and
+  (not -moz-pref("userChrome.tabbar.as_titlebar")) {
+  #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-content {
+    --tab-inline-padding: var(--tab-padding-inline);
+    --tab-inner-inline-margin: var(--tab-margin-inline-inner);
+  }
+}
+`;
+
 /**
  * Combined Lepton-family stylesheet: color fix + Lepton-specific compat.
  * Injected after Lepton's own sheets.
@@ -279,5 +305,34 @@ export const LEPTON_COMPAT_152_CSS = `
  * The Floorp icon patches that used to be appended here now live in the
  * design-agnostic chrome-extras stylesheets.
  */
-export const LEPTON_COMPAT_CSS =
-  GECKO_152_COLOR_FIX_CSS + "\n" + LEPTON_COMPAT_152_CSS;
+export const LEPTON_CONTAINER_INDICATOR_CSS = `
+/* Photon uses selected="true", but current Gecko represents selection with
+ * selected="". Its inactive animation therefore hides selected containers,
+ * while its identity-color reset also replaces their individual colors.
+ * A container's identity must remain visible independently of selection/hover.
+ * Keep this after the vendored sheet, which is replaced by upstream syncs. */
+@media -moz-pref("userChrome.tab.photon_like_contextline") {
+  #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+    --identity-icon-color: inherit;
+    background-color: var(--identity-icon-color) !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* The vendored #TabsToolbar[brighttext] hover rule is more specific than
+   * the one above and repaints hovered container lines translucent white.
+   * Two ids plus :hover beat it outright, toolbar-order independent. */
+  #TabsToolbar[brighttext] #tabbrowser-tabs .tabbrowser-tab[usercontextid]:hover > .tab-stack > .tab-background > .tab-context-line {
+    background-color: var(--identity-icon-color) !important;
+  }
+  /* Photon forces a 2px height for horizontal tabs. Restore the native
+   * vertical indicator's height when the tab strip changes orientation. */
+  #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+    height: 24px !important;
+    align-self: center;
+  }
+}
+`;
+
+export const LEPTON_COMPAT_CSS = GECKO_152_COLOR_FIX_CSS + "\n" +
+  LEPTON_COMPAT_152_CSS + "\n" +
+  LEPTON_CONTAINER_INDICATOR_CSS + "\n" + LEPTON_CONTAINER_GEOMETRY_CSS;
