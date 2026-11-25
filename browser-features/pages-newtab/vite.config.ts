@@ -22,6 +22,14 @@ export default defineConfig(({ command }) => {
       tsconfigPaths(),
       genJarmnPlugin("content-newtab", "noraneko-newtab", "content"),
       disableCspInDevPlugin(command === "serve"),
+      {
+        // Floorp Start runs with the about:newtab principal, so a CORS-mode
+        // stylesheet request to chrome://noraneko-newtab would be blocked.
+        name: "strip-crossorigin",
+        apply: "build",
+        transformIndexHtml: (html: string) =>
+          html.replaceAll(" crossorigin", ""),
+      },
     ],
     optimizeDeps: {
       include: ["react", "react-dom", "react/jsx-runtime"],
