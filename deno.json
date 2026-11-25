@@ -84,7 +84,7 @@
     "firefox-tests:prepare-browser": "deno run --allow-read --allow-write=browser-features/chrome/test/firefox-downloaded/generated tools/firefox-tests/prepare_firefox_browser_tests.ts",
     "test": "deno run -A tools/src/colocated_test_runner.ts",
     "test:firefox-tests": "deno test --allow-read --allow-write --allow-run=git tools/firefox-tests/",
-    "test:host": "deno test --allow-read --allow-write tools/src/ tools/design-matrix/",
+    "test:host": "deno test --allow-read --allow-write tools/src/ tools/design-matrix/ tools/workflow-research/",
     "test:docs-pipeline": "deno test --allow-read --allow-write --allow-net=127.0.0.1 tools/docs-pipeline/",
     "test:smoke": "deno run -A tools/src/smoke_runner.ts",
     "test:tab-stacks-session": "deno run -A tools/tab-stacks-session-regression.ts",
@@ -93,6 +93,8 @@
     "test:os-api:network-idle": "deno run -A tools/os-test/verify_network_idle_rigorous.ts",
     "test:os-api:local-page": "deno run -A tools/os-test/test-with-local-page.ts",
     "test:os-api:effects": "deno run -A tools/os-test/test-enhanced-effects.ts",
+    "workflow-research": "deno run --allow-read --allow-write tools/workflow-research/mod.ts",
+    "test:workflow-research": "deno test --allow-read --allow-write tools/workflow-research/",
     "test:integration": "deno task test && deno task test:os-api --quick"
   },
   "nodeModulesDir": "manual"
