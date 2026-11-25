@@ -22,6 +22,9 @@ export type M3dPackageHttpsOriginKind = "trusted" | "untrusted" | "raw";
 export interface M3dPackageHttpsRequestObservation {
   readonly origin: M3dPackageHttpsOriginKind;
   readonly mode: M3dPackageHttpsMode | "redirect-target";
+  readonly routePath: string | null;
+  readonly featureId: string | null;
+  readonly packageSha256: string | null;
   readonly cookiePresent: boolean;
   readonly seedCookieMarkerMatch: boolean;
   readonly acquisitionCookieMarkerMatch: boolean;

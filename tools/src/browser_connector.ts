@@ -123,7 +123,15 @@ export class MarionetteClient {
     if (resp[2]) {
       const err = resp[2];
       throw new Error(
-        `Marionette error (${err.error}): ${err.message ?? JSON.stringify(err)}`,
+        `Marionette error (${err.error}): ${
+          err.message ?? JSON.stringify(err)
+        }`,
+        {
+          cause: {
+            name: String(err.error),
+            message: String(err.message ?? ""),
+          },
+        },
       );
     }
     return resp[3];
@@ -211,6 +219,14 @@ export class MarionetteClient {
     } catch {
       // ignore
     }
+    try {
+      this.#conn.close();
+    } catch {
+      // ignore
+    }
+  }
+
+  abort(): void {
     try {
       this.#conn.close();
     } catch {
