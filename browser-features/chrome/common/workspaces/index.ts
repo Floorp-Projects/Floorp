@@ -25,6 +25,10 @@ import {
   WorkspacesBackupController,
   type WorkspacesBackupFuncs,
 } from "./utils/workspaces-backup-controller.ts";
+import {
+  canInitializeWorkspace,
+  waitForWorkspaceWindow,
+} from "./window-ready.ts";
 
 @noraComponent(import.meta.hot)
 export default class Workspaces extends NoraComponentBase {
@@ -72,7 +76,23 @@ export default class Workspaces extends NoraComponentBase {
       return;
     }
 
-    migrateWorkspacesData().then(() => {
+    const startup = new AbortController();
+    onCleanup(() => startup.abort());
+    migrateWorkspacesData().then(async () => {
+      const ready = await waitForWorkspaceWindow(
+        window,
+        Services.obs,
+        startup.signal,
+      );
+      if (!canInitializeWorkspace(ready, window, startup.signal)) {
+        if (!ready && !startup.signal.aborted && !window.closed) {
+          console.error(
+            "[Workspaces] Window startup finished without required browser chrome",
+          );
+        }
+        return;
+      }
+      if (!enabled()) return;
       const exec = () => {
         const iconCtx = new WorkspaceIcons();
         const dataManagerCtx = new WorkspacesDataManager();
@@ -123,6 +143,10 @@ export default class Workspaces extends NoraComponentBase {
       };
       if (owner) runWithOwner(owner, exec);
       else createRoot(exec);
+    }).catch((error: unknown) => {
+      if (!startup.signal.aborted && !window.closed) {
+        console.error("[Workspaces] Failed to initialize:", error);
+      }
     });
   }
 }
