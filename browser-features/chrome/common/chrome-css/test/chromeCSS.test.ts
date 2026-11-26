@@ -1993,7 +1993,7 @@ export async function runAllTests(): Promise<void> {
     {
       name:
         "ChromeCSSService: uninit saves empty disabled list when all enabled",
-      fn: testUninitSavesEmptyDisabledListWhenAllEnabled,
+      fn: testUninitDoesNotCreateDisabledListPrefWhenAllEnabled,
     },
     {
       name: "ChromeCSSService: uninit saves all files when all disabled",
