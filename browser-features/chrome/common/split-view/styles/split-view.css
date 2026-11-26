@@ -22,13 +22,19 @@
   -moz-subtree-hidden-only-visually: 0 !important;
   visibility: inherit !important;
   position: relative;
-  /*
-   * Upstream only applies `width: unset` on `.split-view-panel-active`,
-   * but in Floorp's N-pane split view, panels may not all receive that
-   * class immediately (especially the non-selected panel during initial
-   * split creation). Without `width: unset`, the panel retains its
-   * default/inherited width and ignores flex sizing, causing overlaps.
-   */
+}
+
+/*
+ * Upstream only applies `width: unset` on `.split-view-panel-active`,
+ * but in Floorp's N-pane split view, panels may not all receive that
+ * class immediately (especially the non-selected panel during initial
+ * split creation). Without `width: unset`, the panel retains its
+ * default/inherited width and ignores flex sizing, causing overlaps.
+ * Do not apply this to the native two-pane splitter path: upstream stores
+ * the controlled pane width in an attribute and inline style there.
+ */
+#tabbrowser-tabpanels[data-floorp-split]:not([data-floorp-native-splitter])
+  > .split-view-panel {
   width: unset !important;
 }
 
