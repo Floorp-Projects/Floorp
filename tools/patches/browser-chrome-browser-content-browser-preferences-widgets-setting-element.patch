@@ -1,0 +1,12 @@
+diff --git a/browser/chrome/browser/content/browser/preferences/widgets/setting-element.mjs b/browser/chrome/browser/content/browser/preferences/widgets/setting-element.mjs
+--- ./browser/chrome/browser/content/browser/preferences/widgets/setting-element.mjs
++++ ./browser/chrome/browser/content/browser/preferences/widgets/setting-element.mjs
+@@ -130,6 +130,8 @@
+         throw new Error(
+           `Event listeners are not yet supported with spread (${key})`
+         );
++      } else if (value === undefined || value === null) {
++        el.removeAttribute(key);
+       } else {
+         el.setAttribute(key, String(value));
+       }

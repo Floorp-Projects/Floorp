@@ -51,7 +51,12 @@ export namespace gTabbarStyleFunctions {
     tabbarElement?.removeAttribute("hidden");
 
     // Move elements to default positions
-    if (tabbarElement && windowManageContainer) {
+    // Moving a node that is already in place still reframes it and resets
+    // the tab strip's scroll position.
+    if (
+      tabbarElement && windowManageContainer &&
+      tabbarElement.lastChild !== windowManageContainer
+    ) {
       tabbarElement.appendChild(windowManageContainer);
     }
 
@@ -60,8 +65,10 @@ export namespace gTabbarStyleFunctions {
         | XULElement
         | null;
       if (menubar && menubar.parentNode === navigatorToolbox) {
-        menubar.after(tabbarElement);
-      } else {
+        if (menubar.nextElementSibling !== tabbarElement) {
+          menubar.after(tabbarElement);
+        }
+      } else if (navigatorToolbox.firstElementChild !== tabbarElement) {
         navigatorToolbox.prepend(tabbarElement);
       }
     }

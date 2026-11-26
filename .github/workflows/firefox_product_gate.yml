@@ -1,0 +1,253 @@
+# Nonrequired shadow until the repository owner promotes the check.
+name: "Firefox product gate"
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firefox-product-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runtime:
+    name: product runtime build (linux-x86_64)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      SCCACHE_GHA_ENABLED: "on"
+      SCCACHE_MAX_FRAME_LENGTH: "1048576"
+    steps:
+      - name: Checkout Floorp
+        uses: actions/checkout@v4
+        with:
+          path: floorp
+          persist-credentials: false
+
+      - name: Read Runtime lock
+        id: lock
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          lock = json.load(open("floorp/floorp-runtime.lock.json"))
+          print("repository=" + lock["source"]["repository"])
+          print("commit=" + lock["source"]["commit"])
+          PY
+
+      - name: Checkout locked Runtime
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.lock.outputs.repository }}
+          ref: ${{ steps.lock.outputs.commit }}
+          path: runtime
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h "$GITHUB_WORKSPACE"
+
+      - name: Host tests for the planner and aggregator
+        working-directory: floorp
+        run: python3 -B -m unittest discover -s tools/qa3 -p 'test_*product_cohort.py' -v
+
+      - uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Setup Runtime toolchain
+        working-directory: runtime
+        run: |
+          ./.github/workflows/scripts/setup-rust.sh linux x86_64 ""
+          ./.github/workflows/scripts/allocate-swap.sh x86_64
+
+      - name: Build Runtime with same-OBJDIR test packages
+        run: |
+          floorp/tools/qa/native-bridge/product-build-runtime.sh \
+            "$GITHUB_WORKSPACE/runtime" "$GITHUB_WORKSPACE/floorp/floorp-runtime.lock.json" \
+            "$(date -u +%Y%m%d%H%M%S)"
+
+      - name: Record compiled Runtime identity
+        run: |
+          git -C runtime worktree add --detach "$GITHUB_WORKSPACE/runtime-clean" HEAD
+          python3 -B floorp/tools/qa/native-bridge/product_provenance.py runtime \
+            --runtime runtime-clean --objdir runtime/obj-x86_64-pc-linux-gnu \
+            --lock floorp/floorp-runtime.lock.json --output runtime-support
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: product-runtime-${{ github.run_id }}-${{ github.run_attempt }}
+          path: runtime-support
+          if-no-files-found: error
+          retention-days: 14
+
+  assemble:
+    name: product assemble (linux-x86_64)
+    needs: runtime
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout Floorp
+        uses: actions/checkout@v4
+        with:
+          path: floorp
+          persist-credentials: false
+
+      - name: Read Runtime lock
+        id: lock
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          lock = json.load(open("floorp/floorp-runtime.lock.json"))
+          print("repository=" + lock["source"]["repository"])
+          print("commit=" + lock["source"]["commit"])
+          PY
+
+      - name: Checkout locked Runtime
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.lock.outputs.repository }}
+          ref: ${{ steps.lock.outputs.commit }}
+          path: runtime
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h "$GITHUB_WORKSPACE"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: product-runtime-${{ github.run_id }}-${{ github.run_attempt }}
+          path: runtime-support
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Assemble packaged Floorp with noraneko
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends patchelf
+          RUNTIME_PACKAGE=$(python3 -c 'import json;print(json.load(open("runtime-support/runtime-identity.json"))["packages"]["runtime"]["name"])')
+          floorp/tools/qa/native-bridge/product-assemble.sh \
+            "$GITHUB_WORKSPACE/runtime-support/$RUNTIME_PACKAGE" "$GITHUB_WORKSPACE/runtime" \
+            "$GITHUB_WORKSPACE/floorp" "$GITHUB_WORKSPACE/assembly"
+          mkdir product-package
+          cp assembly/obj-artifact-build-output/dist/floorp-*.tar.xz product-package/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: product-floorp-${{ github.run_id }}-${{ github.run_attempt }}
+          path: product-package
+          if-no-files-found: error
+          retention-days: 14
+
+  firefox-product-cohort:
+    name: firefox-product-cohort (linux-x86_64)
+    needs: [runtime, assemble]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      EVIDENCE: ${{ github.workspace }}/evidence
+    steps:
+      - name: Require compiled Runtime and assembled product
+        run: |
+          mkdir -p "$EVIDENCE"
+          echo '{"runtime": "${{ needs.runtime.result }}", "assemble": "${{ needs.assemble.result }}"}' > "$EVIDENCE/needs.json"
+          [ "${{ needs.runtime.result }}" = success ] && [ "${{ needs.assemble.result }}" = success ]
+
+      - name: Checkout Floorp
+        uses: actions/checkout@v4
+        with:
+          path: floorp
+          persist-credentials: false
+
+      - name: Read Runtime lock
+        id: lock
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          lock = json.load(open("floorp/floorp-runtime.lock.json"))
+          print("repository=" + lock["source"]["repository"])
+          print("commit=" + lock["source"]["commit"])
+          PY
+
+      - name: Checkout locked Runtime
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.lock.outputs.repository }}
+          ref: ${{ steps.lock.outputs.commit }}
+          path: runtime
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: product-runtime-${{ github.run_id }}-${{ github.run_attempt }}
+          path: runtime-support
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: product-floorp-${{ github.run_id }}-${{ github.run_attempt }}
+          path: product-package
+
+      - name: Extract product and same-OBJDIR test packages
+        run: |
+          set -euo pipefail
+          mkdir product support
+          tar -xJf product-package/floorp-*.tar.xz -C product
+          for kind in common mochitest condprof; do
+            name=$(python3 -c 'import json,sys;print(json.load(open("runtime-support/runtime-identity.json"))["packages"][sys.argv[1]]["name"])' "$kind")
+            tar --zstd -xf "runtime-support/$name" -C support
+          done
+          python3 -m venv venv
+          (cd support/config && ../../venv/bin/pip install --quiet -r marionette_requirements.txt)
+          venv/bin/pip freeze > "$EVIDENCE/python-environment.txt"
+
+      - name: Bind product provenance
+        run: |
+          python3 -B floorp/tools/qa/native-bridge/product_provenance.py bind \
+            --runtime runtime --runtime-support runtime-support --support support \
+            --floorp-source floorp --product-archive "$(ls product-package/floorp-*.tar.xz)" \
+            --product-root product/floorp --output "$EVIDENCE/provenance.json"
+
+      - name: Run all 289 original cases serially
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openbox pulseaudio pulseaudio-utils
+          # Audio tab tests need a sound server, as on Mozilla's Linux test workers.
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink
+          xvfb-run -a -s "-screen 0 1600x1200x24" bash -c 'openbox & sleep 2; exec "$@"' _ \
+            venv/bin/python -B floorp/tools/qa/native-bridge/run_product_cohort.py \
+            --source runtime --support support --python venv/bin/python \
+            --floorp product/floorp/floorp --output "$EVIDENCE/cohort"
+
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-product-cohort-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.EVIDENCE }}
+          if-no-files-found: error
+          retention-days: 30

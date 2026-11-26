@@ -1,0 +1,18 @@
+diff --git a/browser/components/sessionstore/SessionStore.sys.mjs b/browser/components/sessionstore/SessionStore.sys.mjs
+--- a/browser/components/sessionstore/SessionStore.sys.mjs
++++ b/browser/components/sessionstore/SessionStore.sys.mjs
+@@ -2493,7 +2493,13 @@
+     /** @type {Map<string, SavedTabGroupStateData>} */
+     let newlySavedTabGroups = new Map();
+     // Convert any open tab groups into saved tab groups in place
+-    let savedGroups = closedWinData.groups.map(tabGroupState =>
++    let closingGroupIds = new Set(
++      (closedWinData.closedGroups ?? []).map(group => group.id)
++    );
++    let openGroups = closedWinData.groups.filter(
++      tabGroupState => !closingGroupIds.has(tabGroupState.id)
++    );
++    let savedGroups = openGroups.map(tabGroupState =>
+       lazy.TabGroupState.savedInClosedWindow(
+         tabGroupState,
+         closedWinData.closedId

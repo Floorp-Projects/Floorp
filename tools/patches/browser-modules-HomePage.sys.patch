@@ -1,0 +1,12 @@
+diff --git a/browser/modules/HomePage.sys.mjs b/browser/modules/HomePage.sys.mjs
+--- ./browser/modules/HomePage.sys.mjs
++++ ./browser/modules/HomePage.sys.mjs
+@@ -170,7 +170,7 @@
+     let tabs = [];
+ 
+     if (
+-      win &&
++      win?.gBrowser &&
+       win.document.documentElement.getAttribute("windowtype") ===
+         "navigator:browser"
+     ) {

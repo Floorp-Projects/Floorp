@@ -646,8 +646,9 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     const workspaceId = this.tabManagerCtx.getWorkspaceIdFromAttribute(tab);
     const currentWorkspaceId = this.getSelectedWorkspaceID();
 
-    // If tab doesn't have a workspace ID, assign it to current workspace
-    if (!workspaceId) {
+    // If tab doesn't have a workspace ID, assign it to current workspace.
+    // Session restore opens tabs it hid already hidden; leave them alone.
+    if (!workspaceId && !(tab as XULElement & { hidden?: boolean }).hidden) {
       this.tabManagerCtx.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
     }
 

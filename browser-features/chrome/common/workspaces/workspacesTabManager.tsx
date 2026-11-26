@@ -376,6 +376,8 @@ export class WorkspacesTabManager {
       const wsId = this.getWorkspaceIdFromAttribute(tab) ??
         this.dataManagerCtx.getSelectedWorkspaceID();
       if (!this.getWorkspaceIdFromAttribute(tab)) {
+        // Session restore opens tabs it hid already hidden; leave them alone.
+        if ((tab as XULElement & { hidden?: boolean }).hidden) return;
         this.setWorkspaceIdToAttribute(tab, wsId);
       }
     } catch {
@@ -414,6 +416,8 @@ export class WorkspacesTabManager {
       // Set workspaceId if workspaceId is null
       const workspaceId = this.getWorkspaceIdFromAttribute(tab);
       if (!workspaceId) {
+        // Tabs hidden outside workspaces (session restore, extensions) stay hidden.
+        if ((tab as XULElement & { hidden?: boolean }).hidden) continue;
         this.setWorkspaceIdToAttribute(tab, currentWorkspaceId);
       }
 
@@ -744,7 +748,10 @@ export class WorkspacesTabManager {
             globalThis.gBrowser.selectedTab = tabToSelect;
           } else {
             // Priority 4: Claim an unattributed tab or create a new one.
-            const nonWorkspaceTab = this.isThereNoWorkspaceTabs();
+            const nonWorkspaceTab = currentTab &&
+                !currentTab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)
+              ? currentTab
+              : this.isThereNoWorkspaceTabs();
             if (nonWorkspaceTab !== true) {
               globalThis.gBrowser.selectedTab = nonWorkspaceTab as XULElement;
               this.setWorkspaceIdToAttribute(
@@ -846,7 +853,10 @@ export class WorkspacesTabManager {
       >
     ) {
       if (!tab) continue;
-      if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
+      if (
+        !(tab as XULElement & { hidden?: boolean }).hidden &&
+        !tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)
+      ) {
         return tab;
       }
     }

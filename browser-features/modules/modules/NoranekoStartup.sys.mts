@@ -11,6 +11,12 @@ import {
   shouldShowReleaseNotesChoice,
 } from "../common/release-notes.ts";
 import { launchDevPorts } from "../common/dev-port-offset.ts";
+import {
+  getComponentRegistrar,
+  loadStartPageInPrivilegedAboutProcesses,
+  registerCustomAboutPage,
+  START_PAGE_URL,
+} from "./StartPageAbout.sys.mts";
 
 /** Launch-local dev port resolver (FDH Gate 2 task 2-B): dev/test URLs of
  * this launch resolve to the ports actually in use, not the base table. */
@@ -23,18 +29,6 @@ Services.prefs.getDefaultBranch("").setStringPref(
   "startup.homepage_override_url",
   "",
 );
-
-// Keep the existing browser UI during the Firefox 157 transition. Locking the
-// preferences masks a profile's prior Nova opt-in without deleting it.
-for (
-  const pref of [
-    "browser.nova.enabled",
-    "browser.newtabpage.activity-stream.nova.enabled",
-  ]
-) {
-  Services.prefs.getDefaultBranch("").setBoolPref(pref, false);
-  Services.prefs.lockPref(pref);
-}
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs",
@@ -70,30 +64,6 @@ export const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 
 export let isFirstRun = false;
 export let isUpdated = false;
-
-/**
- * Get nsIComponentRegistrar from Components.manager via QueryInterface.
- * Components.manager needs explicit QI to access registerFactory.
- */
-function getComponentRegistrar(): nsIComponentRegistrar | null {
-  try {
-    const cm = Components.manager;
-    if (cm === undefined || cm === null) {
-      return null;
-    }
-    // Components.manager has QueryInterface at runtime but TypeScript defs don't reflect it
-    const maybeQI =
-      (cm as unknown as { QueryInterface?: (iid: nsIID) => unknown })
-        .QueryInterface;
-    if (typeof maybeQI !== "function") {
-      return null;
-    }
-    return maybeQI.call(cm, Ci.nsIComponentRegistrar) as nsIComponentRegistrar;
-  } catch (e) {
-    console.error("[NoranekoStartup] Failed to get nsIComponentRegistrar:", e);
-    return null;
-  }
-}
 
 const executedFunctions = new Set<string>();
 const RELEASE_NOTES_URL =
@@ -410,8 +380,8 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
   }
 
   if (await checkNewtabUserPreference()) {
-    customAboutPages["newtab"] = "chrome://noraneko-newtab/content/index.html";
-    customAboutPages["home"] = "chrome://noraneko-newtab/content/index.html";
+    customAboutPages["newtab"] = START_PAGE_URL;
+    customAboutPages["home"] = START_PAGE_URL;
     // Fallback for newtab in about pages map (though AboutNewTab handles the actual newtab url)
     if (!(await isResourceAvailable(customAboutPages["newtab"]))) {
       const localhostNewTab = launchDevPort.httpOrigin("newtab", "/");
@@ -423,47 +393,6 @@ const getCustomAboutPages = async (): Promise<Record<string, string>> => {
   return customAboutPages;
 };
 
-class CustomAboutPage {
-  private _uri: nsIURI;
-
-  constructor(urlString: string) {
-    this._uri = Services.io.newURI(urlString);
-  }
-
-  get uri(): nsIURI {
-    return this._uri;
-  }
-
-  newChannel(_uri: nsIURI, loadInfo: nsILoadInfo): nsIChannel {
-    const query = _uri.query ? `?${_uri.query}` : "";
-    const ref = _uri.ref ? `#${_uri.ref}` : "";
-    const targetUri = Services.io.newURI(`${this.uri.spec}${query}${ref}`);
-    const new_ch = Services.io.newChannelFromURIWithLoadInfo(
-      targetUri,
-      loadInfo,
-    );
-    new_ch.owner = Services.scriptSecurityManager.getSystemPrincipal();
-    return new_ch;
-  }
-
-  getURIFlags(_uri: nsIURI): number {
-    if (!this.uri) {
-      throw new Error("URI is not defined");
-    }
-
-    return (
-      (Ci.nsIAboutModule.ALLOW_SCRIPT as number) |
-      (Ci.nsIAboutModule.IS_SECURE_CHROME_UI as number)
-    );
-  }
-
-  getChromeURI(_uri: nsIURI): nsIURI {
-    return this.uri;
-  }
-
-  QueryInterface = ChromeUtils.generateQI(["nsIAboutModule"]);
-}
-
 async function registerCustomAboutPages(): Promise<void> {
   const customAboutPages = await getCustomAboutPages();
   // Newtab's resource mapping and Activity Stream share the native readiness signal.
@@ -473,29 +402,14 @@ async function registerCustomAboutPages(): Promise<void> {
     : undefined;
 
   for (const aboutKey in customAboutPages) {
-    const AboutModuleFactory: nsIFactory = {
-      createInstance<T extends nsIID>(iid: T): nsQIResult<T> {
-        const page = new CustomAboutPage(customAboutPages[aboutKey]);
-        if (aboutKey === "newtab") {
-          Object.defineProperty(page, "wrappedJSObject", {
-            value: newTabRedirector,
-          });
-        }
-        return page.QueryInterface(iid);
-      },
-    };
-
-    const registrar = getComponentRegistrar();
-    if (!registrar) {
-      console.error("[NoranekoStartup] Failed to get nsIComponentRegistrar");
-      continue;
-    }
-    registrar.registerFactory(
-      Services.uuid.generateUUID(),
-      `about:${aboutKey}`,
-      `@mozilla.org/network/protocol/about;1?what=${aboutKey}`,
-      AboutModuleFactory,
+    registerCustomAboutPage(
+      aboutKey,
+      customAboutPages[aboutKey],
+      aboutKey === "newtab" ? newTabRedirector : undefined,
     );
+  }
+  if (customAboutPages.newtab === START_PAGE_URL) {
+    loadStartPageInPrivilegedAboutProcesses();
   }
 }
 

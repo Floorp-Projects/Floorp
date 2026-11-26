@@ -118,7 +118,9 @@ class i18nUtils {
 
     // Install the requested lang pack on startup. Use the user-set pref
     // when present; otherwise attempt negotiation. Avoid duplicating the
-    // install/catch logic.
+    // install/catch logic. Langpack lookup queries AMO, which test
+    // harnesses forbid.
+    if (Cu.isInAutomation) return;
     const usePref = this.isUserLocaleSet;
     this.installLangPackAsRequested(usePref).catch(() => {
       console.error("Failed to install lang pack on startup");

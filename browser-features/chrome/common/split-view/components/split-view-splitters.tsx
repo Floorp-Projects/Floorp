@@ -8,6 +8,7 @@ import {
   persistPaneSizesForPanelIds,
   resolvePaneSizesForPanelIds,
 } from "../patches/session-restore.js";
+import { splitViewPaneSizes } from "../data/config.js";
 import { forceCleanupDragState } from "../utils/force-cleanup.js";
 
 const log = console.createInstance({ prefix: "nora@split-view-splitters" });
@@ -56,6 +57,97 @@ function remapFlexRatiosToOrder(
 
 // Track active drag cleanup so clearSplitHandles can abort in-progress drags
 let activeDragCleanup: (() => void) | null = null;
+let nativeWidthObserver: MutationObserver | null = null;
+let nativeWidthPersistTimeout: number | undefined;
+
+function normalizedDefaultRatios(count: number): number[] {
+  return normalizeRatios(splitViewPaneSizes().flexRatios, count);
+}
+
+function ratiosDifferFromDefault(ratios: number[]): boolean {
+  const defaults = normalizedDefaultRatios(ratios.length);
+  return ratios.some((ratio, index) =>
+    Math.abs(ratio - defaults[index]!) > 0.005
+  );
+}
+
+function persistNativeHorizontalWidths(panelIds: string[]): void {
+  const panels = panelIds.map((id) =>
+    document?.getElementById(id) as HTMLElement | null
+  );
+  const [leftPanel, rightPanel] = panels;
+  if (!leftPanel || !rightPanel || !leftPanel.hasAttribute("width")) {
+    return;
+  }
+  const leftWidth = leftPanel.getBoundingClientRect().width;
+  const rightWidth = rightPanel.getBoundingClientRect().width;
+  const totalWidth = leftWidth + rightWidth;
+  if (!(totalWidth > 0)) {
+    return;
+  }
+  const leftRatio = leftWidth / totalWidth;
+  const ratios = normalizeRatios([leftRatio, 1 - leftRatio], 2);
+  const currentSizes = resolvePaneSizesForPanelIds(panelIds);
+  persistPaneSizesForPanelIds(panelIds, {
+    ...currentSizes,
+    flexRatios: ratios,
+  });
+}
+
+function observeNativeHorizontalWidths(panelIds: string[]): void {
+  nativeWidthObserver?.disconnect();
+  nativeWidthObserver = null;
+  const panels = panelIds
+    .map((id) => document?.getElementById(id) as HTMLElement | null)
+    .filter((panel): panel is HTMLElement => !!panel);
+  if (panels.length !== 2) {
+    return;
+  }
+  nativeWidthObserver = new MutationObserver(() => {
+    if (nativeWidthPersistTimeout !== undefined) {
+      self.clearTimeout(nativeWidthPersistTimeout);
+    }
+    nativeWidthPersistTimeout = self.setTimeout(() => {
+      nativeWidthPersistTimeout = undefined;
+      persistNativeHorizontalWidths(panelIds);
+    }, 300);
+  });
+  for (const panel of panels) {
+    nativeWidthObserver.observe(panel, {
+      attributes: true,
+      attributeFilter: ["width"],
+    });
+  }
+}
+
+function applyNativeHorizontalSizes(
+  panelIds: string[],
+  ratios: number[],
+): void {
+  if (!ratiosDifferFromDefault(ratios)) {
+    return;
+  }
+  requestAnimationFrame(() => {
+    const [leftPanel, rightPanel] = panelIds.map((id) =>
+      document?.getElementById(id) as HTMLElement | null
+    );
+    if (!leftPanel || !rightPanel || leftPanel.hasAttribute("width")) {
+      return;
+    }
+    const totalWidth = leftPanel.getBoundingClientRect().width +
+      rightPanel.getBoundingClientRect().width;
+    if (!(totalWidth > 0)) {
+      return;
+    }
+    const minWidth = 140;
+    const requested = totalWidth * ratios[0]!;
+    const width = Math.round(
+      Math.max(minWidth, Math.min(requested, totalWidth - minWidth)),
+    );
+    leftPanel.setAttribute("width", String(width));
+    leftPanel.style.setProperty("width", `${width}px`);
+  });
+}
 
 function getTabpanels(): Element | null {
   return document?.getElementById("tabbrowser-tabpanels") ?? null;
@@ -70,8 +162,19 @@ export function clearSplitHandles(): void {
 
   const tabpanels = getTabpanels();
   if (!tabpanels) return;
+  tabpanels.removeAttribute("data-floorp-native-splitter");
+  nativeWidthObserver?.disconnect();
+  nativeWidthObserver = null;
+  if (nativeWidthPersistTimeout !== undefined) {
+    self.clearTimeout(nativeWidthPersistTimeout);
+    nativeWidthPersistTimeout = undefined;
+  }
+  const nativeSplitter = tabpanels.querySelector(
+    ":scope > .split-view-splitter",
+  ) as HTMLElement | null;
+  nativeSplitter?.style.removeProperty("--splitter-order");
   const handles = tabpanels.querySelectorAll(
-    ".floorp-split-handle, .floorp-grid-handle, .split-view-splitter",
+    ".floorp-split-handle, .floorp-grid-handle",
   );
   log.debug(`[clearSplitHandles] removing ${handles.length} handle(s)`);
   for (const handle of handles) {
@@ -133,18 +236,35 @@ export function insertFlexHandles(
     }]`,
   );
 
+  // Two side-by-side panes keep Firefox's keyboard-accessible splitter.
+  const useNativeSplitter = orientation === "horizontal" &&
+    orderedIds.length === 2;
+  if (useNativeSplitter) {
+    tabpanels.setAttribute("data-floorp-native-splitter", "true");
+    const nativeSplitter = tabpanels.querySelector(
+      ":scope > .split-view-splitter",
+    ) as HTMLElement | null;
+    nativeSplitter?.style.setProperty("--splitter-order", "1");
+    applyNativeHorizontalSizes(orderedIds, ratios);
+    observeNativeHorizontalWidths(orderedIds);
+  }
+
   for (let i = 0; i < orderedIds.length; i++) {
     const panelEl = document?.getElementById(orderedIds[i]!) as
       | HTMLElement
       | null;
     if (panelEl) {
-      panelEl.style.setProperty("flex", `${ratios[i]} 1 0%`);
+      if (!useNativeSplitter) {
+        panelEl.style.setProperty("flex", `${ratios[i]} 1 0%`);
+      }
       // DOM order of tabpanels children can stay creation order; match tabs.
       panelEl.style.setProperty("order", String(2 * i));
     } else {
       log.warn(`[insertFlexHandles] panel element not found: ${orderedIds[i]}`);
     }
   }
+
+  if (useNativeSplitter) return;
 
   for (let i = 0; i < orderedIds.length - 1; i++) {
     const panelEl = document?.getElementById(orderedIds[i]!);

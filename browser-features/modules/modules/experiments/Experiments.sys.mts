@@ -546,6 +546,12 @@ export class ExperimentsClient {
     this.disabledExperiments = this.loadDisabledExperiments();
     this.forceEnrolledExperiments = this.loadForceEnrolledExperiments();
 
+    // Test harnesses forbid non-local connections; keep cached assignments.
+    if (Cu.isInAutomation) {
+      this.experiments = [];
+      return this;
+    }
+
     const timeoutMs = options.timeoutMs || 5000;
     try {
       const data = await this.fetchJsonWithTimeout(

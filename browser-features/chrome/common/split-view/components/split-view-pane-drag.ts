@@ -48,9 +48,8 @@ export function updatePaneDragGrips(
       continue;
     }
     grip.className = "floorp-pane-drag-grip";
-    grip.setAttribute("role", "button");
-    grip.setAttribute("aria-label", "Drag to reorder pane");
-    grip.setAttribute("tabindex", "0");
+    // Mouse-only affordance; keep it out of the content area's tab order.
+    grip.setAttribute("aria-hidden", "true");
     grip.addEventListener("mousedown", (ev: Event) => {
       onGripMouseDown(ev as MouseEvent, logger);
     });

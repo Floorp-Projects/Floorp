@@ -33,6 +33,15 @@ export class NRStartPageChild extends JSWindowActorChild {
       Cu.exportFunction(this.FocusUrlBar.bind(this), window, {
         defineAs: "NRFocusUrlBar",
       });
+      Cu.exportFunction(this.GetStringPref.bind(this), window, {
+        defineAs: "NRGetStringPref",
+      });
+      Cu.exportFunction(this.SetStringPref.bind(this), window, {
+        defineAs: "NRSetStringPref",
+      });
+      Cu.exportFunction(() => Cu.isInAutomation, window, {
+        defineAs: "NRIsInAutomation",
+      });
     }
   }
 
@@ -70,6 +79,29 @@ export class NRStartPageChild extends JSWindowActorChild {
   }
 
   resolveGetRandomImageFromFolder: ((image: string) => void) | null = null;
+
+  GetStringPref(
+    name: string,
+    callback: (value: string | null) => void = () => {},
+  ) {
+    this.sendQuery("NRStartPage:GetStringPref", { name }).then(
+      (value: unknown) => callback(typeof value === "string" ? value : null),
+      (error: unknown) => {
+        console.error("[NRStartPage] GetStringPref failed:", error);
+        callback(null);
+      },
+    );
+  }
+
+  SetStringPref(name: string, value: string, callback: () => void = () => {}) {
+    this.sendQuery("NRStartPage:SetStringPref", { name, value }).then(
+      () => callback(),
+      (error: unknown) => {
+        console.error("[NRStartPage] SetStringPref failed:", error);
+        callback();
+      },
+    );
+  }
 
   FocusUrlBar() {
     this.sendAsyncMessage("NRStartPage:FocusUrlBar");

@@ -24,12 +24,11 @@ function manifestObserverCount(): number {
   return count;
 }
 
-function tabSelectListenerCount(): number {
+function tabSwitchListenerCount(): number {
   return Cc["@mozilla.org/eventlistenerservice;1"].getService(
     Ci.nsIEventListenerService,
-  ).getListenerInfoFor(gBrowser.tabContainer).filter((info) =>
-    info.type === "TabSelect"
-  ).length;
+  ).getListenerInfoFor(window).filter((info) => info.type === "TabSwitchDone")
+    .length;
 }
 
 function deferredBoolean() {
@@ -43,7 +42,7 @@ async function testPendingManifestCheckCannotReviveClosedOwner(): Promise<
 > {
   for (const pendingStage of ["manifest", "installed"]) {
     const observers = manifestObserverCount();
-    const tabListeners = tabSelectListenerCount();
+    const tabListeners = tabSwitchListenerCount();
     const pending = deferredBoolean();
     const target = new EventTarget();
     let firstChecks = 0;
@@ -80,9 +79,9 @@ async function testPendingManifestCheckCannotReviveClosedOwner(): Promise<
         "constructor owns one manifest observer",
       );
       assertEquals(
-        tabSelectListenerCount(),
+        tabSwitchListenerCount(),
         tabListeners + 1,
-        "constructor owns one TabSelect listener",
+        "constructor owns one TabSwitchDone listener",
       );
       await Promise.resolve();
       if (pendingStage === "installed") {
@@ -100,7 +99,7 @@ async function testPendingManifestCheckCannotReviveClosedOwner(): Promise<
         "unload releases the exact native observer",
       );
       assertEquals(
-        tabSelectListenerCount(),
+        tabSwitchListenerCount(),
         tabListeners,
         "unload releases the exact tab listener",
       );
@@ -219,7 +218,13 @@ async function testManifestNotificationBelongsToSelectedBrowser(): Promise<
       MANIFEST_TOPIC,
     );
     assertEquals(checks, initial + 1, "the selected browser still refreshes");
+    const switched = new Promise<void>((resolve) =>
+      globalThis.addEventListener("TabSwitchDone", () => resolve(), {
+        once: true,
+      })
+    );
     gBrowser.selectedTab = background;
+    await switched;
     assertEquals(
       checks,
       initial + 2,

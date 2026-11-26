@@ -2,10 +2,17 @@ import { moduleUrlServedByDevHttpServer } from "../../../../../libs/shared/dev-p
 import type { NRSettingsParentFunctions } from "../../../../modules/common/defines.ts";
 import { createBirpc } from "birpc";
 
-// deno-lint-ignore no-explicit-any
-declare const Services: any;
 declare global {
   interface Window {
+    NRGetStringPref: (
+      prefName: string,
+      callback: (value: string | null) => void,
+    ) => void;
+    NRSetStringPref: (
+      prefName: string,
+      value: string,
+      callback: () => void,
+    ) => void;
     NRSettingsSend: (data: string) => void;
     NRSettingsRegisterReceiveCallback: (
       callback: (data: string) => void,
@@ -16,37 +23,24 @@ declare global {
 // Dev-mode detection is offset-agnostic (FDH Gate 2 task 2-B).
 const isNewtabDev = moduleUrlServedByDevHttpServer(import.meta.url);
 
-const directServicesFunctions: NRSettingsParentFunctions = {
-  getBoolPref: (prefName) => {
-    if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_BOOL) {
-      return Promise.resolve(null);
-    }
-    return Promise.resolve(Services.prefs.getBoolPref(prefName));
-  },
-  getIntPref: (prefName) => {
-    if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_INT) {
-      return Promise.resolve(null);
-    }
-    return Promise.resolve(Services.prefs.getIntPref(prefName));
-  },
-  getStringPref: (prefName) => {
-    if (Services.prefs.getPrefType(prefName) !== Services.prefs.PREF_STRING) {
-      return Promise.resolve(null);
-    }
-    return Promise.resolve(Services.prefs.getStringPref(prefName));
-  },
-  setBoolPref: (prefName, value) => {
-    Services.prefs.setBoolPref(prefName, value);
-    return Promise.resolve();
-  },
-  setIntPref: (prefName, value) => {
-    Services.prefs.setIntPref(prefName, value);
-    return Promise.resolve();
-  },
-  setStringPref: (prefName, value) => {
-    Services.prefs.setStringPref(prefName, value);
-    return Promise.resolve();
-  },
+type StartPagePrefFunctions = Pick<
+  NRSettingsParentFunctions,
+  "getStringPref" | "setStringPref"
+>;
+
+const startPageActorFunctions: StartPagePrefFunctions = {
+  getStringPref: (prefName) =>
+    new Promise((resolve) =>
+      (globalThis as unknown as Window).NRGetStringPref(prefName, resolve)
+    ),
+  setStringPref: (prefName, value) =>
+    new Promise((resolve) =>
+      (globalThis as unknown as Window).NRSetStringPref(
+        prefName,
+        value,
+        () => resolve(),
+      )
+    ),
 };
 
 export const rpc = isNewtabDev
@@ -63,4 +57,4 @@ export const rpc = isNewtabDev
       deserialize: (v) => JSON.parse(v),
     },
   )
-  : directServicesFunctions;
+  : startPageActorFunctions;

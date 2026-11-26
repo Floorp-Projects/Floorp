@@ -2,7 +2,7 @@ diff --git a/browser/components/tabbrowser/Tabbrowser.sys.mjs b/browser/componen
 index e41d07a03d5..1a06b53b97e 100644
 --- a/browser/components/tabbrowser/Tabbrowser.sys.mjs
 +++ b/browser/components/tabbrowser/Tabbrowser.sys.mjs
-@@ -4975,6 +4975,45 @@ export class Tabbrowser {
+@@ -5118,6 +5118,50 @@ export class Tabbrowser {
      for (var i = 0; i < tabDataList.length; i++) {
        let tabData = tabDataList[i];
  
@@ -30,7 +30,12 @@ index e41d07a03d5..1a06b53b97e 100644
 +      let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
 +      let floorpSSB = tabData.floorpSSB;
 +
-+      if (!isPrivateContainerPlaceholder && !floorpWorkspaceId) {
++      // Session restore keeps hidden tabs hidden; do not claim them.
++      if (
++        !isPrivateContainerPlaceholder &&
++        !floorpWorkspaceId &&
++        !tabData.hidden
++      ) {
 +        try {
 +          floorpWorkspaceId = JSON.parse(
 +            Services.prefs.getStringPref("floorp.workspaces.v4.store", "{}")
@@ -48,7 +53,7 @@ index e41d07a03d5..1a06b53b97e 100644
        let userContextId = tabData.userContextId;
        let select = i == selectTab - 1;
        let tab;
-@@ -4992,6 +5031,36 @@ export class Tabbrowser {
+@@ -5135,6 +5179,36 @@ export class Tabbrowser {
        ) {
          tabWasReused = true;
          tab = this.selectedTab;
@@ -85,7 +90,7 @@ index e41d07a03d5..1a06b53b97e 100644
          if (!tabData.pinned) {
            this.unpinTab(tab);
          } else {
-@@ -5036,6 +5105,37 @@ export class Tabbrowser {
+@@ -5179,6 +5253,37 @@ export class Tabbrowser {
            preferredRemoteType,
          });
  
@@ -123,6 +128,31 @@ index e41d07a03d5..1a06b53b97e 100644
          if (select) {
            tabToSelect = tab;
          }
+@@ -5295,6 +5400,24 @@ export class Tabbrowser {
+           // tabs.
+           if (!tab.pinned) {
+             this.#fireTabOpen(tab, {});
++            /**
++             * * NORANEKO PATCH - 0.1.19
++             * * [WORKSPACES]
++             * * START
++             */
++            // Session restore hides this tab after TabOpen; keep it unclaimed.
++            let restoredTabData = tabDataList[tabs.indexOf(tab)];
++            if (
++              restoredTabData?.hidden &&
++              !restoredTabData.floorpWorkspaceId
++            ) {
++              tab.removeAttribute("floorpWorkspaceId");
++            }
++            /**
++             * * NORANEKO PATCH - 0.1.19
++             * * [WORKSPACES]
++             * * END
++             */
+           }
+ 
+           // Fire a TabBrowserInserted event on all tabs that have a connected,
 diff --git a/browser/components/sessionstore/SessionStore.sys.mjs b/browser/components/sessionstore/SessionStore.sys.mjs
 index 9fa4c8e8ccd..03a41e7c401 100644
 --- a/browser/components/sessionstore/SessionStore.sys.mjs

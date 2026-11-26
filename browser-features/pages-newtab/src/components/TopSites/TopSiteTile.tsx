@@ -25,11 +25,16 @@ export function TopSiteTile(
   { site, isPinned, isFirefoxMode, onContextMenu }: TopSiteTileProps,
 ) {
   const isPinnedSite = isPinned;
+  // Test harnesses forbid non-local connections.
+  const inAutomation = (globalThis as { NRIsInAutomation?: () => boolean })
+    .NRIsInAutomation?.() ?? false;
   const faviconUrl = (site as TopSite).favicon ||
     (site as TopSite).smallFavicon ||
-    `https://www.google.com/s2/favicons?domain=${
-      new URL(site.url).hostname
-    }&sz=64`;
+    (inAutomation
+      ? ""
+      : `https://www.google.com/s2/favicons?domain=${
+        new URL(site.url).hostname
+      }&sz=64`);
 
   return (
     <a

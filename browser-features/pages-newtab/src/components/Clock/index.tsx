@@ -19,7 +19,11 @@ export function Clock() {
       <div className="flex items-center gap-3">
         <div className="text-2xl font-medium text-white tabular-nums tracking-wide">
           {hours}
-          <span className="animate-pulse mx-0.5">:</span>
+          <span
+            className={`mx-0.5 ${time.getSeconds() % 2 ? "opacity-40" : ""}`}
+          >
+            :
+          </span>
           {minutes}
         </div>
         <div className="flex flex-col text-right">
