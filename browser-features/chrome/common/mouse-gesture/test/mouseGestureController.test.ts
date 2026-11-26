@@ -1110,6 +1110,37 @@ async function testRecognizedGestureExecutesSynchronously(): Promise<void> {
   });
 }
 
+async function testReversalEndingAtItsOriginExecutes(
+  finalMoveButtons = 2,
+): Promise<void> {
+  await withTrackedActions(async (counts) => {
+    await withController(
+      { actions: [{ pattern: ["right", "left"], action: DRAWN_RIGHT_ACTION }] },
+      ({ win }) => {
+        dispatchMouse(win, "mousedown", 2, 0, 0, 2);
+        dispatchDrag(win, 96, 0);
+        for (let x = 90; x > 0; x -= 6) {
+          dispatchMouse(win, "mousemove", 0, x, 0, 2);
+        }
+        dispatchMouse(win, "mousemove", 2, 0, 0, finalMoveButtons);
+        const mouseUp = dispatchMouse(win, "mouseup", 2);
+        const contextMenu = dispatchMouse(win, "contextmenu", 2);
+
+        assertEquals(
+          counts[DRAWN_RIGHT_ACTION],
+          1,
+          "reversal should run its action",
+        );
+        assert(mouseUp.defaultPrevented, "reversal should consume mouseup");
+        assert(
+          contextMenu.defaultPrevented,
+          "reversal should suppress the context menu",
+        );
+      },
+    );
+  });
+}
+
 async function testUnrecognizedMovedGestureConsumesMouseUp(): Promise<void> {
   await withTrackedActions(async (counts) => {
     await withController(
@@ -2594,6 +2625,16 @@ const tests: TestCase[] = [
   {
     name: "recognized gesture executes synchronously on mouseup",
     fn: testRecognizedGestureExecutesSynchronously,
+  },
+  {
+    name:
+      "reversal ending at its origin executes and suppresses the context menu",
+    fn: testReversalEndingAtItsOriginExecutes,
+  },
+  {
+    name:
+      "reversal survives a secondary drag event delivered after button release",
+    fn: () => testReversalEndingAtItsOriginExecutes(0),
   },
   {
     name: "unrecognized but moved gesture consumes its mouseup",
