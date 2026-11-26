@@ -41,12 +41,12 @@ function withIntPrefs(prefs: [string, number][], fn: () => void): void {
 // Tests — getOldInterfaceConfig
 // ---------------------------------------------------------------------------
 
-function testInterfaceDefaultLepton(): void {
+function testInterfaceDefaultProton(): void {
   withIntPref("floorp.browser.user.interface", 0, () => {
     assertEquals(
       getOldInterfaceConfig(),
-      "lepton",
-      "default (0) should return lepton",
+      "proton",
+      "default (0) should return proton for fresh profiles",
     );
   });
 }
@@ -253,7 +253,7 @@ function testTabbarPositionInvalidValueReturnsDefault(): void {
 
 export function runAllTests(): void {
   const tests: TestCase[] = [
-    { name: "interface default → lepton", fn: testInterfaceDefaultLepton },
+    { name: "interface default → proton", fn: testInterfaceDefaultProton },
     {
       name: "interface 3+0 → lepton",
       fn: testInterfaceCase3DefaultLepton,
