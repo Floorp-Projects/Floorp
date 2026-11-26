@@ -1074,7 +1074,9 @@ async function testUninitSavesDisabledListPref(): Promise<void> {
   }
 }
 
-async function testUninitSavesEmptyDisabledListWhenAllEnabled(): Promise<void> {
+async function testUninitDoesNotCreateDisabledListPrefWhenAllEnabled(): Promise<
+  void
+> {
   await resetServiceSingleton();
   const { ChromeCSSService } = await import("../service.tsx");
   const svc = ChromeCSSService.getInstance();
@@ -1095,17 +1097,10 @@ async function testUninitSavesEmptyDisabledListWhenAllEnabled(): Promise<void> {
 
   svc.uninit();
 
-  // Verify the pref exists but is empty (or contains only the separator)
-  const savedPref = Services.prefs.getStringPref(
-    "UserCSSLoader.disabled_list",
-    "",
-  );
-  const decodedPref = decodeURIComponent(savedPref);
-
   assertEquals(
-    decodedPref,
-    "",
-    "pref should be empty when all files are enabled",
+    Services.prefs.prefHasUserValue("UserCSSLoader.disabled_list"),
+    false,
+    "pref should not be created when all files are enabled",
   );
 
   // Cleanup

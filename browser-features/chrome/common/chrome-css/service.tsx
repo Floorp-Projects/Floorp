@@ -125,10 +125,15 @@ export class ChromeCSSService {
       .filter((key) => !this.readCSS[key].enabled)
       .join("|");
 
-    Services.prefs.setStringPref(
-      "UserCSSLoader.disabled_list",
-      encodeURIComponent(disabledList),
-    );
+    const encodedDisabledList = encodeURIComponent(disabledList);
+    if (encodedDisabledList) {
+      Services.prefs.setStringPref(
+        "UserCSSLoader.disabled_list",
+        encodedDisabledList,
+      );
+    } else if (Services.prefs.prefHasUserValue("UserCSSLoader.disabled_list")) {
+      Services.prefs.clearUserPref("UserCSSLoader.disabled_list");
+    }
 
     // Dispose of reactive root
     if (this.dispose) {
