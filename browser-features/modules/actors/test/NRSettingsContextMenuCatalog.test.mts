@@ -18,6 +18,7 @@ import { isSecondaryContextMenuDocumentUri } from "../NRContextMenuChild.sys.mts
 
 interface CatalogServiceModule {
   ContextMenuCatalogService: ContextMenuCatalogReporter & {
+    registerRefresh(ownerId: string, refresh: () => void): void;
     getSnapshot(): ContextMenuCatalogSnapshot;
     getRevision(): number;
   };
@@ -68,7 +69,11 @@ function getSurfaceLabel(
 
 async function testParentActorCatalogQuery(): Promise<void> {
   const service = getCatalogService();
-  service.report(OWNER_ID, makeSnapshot());
+  let refreshCount = 0;
+  service.registerRefresh(OWNER_ID, () => {
+    refreshCount++;
+    service.report(OWNER_ID, makeSnapshot());
+  });
   try {
     const parent = Object.create(
       NRSettingsParent.prototype,
@@ -80,6 +85,11 @@ async function testParentActorCatalogQuery(): Promise<void> {
       getSurfaceLabel(result),
       "Settings catalog test",
       "the parent actor returns the process-wide catalog",
+    );
+    assertEquals(
+      refreshCount,
+      1,
+      "opening settings actively collects menus before returning the catalog",
     );
   } finally {
     service.removeOwner(OWNER_ID);

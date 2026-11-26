@@ -137,6 +137,17 @@ export class OptionalContextMenuCatalogReporter
     }
   }
 
+  registerRefresh(ownerId: string, refresh: () => void): void {
+    try {
+      this.#reporter?.registerRefresh?.(ownerId, refresh);
+    } catch (error) {
+      console.error(
+        "[ContextMenuCustomizer] Catalog refresh registration failed",
+        error,
+      );
+    }
+  }
+
   removeOwner(ownerId: string): void {
     try {
       this.#reporter?.removeOwner(ownerId);
