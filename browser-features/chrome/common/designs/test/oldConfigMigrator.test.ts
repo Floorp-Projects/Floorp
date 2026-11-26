@@ -201,12 +201,12 @@ function testTabbarPositionBottomWindow(): void {
 // Tests — edge cases (invalid / unknown values)
 // ---------------------------------------------------------------------------
 
-function testInterfaceInvalidValueReturnsLepton(): void {
+function testInterfaceInvalidValueReturnsProton(): void {
   withIntPref("floorp.browser.user.interface", 99, () => {
     assertEquals(
       getOldInterfaceConfig(),
-      "lepton",
-      "invalid interface value should default to lepton",
+      "proton",
+      "invalid interface value should fall back to the fresh-profile default (proton)",
     );
   });
 }
