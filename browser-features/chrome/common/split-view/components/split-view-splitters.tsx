@@ -105,9 +105,9 @@ function observeNativeHorizontalWidths(panelIds: string[]): void {
   }
   nativeWidthObserver = new MutationObserver(() => {
     if (nativeWidthPersistTimeout !== undefined) {
-      clearTimeout(nativeWidthPersistTimeout);
+      self.clearTimeout(nativeWidthPersistTimeout);
     }
-    nativeWidthPersistTimeout = setTimeout(() => {
+    nativeWidthPersistTimeout = self.setTimeout(() => {
       nativeWidthPersistTimeout = undefined;
       persistNativeHorizontalWidths(panelIds);
     }, 300);
@@ -166,7 +166,7 @@ export function clearSplitHandles(): void {
   nativeWidthObserver?.disconnect();
   nativeWidthObserver = null;
   if (nativeWidthPersistTimeout !== undefined) {
-    clearTimeout(nativeWidthPersistTimeout);
+    self.clearTimeout(nativeWidthPersistTimeout);
     nativeWidthPersistTimeout = undefined;
   }
   const nativeSplitter = tabpanels.querySelector(
