@@ -58,7 +58,7 @@ const launchDevPort = launchDevPorts();
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
-    getSnapshot(): ContextMenuCatalogSnapshot;
+    refresh(): ContextMenuCatalogSnapshot;
     getRevision(): number;
   };
 }
@@ -97,7 +97,7 @@ export class NRSettingsParent extends JSWindowActorParent {
           data.baseValue as string | null | undefined,
         );
       case "getContextMenuCatalog":
-        return ContextMenuCatalogService.getSnapshot();
+        return ContextMenuCatalogService.refresh();
       case "getContextMenuCatalogRevision":
         return ContextMenuCatalogService.getRevision();
       case "openExternalLink": {

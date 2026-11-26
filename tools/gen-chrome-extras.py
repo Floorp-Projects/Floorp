@@ -471,11 +471,17 @@ def main() -> int:
             continue
         if any(p in MENU_OMITTED for p in pos):
             omitted += 1
+    # Not in Lepton: Gecko's paste confirmation menu (ClipboardContextMenu.sys.mjs),
+    # shown when a page reads the clipboard.
+    PASTE_CONFIRM_MENU = """/* Floorp: Gecko's paste confirmation menu */
+#clipboardReadPasteMenuItem {
+  --menuitem-image: url("../icons/edit-paste.svg");
+}"""
     write("icon-menu.css", "iconMenu", hit, [
         "Applied only while icons are enabled (iconDisabled off).",
         f"{omitted} block(s) gated on Lepton-only sub-options "
         f"({', '.join(MENU_OMITTED)}) are not ported — they stay Lepton-family-only.",
-    ])
+    ], extra=PASTE_CONFIRM_MENU)
     return 0
 
 

@@ -18,7 +18,7 @@ type SettingsPageParentFunctions =
 
 interface ContextMenuCatalogServiceModule {
   ContextMenuCatalogService: {
-    getSnapshot(): ContextMenuCatalogSnapshot;
+    refresh(): ContextMenuCatalogSnapshot;
     getRevision(): number;
   };
 }
@@ -194,7 +194,7 @@ const directServicesFunctions: SettingsPageParentFunctions = {
     const { ContextMenuCatalogService } = ChromeUtils.importESModule(
       "resource://noraneko/modules/context-menu/ContextMenuCatalogService.sys.mjs",
     ) as ContextMenuCatalogServiceModule;
-    return Promise.resolve(ContextMenuCatalogService.getSnapshot());
+    return Promise.resolve(ContextMenuCatalogService.refresh());
   },
   getContextMenuCatalogRevision: () => {
     const { ContextMenuCatalogService } = ChromeUtils.importESModule(
