@@ -68,7 +68,8 @@ def read_raw(path: Path) -> dict:
             unexpected.append({"test": test, "subtest": row.get("subtest"),
                                "status": row.get("status"), "expected": row.get("expected")})
         elif action == "mozleak_total":
-            leak_total_count += 1
+            if row.get("process") == "default":
+                leak_total_count += 1
             if leak_failed(row):
                 leaks.append(row)
             elif row.get("bytes"):

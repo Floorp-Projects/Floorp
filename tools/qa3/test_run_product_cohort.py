@@ -65,6 +65,16 @@ class TestRunner(TestCase):
             with self.subTest(overrides=overrides):
                 self.assertEqual(runner.verdict([self.batch(record, **overrides)], 2)["verdict"], "FAIL")
         self.assertEqual(runner.verdict([self.batch(record)], 3)["verdict"], "FAIL")
+
+    def test_child_process_leak_total_does_not_satisfy_parent_evidence(self):
+        record = raw([
+            *ran(JOB["cases"][0]), *ran(JOB["cases"][1]),
+            {"action": "mozleak_total", "process": "tab", "bytes": 0, "threshold": 0, "objects": []},
+            {"action": "suite_end"},
+        ])
+        batch = self.batch(record, leak_total_count=record["leak_total_count"])
+        self.assertEqual(batch["leak_total_count"], 0)
+        self.assertEqual(runner.verdict([batch], 2)["verdict"], "FAIL")
         self.assertEqual(runner.verdict([self.batch(None)], 2)["counts"], {"unexecuted": 2})
 
     def test_leakcheck_mirrors_mozlog_thresholds(self):
