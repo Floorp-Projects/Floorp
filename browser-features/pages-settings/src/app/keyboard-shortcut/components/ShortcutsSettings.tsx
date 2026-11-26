@@ -11,6 +11,7 @@ import type { ShortcutConfig } from "../../../types/pref.ts";
 import type { ShortcutsSettingsProps } from "../types.ts";
 import { useAvailableActions } from "../../gesture/useAvailableActions.ts";
 import { getKeyboardShortcutActionOptions } from "../actionCatalog.ts";
+import { formatShortcutKey } from "../dataManager.ts";
 import { ShortcutEditor } from "./ShortcutEditor.tsx";
 import {
     Card,
@@ -22,10 +23,6 @@ import {
 import { Keyboard } from "lucide-react";
 import { InfoTip } from "@/components/common/infotip.tsx";
 import { formatModifierSymbol } from "../platform.ts";
-
-function formatKeyCode(code: string): string {
-    return code.replace(/^(Key|Digit|Arrow)/, "").toUpperCase();
-}
 
 export const ShortcutsSettings = ({
     config,
@@ -93,7 +90,7 @@ export const ShortcutsSettings = ({
                                                     {shortcut.modifiers.ctrl && <span>{formatModifierSymbol("ctrl")}</span>}
                                                     {shortcut.modifiers.meta && <span>{formatModifierSymbol("meta")}</span>}
                                                     {shortcut.modifiers.shift && <span>{formatModifierSymbol("shift")}</span>}
-                                                    <span>{formatKeyCode(shortcut.key)}</span>
+                                                    <span>{formatShortcutKey(shortcut.key)}</span>
                                                 </div>
                                             ) : (
                                                 <span className="text-base-content/50">
@@ -105,7 +102,7 @@ export const ShortcutsSettings = ({
                                             <div className={styles.actions}>
                                                 <Button
                                                     type="button"
-                                                    variant="primary"
+                                                    variant={shortcut ? "primary" : "secondary"}
                                                     onClick={() => {
                                                         setEditingShortcut(shortcut);
                                                         setEditingAction(action.id);
