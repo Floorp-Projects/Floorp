@@ -853,7 +853,10 @@ export class WorkspacesTabManager {
       >
     ) {
       if (!tab) continue;
-      if (!tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)) {
+      if (
+        !(tab as XULElement & { hidden?: boolean }).hidden &&
+        !tab.hasAttribute(WORKSPACE_TAB_ATTRIBUTION_ID)
+      ) {
         return tab;
       }
     }
