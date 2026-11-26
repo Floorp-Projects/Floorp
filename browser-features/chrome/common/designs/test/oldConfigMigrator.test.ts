@@ -277,8 +277,8 @@ export function runAllTests(): void {
     },
     // Edge cases
     {
-      name: "interface invalid → lepton",
-      fn: testInterfaceInvalidValueReturnsLepton,
+      name: "interface invalid → proton",
+      fn: testInterfaceInvalidValueReturnsProton,
     },
     {
       name: "interface 3+invalid → lepton",
