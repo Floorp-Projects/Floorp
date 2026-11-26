@@ -20,6 +20,9 @@ if [[ -z "${ACTIONS_RESULTS_URL:-}" ]]; then
 fi
 grep -Eq '^[[:space:]]*ac_add_options[[:space:]]+--disable-tests' mozconfig && {
   echo "tests are disabled in the release mozconfig" >&2; exit 1; }
+if ! grep -Eq '^[[:space:]]*ac_add_options[[:space:]]+--enable-logrefcnt' mozconfig; then
+  echo 'ac_add_options --enable-logrefcnt' >> mozconfig
+fi
 export MOZ_BUILD_DATE="$BUILD_DATE" LIBGL_ALWAYS_SOFTWARE=1
 ./mach configure
 nice -n 10 ./mach build --jobs="$(nproc)"

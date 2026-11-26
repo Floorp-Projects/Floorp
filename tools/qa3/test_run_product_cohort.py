@@ -29,12 +29,17 @@ def ran(test, status="OK", **extra):
 class TestRunner(TestCase):
     def batch(self, record, **overrides):
         result = {"exit": 0, "suite_end": True, "teardown_survivors": [], "leaks": [],
-                  "unplanned_tests": [], "outcomes": runner.classify(JOB, record, 0)}
+                  "unplanned_tests": [], "leak_total_count": 1,
+                  "outcomes": runner.classify(JOB, record, 0)}
         result.update(overrides)
         return result
 
     def test_all_pass(self):
-        record = raw([*ran(JOB["cases"][0]), *ran(JOB["cases"][1]), {"action": "suite_end"}])
+        record = raw([
+            *ran(JOB["cases"][0]), *ran(JOB["cases"][1]),
+            {"action": "mozleak_total", "process": "default", "bytes": 0, "threshold": 0, "objects": []},
+            {"action": "suite_end"},
+        ])
         self.assertEqual(runner.verdict([self.batch(record)], 2)["verdict"], "PASS")
 
     def test_missing_and_failing_cases_fail_closed(self):
@@ -56,7 +61,7 @@ class TestRunner(TestCase):
         record = raw([*ran(JOB["cases"][0]), *ran(JOB["cases"][1])])
         for overrides in ({"exit": 1}, {"exit": "timeout"}, {"suite_end": False},
                           {"teardown_survivors": [42]}, {"leaks": [{"bytes": 8}]},
-                          {"unplanned_tests": ["x.js"]}):
+                          {"unplanned_tests": ["x.js"]}, {"leak_total_count": 0}):
             with self.subTest(overrides=overrides):
                 self.assertEqual(runner.verdict([self.batch(record, **overrides)], 2)["verdict"], "FAIL")
         self.assertEqual(runner.verdict([self.batch(record)], 3)["verdict"], "FAIL")

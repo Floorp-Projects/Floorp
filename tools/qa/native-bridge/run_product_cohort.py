@@ -50,6 +50,7 @@ def leak_failed(row: dict) -> bool:
 
 def read_raw(path: Path) -> dict:
     tests, unexpected, leaks, leak_warnings, crashes, suite_end = {}, [], [], [], [], False
+    leak_total_count = 0
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             row = json.loads(line)
@@ -67,6 +68,7 @@ def read_raw(path: Path) -> dict:
             unexpected.append({"test": test, "subtest": row.get("subtest"),
                                "status": row.get("status"), "expected": row.get("expected")})
         elif action == "mozleak_total":
+            leak_total_count += 1
             if leak_failed(row):
                 leaks.append(row)
             elif row.get("bytes"):
@@ -76,7 +78,8 @@ def read_raw(path: Path) -> dict:
         elif action == "suite_end":
             suite_end = True
     return {"tests": tests, "unexpected": unexpected, "leaks": leaks,
-            "leak_warnings": leak_warnings, "crashes": crashes, "suite_end": suite_end}
+            "leak_warnings": leak_warnings, "crashes": crashes, "suite_end": suite_end,
+            "leak_total_count": leak_total_count}
 
 
 def classify(job: dict, raw: dict | None, exit_code: int | None) -> dict:
@@ -139,6 +142,7 @@ def run_job(job: dict, product_root: Path, timeout: int, env: dict) -> dict:
     out["unexpected"] = raw["unexpected"] if raw else []
     out["leaks"] = raw["leaks"] if raw else []
     out["leak_warnings"] = raw["leak_warnings"] if raw else []
+    out["leak_total_count"] = raw["leak_total_count"] if raw else 0
     out["crashes"] = raw["crashes"] if raw else []
     extra = sorted(set(raw["tests"]) - set(job["cases"])) if raw else []
     out["unplanned_tests"] = extra
@@ -157,7 +161,8 @@ def verdict(results: list[dict], planned: int) -> dict:
         len(outcomes) == planned
         and counts.get("pass", 0) == planned
         and all(r.get("exit") == 0 and r.get("suite_end") and not r.get("teardown_survivors")
-                and not r.get("leaks") and not r.get("unplanned_tests") for r in results)
+                and not r.get("leaks") and not r.get("unplanned_tests")
+                and r.get("leak_total_count", 0) > 0 for r in results)
     )
     return {"verdict": "PASS" if clean else "FAIL", "planned": planned,
             "recorded": len(outcomes), "counts": counts}
