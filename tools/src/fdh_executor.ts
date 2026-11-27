@@ -108,6 +108,11 @@ export interface StepCommand {
   /** Task-state assertion recorded for this command's exit code. */
   assertionName?: string;
   expected?: string;
+  /**
+   * Platform QA report the command writes, relative to the worktree with `/`
+   * separators (KAN-146). Settling the job pins it and its screenshot.
+   */
+  platformReport?: string;
 }
 
 /**
@@ -144,6 +149,14 @@ export interface JobInputs {
   /** Hash of the uncommitted state (tracked diff and untracked names). */
   worktreeState?: string;
 }
+
+/**
+ * `worktreeState` of a worktree with no tracked change and no untracked file:
+ * the SHA-256 of the single separator byte that `currentInputs` hashes
+ * between the (empty) diff and the (empty) untracked list.
+ */
+export const CLEAN_WORKTREE_STATE =
+  "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d";
 
 export interface JobTransition {
   from: State | null;

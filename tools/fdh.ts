@@ -1250,9 +1250,13 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
     requireOption(parsed, "out"),
   );
   assertNoSecretReferences(state);
+  // Platform QA results count only at this commit (KAN-146), the same one
+  // the comment is bound to.
+  const commit = (await defaultGitRunner(state.worktree, ["rev-parse", "HEAD"]))
+    .trim();
   let manifest;
   try {
-    manifest = await buildEvidenceManifest(state);
+    manifest = await buildEvidenceManifest(state, { head: commit });
   } catch (error) {
     if (error instanceof EvidenceValidationError) {
       printValidationErrors(error.errors);
@@ -1265,8 +1269,6 @@ async function cmdEvidencePublish(parsed: ParsedArgs): Promise<void> {
     printValidationErrors(errors);
     Deno.exit(1);
   }
-  const commit = (await defaultGitRunner(state.worktree, ["rev-parse", "HEAD"]))
-    .trim();
   const uncommitted = (await defaultGitRunner(state.worktree, [
     "status",
     "--porcelain",
@@ -1349,9 +1351,11 @@ async function cmdEvidence(parsed: ParsedArgs): Promise<void> {
   });
   writeTaskState(state);
 
+  const head = (await defaultGitRunner(state.worktree, ["rev-parse", "HEAD"]))
+    .trim();
   let manifest;
   try {
-    manifest = await buildEvidenceManifest(state);
+    manifest = await buildEvidenceManifest(state, { head });
   } catch (error) {
     if (error instanceof EvidenceValidationError) {
       printValidationErrors(error.errors);

@@ -7,12 +7,15 @@ import {
   payloadKindFor,
   type PlatformQaIo,
   type PlatformQaTarget,
+  platformReportRef,
   PROBE_SCRIPT,
   probeProblems,
+  readPlatformQaRecord,
   redact,
   runPlatformQa,
   runPlatformQaCli,
 } from "./fdh_platform_qa.ts";
+import { CLEAN_WORKTREE_STATE } from "./fdh_executor.ts";
 import type { PlatformQaPreflight } from "./fdh_platform_qa_types.ts";
 import { QaTargetError } from "./fdh_qa_remote.ts";
 
@@ -559,4 +562,71 @@ Deno.test("platform QA: the image is not built while other blockers stand", asyn
   assertEquals(report.outcome, "blocked");
   assertEquals(report.reason, "blocked: low-disk, image-missing");
   assertEquals(calls, ["preflight"]);
+});
+
+Deno.test("platform QA record: the report must be this task's, at its own path, with a sound screenshot", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const out = `${dir}/_dist/fdh/platform/${TASK}`;
+    Deno.mkdirSync(out, { recursive: true });
+    const write = (report: Record<string, unknown>) =>
+      Deno.writeTextFileSync(
+        `${out}/linux-report.json`,
+        JSON.stringify({
+          schema: "fdh-platform-qa-report/v1",
+          taskId: TASK,
+          platform: "linux",
+          payload: { name: "f.tar.xz", sha256: SHA, version: null },
+          ...report,
+        }),
+      );
+    const read = (reportRef = platformReportRef(TASK, "linux")) =>
+      readPlatformQaRecord({
+        worktree: dir,
+        taskId: TASK,
+        platform: "linux",
+        jobId: "platform-1",
+        reportRef,
+        head: "A".repeat(40),
+        worktreeState: CLEAN_WORKTREE_STATE,
+      });
+
+    write({ outcome: "blocked", screenshot: null });
+    const blocked = await read();
+    assertEquals(blocked.problems, []);
+    assertEquals(blocked.outcome, "blocked");
+    assertEquals(blocked.head, "a".repeat(40));
+    assertEquals(blocked.cleanWorktree, true);
+    assertEquals(blocked.attachments.length, 1);
+
+    write({ outcome: "passed", screenshot: null });
+    assertEquals((await read()).problems, [
+      "a passed report has no screenshot",
+    ]);
+
+    write({
+      outcome: "passed",
+      screenshot: { file: "../linux.png", sha256: SHA },
+    });
+    assertEquals((await read()).problems, [
+      "the report's screenshot entry is malformed",
+    ]);
+
+    write({ outcome: "passed", taskId: "other-task" });
+    assertStringIncludes((await read()).problems[0], "other-task/linux");
+
+    // An identity String() cannot convert is a problem, not a throw.
+    write({ outcome: "passed", taskId: { toString: null, valueOf: null } });
+    assertStringIncludes((await read()).problems[0], "[object]/linux");
+
+    Deno.removeSync(`${out}/linux-report.json`);
+    Deno.mkdirSync(`${out}/linux-report.json`);
+    assertStringIncludes((await read()).problems[0], "not a regular file");
+
+    const elsewhere = await read("_dist/fdh/platform/other/linux-report.json");
+    assertStringIncludes(elsewhere.problems[0], "unexpected report path");
+    assertEquals(elsewhere.attachments, []);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
 });

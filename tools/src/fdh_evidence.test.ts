@@ -507,3 +507,211 @@ Deno.test("an external build record cannot clear the not-compiled limitation", a
     assertEquals(validateEvidenceManifest(manifest), []);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Platform QA results bound to a commit (KAN-146)
+// ---------------------------------------------------------------------------
+
+const PLATFORM_HEAD = "a".repeat(40);
+const OTHER_HEAD = "c".repeat(40);
+
+async function sha256Of(bytes: Uint8Array): Promise<string> {
+  const copy = new Uint8Array(bytes.length);
+  copy.set(bytes);
+  return Array.from(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", copy)),
+    (b) => b.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+/** A settled Linux platform job: report and screenshot on disk, pinned. */
+async function addPlatformResult(
+  state: FdhTaskState,
+  options: { head?: string; clean?: boolean } = {},
+): Promise<{ reportFile: string; pngFile: string }> {
+  const dirRef = `_dist/fdh/platform/${state.taskId}`;
+  const dir = path.join(state.worktree, ...dirRef.split("/"));
+  Deno.mkdirSync(dir, { recursive: true });
+  const png = new TextEncoder().encode("png-bytes");
+  const pngFile = path.join(dir, "linux.png");
+  Deno.writeFileSync(pngFile, png);
+  const report = new TextEncoder().encode(JSON.stringify({
+    schema: "fdh-platform-qa-report/v1",
+    taskId: state.taskId,
+    platform: "linux",
+    outcome: "passed",
+  }));
+  const reportFile = path.join(dir, "linux-report.json");
+  Deno.writeFileSync(reportFile, report);
+  state.assertions.push({
+    name: "platform-qa-linux",
+    expected: "exit code 0 (QA passed on linux)",
+    actual: "exit code 0; outcome passed",
+    passed: true,
+    at: "2026-11-08T00:03:00.000Z",
+    platform: {
+      platform: "linux",
+      jobId: "platform-1",
+      head: options.head ?? PLATFORM_HEAD,
+      cleanWorktree: options.clean ?? true,
+      outcome: "passed",
+      payload: {
+        name: "floorp-linux-x86_64.tar.xz",
+        sha256: "d".repeat(64),
+        version: "12.21.1@159.0.1",
+      },
+      target: "Linux container image fdh-qa-linux:41fc5d48b6ce",
+      attachments: [
+        {
+          ref: `${dirRef}/linux-report.json`,
+          sha256: await sha256Of(report),
+          bytes: report.length,
+        },
+        {
+          ref: `${dirRef}/linux.png`,
+          sha256: await sha256Of(png),
+          bytes: png.length,
+        },
+      ],
+      problems: [],
+    },
+  });
+  return { reportFile, pngFile };
+}
+
+Deno.test("a platform result at HEAD on a clean worktree counts and pins its files", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    addCheck(state, "host-test-exit-code", "deno task test:host");
+    const { reportFile, pngFile } = await addPlatformResult(state);
+    writeTaskState(state);
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+      head: PLATFORM_HEAD,
+    });
+    assertEquals(validateEvidenceManifest(manifest), []);
+    assertEquals(manifest.envelope.taskStatus.state, "succeeded");
+    const atHead = manifest.assertions.find((a) =>
+      a.name === "platform-qa-linux-at-head"
+    );
+    assertEquals(atHead?.passed, true);
+    assert(atHead?.expected.includes(`recorded at HEAD ${PLATFORM_HEAD} `));
+    const pinned = manifest.inputFidelity.inputs.map((i) => i.path);
+    assert(pinned.includes(reportFile));
+    assert(pinned.includes(pngFile));
+    assert(
+      manifest.environmentFidelity.deviations.some((d) =>
+        d.includes("fdh-qa-linux:41fc5d48b6ce")
+      ),
+    );
+  });
+});
+
+Deno.test("a platform result from another commit, a dirty worktree or no HEAD fails the manifest", async () => {
+  for (
+    const [label, record, head] of [
+      ["other commit", { head: OTHER_HEAD }, PLATFORM_HEAD],
+      ["dirty worktree", { clean: false }, PLATFORM_HEAD],
+      ["no head given", {}, undefined],
+    ] as const
+  ) {
+    await withTempDir(async (dir) => {
+      const state = makeState(dir);
+      addCheck(state, "host-test-exit-code", "deno task test:host");
+      await addPlatformResult(state, record);
+      writeTaskState(state);
+      const manifest = await buildEvidenceManifest(state, {
+        os: { name: "testos", arch: "x86_64" },
+        head,
+      });
+      assertEquals(validateEvidenceManifest(manifest), [], label);
+      assertEquals(manifest.envelope.taskStatus.state, "failed", label);
+      assertEquals(
+        manifest.assertions.find((a) => a.name === "platform-qa-linux-at-head")
+          ?.passed,
+        false,
+        label,
+      );
+    });
+  }
+});
+
+Deno.test("a changed platform report or screenshot stops the manifest build", async () => {
+  for (const which of ["reportFile", "pngFile"] as const) {
+    await withTempDir(async (dir) => {
+      const state = makeState(dir);
+      const files = await addPlatformResult(state);
+      writeTaskState(state);
+      Deno.writeTextFileSync(files[which], "edited");
+      const error = await assertRejects(
+        () =>
+          buildEvidenceManifest(state, {
+            os: { name: "testos", arch: "x86_64" },
+            head: PLATFORM_HEAD,
+          }),
+        EvidenceValidationError,
+      );
+      assert(
+        error.errors[0].message.includes(
+          "changed since job platform-1 settled",
+        ),
+      );
+    });
+  }
+});
+
+Deno.test("only the latest platform result counts, and one without a binding fails", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    await addPlatformResult(state, { head: OTHER_HEAD });
+    // A later run at HEAD replaces the older result.
+    await addPlatformResult(state);
+    writeTaskState(state);
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+      head: PLATFORM_HEAD,
+    });
+    assertEquals(manifest.envelope.taskStatus.state, "succeeded");
+
+    addCheck(
+      state,
+      "platform-qa-linux",
+      "deno run -A tools/fdh.ts platform-qa run --platform linux",
+    );
+    writeTaskState(state);
+    const unbound = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+      head: PLATFORM_HEAD,
+    });
+    assertEquals(unbound.envelope.taskStatus.state, "failed");
+    assert(
+      unbound.assertions.some((a) =>
+        a.name === "platform-qa-linux-at-head" && !a.passed &&
+        a.actual.includes("no commit binding")
+      ),
+    );
+  });
+});
+
+Deno.test("a platform binding that points outside its own files fails without reading them", async () => {
+  await withTempDir(async (dir) => {
+    const state = makeState(dir);
+    await addPlatformResult(state);
+    const record = state.assertions.at(-1)!.platform!;
+    record.attachments[0] = { ...record.attachments[0], ref: "../../etc/x" };
+    writeTaskState(state);
+    const manifest = await buildEvidenceManifest(state, {
+      os: { name: "testos", arch: "x86_64" },
+      head: PLATFORM_HEAD,
+    });
+    assertEquals(manifest.envelope.taskStatus.state, "failed");
+    assert(
+      manifest.assertions.some((a) =>
+        a.name === "platform-qa-linux-at-head" && a.actual.includes("malformed")
+      ),
+    );
+    assert(
+      !manifest.inputFidelity.inputs.some((i) => i.path.includes("etc")),
+    );
+  });
+});

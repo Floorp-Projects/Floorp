@@ -31,6 +31,7 @@ import {
 import {
   applyReport,
   beginAttempt,
+  CLEAN_WORKTREE_STATE,
   heartbeat,
   jobJournalPath,
   readJob,
@@ -1481,4 +1482,186 @@ Deno.test("fdh job: a zombie root counts as gone, so its group's orphans are sti
   );
   // groupsOf skips entries without a group id (Windows).
   assertEquals(groupsOf([{ ...snapshot[1], pgid: undefined }]).size, 0);
+});
+
+Deno.test("fdh job: a clean worktree has the CLEAN_WORKTREE_STATE inputs", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const state = await taskIn(dir);
+    const clean = await currentInputs(
+      state,
+      fakeGit({ head: "h", diff: "", untracked: "" }),
+    );
+    assertEquals(clean.worktreeState, CLEAN_WORKTREE_STATE);
+    const dirty = await currentInputs(
+      state,
+      fakeGit({ head: "h", diff: "diff --git a/x b/x", untracked: "" }),
+    );
+    assertNotEquals(dirty.worktreeState, CLEAN_WORKTREE_STATE);
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+/** The command's run time in these tests; the report is written inside it. */
+const RUN_FROM = "2026-11-25T10:00:00.000Z";
+const RUN_TO = "2026-11-25T10:10:00.000Z";
+
+/** Start a Linux platform job at `head` and finish it with `exitCode`. */
+async function finishedPlatformJob(
+  dir: string,
+  head: string,
+  exitCode: number,
+): Promise<string> {
+  const state = await taskIn(dir);
+  const job = await startStepJob({
+    state,
+    kind: "platform",
+    platform: {
+      platform: "linux",
+      targetFile: "/cfg/linux.json",
+      targetSha256: "c".repeat(64),
+      payloadFile: "/p/floorp-linux-x86_64.tar.xz",
+      payloadSha256: "d".repeat(64),
+    },
+    git: fakeGit({ head, diff: "", untracked: "" }),
+    spawn: () => 1,
+  });
+  const now = new Date().toISOString();
+  await updateJob(dir, "t1", job.jobId, (j) => {
+    beginAttempt(j, 1, "x1", now);
+    applyReport(j, {
+      jobId: job.jobId,
+      epoch: 1,
+      holder: "x1",
+      exitCode,
+      endedAt: now,
+      logRef: null,
+      results: [{
+        index: 0,
+        epoch: 1,
+        exitCode,
+        startedAt: RUN_FROM,
+        endedAt: RUN_TO,
+        logRef: null,
+      }],
+    }, now);
+  });
+  return job.jobId;
+}
+
+async function writePlatformReport(
+  dir: string,
+  screenshotSha256: (png: Uint8Array) => Promise<string>,
+  overrides: Record<string, unknown> = {},
+): Promise<void> {
+  const out = `${dir}/_dist/fdh/platform/t1`;
+  Deno.mkdirSync(out, { recursive: true });
+  const png = new TextEncoder().encode("png");
+  Deno.writeFileSync(`${out}/linux.png`, png);
+  Deno.writeTextFileSync(
+    `${out}/linux-report.json`,
+    JSON.stringify({
+      schema: "fdh-platform-qa-report/v1",
+      taskId: "t1",
+      platform: "linux",
+      outcome: "passed",
+      reason: null,
+      payload: {
+        name: "floorp-linux-x86_64.tar.xz",
+        sha256: "d".repeat(64),
+        version: "12.21.1@159.0.1",
+      },
+      screenshot: { file: "linux.png", sha256: await screenshotSha256(png) },
+      startedAt: "2026-11-25T10:01:00.000Z",
+      finishedAt: "2026-11-25T10:09:00.000Z",
+      steps: [{
+        name: "preflight",
+        ok: true,
+        result: { details: { image: "fdh-qa-linux:41fc5d48b6ce" } },
+      }],
+      ...overrides,
+    }),
+  );
+}
+
+async function hexSha256(bytes: Uint8Array): Promise<string> {
+  const copy = new Uint8Array(bytes.length);
+  copy.set(bytes);
+  return Array.from(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", copy)),
+    (b) => b.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+Deno.test("fdh job: a settled platform job pins its report and screenshot at the job's HEAD", async () => {
+  const dir = await Deno.makeTempDir();
+  try {
+    const head = "a".repeat(40);
+    const jobId = await finishedPlatformJob(dir, head, 0);
+    await writePlatformReport(dir, hexSha256);
+    assertEquals(await settleJob(dir, "t1", jobId), true);
+    const [assertion] = readTaskState(dir, "t1").assertions;
+    assertEquals(assertion.name, "platform-qa-linux");
+    assertEquals(assertion.passed, true, assertion.actual);
+    assertEquals(assertion.platform?.head, head);
+    assertEquals(assertion.platform?.cleanWorktree, true);
+    assertEquals(assertion.platform?.jobId, jobId);
+    assertEquals(
+      assertion.platform?.target,
+      "Linux container image fdh-qa-linux:41fc5d48b6ce",
+    );
+    assertEquals(
+      assertion.platform?.attachments.map((a) => a.ref),
+      [
+        "_dist/fdh/platform/t1/linux-report.json",
+        "_dist/fdh/platform/t1/linux.png",
+      ],
+    );
+    assert(assertion.actual.includes(`at ${head} (clean worktree)`));
+  } finally {
+    await Deno.remove(dir, { recursive: true });
+  }
+});
+
+Deno.test("fdh job: a platform job passes only on a report that holds up", async () => {
+  for (
+    const [label, exitCode, write, overrides] of [
+      ["missing report", 0, false, {}],
+      ["screenshot hash mismatch", 0, true, {}],
+      ["non-zero exit", 1, true, {}],
+      // Another run's report at the same path (a later job, or a direct run).
+      ["written after this run", 0, true, {
+        startedAt: "2026-11-25T10:11:00.000Z",
+        finishedAt: "2026-11-25T10:12:00.000Z",
+      }],
+      ["another payload", 0, true, {
+        payload: {
+          name: "other.tar.xz",
+          sha256: "f".repeat(64),
+          version: null,
+        },
+      }],
+    ] as const
+  ) {
+    const dir = await Deno.makeTempDir();
+    try {
+      const jobId = await finishedPlatformJob(dir, "a".repeat(40), exitCode);
+      if (write) {
+        await writePlatformReport(
+          dir,
+          label === "screenshot hash mismatch"
+            ? () => Promise.resolve("e".repeat(64))
+            : hexSha256,
+          overrides,
+        );
+      }
+      await settleJob(dir, "t1", jobId);
+      const [assertion] = readTaskState(dir, "t1").assertions;
+      assertEquals(assertion.passed, false, label);
+      assert(assertion.platform !== undefined, label);
+    } finally {
+      await Deno.remove(dir, { recursive: true });
+    }
+  }
 });

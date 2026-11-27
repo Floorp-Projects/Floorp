@@ -18,6 +18,7 @@
 import * as path from "@std/path";
 import { encodeHex } from "@std/encoding/hex";
 import { lockPathFor } from "./fdh_lock.ts";
+import type { PlatformQaRecord } from "./fdh_platform_qa_types.ts";
 import {
   type DevPortProbe,
   isTcpPortInUse,
@@ -105,6 +106,8 @@ export interface FdhAssertion {
   actual: string;
   passed: boolean;
   at: string;
+  /** Set on a platform QA step's assertion (KAN-146). */
+  platform?: PlatformQaRecord;
 }
 
 export interface FdhCleanup {
@@ -585,6 +588,7 @@ export interface NewAssertion {
   actual: string;
   passed: boolean;
   at?: string;
+  platform?: PlatformQaRecord;
 }
 
 export function recordAssertion(
@@ -597,6 +601,9 @@ export function recordAssertion(
     actual: assertion.actual,
     passed: assertion.passed,
     at: assertion.at ?? nowIso(),
+    ...(assertion.platform !== undefined
+      ? { platform: assertion.platform }
+      : {}),
   };
   state.assertions.push(entry);
   return entry;

@@ -121,3 +121,34 @@ export interface PlatformStepOptions {
   expect?: string;
   startUrl?: string;
 }
+
+/** A file a platform QA result rests on, pinned when its job settled. */
+export interface PlatformQaAttachment {
+  /** Path relative to the worktree, with `/` separators. */
+  ref: string;
+  sha256: string;
+  bytes: number;
+}
+
+/**
+ * What a settled platform QA job left (KAN-146): the commit and worktree it
+ * ran on, the payload and target it checked, and the report and screenshot
+ * pinned by SHA-256. Kept on the task-state assertion, so the evidence
+ * builder can re-hash the files and check the commit binding.
+ */
+export interface PlatformQaRecord {
+  platform: QaPlatform;
+  jobId: string;
+  /** Worktree HEAD when the job started (from its journal inputs). */
+  head: string;
+  /** No tracked change and no untracked file when the job started. */
+  cleanWorktree: boolean;
+  /** The report's outcome, or null when the report could not be read. */
+  outcome: PlatformQaOutcome | null;
+  payload: { name: string; sha256: string; version: string | null } | null;
+  /** The target as the report's preflight saw it (image tag, macOS version). */
+  target: string | null;
+  attachments: PlatformQaAttachment[];
+  /** Why the report does not support a pass (empty when it does). */
+  problems: string[];
+}

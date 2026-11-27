@@ -29,13 +29,19 @@ import {
 import type { LinuxPayloadKind } from "./fdh_qa_linux_types.ts";
 import { QaTargetError } from "./fdh_qa_remote.ts";
 import { taskStatePath, validateTaskId } from "./fdh_task.ts";
-import { isTerminal, listJobIds, readJob } from "./fdh_executor.ts";
+import {
+  CLEAN_WORKTREE_STATE,
+  isTerminal,
+  listJobIds,
+  readJob,
+} from "./fdh_executor.ts";
 import type {
   PlatformQaCliDeps,
   PlatformQaCliResult,
   PlatformQaIo,
   PlatformQaOutcome,
   PlatformQaPreflight,
+  PlatformQaRecord,
   PlatformQaReport,
   PlatformQaRunOptions,
   PlatformQaStepRecord,
@@ -44,10 +50,12 @@ import type {
 } from "./fdh_platform_qa_types.ts";
 
 export type {
+  PlatformQaAttachment,
   PlatformQaCliDeps,
   PlatformQaCliResult,
   PlatformQaIo,
   PlatformQaOutcome,
+  PlatformQaRecord,
   PlatformQaReport,
   PlatformQaRunOptions,
   PlatformQaTarget,
@@ -192,6 +200,274 @@ export function activePlatformJobs(
         c.argv.includes(`--platform=${platform}`)
       );
   });
+}
+
+/** Report path of a platform step, relative to the worktree (KAN-146). */
+export function platformReportRef(
+  taskId: string,
+  platform: QaPlatform,
+): string {
+  validateTaskId(taskId);
+  return `_dist/fdh/platform/${taskId}/${platform}-report.json`;
+}
+
+/** Screenshot path of a platform step, relative to the worktree. */
+export function platformScreenshotRef(
+  taskId: string,
+  platform: QaPlatform,
+): string {
+  validateTaskId(taskId);
+  return `_dist/fdh/platform/${taskId}/${platform}.png`;
+}
+
+/** Largest platform QA report fdh reads. */
+export const MAX_PLATFORM_REPORT_BYTES = 4 * 1024 * 1024;
+/** Largest platform QA screenshot fdh reads. */
+export const MAX_PLATFORM_SCREENSHOT_BYTES = 64 * 1024 * 1024;
+
+/**
+ * Read a platform QA file under the worktree: a regular file (not a link) no
+ * larger than `max` bytes. Returns the bytes, or why it cannot be used.
+ */
+export function readPlatformFile(
+  worktree: string,
+  ref: string,
+  max: number,
+): Uint8Array | string {
+  const file = path.join(worktree, ...ref.split("/"));
+  let info: Deno.FileInfo;
+  try {
+    info = Deno.lstatSync(file);
+  } catch {
+    return `${ref} is not readable`;
+  }
+  if (!info.isFile) return `${ref} is not a regular file`;
+  if (info.size > max) return `${ref} is larger than ${max} bytes`;
+  try {
+    const bytes = Deno.readFileSync(file);
+    return bytes.length > max ? `${ref} is larger than ${max} bytes` : bytes;
+  } catch {
+    return `${ref} is not readable`;
+  }
+}
+
+/** One line of at most `max` characters, for text taken from a report. */
+function clip(value: unknown, max: number): string {
+  // An object from JSON may have no usable toString (`{"toString": null}`),
+  // and String() would throw; its text is not needed anyway.
+  const shown = typeof value === "object" && value !== null
+    ? "[object]"
+    : String(value);
+  // deno-lint-ignore no-control-regex
+  const text = shown.replace(/[\u0000-\u001f\u007f]/g, " ");
+  return text.length <= max ? text : `${text.slice(0, max)}...`;
+}
+
+const LINUX_IMAGE = /^fdh-qa-linux:[0-9a-f]{12}$/;
+const MACOS_VERSION = /^[0-9]{1,3}(?:\.[0-9]{1,3}){0,3}$/;
+
+async function sha256Bytes(bytes: Uint8Array): Promise<string> {
+  const copy = new Uint8Array(bytes.length);
+  copy.set(bytes);
+  return encodeHex(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", copy)),
+  );
+}
+
+function isRecordObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** The target as the report's preflight saw it, or null. */
+function targetOf(report: Record<string, unknown>): string | null {
+  const steps = Array.isArray(report.steps) ? report.steps : [];
+  const preflight = steps.find((s) =>
+    isRecordObject(s) && s.name === "preflight"
+  );
+  const result = isRecordObject(preflight) ? preflight.result : null;
+  const details = isRecordObject(result) ? result.details : null;
+  if (!isRecordObject(details)) return null;
+  if (typeof details.image === "string" && LINUX_IMAGE.test(details.image)) {
+    return `Linux container image ${details.image}`;
+  }
+  if (
+    typeof details.osVersion === "string" &&
+    MACOS_VERSION.test(details.osVersion)
+  ) {
+    return `macOS VM, macOS ${details.osVersion}`;
+  }
+  return null;
+}
+
+export interface PlatformRecordInput {
+  worktree: string;
+  taskId: string;
+  platform: QaPlatform;
+  jobId: string;
+  /** `platformReportRef` of the step. */
+  reportRef: string;
+  /** The job's journal inputs. */
+  head: string;
+  worktreeState?: string;
+  /** `--payload-sha256` of the command: the report must name this payload. */
+  payloadSha256?: string;
+  /** Start and end of the command: the report must have been written then. */
+  window?: { startedAt: string; endedAt: string };
+}
+
+/**
+ * Read a settled platform job's report and screenshot and pin them (KAN-146).
+ * Never throws: whatever does not hold up goes into `problems`, and the
+ * caller records a failed assertion for it.
+ */
+export async function readPlatformQaRecord(
+  input: PlatformRecordInput,
+): Promise<PlatformQaRecord> {
+  const record: PlatformQaRecord = {
+    platform: input.platform,
+    jobId: input.jobId,
+    head: input.head.trim().toLowerCase(),
+    cleanWorktree: input.worktreeState === CLEAN_WORKTREE_STATE,
+    outcome: null,
+    payload: null,
+    target: null,
+    attachments: [],
+    problems: [],
+  };
+  if (input.reportRef !== platformReportRef(input.taskId, input.platform)) {
+    record.problems.push(`unexpected report path ${input.reportRef}`);
+    return record;
+  }
+  const bytes = readPlatformFile(
+    input.worktree,
+    input.reportRef,
+    MAX_PLATFORM_REPORT_BYTES,
+  );
+  if (typeof bytes === "string") {
+    record.problems.push(`report ${bytes}`);
+    return record;
+  }
+  record.attachments.push({
+    ref: input.reportRef,
+    sha256: await sha256Bytes(bytes),
+    bytes: bytes.length,
+  });
+  let report: unknown;
+  try {
+    report = JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    record.problems.push("the report is not JSON");
+    return record;
+  }
+  if (
+    !isRecordObject(report) || report.schema !== "fdh-platform-qa-report/v1"
+  ) {
+    record.problems.push("the report is not an fdh-platform-qa-report/v1");
+    return record;
+  }
+  if (report.taskId !== input.taskId || report.platform !== input.platform) {
+    record.problems.push(
+      `the report is for ${clip(report.taskId, 80)}/${
+        clip(report.platform, 20)
+      }`,
+    );
+    return record;
+  }
+  // The report path is shared by every run of the task and platform: it
+  // must be the one this command wrote (its payload, inside its run time).
+  if (input.window !== undefined) {
+    const from = Date.parse(input.window.startedAt);
+    const to = Date.parse(input.window.endedAt);
+    const began = typeof report.startedAt === "string"
+      ? Date.parse(report.startedAt)
+      : NaN;
+    const ended = typeof report.finishedAt === "string"
+      ? Date.parse(report.finishedAt)
+      : NaN;
+    if (!(began >= from && ended <= to && began <= ended)) {
+      record.problems.push("the report was not written by this run");
+    }
+  }
+  const outcome = report.outcome;
+  if (outcome === "passed" || outcome === "failed" || outcome === "blocked") {
+    record.outcome = outcome;
+  } else {
+    record.problems.push("the report has no outcome");
+  }
+  const payload = report.payload;
+  if (
+    isRecordObject(payload) && typeof payload.name === "string" &&
+    typeof payload.sha256 === "string" && SHA256.test(payload.sha256)
+  ) {
+    record.payload = {
+      name: clip(payload.name, 200),
+      sha256: payload.sha256,
+      version: typeof payload.version === "string"
+        ? clip(payload.version, 100)
+        : null,
+    };
+    if (
+      input.payloadSha256 !== undefined &&
+      payload.sha256 !== input.payloadSha256
+    ) {
+      record.problems.push("the report names another payload than the job");
+    }
+  } else {
+    record.problems.push("the report has no payload hash");
+  }
+  record.target = targetOf(report);
+  const shot = report.screenshot;
+  if (shot !== null && shot !== undefined) {
+    const file = isRecordObject(shot) ? shot.file : undefined;
+    const claimed = isRecordObject(shot) ? shot.sha256 : undefined;
+    if (file !== `${input.platform}.png` || typeof claimed !== "string") {
+      record.problems.push("the report's screenshot entry is malformed");
+    } else {
+      const ref = platformScreenshotRef(input.taskId, input.platform);
+      const png = readPlatformFile(
+        input.worktree,
+        ref,
+        MAX_PLATFORM_SCREENSHOT_BYTES,
+      );
+      if (typeof png === "string") {
+        record.problems.push(`screenshot ${png}`);
+      } else {
+        const sha256 = await sha256Bytes(png);
+        record.attachments.push({ ref, sha256, bytes: png.length });
+        if (sha256 !== claimed) {
+          record.problems.push(
+            `screenshot ${ref} does not match the report (sha256 ${sha256})`,
+          );
+        }
+      }
+    }
+  } else if (record.outcome === "passed") {
+    record.problems.push("a passed report has no screenshot");
+  }
+  return record;
+}
+
+/** The assertion text of a settled platform step. */
+export function platformActual(
+  exitCode: number,
+  record: PlatformQaRecord,
+): string {
+  const report = record.attachments.find((a) => a.ref.endsWith("-report.json"));
+  return [
+    `exit code ${exitCode}`,
+    `outcome ${record.outcome ?? "unknown"}`,
+    `at ${record.head} (${
+      record.cleanWorktree ? "clean worktree" : "uncommitted changes"
+    })`,
+    record.payload === null
+      ? "payload unknown"
+      : `payload ${record.payload.name} sha256 ${record.payload.sha256}`,
+    `target ${record.target ?? "unknown"}`,
+    report === undefined ? "no report" : `report sha256 ${report.sha256}`,
+    ...(record.problems.length > 0
+      ? [`problems: ${record.problems.join("; ")}`]
+      : []),
+  ].join("; ");
 }
 
 function userOf(sshDestination: string): string | null {

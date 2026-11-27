@@ -30,7 +30,13 @@ import * as path from "@std/path";
 import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 import { encodeHex } from "@std/encoding/hex";
 import type { EvidenceManifest } from "../qa3/evidence/types.ts";
-import { evidenceIds, validateEvidenceManifest } from "./fdh_evidence.ts";
+import {
+  evidenceIds,
+  PLATFORM_AT_HEAD_RE,
+  platformAtHeadName,
+  validateEvidenceManifest,
+} from "./fdh_evidence.ts";
+import { platformAssertionName, QA_PLATFORMS } from "./fdh_platform_qa.ts";
 import receiptPermissions from "./fdh_receipt_permissions.cjs";
 import {
   parseReceiptComments,
@@ -430,6 +436,41 @@ export interface ParsedEvidence {
   state: string | null;
   assertions: number;
   failedAssertions: number;
+  /**
+   * Platform QA results in the manifest (KAN-146): the commit each one's
+   * latest `platform-qa-<p>-at-head` assertion names, and whether it passed.
+   */
+  platforms: PlatformBinding[];
+}
+
+export interface PlatformBinding {
+  platform: string;
+  /** Commit the result was bound to, or null when the manifest names none. */
+  boundTo: string | null;
+  passed: boolean;
+}
+
+/** Platform results of a decoded manifest and the commit each is bound to. */
+export function platformBindings(
+  manifest: EvidenceManifest,
+): PlatformBinding[] {
+  const out: PlatformBinding[] = [];
+  for (const platform of QA_PLATFORMS) {
+    const name = platformAssertionName(platform);
+    const result = manifest.assertions.filter((a) => a.name === name).at(-1);
+    if (result === undefined) continue;
+    const atHead = manifest.assertions.filter((a) =>
+      a.name === platformAtHeadName(platform)
+    ).at(-1);
+    out.push({
+      platform,
+      boundTo: atHead === undefined
+        ? null
+        : PLATFORM_AT_HEAD_RE.exec(atHead.expected)?.[1] ?? null,
+      passed: result.passed && (atHead?.passed ?? false),
+    });
+  }
+  return out;
 }
 
 export interface EvidenceCommentSource extends ReviewCommentInput {
@@ -502,6 +543,7 @@ export async function parseEvidenceComments(
       state: null,
       assertions: 0,
       failedAssertions: 0,
+      platforms: [],
     };
     out.push(entry);
     const parsed = readMarker(body);
@@ -578,6 +620,7 @@ export async function parseEvidenceComments(
     entry.assertions = manifest.assertions.length;
     entry.failedAssertions = manifest.assertions.filter((a) => !a.passed)
       .length;
+    entry.platforms = platformBindings(manifest);
     entry.ok = true;
   }
   return out;
@@ -677,9 +720,15 @@ export async function traceEvidence(
     .map((e) => {
       const b = e.binding;
       const atHead = b?.commit === headSha;
+      // A platform result counts only for the commit the comment is bound
+      // to, so a manifest built at another commit cannot be posted for this
+      // head (KAN-146).
+      const platformsBound = e.platforms.every((p) =>
+        p.passed && b !== null && p.boundTo === b.commit
+      );
       const counts = e.ok && e.trusted && !e.edited && b !== null &&
         sameRepo(b.repo, slug) && b.pr === pr && atHead && !b.uncommitted &&
-        e.state === "succeeded" && e.assertions > 0;
+        e.state === "succeeded" && e.assertions > 0 && platformsBound;
       return { ...e, atHead, counts };
     });
   const receipts: TraceReport["receipts"] = {
@@ -740,6 +789,12 @@ export async function traceEvidence(
       ...(e.ok && e.state !== "succeeded"
         ? [`the manifest's state is ${e.state}`]
         : []),
+      ...e.platforms.filter((p) => !p.passed || p.boundTo !== b?.commit).map(
+        (p) =>
+          `${p.platform} QA is bound to ${p.boundTo ?? "no commit"}${
+            p.passed ? "" : " and did not pass"
+          }, not ${b?.commit ?? "the comment's commit"}`,
+      ),
     ];
     notes.push(
       `not counted (${e.author}${e.url ? `, ${e.url}` : ""}): ${

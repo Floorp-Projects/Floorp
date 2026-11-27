@@ -30,6 +30,16 @@ import type {
 import { UNVERIFIED, validateManifest } from "../qa3/evidence/validate.ts";
 import { type FdhTaskState, taskStatePath } from "./fdh_task.ts";
 import { isBlockedBuildEvent } from "./fdh_verify.ts";
+import {
+  MAX_PLATFORM_REPORT_BYTES,
+  MAX_PLATFORM_SCREENSHOT_BYTES,
+  platformAssertionName,
+  platformReportRef,
+  platformScreenshotRef,
+  QA_PLATFORMS,
+  readPlatformFile,
+} from "./fdh_platform_qa.ts";
+import type { PlatformQaRecord, QaPlatform } from "./fdh_platform_qa_types.ts";
 
 export const FDH_OWNER = "fdh-local-runner";
 export const FDH_PRINCIPAL_ID = "fdh-cli";
@@ -63,6 +73,12 @@ export interface BuildEvidenceOptions {
   os?: { name: string; version?: string; arch: string };
   owner?: string;
   principalId?: string;
+  /**
+   * Commit the manifest is built for (the worktree HEAD). A platform QA
+   * result counts only when it was recorded at this commit on a clean
+   * worktree (KAN-146); without it, no platform result counts.
+   */
+  head?: string;
 }
 
 export class EvidenceValidationError extends Error {
@@ -144,11 +160,14 @@ function isBrowserEval(operation: FdhTaskState["operations"][number]): boolean {
  * build/test that is fixed later (Gate 3 T-01 error-then-fix loop) ends as a
  * pass while the failed intermediate assertion stays visible in assertions[].
  */
-function manifestStateOf(state: FdhTaskState): State {
+function manifestStateOf(
+  state: FdhTaskState,
+  extra: readonly Assertion[] = [],
+): State {
   if (state.status === "cancelled") return "cancelled";
   if (state.status === "failed") return "failed";
   const latest = new Map<string, boolean>();
-  for (const assertion of state.assertions) {
+  for (const assertion of [...state.assertions, ...extra]) {
     latest.set(assertion.name, assertion.passed);
   }
   if ([...latest.values()].some((passed) => !passed)) return "failed";
@@ -159,8 +178,9 @@ function manifestStateOf(state: FdhTaskState): State {
 
 function attemptResultOf(
   state: FdhTaskState,
+  extra: readonly Assertion[],
 ): Attempt["result"] {
-  const state_ = manifestStateOf(state);
+  const state_ = manifestStateOf(state, extra);
   if (state_ === "failed") return "failed";
   if (state_ === "cancelled") return "cancelled";
   if (state_ === "succeeded") return "passed";
@@ -290,7 +310,7 @@ function buildLimitations(state: FdhTaskState, manifestState: State): string[] {
     )
   ) {
     add(
-      "Platform QA (fdh platform-qa, KAN-145) ran a packaged build on one QA target per platform (a macOS VM, a Linux container); it is an early development check, not QA3, release qualification or a visual judgment, and fdh did not verify that the payload was built from this HEAD.",
+      "Platform QA (fdh platform-qa, KAN-145) ran a packaged build on one QA target per platform (a macOS VM, a Linux container); it is an early development check, not QA3, release qualification or a visual judgment. A result counts only when its job ran at this HEAD on a clean worktree (platform-qa-<platform>-at-head, KAN-146), but fdh did not verify that the payload itself was built from this HEAD; the payload is identified by its SHA-256 only.",
     );
   }
   if (
@@ -414,14 +434,20 @@ function buildOperations(state: FdhTaskState): Operation[] {
   }));
 }
 
-function buildAssertions(state: FdhTaskState): Assertion[] {
+function buildAssertions(
+  state: FdhTaskState,
+  extra: readonly Assertion[],
+): Assertion[] {
   if (state.assertions.length > 0) {
-    return state.assertions.map((assertion) => ({
-      name: assertion.name,
-      expected: assertion.expected,
-      actual: assertion.actual,
-      passed: assertion.passed,
-    }));
+    return [
+      ...state.assertions.map((assertion) => ({
+        name: assertion.name,
+        expected: assertion.expected,
+        actual: assertion.actual,
+        passed: assertion.passed,
+      })),
+      ...extra,
+    ];
   }
   return [{
     name: "task-state-recorded",
@@ -432,16 +458,21 @@ function buildAssertions(state: FdhTaskState): Assertion[] {
   }];
 }
 
-function buildAttempts(state: FdhTaskState, ids: FdhEvidenceIds): Attempt[] {
+function buildAttempts(
+  state: FdhTaskState,
+  ids: FdhEvidenceIds,
+  extra: readonly Assertion[],
+): Attempt[] {
   return [{
     run: ids.run,
     attempt: 1,
     startedAt: state.createdAt,
     endedAt: lastTimestamp(state),
-    result: attemptResultOf(state),
+    result: attemptResultOf(state, extra),
     exitCode: null,
-    notes:
-      `fdh local loop; ${state.operations.length} command(s), ${state.assertions.length} assertion(s)`,
+    notes: `fdh local loop; ${state.operations.length} command(s), ${
+      state.assertions.length + extra.length
+    } assertion(s)`,
   }];
 }
 
@@ -522,6 +553,144 @@ async function externalObservationInputs(
   return inputs;
 }
 
+/** Name of the assertion that binds a platform result to the manifest's commit. */
+export function platformAtHeadName(platform: string): string {
+  return `platform-qa-${platform}-at-head`;
+}
+
+/**
+ * `expected` of a `platform-qa-<p>-at-head` assertion. `evidence trace` reads
+ * the commit back with PLATFORM_AT_HEAD_RE, so the two must change together.
+ */
+export function platformAtHeadExpected(
+  platform: string,
+  head: string | undefined,
+): string {
+  return `the ${platform} result was recorded at HEAD ${
+    head ?? "(not given)"
+  } on a clean worktree`;
+}
+
+export const PLATFORM_AT_HEAD_RE =
+  /^the [a-z]+ result was recorded at HEAD ([0-9a-f]{40}(?:[0-9a-f]{24})?) on a clean worktree$/;
+
+/** The record of a task-state assertion is well formed for this task. */
+function isRecordFor(
+  value: unknown,
+  taskId: string,
+  platform: QaPlatform,
+): value is PlatformQaRecord {
+  if (value === null || typeof value !== "object") return false;
+  const r = value as Record<string, unknown>;
+  const allowed = [
+    platformReportRef(taskId, platform),
+    platformScreenshotRef(taskId, platform),
+  ];
+  return r.platform === platform && typeof r.jobId === "string" &&
+    typeof r.head === "string" && typeof r.cleanWorktree === "boolean" &&
+    Array.isArray(r.attachments) &&
+    r.attachments.every((a: unknown) => {
+      if (a === null || typeof a !== "object") return false;
+      const x = a as Record<string, unknown>;
+      return typeof x.ref === "string" && allowed.includes(x.ref) &&
+        typeof x.sha256 === "string" && /^[0-9a-f]{64}$/.test(x.sha256) &&
+        Number.isSafeInteger(x.bytes);
+    });
+}
+
+interface PlatformEvidence {
+  assertions: Assertion[];
+  inputs: InputFidelityInput[];
+  deviations: string[];
+}
+
+/**
+ * The latest result of each platform (KAN-146): re-hash the report and
+ * screenshot its job pinned (a changed file stops the build, like an
+ * external observation), and add a `platform-qa-<p>-at-head` assertion that
+ * passes only when the result was recorded at `head` on a clean worktree.
+ * An older result, or one from before results were bound, does not count.
+ */
+async function platformEvidence(
+  state: FdhTaskState,
+  head: string | undefined,
+  /** Inputs that come before these in inputFidelity.inputs. */
+  inputsBefore: number,
+): Promise<PlatformEvidence> {
+  const out: PlatformEvidence = { assertions: [], inputs: [], deviations: [] };
+  const want = head?.trim().toLowerCase();
+  for (const platform of QA_PLATFORMS) {
+    const name = platformAssertionName(platform);
+    const latest = state.assertions.filter((a) => a.name === name).at(-1);
+    if (latest === undefined) continue;
+    const record = latest.platform;
+    const expected = platformAtHeadExpected(platform, want);
+    if (record !== undefined && !isRecordFor(record, state.taskId, platform)) {
+      out.assertions.push({
+        name: platformAtHeadName(platform),
+        expected,
+        actual: "the recorded commit binding is malformed",
+        passed: false,
+      });
+      continue;
+    }
+    if (record === undefined) {
+      out.assertions.push({
+        name: platformAtHeadName(platform),
+        expected,
+        actual:
+          "the result carries no commit binding: no report was pinned (the job did not finish, its report was not read, or it was recorded before KAN-146)",
+        passed: false,
+      });
+      continue;
+    }
+    for (const attachment of record.attachments) {
+      const file = path.join(state.worktree, ...attachment.ref.split("/"));
+      const at = `/inputFidelity/inputs/${inputsBefore + out.inputs.length}`;
+      const bytes = readPlatformFile(
+        state.worktree,
+        attachment.ref,
+        attachment.ref.endsWith(".png")
+          ? MAX_PLATFORM_SCREENSHOT_BYTES
+          : MAX_PLATFORM_REPORT_BYTES,
+      );
+      if (typeof bytes === "string") {
+        throw new EvidenceValidationError([{
+          code: "schema-violation",
+          path: at,
+          message: `platform QA file ${bytes}`,
+        }]);
+      }
+      const sha256 = await sha256Hex(bytes);
+      if (sha256 !== attachment.sha256) {
+        throw new EvidenceValidationError([{
+          code: "schema-violation",
+          path: at,
+          message:
+            `platform QA file '${attachment.ref}' changed since job ${record.jobId} settled: sha256 ${sha256} != recorded ${attachment.sha256}; run the platform step again`,
+        }]);
+      }
+      out.inputs.push({ path: file, sha256, bytes: bytes.length });
+    }
+    const bound = want !== undefined && record.head === want &&
+      record.cleanWorktree;
+    out.assertions.push({
+      name: platformAtHeadName(platform),
+      expected,
+      actual: `recorded by job ${record.jobId} at ${record.head} (${
+        record.cleanWorktree ? "clean worktree" : "uncommitted changes"
+      })`,
+      passed: bound,
+    });
+    out.deviations.push(
+      `${platform} QA ran on an FDH QA target (${
+        record.target ?? "target not recorded"
+      }), not on this host`,
+    );
+  }
+  return out;
+}
+
 /**
  * Build an EvidenceManifest v0 for `state`, validate it with the shared
  * Runner rules, and return it. Throws `EvidenceValidationError` when the
@@ -537,7 +706,13 @@ export async function buildEvidenceManifest(
   const statePath = taskStatePath(state.worktree, state.taskId);
   const stateBytes = Deno.readFileSync(statePath);
   const externalInputs = await externalObservationInputs(state);
-  const manifestState = manifestStateOf(state);
+  // inputs[0] is the task state, then the external observation files.
+  const platform = await platformEvidence(
+    state,
+    options.head,
+    1 + externalInputs.length,
+  );
+  const manifestState = manifestStateOf(state, platform.assertions);
 
   const manifest: EvidenceManifest = {
     schemaVersion: 1,
@@ -568,9 +743,9 @@ export async function buildEvidenceManifest(
       },
     },
     runtime: buildRuntime(state, os),
-    attempts: buildAttempts(state, ids),
+    attempts: buildAttempts(state, ids, platform.assertions),
     operations: buildOperations(state),
-    assertions: buildAssertions(state),
+    assertions: buildAssertions(state, platform.assertions),
     environmentFidelity: {
       host: `${os.name}${os.version ? ` ${os.version}` : ""} (${os.arch})`,
       network: "enabled",
@@ -578,6 +753,7 @@ export async function buildEvidenceManifest(
       deviations: [
         "local development worktree rather than a packaged qualification environment",
         "no external network services are used; only the local dev server may be running",
+        ...platform.deviations,
       ],
       notes:
         "Local fdh loop on the recorded worktree; this is not a release-environment run.",
@@ -590,6 +766,7 @@ export async function buildEvidenceManifest(
           bytes: stateBytes.length,
         },
         ...externalInputs,
+        ...platform.inputs,
       ],
       unchangedDuringRun: "unknown",
       deviations: [
@@ -599,9 +776,14 @@ export async function buildEvidenceManifest(
             "external observation files were supplied by the operator and are re-hashed when this manifest is built",
           ]
           : []),
+        ...(platform.inputs.length > 0
+          ? [
+            "platform QA reports and screenshots were pinned when their jobs settled and are re-hashed when this manifest is built",
+          ]
+          : []),
       ],
-      notes: externalInputs.length > 0
-        ? `Pinned inputs are the fdh task-state snapshot and ${externalInputs.length} external observation file(s) re-hashed while building this manifest.`
+      notes: externalInputs.length + platform.inputs.length > 0
+        ? `Pinned inputs are the fdh task-state snapshot, ${externalInputs.length} external observation file(s) and ${platform.inputs.length} platform QA file(s), re-hashed while building this manifest.`
         : "Pinned input is the fdh task-state snapshot read while building this manifest.",
     },
     visualJudge: null,
