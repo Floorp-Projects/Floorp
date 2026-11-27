@@ -117,6 +117,7 @@ const ACTION_CATEGORY_MAP: Record<string, string> = {
   "gecko-workspace-previous": "workspace",
 
   "floorp-rest-mode": "floorp",
+  "floorp-merge-all-windows": "window",
   "floorp-hide-user-interface": "floorp",
   "floorp-toggle-navigation-panel": "floorp",
   "floorp-toggle-zen-mode": "floorp",
@@ -181,6 +182,14 @@ const ACTION_KEYWORDS: Record<string, string[]> = {
   "gecko-workspace-next": ["next workspace"],
   "gecko-workspace-previous": ["previous workspace"],
   "floorp-rest-mode": ["rest", "break"],
+  "floorp-merge-all-windows": [
+    "merge",
+    "consolidate",
+    "gather",
+    "single window",
+    "one window",
+    "all windows",
+  ],
   "floorp-hide-user-interface": ["hide ui", "hide interface"],
   "floorp-toggle-zen-mode": ["zen", "focus", "distraction free"],
   "floorp-toggle-command-palette": ["command palette", "palette", "command"],

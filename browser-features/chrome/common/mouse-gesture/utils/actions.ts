@@ -1,6 +1,10 @@
 import type { GestureActionRegistration } from "./gestures.ts";
 import { getScrollTargetContext } from "./scroll-target.ts";
 import { setShareModeEnabled } from "#features-chrome/common/browser-share-mode/browser-share-mode.tsx";
+import {
+  MERGE_WINDOWS_ACTION_ID,
+  mergeAllWindows,
+} from "#features-chrome/common/windows-merge/controller.ts";
 import { toggleZenModeForWindow } from "#features-chrome/common/zen-mode/zen-mode.tsx";
 import {
   setPersistedGroupLayout,
@@ -534,6 +538,15 @@ export const actions: GestureActionRegistration[] = [
   {
     name: "floorp-toggle-share-mode",
     fn: () => setShareModeEnabled((prev) => !prev),
+  },
+  {
+    // Registered here, not from the feature's init: the command palette caches
+    // this catalog during its own init, so a late dynamic registration would
+    // stay invisible in the palette until a reload.
+    name: MERGE_WINDOWS_ACTION_ID,
+    fn: (win) => {
+      mergeAllWindows(win);
+    },
   },
   {
     name: "floorp-copy-page-url-as-markdown",
