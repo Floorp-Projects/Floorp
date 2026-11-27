@@ -487,19 +487,21 @@ export function BackupSettings() {
                 {t("workspaces.backupIntervalDescription")}
               </span>
             </label>
-            <Select
-              id="backup-interval"
-              aria-describedby="backup-interval-description"
-              value={String(intervalMinutes ?? 15)}
-              onChange={(e) =>
-                setValue("intervalMinutes", Number(e.target.value))}
-            >
-              {intervalOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {intervalLabel(option.value, option.unit)}
-                </option>
-              ))}
-            </Select>
+            <div className={styles.intervalSelect}>
+              <Select
+                id="backup-interval"
+                aria-describedby="backup-interval-description"
+                value={String(intervalMinutes ?? 15)}
+                onChange={(e) =>
+                  setValue("intervalMinutes", Number(e.target.value))}
+              >
+                {intervalOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {intervalLabel(option.value, option.unit)}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
 
           <div className={styles.row}>

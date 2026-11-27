@@ -312,6 +312,14 @@ export const LEPTON_CONTAINER_INDICATOR_CSS = `
  * A container's identity must remain visible independently of selection/hover.
  * Keep this after the vendored sheet, which is replaced by upstream syncs. */
 @media -moz-pref("userChrome.tab.photon_like_contextline") {
+  /* Gecko represents tab selection as selected="" rather than
+   * selected="true". The vendored inactive-tab animation therefore also
+   * hides the selected tab's Photon line. Restore it for selected tabs
+   * without changing the hover animation of inactive tabs. */
+  #tabbrowser-tabs .tabbrowser-tab:is([selected], [multiselected]) > .tab-stack > .tab-background > .tab-context-line {
+    opacity: 1 !important;
+    transform: none !important;
+  }
   #tabbrowser-tabs .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
     --identity-icon-color: inherit;
     background-color: var(--identity-icon-color) !important;

@@ -16,8 +16,13 @@
   min-height: 60px;
 }
 .row > :first-child {
+  flex: 1 1 auto;
   min-width: 0;
 }
 .row > :last-child {
   flex-shrink: 0;
+}
+.intervalSelect {
+  width: 10rem;
+  max-width: 40%;
 }
