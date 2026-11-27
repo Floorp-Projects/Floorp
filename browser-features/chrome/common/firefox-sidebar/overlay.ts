@@ -8,6 +8,7 @@ import type {
   SidebarOpeningRequest,
   SidebarOverlaySettings,
 } from "./types.ts";
+import { FLOORP_PANEL_SIDEBAR_POSITION_CHANGED_EVENT } from "../flex-order/events.ts";
 
 const OPEN_DELAY = 180;
 const CLOSE_DELAY = 350;
@@ -293,6 +294,11 @@ export class FirefoxSidebarOverlayController {
       );
     });
     this.listen(window, "resize", () => this.scheduleGeometry());
+    this.listen(
+      document,
+      FLOORP_PANEL_SIDEBAR_POSITION_CHANGED_EVENT,
+      () => this.scheduleGeometry(),
+    );
     // Switching focus between the sidebar and a tab can blur the chrome window.
     this.listen(window, "deactivate", (event) => {
       if (event.target !== window) return;

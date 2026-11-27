@@ -2,6 +2,7 @@
 // @colocated-env browser
 
 import { gFlexOrder } from "../flex-order.tsx";
+import { FLOORP_PANEL_SIDEBAR_POSITION_CHANGED_EVENT } from "../events.ts";
 import { createRoot } from "solid-js";
 
 import {
@@ -257,6 +258,31 @@ function testPositionCanBeUpdatedWithoutRenderingAnotherStyle(): void {
   cleanupFlexOrderStyle();
 }
 
+function testPositionChangeDispatchesGeometryEvent(): void {
+  initializeFlexOrder();
+  let count = 0;
+  const listener = () => count++;
+  document.addEventListener(
+    FLOORP_PANEL_SIDEBAR_POSITION_CHANGED_EVENT,
+    listener,
+  );
+  try {
+    gFlexOrder.applyFlexOrder(true);
+    gFlexOrder.applyFlexOrder(false);
+    assertEquals(
+      count,
+      2,
+      "each Floorp sidebar position change should notify overlay geometry",
+    );
+  } finally {
+    document.removeEventListener(
+      FLOORP_PANEL_SIDEBAR_POSITION_CHANGED_EVENT,
+      listener,
+    );
+    cleanupFlexOrderStyle();
+  }
+}
+
 export async function runAllTests(): Promise<void> {
   const originalStyle = document.getElementById(flexOrderStyleId);
   const originalFloorpAtRight = getComputedOrder("panel-sidebar-box") > 0;
@@ -295,6 +321,10 @@ export async function runAllTests(): Promise<void> {
       {
         name: "position updates reuse the rendered style",
         fn: testPositionCanBeUpdatedWithoutRenderingAnotherStyle,
+      },
+      {
+        name: "position changes dispatch overlay geometry event",
+        fn: testPositionChangeDispatchesGeometryEvent,
       },
     ]);
   } finally {
