@@ -1063,11 +1063,8 @@ function testFlattenSelectionPrefersFocusedWindow(): void {
     },
   ]);
   assertEquals(
-    flattened.map((tab) => [tab.url, tab.isSelected]),
-    [
-      ["https://example.com/focused", true],
-      ["https://example.com/other", false],
-    ],
+    flattened.map((tab) => `${tab.url}:${tab.isSelected}`).join(","),
+    "https://example.com/focused:true,https://example.com/other:false",
     "focused window selection wins and the other tab can stay lazy",
   );
 }
@@ -1089,12 +1086,8 @@ function testFlattenSelectionFallsBackInFileOrder(): void {
     },
   ]);
   assertEquals(
-    flattened.map((tab) => [tab.url, tab.isSelected]),
-    [
-      ["https://example.com/focused", false],
-      ["https://example.com/first", true],
-      ["https://example.com/second", false],
-    ],
+    flattened.map((tab) => `${tab.url}:${tab.isSelected}`).join(","),
+    "https://example.com/focused:false,https://example.com/first:true,https://example.com/second:false",
     "without a focused selection, only the first selected tab survives",
   );
 }
