@@ -11,6 +11,22 @@ const SCOPE = /^[\x21\x23-\x5b\x5d-\x7e]{1,256}$/;
 const EMAIL =
   /^[A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@floorp\.app$/;
 
+class BrokerIOError extends Error {
+  constructor() {
+    super("Google broker unavailable");
+  }
+}
+
+async function brokerSnapshot(read: () => Promise<unknown>): Promise<unknown> {
+  let response;
+  try {
+    response = await read();
+  } catch {
+    throw new BrokerIOError();
+  }
+  return ownDataSnapshot(response);
+}
+
 /** Pure RS adapter, NOT Google signature verification, an AS, MCP grant, or
  * human approval. The root IO pins hosts/realm/credentials and authenticates the
  * complete responses plus identity_provider's USER SESSION NOTE provenance.
@@ -21,6 +37,7 @@ const EMAIL =
 export function createSharedGoogleBrokerResolver(
   policy: unknown,
   trustedIO: unknown,
+  { propagateIOErrors = false } = {},
 ): SharedGoogleBrokerResolver {
   let issuer: string;
   let audience: string;
@@ -64,7 +81,7 @@ export function createSharedGoogleBrokerResolver(
       ) return null;
 
       // Snapshot each completed response immediately, before starting another IO.
-      const i = record(ownDataSnapshot(await io.introspect(token)));
+      const i = record(await brokerSnapshot(() => io.introspect(token)));
       if (
         i.active !== true || i.iss !== issuer || i.sub !== subject ||
         i.identity_provider !== "google" || i.exp !== expires ||
@@ -74,17 +91,20 @@ export function createSharedGoogleBrokerResolver(
         !grantedScopes.every((s) => scopeString(i.scope).includes(s))
       ) return null;
       const provider = record(
-        ownDataSnapshot(await io.readGoogleProviderConfig()),
+        await brokerSnapshot(() => io.readGoogleProviderConfig()),
       );
       if (!validProvider(provider, clientId)) return null;
       if (
-        array(ownDataSnapshot(await io.readGoogleProviderMappers())).length !==
+        array(await brokerSnapshot(() => io.readGoogleProviderMappers()))
+          .length !==
           0
       ) return null;
-      if (!validProfile(record(ownDataSnapshot(await io.readUserProfile())))) {
+      if (
+        !validProfile(record(await brokerSnapshot(() => io.readUserProfile())))
+      ) {
         return null;
       }
-      const user = record(ownDataSnapshot(await io.readUser(subject)));
+      const user = record(await brokerSnapshot(() => io.readUser(subject)));
       if (
         user.id !== subject || user.emailVerified !== true ||
         typeof user.email !== "string" || user.email.length > 254 ||
@@ -92,7 +112,7 @@ export function createSharedGoogleBrokerResolver(
         user.serviceAccountClientId !== undefined || user.enabled === false
       ) return null;
       const identities = array(
-        ownDataSnapshot(await io.readFederatedIdentities(subject)),
+        await brokerSnapshot(() => io.readFederatedIdentities(subject)),
       );
       const google = identities.map(record).filter((f) =>
         f.identityProvider === "google"
@@ -114,7 +134,8 @@ export function createSharedGoogleBrokerResolver(
         emailVerified: true,
         hostedDomain: "floorp.app",
       });
-    } catch {
+    } catch (error) {
+      if (propagateIOErrors && error instanceof BrokerIOError) throw error;
       return null;
     }
   };
