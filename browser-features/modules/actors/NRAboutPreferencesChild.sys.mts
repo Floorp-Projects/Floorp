@@ -21,11 +21,23 @@ export class NRAboutPreferencesChild extends JSWindowActorChild {
       return;
     }
     if (event.type === "DOMContentLoaded") {
-      //https://searchfox.org/mozilla-central/rev/3a34b4616994bd8d2b6ede2644afa62eaec817d1/browser/actors/AboutNewTabChild.sys.mjs#70
-      Services.scriptloader.loadSubScript(
-        "chrome://noraneko-startup/content/about-preferences.js",
-        this.contentWindow,
+      const doc = this.contentWindow?.document;
+      if (!doc?.head) {
+        return;
+      }
+
+      // The startup bundle can import shared chunks, so load it as a module
+      // in the preferences document's global.
+      const script = doc.createElementNS(
+        "http://www.w3.org/1999/xhtml",
+        "script",
       );
+      script.setAttribute("type", "module");
+      script.setAttribute(
+        "src",
+        "chrome://noraneko-startup/content/about-preferences.js",
+      );
+      doc.head.append(script);
     }
   }
 }
