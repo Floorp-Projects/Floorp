@@ -63,6 +63,7 @@ export interface WorkspaceBackupState {
   workspaces: WorkspaceBackupWorkspace[];
   order: TWorkspaceID[];
   defaultID: TWorkspaceID | null;
+  /** Selection of the focused normal browser window when it can be read. */
   currentWorkspaceId: TWorkspaceID | null;
 }
 

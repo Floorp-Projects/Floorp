@@ -684,7 +684,7 @@ export const restoreTabsIntoWindow = async <T extends RestorableTab>(
       }
     }
 
-    if (tabSnapshot.isSelected) {
+    if (tabSnapshot.isSelected && !targetTab) {
       targetTab = tab;
     }
 

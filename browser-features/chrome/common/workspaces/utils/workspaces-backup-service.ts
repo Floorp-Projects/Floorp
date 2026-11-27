@@ -57,6 +57,9 @@ import {
 interface BrowserWindow extends Window {
   closed: boolean;
   gBrowser?: RestoreTargetBrowser;
+  workspacesFuncs?: {
+    getSelectedWorkspaceID?: () => unknown;
+  };
 }
 
 interface PrivateBrowsingUtilsModule {
@@ -745,16 +748,18 @@ export class WorkspacesBackupService {
         ({ capturedTabs } = await this.captureAndWrite("pre-restore"));
       } catch (error) {
         if (error instanceof Error && error.message === "nothing-to-back-up") {
-          // No capturable tab exists, so there is nothing a safety copy could
-          // hold. Every current tab is preserved below instead.
-          capturedTabs = new Set();
-        } else {
+          // Tabs can be preserved without a copy, but workspace metadata
+          // cannot. Abort rather than replacing the store without a rollback.
           console.error(
-            "WorkspacesBackupService: failed to capture pre-restore backup",
-            error,
+            "WorkspacesBackupService: pre-restore backup has no capturable state",
           );
           return { success: false, error: "pre-restore-failed" };
         }
+        console.error(
+          "WorkspacesBackupService: failed to capture pre-restore backup",
+          error,
+        );
+        return { success: false, error: "pre-restore-failed" };
       }
       // Only tabs the safety copy covers may be replaced. Anything opened since
       // the copy (including a same-count swap, or tabs dropped by capture
@@ -1253,16 +1258,52 @@ export class WorkspacesBackupService {
     return preserve;
   }
 
-  private resolveCurrentWorkspaceId(): TWorkspaceID | null {
+  private resolveWindowWorkspaceId(
+    window: BrowserWindow | null,
+  ): TWorkspaceID | null {
+    if (!window || window.closed) {
+      return null;
+    }
+    try {
+      const selected = window.workspacesFuncs?.getSelectedWorkspaceID?.();
+      if (typeof selected === "string" && this.host.isWorkspaceID(selected)) {
+        return selected as TWorkspaceID;
+      }
+    } catch (error) {
+      console.warn(
+        "WorkspacesBackupService: failed to read focused window workspace",
+        error,
+      );
+    }
+    return null;
+  }
+
+  private resolveCurrentWorkspaceId(
+    preferredWindow?: BrowserWindow | null,
+  ): TWorkspaceID | null {
+    const preferred = this.resolveWindowWorkspaceId(preferredWindow ?? null);
+    if (preferred) {
+      return preferred;
+    }
+    const defaultCandidate = workspacesDataStore.defaultID as TWorkspaceID;
+    const defaultWorkspace = defaultCandidate &&
+        this.host.isWorkspaceID(defaultCandidate)
+      ? defaultCandidate
+      : null;
+    // When another normal window is focused, this window's local selection is
+    // not a safe fallback: whichever scheduler won the race would otherwise
+    // write its own workspace as the global current one.
+    if (
+      preferredWindow &&
+      preferredWindow !== (globalThis as unknown as BrowserWindow)
+    ) {
+      return defaultWorkspace;
+    }
     const selected = selectedWorkspaceID();
     if (selected && this.host.isWorkspaceID(selected)) {
       return selected;
     }
-    const defaultCandidate = workspacesDataStore.defaultID as TWorkspaceID;
-    if (defaultCandidate && this.host.isWorkspaceID(defaultCandidate)) {
-      return defaultCandidate;
-    }
-    return null;
+    return defaultWorkspace;
   }
 
   /**
@@ -1274,7 +1315,9 @@ export class WorkspacesBackupService {
    * and de-duplicated), then any remaining workspaces in data order. Counts and
    * string lengths are clamped to the validator's limits.
    */
-  private captureWorkspaceState(): WorkspaceBackupState | null {
+  private captureWorkspaceState(
+    focusedWindow?: BrowserWindow | null,
+  ): WorkspaceBackupState | null {
     const rawData: unknown = workspacesDataStore.data;
     const dataIds: TWorkspaceID[] = rawData instanceof Map
       ? [...(rawData as Map<TWorkspaceID, TWorkspace>).keys()]
@@ -1338,7 +1381,7 @@ export class WorkspacesBackupService {
     const order = workspaces.map((workspace) => workspace.workspaceId);
     const kept = new Set(order);
     const defaultCandidate = workspacesDataStore.defaultID as TWorkspaceID;
-    const current = this.resolveCurrentWorkspaceId();
+    const current = this.resolveCurrentWorkspaceId(focusedWindow);
     return {
       workspaces,
       order,
@@ -1550,7 +1593,9 @@ export class WorkspacesBackupService {
     }
 
     const workspaceState = mode === "workspaces"
-      ? this.captureWorkspaceState()
+      ? this.captureWorkspaceState(
+        focusedIndex >= 0 ? windows[focusedIndex] : null,
+      )
       : null;
     if (mode === "workspaces" && !workspaceState) {
       throw new Error("workspace-state-unavailable");

@@ -6,6 +6,7 @@ import {
   buildBackupSummary,
   filterBackupFiles,
   findDanglingWorkspaceReferences,
+  flattenWindowsForSingleWindowRestore,
   formatBackupFileName,
   isBackupFileName,
   isRestorableTabUrl,
@@ -1046,6 +1047,60 @@ function testIntegrityFailures(): void {
 
 /* ------------------------------------------------------------------ */
 
+function testFlattenSelectionPrefersFocusedWindow(): void {
+  const flattened = flattenWindowsForSingleWindowRestore([
+    {
+      isFocused: true,
+      tabs: [
+        makeTab(0, { url: "https://example.com/focused", isSelected: true }),
+      ],
+    },
+    {
+      isFocused: false,
+      tabs: [
+        makeTab(1, { url: "https://example.com/other", isSelected: true }),
+      ],
+    },
+  ]);
+  assertEquals(
+    flattened.map((tab) => [tab.url, tab.isSelected]),
+    [
+      ["https://example.com/focused", true],
+      ["https://example.com/other", false],
+    ],
+    "focused window selection wins and the other tab can stay lazy",
+  );
+}
+
+function testFlattenSelectionFallsBackInFileOrder(): void {
+  const flattened = flattenWindowsForSingleWindowRestore([
+    {
+      isFocused: true,
+      tabs: [
+        makeTab(0, { url: "https://example.com/focused", isSelected: false }),
+      ],
+    },
+    {
+      isFocused: false,
+      tabs: [
+        makeTab(1, { url: "https://example.com/first", isSelected: true }),
+        makeTab(2, { url: "https://example.com/second", isSelected: true }),
+      ],
+    },
+  ]);
+  assertEquals(
+    flattened.map((tab) => [tab.url, tab.isSelected]),
+    [
+      ["https://example.com/focused", false],
+      ["https://example.com/first", true],
+      ["https://example.com/second", false],
+    ],
+    "without a focused selection, only the first selected tab survives",
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
 export function runAllTests(): void {
   const tests: TestCase[] = [
     { name: "file name format and parse", fn: testFormatAndParseFileName },
@@ -1065,6 +1120,14 @@ export function runAllTests(): void {
     {
       name: "dangling workspace references",
       fn: testDanglingWorkspaceReferences,
+    },
+    {
+      name: "flatten selection prefers focused window",
+      fn: testFlattenSelectionPrefersFocusedWindow,
+    },
+    {
+      name: "flatten selection falls back in file order",
+      fn: testFlattenSelectionFallsBackInFileOrder,
     },
     {
       name: "sanitize strips sensitive state",

@@ -35,6 +35,7 @@ import {
   WorkspacesArchiveService,
 } from "./utils/workspaces-archive-service";
 import { WorkspacesBackupService } from "./utils/workspaces-backup-service";
+import { flattenWindowsForSingleWindowRestore } from "./utils/workspaces-backup-helpers";
 import type {
   WorkspaceBackupFile,
   WorkspaceBackupSummary,
@@ -949,7 +950,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
       // without a (resolvable) workspace join the first restored one so they
       // stay visible after the restore. The last-shown marker also references
       // a workspace ID; map it too or the saved tab selection is lost.
-      const allTabs = file.windows.flatMap((window) => window.tabs).map(
+      const allTabs = flattenWindowsForSingleWindowRestore(file.windows).map(
         (tab) => ({
           ...tab,
           lastShownWorkspaceId: tab.lastShownWorkspaceId

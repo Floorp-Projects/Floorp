@@ -9,7 +9,11 @@ import {
   assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
-import { settle, withWindows } from "./workspace-last-tab-test-utils.ts";
+import {
+  settle,
+  waitFor,
+  withWindows,
+} from "./workspace-last-tab-test-utils.ts";
 import {
   WORKSPACE_DATA_PREF_NAME,
   WORKSPACE_TAB_ATTRIBUTION_ID,
@@ -269,6 +273,39 @@ async function testWorkspaceAttribution(): Promise<void> {
     );
     assert(state.currentWorkspaceId !== state.defaultID, "A-05 non-default");
   });
+}
+
+// R-01 regression: a backup triggered by a non-focused window still records
+// the focused window's workspace as the file's current workspace.
+async function testFocusedWindowWorkspaceIsCaptured(): Promise<void> {
+  await withBackupCleanup(() =>
+    withWindows(false, false, async (open) => {
+      const focused = (await open()) as BackupTestWindow;
+      const background = (await open()) as BackupTestWindow;
+      const focusedApi = api(focused);
+      const backgroundApi = api(background);
+      const focusedWorkspace = focusedApi.workspaces.createNoNameWorkspace();
+      await settle();
+      backgroundApi.workspaces.createNoNameWorkspace();
+      await settle();
+      urlTab(focused, [`${PREFIX}/r01-focused`], 1);
+      urlTab(background, [`${PREFIX}/r01-background`], 1);
+      await settle();
+      focused.focus();
+      await waitFor(
+        () => Services.wm.getMostRecentWindow("navigator:browser") === focused,
+        "focused window becomes the most recent browser window",
+      );
+
+      const summary = await backgroundApi.backup.backupNow();
+      const file = await readBackup(summary.fileName);
+      assertEquals(
+        file.workspaceState?.currentWorkspaceId,
+        focusedWorkspace,
+        "currentWorkspaceId comes from the focused window, not the capturing window",
+      );
+    })
+  );
 }
 
 // A-04
@@ -706,6 +743,10 @@ export async function runAllTests(): Promise<void> {
   await runTests("workspacesBackupQaG1Capture.test.ts", [
     { name: "A-03/A-05 workspace attribution", fn: testWorkspaceAttribution },
     { name: "A-04 workspace metadata", fn: testWorkspaceMetadata },
+    {
+      name: "R-01 focused window workspace capture",
+      fn: testFocusedWindowWorkspaceIsCaptured,
+    },
     { name: "A-06..A-09 tab properties", fn: testTabProperties },
     { name: "A-11/12/16..19/21 URL allowlist", fn: testUrlAllowlist },
     { name: "A-20 partial history", fn: testPartialHistory },

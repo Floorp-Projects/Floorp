@@ -832,8 +832,9 @@ async function testSafetyCopyFailureAborts(): Promise<void> {
 async function testNothingToBackUp(): Promise<void> {
   await inWindow(async (win) => {
     const { backup } = apis(win);
-    const { file, names } = threeWorkspaceFile("empty");
+    const { file } = threeWorkspaceFile("empty");
     const fileName = await writeFile(file);
+    const storeBefore = Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME);
     const tabsBefore: XULElement[] = [];
     for (const w of browserWindows()) {
       for (const tab of w.gBrowser.tabs as XULElement[]) {
@@ -842,9 +843,14 @@ async function testNothingToBackUp(): Promise<void> {
       }
     }
     const result = await backup.restoreBackup(fileName);
-    assert(result.success, `restore proceeds (${result.error ?? ""})`);
+    assert(!result.success, "restore is aborted without a safety copy");
+    assertEquals(result.error, "pre-restore-failed", "error code");
     await settle();
-    names.forEach(workspaceIdByName);
+    assertEquals(
+      Services.prefs.getStringPref(WORKSPACE_DATA_PREF_NAME),
+      storeBefore,
+      "workspace store is untouched",
+    );
     for (const tab of tabsBefore) {
       assert(tab.isConnected, "uncaptured tab kept");
     }
@@ -853,6 +859,75 @@ async function testNothingToBackUp(): Promise<void> {
       0,
       "no empty safety copy is written",
     );
+  });
+}
+
+// R-03 regression: flattening two windows must not let a non-focused
+// window's selected tab overwrite the focused window's selected tab.
+async function testFocusedWindowSelectedTabWins(): Promise<void> {
+  await inWindow(async (win) => {
+    const { backup } = apis(win);
+    const focusedWorkspace = newWorkspaceId();
+    const otherWorkspace = newWorkspaceId();
+    const focusedUrl = `${PREFIX}/r03/focused-selected`;
+    const otherUrl = `${PREFIX}/r03/other-selected`;
+    const backupTab = (
+      url: string,
+      workspaceId: string,
+    ): WorkspaceBackupTab => ({
+      state: tabState(url),
+      title: null,
+      url,
+      pinned: false,
+      isSelected: true,
+      userContextId: 0,
+      lastShownWorkspaceId: workspaceId as TWorkspaceID,
+      workspaceId: workspaceId as TWorkspaceID,
+    });
+    const file = buildBackupFile(
+      "manual",
+      "workspaces",
+      Date.now(),
+      [
+        {
+          isFocused: true,
+          tabs: [backupTab(focusedUrl, focusedWorkspace)],
+        },
+        {
+          isFocused: false,
+          tabs: [backupTab(otherUrl, otherWorkspace)],
+        },
+      ],
+      {
+        workspaces: [
+          {
+            workspaceId: focusedWorkspace as TWorkspaceID,
+            name: "r03-focused",
+            userContextId: 0,
+          },
+          {
+            workspaceId: otherWorkspace as TWorkspaceID,
+            name: "r03-other",
+            userContextId: 0,
+          },
+        ],
+        order: [
+          focusedWorkspace as TWorkspaceID,
+          otherWorkspace as TWorkspaceID,
+        ],
+        defaultID: focusedWorkspace as TWorkspaceID,
+        currentWorkspaceId: focusedWorkspace as TWorkspaceID,
+      },
+    );
+    const fileName = await writeFile(file);
+    const result = await backup.restoreBackup(fileName);
+    assert(result.success, `restore succeeds (${result.error ?? ""})`);
+    await settle();
+    assert(
+      tabUrls(win.gBrowser.selectedTab as XULElement).includes(focusedUrl),
+      "focused window's selected tab is selected after flattening",
+    );
+    assertEquals(tabsWith(win, otherUrl).length, 1, "other tab is restored");
   });
 }
 
@@ -982,6 +1057,10 @@ export async function runAllTests(): Promise<void> {
       fn: testSafetyCopyFailureAborts,
     },
     { name: "J-04 nothing to back up", fn: testNothingToBackUp },
+    {
+      name: "R-03 focused selected tab wins",
+      fn: testFocusedWindowSelectedTabWins,
+    },
     { name: "J-05/J-07/J-08 pre-restore limit", fn: testPreRestoreLimit },
     { name: "J-06 fresh pre-restore grace", fn: testFreshPreRestoreGrace },
   ]);

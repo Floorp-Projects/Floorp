@@ -631,6 +631,34 @@ export const findDanglingWorkspaceReferences = (
   return dangling;
 };
 
+/**
+ * Flattens a multi-window backup for the workspaces-mode restore path.
+ *
+ * Each source window can have its own selected tab, but the destination has
+ * only one selected tab. Prefer the focused window's first selected tab; when
+ * it has none, fall back to the first selected tab in file order. Every other
+ * flag is cleared so non-selected restored tabs can stay lazy.
+ */
+export const flattenWindowsForSingleWindowRestore = (
+  windows: WorkspaceBackupWindow[],
+): WorkspaceBackupTab[] => {
+  const focusedIndex = windows.findIndex((window) => window.isFocused);
+  const selectionWindowIndex = focusedIndex >= 0 ? focusedIndex : 0;
+  const focusedHasSelected =
+    windows[selectionWindowIndex]?.tabs.some((tab) => tab.isSelected) ?? false;
+  let selectionAssigned = false;
+  return windows.flatMap((window, windowIndex) =>
+    window.tabs.map((tab) => {
+      const isSelected = tab.isSelected && !selectionAssigned &&
+        (!focusedHasSelected || windowIndex === selectionWindowIndex);
+      if (isSelected) {
+        selectionAssigned = true;
+      }
+      return { ...tab, isSelected };
+    })
+  );
+};
+
 /* -------------------------------------------------------------------------
  * Summary / ordering / retention
  * ---------------------------------------------------------------------- */
