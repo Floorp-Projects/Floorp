@@ -52,18 +52,15 @@ type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
  */
 let pwaNavigationPolicyRegistered = false;
 
+const pwaBrowsingContextIds = new Set<number>();
+
 function isPwaWindowLoad(loadInfo: nsILoadInfo): boolean {
   try {
     const browsingContext = loadInfo.browsingContext;
-    // deno-lint-ignore no-explicit-any
-    const embedder = browsingContext?.embedderElement as any;
-    const documentElement = embedder?.ownerGlobal?.document?.documentElement;
-    // createWindowArgs stamps `taskbartab` in the window property bag, and
-    // browser-init copies that property onto the chrome document element
-    // before any navigation. `ssbid` stays in the bag and never reaches the
-    // document, so it cannot be used here.
-    return typeof documentElement?.getAttribute === "function" &&
-      documentElement.getAttribute("taskbartab") !== null;
+    // `taskbartab` cannot identify PWA windows: web panels stamp the same
+    // attribute on the main browser window. Track browsing contexts of tabs
+    // in windows opened through openSsbWindow instead.
+    return !!browsingContext && pwaBrowsingContextIds.has(browsingContext.id);
   } catch {
     return false;
   }
@@ -203,7 +200,7 @@ function registerPwaNavigationPolicy(): void {
     } as any,
   );
   Services.catMan.addCategoryEntry(
-    "netchannel-event-sinks",
+    "net-channel-event-sinks",
     "floorp-pwa-redirect-policy",
     "@floorp/pwa-redirect-policy;1",
     false,
@@ -222,7 +219,6 @@ export class SsbRunnerUtils {
     }
     // Register before the window opens: enforcement must be in place before
     // the first navigation, which may itself redirect.
-    registerPwaNavigationPolicy();
     // Use LastWindowClosingSurvivalArea to avoid showing empty window
     if (initialLaunch) {
       Services.startup.enterLastWindowClosingSurvivalArea();
@@ -240,6 +236,27 @@ export class SsbRunnerUtils {
       const win = await NativeAppRuntime.open(ssb, () =>
         BrowserWindowTracker.openWindow(options)) ??
         await BrowserWindowTracker.promiseOpenWindow(options);
+
+      // Register navigation enforcement before any redirect response can
+      // arrive: the initial start_url is validated above, and its redirect
+      // chain requires a network round trip while registration is immediate.
+      // `ssbid`/`taskbartab` document attributes cannot identify PWA windows
+      // (the former never reaches the document; web panels share the latter).
+      registerPwaNavigationPolicy();
+      const enforceTab = (tab: unknown) => {
+        // deno-lint-ignore no-explicit-any
+        const browser = win.gBrowser?.getBrowserForTab(tab as any);
+        if (browser?.browsingContext) {
+          pwaBrowsingContextIds.add(browser.browsingContext.id);
+        }
+      };
+      for (const tab of win.gBrowser?.tabs ?? []) {
+        enforceTab(tab);
+      }
+      // deno-lint-ignore no-explicit-any
+      win.addEventListener("TabOpen", (event: any) => {
+        enforceTab(event.target);
+      });
 
       // Set displayMode on all tabs
       const displayMode = ssb.display || "standalone";
