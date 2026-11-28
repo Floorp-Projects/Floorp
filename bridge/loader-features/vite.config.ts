@@ -256,7 +256,7 @@ export default defineConfig({
       "solid-js/html",
       "solid-js/h",
     ],
-    preserveSymlinks: true,
+    preserveSymlinks: false,
     alias: [
       { find: "@chakra-ui/react", replacement: chakraReactDir },
       { find: "@emotion/react", replacement: emotionReactDir },

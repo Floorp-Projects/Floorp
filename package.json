@@ -4,6 +4,11 @@
   "description": "",
   "main": "index.js",
   "type": "module",
+  "scripts": {
+    "build:node": "node tools/node-build.ts --mode production",
+    "build:node:dev": "node tools/node-build.ts --mode dev",
+    "test:node": "node --test tools/node-build.test.ts"
+  },
   "keywords": [],
   "author": "",
   "private": true,
@@ -22,12 +27,13 @@
     "pathe": "^2.0.3",
     "prettier": "^3.7.4",
     "puppeteer-core": "^24.34.0",
+    "tsdown": "^0.22.0",
     "typescript": "^5.9.3",
+    "unrun": "^0.3.0",
     "vite": "^7.3.0",
     "vite-plugin-solid": "^2.11.10"
   },
   "dependencies": {
-    "@deno/vite-plugin": "^1.0.6",
     "@solid-primitives/memo": "^1.4.3",
     "@solid-primitives/scheduled": "^1.5.2",
     "@solid-primitives/utils": "^6.3.2",

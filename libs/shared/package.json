@@ -7,5 +7,6 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit"
-  }
+  },
+  "version": "0.0.0"
 }

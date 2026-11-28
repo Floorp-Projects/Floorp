@@ -1,0 +1,27 @@
+{
+  "name": "@nora/features-chrome",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@nora/shared": "workspace:*",
+    "@nora/skin": "workspace:*",
+    "@nora/solid-xul": "workspace:*",
+    "@solid-primitives/deep": "^0.3.3",
+    "@solid-primitives/scheduled": "^1.5.2",
+    "budoux": "^0.6.4",
+    "chroma-js": "^3.2.0",
+    "es-toolkit": "^1.43.0",
+    "fp-ts": "^2.16.11",
+    "i18next": "^25.7.3",
+    "io-ts": "^2.2.22",
+    "qr-code-styling": "^1.9.2",
+    "solid-js": "^1.9.10",
+    "solid-styled-jsx": "^0.27.1",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/chroma-js": "^3.1.2",
+    "@types/uuid": "^11.0.0"
+  }
+}

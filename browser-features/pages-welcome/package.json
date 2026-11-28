@@ -20,6 +20,8 @@
     "vite": "^7.3.0"
   },
   "dependencies": {
+    "@chakra-ui/react": "3.37.0",
+    "@emotion/react": "11.14.0",
     "@tailwindcss/vite": "^4.1.18",
     "birpc": "^4.0.0",
     "i18next": "^25.7.3",

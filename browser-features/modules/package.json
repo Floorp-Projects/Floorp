@@ -1,0 +1,10 @@
+{
+  "name": "@nora/modules",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "birpc": "^4.0.0",
+    "fflate": "^0.8.3"
+  }
+}
