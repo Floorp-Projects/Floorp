@@ -83,7 +83,18 @@ async function restoreGeneration(win: Window, gen: Generation): Promise<void> {
     return;
   }
   try {
-    const bytes = await IOUtils.read(gen.path, { decompress: true });
+    // Rotation copies inherit the recovery file's encryption when the
+    // experimental sessionstore encryption was on at write time. Passing
+    // decrypt whenever encryption is available is safe: unencrypted files
+    // pass through untouched, matching SessionFile's own read path.
+    const encryptionAvailable = Services.prefs.getBoolPref(
+      "browser.sessionstore.encryption.available",
+      false,
+    );
+    const bytes = await IOUtils.read(gen.path, {
+      decompress: true,
+      ...(encryptionAvailable ? { decrypt: "sessionstore" } : {}),
+    });
     const json = new TextDecoder().decode(bytes);
     const { SessionStore } = ChromeUtils.importESModule(
       "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
