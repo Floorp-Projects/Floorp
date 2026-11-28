@@ -272,6 +272,32 @@ async function cmdLaunch(opts: Record<string, string | boolean>, multi: Record<s
     if (eq < 1) fail(`--pref must be name=value, got: ${p}`);
     prefLines.push(`user_pref(${JSON.stringify(p.slice(0, eq))}, ${typedPrefValue(p.slice(eq + 1))});`);
   }
+  // Refuse to relaunch over a live instance: Gecko's profile lock would reject
+  // the second browser, and overwriting qa-instance.json here would orphan the
+  // real owner's PID so stop could no longer find it.
+  try {
+    const existing = JSON.parse(await Deno.readTextFile(`${profile}/qa-instance.json`));
+    if (typeof existing.pid === "number") {
+      const cmdline = await processAlive(existing.pid);
+      if (
+        cmdline !== undefined &&
+        cmdline.includes("-profile") &&
+        cmdline.includes(typeof existing.profile === "string" ? existing.profile : profile) &&
+        /floorp/i.test(cmdline)
+      ) {
+        fail(
+          `profile ${profile} is already owned by a running QA instance (pid ${existing.pid}) — stop it first`,
+        );
+      }
+    }
+  } catch (e) {
+    if (e instanceof Deno.errors.NotFound) {
+      // no previous instance
+    } else {
+      throw e;
+    }
+  }
+
   await writePrivate(`${profile}/user.js`, prefLines.join("\n") + "\n");
 
   const args = [
@@ -366,6 +392,23 @@ async function cmdStop(opts: Record<string, string | boolean>): Promise<void> {
     // keep literal path
   }
   const metaPath = `${profile}/qa-instance.json`;
+  // The metadata decides which process gets signaled, so it must not be
+  // replaceable by another local user (e.g. by swapping the whole profile
+  // directory in a shared /tmp). Require both the directory and the file to
+  // be owned by the current user.
+  if (Deno.build.os !== "windows") {
+    const euid = Deno.uid();
+    for (const target of [profile, metaPath]) {
+      try {
+        const info = await Deno.lstat(target);
+        if (info.uid !== euid) {
+          fail(`${target} is owned by uid ${info.uid}, not the current user ${euid} — refusing to trust its metadata`);
+        }
+      } catch (e) {
+        if (!(e instanceof Deno.errors.NotFound)) throw e;
+      }
+    }
+  }
   let meta: { pid?: number; profile?: string };
   try {
     meta = JSON.parse(await Deno.readTextFile(metaPath));
@@ -514,8 +557,14 @@ switch (cmd) {
         );
         out(result?.value as JsonValue);
       } else {
-        const result = await client.executeScript(`return (${script})`);
-        out(result as JsonValue);
+        // Bypass executeScript's fixed 30s client deadline so --timeout applies
+        // to synchronous evaluations as well.
+        const result = await client.sendWithTimeout(
+          "WebDriver:ExecuteScript",
+          { script: `return (${script})`, args: [] },
+          timeoutMs + 5000,
+        );
+        out(result?.value as JsonValue);
       }
     } finally {
       await client.close();

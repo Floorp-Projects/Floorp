@@ -32,8 +32,13 @@ sharedContext: |
 
 driverHints: |
   [production/packaged 駆動パス] Marionette が使えないビルドでは about:hub 経由:
+    重要: packaged build では os-server /evaluate が about:hub の CSP にブロックされる
+    (EvalError)。第一経路は click / pressKey(trusted event)+ ax-tree 読み取りの
+    UI 駆動とし、backup 成果物は使い捨て profile のファイルシステムで検証する。
+    evaluate による bridge 直接呼出しは CSP が許すビルド限定の fallback とし、
+    利用できない driver しかない項目は fail ではなく blocked と記録する。
     os-server で about:hub (または about:hub#/features/backup) のタブを開き、
-    evaluate で window の backup bridge を呼ぶ:
+    evaluate で window の backup bridge を呼ぶ(CSP が許すビルドのみ):
       NRWorkspacesBackupNow()          capture(manual) — Promise を返す bridge 関数
       NRWorkspacesListBackups()        一覧
       NRWorkspacesRestoreBackup(name)  restore
@@ -181,14 +186,14 @@ items:
     spec: プライベートウィンドウのタブが backup に混入しないこと
     tier: L1
     automation: auto
-    approach: private window に特徴的 URL を開き capture。JSON に URL/host が含まれないことを grep レベルで確認
+    approach: private window に特徴的な合成マーカー(固有 URL 文字列・タイトル文字列)を持つタブを開き、通常 window には対照用 control タブを開いて capture。control タブの記録があることを確認した上で、private タブのレコード自体が存在しないこと、および合成マーカー(URL/host/タイトル/icon)が JSON 内に一切残らないことを走査で確認
     priority: P0
     privacy: true
   - id: A-21
     spec: プライベートコンテナのタブが通常 window 内にあっても backup に混入しないこと
     tier: L1
     automation: auto
-    approach: private container タブの URL が capture JSON に無いことを確認
+    approach: private container タブに固有の合成マーカー(URL・タイトル)を持たせ、同一 window 内に通常 container の control タブを置いて capture。control が記録されていることを確認した上で、private container タブのレコード不在とマーカー(URL/host/タイトル/icon)の完全不含有を確認
     priority: P0
     privacy: true
   - id: A-22
@@ -202,14 +207,14 @@ items:
     spec: プライベートコンテナ判定に失敗した場合、backup が fail-closed で中止されること
     tier: L1
     automation: semi
-    approach: コードパスを精読し判定失敗の作り方を特定(mock/破損)。fail-closed は backup ファイルが作られないことで確認
+    approach: コードパスを精読し private container 判定(classifier)への到達と失敗注入の作り方を特定。capture が実際に classifier を呼んだこと・注入した失敗が classifier 内で発生したことをログ等で確認した上で、その試行で backup が作られないこと(fail-closed)を確認。fault を入れない対照試行では backup が完了することを確認
     priority: P0
     privacy: true
   - id: A-24
     spec: formdata、session storage、typed text、scroll state、postdata、principal/CSP/referrer 情報が backup JSON に残らないこと
     tier: L1
     automation: auto
-    approach: fixture ページで form 入力・sessionStorage 書込み後 capture。展開 JSON 全文を既知秘密文字列・禁止キーで走査
+    approach: fixture ページで禁止クラスそれぞれに合成データを投入してから capture: form 入力値・sessionStorage・typed text(入力欄)・scroll state(大きなページでスクロール)等、確立できる全クラスを用意し、展開 JSON 全文を既知秘密文字列・禁止キーで走査。driver 上確立できないクラスは pass 扱いにせず verdict ノートで未検証として明示
     priority: P0
     privacy: true
   - id: A-25
@@ -235,7 +240,7 @@ items:
     spec: javascript:, data:, chrome:, resource:, file:, view-source:, about:config などが復元対象から除外されること
     tier: L1
     automation: auto
-    approach: 各 scheme のタブを開き(開けるもの)capture 非含有を確認。JSON を scheme 正規表現で走査
+    approach: 各 scheme のタブを開き(開けるもの)capture 非含有を確認。JSON を scheme 正規表現で走査。加えて restore 境界の検証: レビュー済みの不活性 fixture(禁止 scheme を含む backup JSON を手作業で構築)を restore し、除外エントリが復元されないこと・既存 state が壊れないことを確認
     priority: P0
     security: true
   - id: A-29
@@ -577,7 +582,7 @@ items:
     spec: 上記 backup を destructive restore し、focused window 由来の workspace が選択されるか、別 window 由来の workspace が選択されないかを確認する
     tier: L2
     automation: semi
-    approach: R-01 の backup で restore。選択 workspace を検証
+    approach: 選択 workspace が既知で独立検証済みの backup(R-01 産物に依存しない fixture か、内容を mozlz4 展開して確認済みのもの)を使い、異なる workspace を選択した状態から restore して選択結果を検証。R-01→R-02 の連鎖は別途 e2e 確認として扱い、R-01 の capture 欠陥と restore 欠陥を区別できるようにする
     priority: P0
     blocker: true
   - id: R-03
