@@ -1,26 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 import * as path from "@std/path";
 
-export function packagedQaEnabled(
-  mode: string,
-  flag: string | undefined,
-  modules: string | undefined,
-): boolean {
-  if (!flag && !modules) return false;
-  if (mode !== "production" || flag !== "1") {
-    throw new Error(
-      "Packaged QA requires production mode and FLOORP_PACKAGED_QA=1.",
-    );
-  }
-  const parsed: unknown = JSON.parse(modules ?? "null");
-  if (
-    !Array.isArray(parsed) || parsed.length === 0 ||
-    parsed.some((entry) => typeof entry !== "string" || !entry)
-  ) {
-    throw new Error("Packaged QA requires a nonempty test module array.");
-  }
-  return true;
-}
+export { packagedQaEnabled } from "./packaged_qa_contract.ts";
 
 /** Add generated QA assets to the normal pre-mach JAR manifest, not to a product. */
 export function registerPackagedQa(contentDirectory: string): string[] {

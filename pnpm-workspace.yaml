@@ -1,0 +1,5 @@
+packages:
+  - "bridge/*"
+  - "browser-features/*"
+  - "i18n"
+  - "libs/*"

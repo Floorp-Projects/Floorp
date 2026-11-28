@@ -1,0 +1,9 @@
+{
+  "name": "@nora/i18n",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@jsr/std__toml": "^1.0.11"
+  }
+}

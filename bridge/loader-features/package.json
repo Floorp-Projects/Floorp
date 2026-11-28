@@ -1,0 +1,13 @@
+{
+  "name": "@nora/bridge-loader-features",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@swc/core": "^1.15.7",
+    "unplugin-swc": "^1.5.9",
+    "vite": "^7.3.0",
+    "vite-plugin-istanbul": "^7.2.1",
+    "vite-plugin-solid": "^2.11.10"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@nora/bridge-startup",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown --config-loader unrun"
+  },
+  "devDependencies": {
+    "tsdown": "^0.22.0",
+    "unrun": "^0.3.0"
+  }
+}

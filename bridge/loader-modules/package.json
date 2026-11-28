@@ -1,6 +1,17 @@
 {
+  "name": "@nora/bridge-loader-modules",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown --config-loader unrun"
+  },
   "dependencies": {
     "@jsr/std__fs": "^1.0.20",
     "pathe": "^2.0.3"
+  },
+  "devDependencies": {
+    "tsdown": "^0.22.0",
+    "unrun": "^0.3.0"
   }
 }

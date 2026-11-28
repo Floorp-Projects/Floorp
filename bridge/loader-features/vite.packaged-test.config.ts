@@ -4,6 +4,7 @@ import { defineConfig, normalizePath } from "vite";
 import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
+import process from "node:process";
 
 const directory = import.meta.dirname;
 if (!directory) {
@@ -11,7 +12,7 @@ if (!directory) {
 }
 const root = path.resolve(directory, "../..");
 const requested: unknown = JSON.parse(
-  Deno.env.get("FLOORP_QA_TEST_MODULES") ?? "null",
+  process.env.FLOORP_QA_TEST_MODULES ?? "null",
 );
 if (!Array.isArray(requested) || requested.length === 0) {
   throw new Error(

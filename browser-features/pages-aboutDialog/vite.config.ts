@@ -1,11 +1,12 @@
 import { defineConfig } from "vite";
-import deno from "@deno/vite-plugin";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import { genJarmnPlugin } from "../../libs/vite-plugin-gen-jarmn/plugin.ts";
 
-const r = (dir: string) => path.resolve(import.meta.dirname ?? ".", dir);
+const r = (dir: string) =>
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), dir);
 
 /**
  * Vite plugin to include public directory files in the JAR manifest.
@@ -49,7 +50,6 @@ function includePublicInJarmn() {
 export default defineConfig({
   cacheDir: "../../node_modules/.vite/pages-aboutdialog",
   plugins: [
-    deno(),
     react({
       jsxRuntime: "automatic",
       jsxImportSource: "preact",
