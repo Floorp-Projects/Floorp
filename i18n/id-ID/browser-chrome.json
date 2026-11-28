@@ -20,6 +20,7 @@
       "name-placeholder": "Masukkan nama untuk ruang kerja ini",
       "container": "Kontainer",
       "no-container": "No Container",
+      "unavailable-container": "Unavailable container (ID {{id}})",
       "icon": "Ikon",
       "edit-title": "Sunting Ruang Kerja",
       "save": "Simpan Perubahan",
@@ -74,7 +75,7 @@
       "indicator-attention": "{{name}} — Workspace sync error: {{error}}",
       "status-selected": "Included in sync",
       "status-error": "Sync error",
-      "status-paused": "Sync paused",
+      "status-paused": "Sinkronisasi dijeda",
       "indicator-paused": "{{name}} — Workspace sync paused: {{error}}",
       "engine-disabled": "Workspace sync is turned off. Choose Resume Workspace Sync in the workspace menu to sync your selected workspaces."
     },
@@ -86,7 +87,7 @@
       "archive": "Arsipkan Ruang Kerja",
       "sync": "Sync This Workspace and Its Tabs",
       "sync-paused": "Workspace Sync Needs Attention",
-      "sync-resume": "Resume Workspace Sync"
+      "sync-resume": "Lanjutkan Sinkronisasi Ruang Kerja"
     },
     "popup": {
       "create-new": "Buat Ruang Kerja Baru …",
@@ -124,6 +125,7 @@
       "setup": "Set Up Workspace Containers…",
       "reopen": "Reopen a Tab in Its Synced Container…",
       "status-pending": "Container setup needed",
+      "choose-new-tab": "The workspace’s default container is unavailable. Choose a container for this tab. Existing sign-ins in that container will be used.",
       "indicator-pending": "{{name}} — Container setup needed: {{error}}",
       "definition-missing": "The container information has not arrived yet. Tabs will open after it is available.",
       "legacy-unresolved": "Some older synced tabs have no container assignment. Use Set Up Workspace Containers to choose where they should open.",

@@ -765,7 +765,6 @@
         "items": "Пункты меню",
         "editingIndependent": "Меняйте порядок стрелками или командой «Переместить к…». В режиме «Текущий контекст» доступно и перетаскивание. Переключатели видимости действуют только для пунктов, которые Floorp может безопасно скрыть в этом профиле контекста.",
         "editingShared": "Меняйте порядок стрелками или командой «Переместить к…». В режиме «Текущий контекст» доступно и перетаскивание. Переключатели видимости действуют только для пунктов, которые Floorp может безопасно скрыть в общем макете.",
-        "incompleteContainer": "Firefox передал только часть этого меню. Сохранённые пункты, которых нет в ответе, останутся без изменений.",
         "capabilityHelp": "«Зависит от Firefox» значит, что Firefox скрыл пункт в последнем замеченном контекстном щелчке. В списке «Все пункты» он остаётся, и для него можно задать относительный порядок. Пункты с пометкой «Порядок фиксирован» остаются на своих местах: их нельзя перемещать и использовать как место вставки.",
         "viewMode": "Показанные пункты",
         "viewCurrent": "Текущий контекст",
@@ -883,6 +882,25 @@
             "minResident": "Освобождать, только если занято больше (МБ)",
             "cost": "Воспроизведение видео, звонки и демонстрация экрана не мешают освобождению памяти. Браузер может на короткое время остановиться, в том числе когда вы снова начинаете им пользоваться. Чем короче интервал, тем чаще это происходит.",
             "saveFailed": "Не удалось сохранить настройку. Восстановлено прежнее значение."
+        },
+        "tabAutoUnload": {
+            "title": "Tab Auto Unload",
+            "description": "Automatically unload inactive tabs when the browser's memory usage exceeds the threshold. Unloaded tabs reload when you select them again.",
+            "enable": "Enable tab auto unload",
+            "memoryThreshold": "Unload when memory usage exceeds (MB)",
+            "minInactive": "Only unload tabs inactive for (minutes)",
+            "exclusionsTitle": "URLs excluded from unloading",
+            "exclusionsDescription": "Tabs matching these patterns are never unloaded automatically. They are also excluded from Firefox's built-in tab unloading.",
+            "patternPlaceholder": "Введите шаблон URL-адреса (напр., мой_сайт.домен, *.google.com).",
+            "add": "Добавить",
+            "remove": "Удалить",
+            "examples": "Pattern examples",
+            "exampleDomain": "Совпадает с любым URL-адресом, содержащим этот домен.",
+            "exampleWildcard": "Matches the domain and its subdomains.",
+            "exampleFullUrl": "Matches URLs starting with this path.",
+            "noPatterns": "No excluded URLs yet.",
+            "cost": "Selected tabs, pinned tabs, tabs playing audio, Picture-in-Picture, WebRTC calls, and private browsing tabs are not unloaded. A tab with an unsaved form or beforeunload prompt may refuse to unload.",
+            "saveFailed": "Could not save this setting. The previous value was restored."
         }
     },
     "ui": {

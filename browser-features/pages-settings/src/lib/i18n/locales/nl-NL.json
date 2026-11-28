@@ -765,7 +765,6 @@
         "items": "Menu items",
         "editingIndependent": "Gebruik de pijlknoppen of ‘Verplaatsen naar…’ om de volgorde van de items te wijzigen. In de huidige context kun je items ook verslepen. De zichtbaarheidsinstellingen zijn alleen van toepassing op items die Floorp in dit contextprofiel veilig kan verbergen.",
         "editingShared": "Gebruik de pijlknoppen of ‘Verplaatsen naar…’ om de volgorde van de items te wijzigen. In de huidige context kun je items ook verslepen. De zichtbaarheidsinstellingen zijn alleen van toepassing op items die Floorp veilig kan verbergen in de gedeelde lay-out.",
-        "incompleteContainer": "Firefox heeft dit menu maar deels doorgegeven. Niet-gemelde opgeslagen items worden niet gewijzigd.",
         "capabilityHelp": "“Voorwaardelijk in Firefox” betekent dat Firefox het item heeft verborgen voor de laatst waargenomen context van de rechtermuisknop. Het blijft beschikbaar in ‘Alle items’, zodat je de relatieve volgorde ervan kunt configureren. Items met een ‘Vaste volgorde’ blijven op hun oorspronkelijke positie staan en kunnen niet worden verplaatst of als doel worden gebruikt.",
         "viewMode": "Getoonde items",
         "viewCurrent": "Huidige context",
@@ -883,6 +882,25 @@
             "minResident": "Alleen vrijmaken wanneer geheugengebruik hoger is dan (MB)",
             "cost": "Het afspelen van video's, oproepen en het delen van je scherm voorkomen het vrijmaken van geheugen niet. Het vrijmaken kan de browser tijdelijk laten haperen, ook wanneer je deze weer gaat gebruiken. Kortere intervallen verhogen de frequentie hiervan.",
             "saveFailed": "Kon deze instelling niet opslaan. De vorige waarde is hersteld."
+        },
+        "tabAutoUnload": {
+            "title": "Tabblad automatisch sluiten",
+            "description": "Inactieve tabbladen worden automatisch gesloten wanneer het geheugengebruik van de browser de drempelwaarde overschrijdt. Gesloten tabbladen worden opnieuw geladen wanneer je ze opnieuw selecteert.",
+            "enable": "Automatisch sluiten tabbladen inschakelen",
+            "memoryThreshold": "Sluiten wanneer geheugengebruik hoger is dan (MB)",
+            "minInactive": "Alleen tabbladen sluiten die langer inactief zijn dan (minuten)",
+            "exclusionsTitle": "URL's uitgesloten van sluiten",
+            "exclusionsDescription": "Tabbladen die overeenkomen met deze patronen worden nooit automatisch gesloten. Ze zijn ook uitgesloten van het ingebouwde sluiten van tabbladen in Firefox.",
+            "patternPlaceholder": "Vul een URL-patroon in (bijv. example.com,*.google.com)",
+            "add": "Toevoegen",
+            "remove": "Verwijderen",
+            "examples": "Patroonvoorbeelden",
+            "exampleDomain": "Geldt voor elke URL die dit domein bevat.",
+            "exampleWildcard": "Komt overeen met het domein en alle subdomeinen.",
+            "exampleFullUrl": "Geldt voor URL's die starten met dit path.",
+            "noPatterns": "Nog geen URL's uitgesloten.",
+            "cost": "• Geselecteerde tabbladen, vastgezette tabbladen, tabbladen met spelende audio, Picture-in-Picture, WebRTC-gesprekken en privétabbladen worden niet gesloten. Een tabblad met een niet-opgeslagen formulier of een waarschuwing bij het sluiten weigert mogelijk om te sluiten.",
+            "saveFailed": "Opslaan instelling mislukt. Vorige waarde hersteld."
         }
     },
     "ui": {

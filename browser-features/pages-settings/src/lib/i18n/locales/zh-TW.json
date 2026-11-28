@@ -765,7 +765,6 @@
         "items": "Menu items",
         "editingIndependent": "Use the arrow buttons or Move to… to reorder items. Dragging is also available in Current context. Visibility switches apply only to items Floorp can safely hide in this context profile.",
         "editingShared": "Use the arrow buttons or Move to… to reorder items. Dragging is also available in Current context. Visibility switches apply only to items Floorp can safely hide in the shared layout.",
-        "incompleteContainer": "Firefox reported only part of this menu. Unreported saved items will be kept unchanged.",
         "capabilityHelp": "“Conditional in Firefox” means Firefox hid the item for the most recently observed right-click context. It remains available in All items so you can configure its relative order. “Order fixed” items stay in their native positions and cannot be moved or used as destinations.",
         "viewMode": "Items shown",
         "viewCurrent": "Current context",
@@ -883,6 +882,25 @@
             "minResident": "僅在記憶體使用超過 (MB) 時才進行回收",
             "cost": "影片播放、通話及螢幕共享不會阻止記憶體回收。這可能會暫停瀏覽器，也包括你重新開始使用瀏覽器時。間隔時間越短，回收的頻率就越高。",
             "saveFailed": "無法儲存此設定。已還原至先前的值。"
+        },
+        "tabAutoUnload": {
+            "title": "Tab Auto Unload",
+            "description": "Automatically unload inactive tabs when the browser's memory usage exceeds the threshold. Unloaded tabs reload when you select them again.",
+            "enable": "Enable tab auto unload",
+            "memoryThreshold": "Unload when memory usage exceeds (MB)",
+            "minInactive": "Only unload tabs inactive for (minutes)",
+            "exclusionsTitle": "URLs excluded from unloading",
+            "exclusionsDescription": "Tabs matching these patterns are never unloaded automatically. They are also excluded from Firefox's built-in tab unloading.",
+            "patternPlaceholder": "鍵入 URL 樣式 (例如：example.com, *.google.com)",
+            "add": "添加",
+            "remove": "移除",
+            "examples": "Pattern examples",
+            "exampleDomain": "匹配包含此網域的任何 URL.",
+            "exampleWildcard": "Matches the domain and its subdomains.",
+            "exampleFullUrl": "Matches URLs starting with this path.",
+            "noPatterns": "No excluded URLs yet.",
+            "cost": "Selected tabs, pinned tabs, tabs playing audio, Picture-in-Picture, WebRTC calls, and private browsing tabs are not unloaded. A tab with an unsaved form or beforeunload prompt may refuse to unload.",
+            "saveFailed": "Could not save this setting. The previous value was restored."
         }
     },
     "ui": {
