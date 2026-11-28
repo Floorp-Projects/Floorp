@@ -164,6 +164,10 @@ export function onFinalUIStartup(): void {
   ChromeUtils.importESModule(
     "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
   );
+  // Session generation restore UI (lists rotation copies from the time-depth patch)
+  ChromeUtils.importESModule(
+    "resource://noraneko/modules/session-generations/SessionGenerations.sys.mjs",
+  );
 }
 
 async function openReleaseNotesInRecentWindow(): Promise<void> {

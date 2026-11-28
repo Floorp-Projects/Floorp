@@ -1,0 +1,216 @@
+diff --git a/browser/components/sessionstore/SessionSaver.sys.mjs b/browser/components/sessionstore/SessionSaver.sys.mjs
+index 325bd818..83e874bf 100644
+--- a/browser/components/sessionstore/SessionSaver.sys.mjs
++++ b/browser/components/sessionstore/SessionSaver.sys.mjs
+@@ -17,7 +17,12 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+  * To save system resources, we generally do not save changes immediately when
+  * a change is detected. Rather, we wait a little to see if this change is
+  * followed by other changes, in which case only the last write is necessary.
+- * This delay is defined by "browser.sessionstore.interval".
++ * The delay depends on the criticality of the change: critical changes use
++ * "floorp.sessionstore.interval.critical", while updates that only touch
++ * scroll position, form data or session storage are batched on
++ * "floorp.sessionstore.interval.deferrable". The legacy
++ * "browser.sessionstore.interval" no longer controls write timing; it only
++ * governs how long content processes buffer updates before sending them.
+  *
+  * Furthermore, when the user is not actively using the computer, webpages
+  * may still perform changes that require (re)writing to sessionstore, e.g.
+@@ -25,12 +30,10 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+  * expect that these changes are much less critical to the user and do not
+  * need to be saved as often. In such cases, we increase the delay to
+  *  "browser.sessionstore.interval.idle".
+- *
+- * When the user returns to the computer, if a save is pending, we reschedule
+- * it to happen soon, with "browser.sessionstore.interval".
+  */
+-const PREF_INTERVAL_ACTIVE = "browser.sessionstore.interval";
+ const PREF_INTERVAL_IDLE = "browser.sessionstore.interval.idle";
++const PREF_INTERVAL_DEFERRABLE = "floorp.sessionstore.interval.deferrable";
++const PREF_INTERVAL_CRITICAL = "floorp.sessionstore.interval.critical";
+ const PREF_IDLE_DELAY = "browser.sessionstore.idleDelay";
+ 
+ const lazy = XPCOMUtils.declareLazy({
+@@ -43,20 +46,26 @@ const lazy = XPCOMUtils.declareLazy({
+   sessionStoreLogger:
+     "moz-src:///browser/components/sessionstore/SessionLogger.sys.mjs",
+   // Minimal interval between two save operations (in ms), while the user is
+-  // active.
+-  intervalWhileActive: {
+-    pref: PREF_INTERVAL_ACTIVE,
+-    default: 15000 /* 15 seconds */,
+-    onUpdate: () => {
+-      // Cancel any pending runs and call runDelayed() with
+-      // zero to apply the newly configured interval.
+-      SessionSaver.cancel();
+-      SessionSaver.runDelayed(0);
+-    },
+-  },
+-  // Minimal interval between two save operations (in ms), while the user is
+   // idle.
+   intervalWhileIdle: { pref: PREF_INTERVAL_IDLE, default: 3600000 /* 1 h */ },
++  // Minimal interval between two save operations (in ms) for deferrable
++  // updates (scroll position, form data, session storage). These updates
++  // piggyback on critical saves whenever those happen, so this interval only
++  // bounds the staleness of deferrable data during periods without critical
++  // activity.
++  intervalWhileDeferrable: {
++    pref: PREF_INTERVAL_DEFERRABLE,
++    default: 600000 /* 10 minutes */,
++  },
++  // Minimal interval between two save operations (in ms) for saves driven
++  // by critical changes (tab/window operations, navigation, typing). Since
++  // deferrable updates no longer drive saves on this timer, the interval
++  // can be shorter than the historical 15 seconds without multiplying write
++  // frequency during scroll-only browsing.
++  intervalWhileCritical: {
++    pref: PREF_INTERVAL_CRITICAL,
++    default: 5000 /* 5 seconds */,
++  },
+   // How long before we assume that the user is idle (s).
+   idleDelay: {
+     pref: PREF_IDLE_DELAY,
+@@ -94,6 +103,14 @@ class _SessionSaver {
+    */
+   #timeoutID = null;
+ 
++  /**
++   * The timeout ID referencing an active timer for a delayed save scheduled
++   * by deferrable updates only. When no deferrable save is pending, this is
++   * null. Any save (critical or deferrable) writes the full session state,
++   * so a critical save satisfies pending deferrable updates as well.
++   */
++  #deferrableTimeoutID = null;
++
+   /**
+    * The idle callback ID referencing an active idle callback. When no idle
+    * callback is pending, this is null.
+@@ -152,10 +169,12 @@ class _SessionSaver {
+       return;
+     }
+ 
+-    // Interval until the next disk operation is allowed.
++    // Interval until the next disk operation is allowed. Saves on this
++    // timer are driven by critical changes only; deferrable updates use
++    // runDelayedDeferrable().
+     let interval = this.#isIdle
+       ? lazy.intervalWhileIdle
+-      : lazy.intervalWhileActive;
++      : lazy.intervalWhileCritical;
+     delay = Math.max(this.#lastSaveTime + interval - Date.now(), delay, 0);
+ 
+     // Schedule a state save.
+@@ -180,6 +199,48 @@ class _SessionSaver {
+     }, delay);
+   }
+ 
++  /**
++   * Saves the current session delayed, for updates that do not need the
++   * regular save interval (scroll position, form data, session storage).
++   * If a critical save is already pending, the deferrable data will ride
++   * along with it and no separate timer is scheduled. Any completed save
++   * writes the full state, so it also satisfies deferrable updates.
++   *
++   * @param delay (optional)
++   *        The minimum delay in milliseconds to wait for until we collect and
++   *        save the current session.
++   */
++  runDelayedDeferrable(delay = 2000) {
++    // A pending critical save will pick up the deferrable data as well.
++    if (this.#timeoutID) {
++      return;
++    }
++
++    // Bail out if there's a pending deferrable run.
++    if (this.#deferrableTimeoutID) {
++      return;
++    }
++
++    let interval = this.#isIdle
++      ? Math.max(lazy.intervalWhileIdle, lazy.intervalWhileDeferrable)
++      : lazy.intervalWhileDeferrable;
++    delay = Math.max(this.#lastSaveTime + interval - Date.now(), delay, 0);
++
++    this.#deferrableTimeoutID = setTimeout(() => {
++      let saveStateAsyncWhenIdle = () => {
++        if (!lazy.RunState.isRunning) {
++          lazy.sessionStoreLogger.debug(
++            "SessionSaver deferrable saveStateAsyncWhenIdle during shutdown"
++          );
++        }
++        this.#deferrableTimeoutID = null;
++        this.#saveStateAsync();
++      };
++
++      requestIdleCallback(saveStateAsyncWhenIdle);
++    }, delay);
++  }
++
+   /**
+    * Returns the timestamp that keeps track of the last time we attempted to save the session.
+    */
+@@ -201,6 +262,8 @@ class _SessionSaver {
+   cancel() {
+     clearTimeout(this.#timeoutID);
+     this.#timeoutID = null;
++    clearTimeout(this.#deferrableTimeoutID);
++    this.#deferrableTimeoutID = null;
+     cancelIdleCallback(this.#idleCallbackID);
+     this.#idleCallbackID = null;
+   }
+diff --git a/browser/components/sessionstore/SessionStore.sys.mjs b/browser/components/sessionstore/SessionStore.sys.mjs
+index 0220c596..1ab58c31 100644
+--- a/browser/components/sessionstore/SessionStore.sys.mjs
++++ b/browser/components/sessionstore/SessionStore.sys.mjs
+@@ -165,6 +165,11 @@
+ // Current version of the format used by Session Restore.
+ const FORMAT_VERSION = 1;
+ 
++// Keys in tab state update data that never need the regular save interval.
++// Updates carrying only these keys are batched on the deferrable timer;
++// anything else (navigation, typing, icons, ...) uses the regular timer.
++const DEFERRABLE_UPDATE_KEYS = new Set(["scroll", "formdata", "storage"]);
++
+ const PERSIST_SESSIONS = Services.prefs.getBoolPref(
+   "browser.sessionstore.persist_closed_tabs_between_sessions",
+   true
+@@ -1462,7 +1467,16 @@ class _SessionStore {
+     }
+ 
+     lazy.TabState.update(permanentKey, update);
+-    this.#saveStateDelayed(win);
++
++    let updateKeys = Object.keys(update.data);
++    let isDeferrable =
++      updateKeys.length > 0 &&
++      updateKeys.every(key => DEFERRABLE_UPDATE_KEYS.has(key));
++    if (isDeferrable) {
++      this.#saveStateDelayedDeferrable(win);
++    } else {
++      this.#saveStateDelayed(win);
++    }
+ 
+     // Handle any updates sent by the child after the tab was closed. This
+     // might be the final update sent as the child tears down but also
+@@ -7364,6 +7378,21 @@ class _SessionStore {
+     lazy.SessionSaver.runDelayed();
+   }
+ 
++  /**
++   * schedule a state save for deferrable updates only
++   *
++   * @param {BrowserWindow} [aWindow]
++   *        Will mark the given window as dirty so that we will recollect its
++   *        data before we start writing.
++   */
++  #saveStateDelayedDeferrable(aWindow = null) {
++    if (aWindow) {
++      DirtyWindows.add(aWindow);
++    }
++
++    lazy.SessionSaver.runDelayedDeferrable();
++  }
++
+   /* ........ Auxiliary Functions .............. */
+ 
+   /**
