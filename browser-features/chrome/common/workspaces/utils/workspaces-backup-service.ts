@@ -583,6 +583,10 @@ export class WorkspacesBackupService {
    */
   private async captureAndWrite(
     kind: WorkspaceBackupKind,
+    validateCapture?: (captured: {
+      file: WorkspaceBackupFile;
+      workspacesTruncated: boolean;
+    }) => boolean,
   ): Promise<{
     summary: WorkspaceBackupSummary;
     capturedTabs: Set<XULElement>;
@@ -596,6 +600,11 @@ export class WorkspacesBackupService {
 
     const { file, capturedTabs, workspacesTruncated } = await this
       .captureAllWorkspaces(kind);
+    // Validate before writing or applying retention: a rejected pre-restore
+    // copy must never enter the backup list nor evict an older usable one.
+    if (validateCapture && !validateCapture({ file, workspacesTruncated })) {
+      throw new Error("capture-validation-failed");
+    }
     if (!isWorkspaceBackupFile(file)) {
       // Never persist a file the reader would reject. A pre-restore copy that
       // cannot be listed or restored is worse than no copy at all, because the
@@ -747,13 +756,17 @@ export class WorkspacesBackupService {
     // A safety copy is only needed when the restore replaces existing state.
     if (destructive) {
       let capturedTabs: Set<XULElement>;
-      let safetyCopyMode: string;
-      let safetyCopyTruncated = false;
       try {
-        const captured = await this.captureAndWrite("pre-restore");
+        const captured = await this.captureAndWrite(
+          "pre-restore",
+          // Capture re-reads the workspaces preference after awaiting
+          // SessionStore, so a mid-restore settings change can produce a
+          // tabs-mode copy, and the workspace count limit can truncate one.
+          // Neither can roll the store back, so reject before writing.
+          ({ file, workspacesTruncated }) =>
+            file.mode === "workspaces" && !workspacesTruncated,
+        );
         capturedTabs = captured.capturedTabs;
-        safetyCopyMode = captured.summary.mode;
-        safetyCopyTruncated = captured.workspacesTruncated;
       } catch (error) {
         if (error instanceof Error && error.message === "nothing-to-back-up") {
           // Tabs can be preserved without a copy, but workspace metadata
@@ -766,24 +779,6 @@ export class WorkspacesBackupService {
         console.error(
           "WorkspacesBackupService: failed to capture pre-restore backup",
           error,
-        );
-        return { success: false, error: "pre-restore-failed" };
-      }
-      // Capture re-reads the workspaces preference after awaiting SessionStore,
-      // so a mid-restore settings change can produce a tabs-mode safety copy
-      // that carries no workspace metadata. Destructive restore must not
-      // replace the store unless the copy can actually roll it back.
-      if (safetyCopyMode !== "workspaces") {
-        console.error(
-          "WorkspacesBackupService: pre-restore backup has no workspace state",
-        );
-        return { success: false, error: "pre-restore-failed" };
-      }
-      if (safetyCopyTruncated) {
-        // A copy truncated by the workspace count limit cannot roll back the
-        // metadata of the omitted workspaces, so it is not a valid safety net.
-        console.error(
-          "WorkspacesBackupService: pre-restore backup is truncated",
         );
         return { success: false, error: "pre-restore-failed" };
       }
