@@ -14,7 +14,6 @@
     "jsr:@std/path@^1.1.4": "1.1.5",
     "jsr:@std/path@^1.1.5": "1.1.5",
     "jsr:@std/streams@^1.0.14": "1.0.16",
-    "jsr:@std/yaml@*": "1.3.0",
     "npm:@bytecodealliance/preview2-shim@~0.17.5": "0.17.9",
     "npm:@chakra-ui/react@3.37.0": "3.37.0_@emotion+react@11.14.0__react@19.2.6_react@19.2.6_react-dom@19.2.6__react@19.2.6",
     "npm:@deno/vite-plugin@^1.0.5": "1.0.6_vite@7.3.3__@types+node@25.9.1__lightningcss@1.32.0__picomatch@4.0.4_@types+node@25.9.1_lightningcss@1.32.0",
@@ -161,9 +160,6 @@
       "dependencies": [
         "jsr:@std/bytes"
       ]
-    },
-    "@std/yaml@1.3.0": {
-      "integrity": "b250103854378b8b36cbff0fe95aec017d3d9ce86b489c67605180c602fb4922"
     }
   },
   "npm": {

@@ -308,3 +308,7 @@ python3 .agents/qa/tools/discord-post.py \
 5. 全項目後に report.md を生成し、orchestrator に報告 (または Discord 投稿)
 6. インスタンスを stop し、プロファイルを残すか削除するか判断
    (fail 再現用に残すのがデフォルト)
+
+## 注意: deno eval でリポジトリの deno.lock を汚染しない
+
+リポジトリ内で `deno eval 'import ... from "jsr:..."'` や `deno run` を新規 JSR 依存付きで実行すると、deno.lock が自動更新され、`git add -A` で誤コミットすると QA3 source ゲート(host import map/lock 契約)が fail する。matrix 検証など一時的なスクリプトは `deno eval --no-lock` を付けるかリポジトリ外で実行すること。コミット前に `git status` で deno.lock/deno.json の差分が無いことを確認する。
