@@ -1,18 +1,52 @@
 diff --git a/browser/components/sessionstore/SessionSaver.sys.mjs b/browser/components/sessionstore/SessionSaver.sys.mjs
-index 325bd818..a8239a54 100644
+index 325bd818..83e874bf 100644
 --- a/browser/components/sessionstore/SessionSaver.sys.mjs
 +++ b/browser/components/sessionstore/SessionSaver.sys.mjs
-@@ -31,6 +31,8 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+@@ -17,7 +17,12 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+  * To save system resources, we generally do not save changes immediately when
+  * a change is detected. Rather, we wait a little to see if this change is
+  * followed by other changes, in which case only the last write is necessary.
+- * This delay is defined by "browser.sessionstore.interval".
++ * The delay depends on the criticality of the change: critical changes use
++ * "floorp.sessionstore.interval.critical", while updates that only touch
++ * scroll position, form data or session storage are batched on
++ * "floorp.sessionstore.interval.deferrable". The legacy
++ * "browser.sessionstore.interval" no longer controls write timing; it only
++ * governs how long content processes buffer updates before sending them.
+  *
+  * Furthermore, when the user is not actively using the computer, webpages
+  * may still perform changes that require (re)writing to sessionstore, e.g.
+@@ -25,12 +30,10 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+  * expect that these changes are much less critical to the user and do not
+  * need to be saved as often. In such cases, we increase the delay to
+  *  "browser.sessionstore.interval.idle".
+- *
+- * When the user returns to the computer, if a save is pending, we reschedule
+- * it to happen soon, with "browser.sessionstore.interval".
   */
- const PREF_INTERVAL_ACTIVE = "browser.sessionstore.interval";
+-const PREF_INTERVAL_ACTIVE = "browser.sessionstore.interval";
  const PREF_INTERVAL_IDLE = "browser.sessionstore.interval.idle";
 +const PREF_INTERVAL_DEFERRABLE = "floorp.sessionstore.interval.deferrable";
 +const PREF_INTERVAL_CRITICAL = "floorp.sessionstore.interval.critical";
  const PREF_IDLE_DELAY = "browser.sessionstore.idleDelay";
  
  const lazy = XPCOMUtils.declareLazy({
-@@ -57,6 +59,24 @@ const lazy = XPCOMUtils.declareLazy({
+@@ -43,20 +46,26 @@ const lazy = XPCOMUtils.declareLazy({
+   sessionStoreLogger:
+     "moz-src:///browser/components/sessionstore/SessionLogger.sys.mjs",
    // Minimal interval between two save operations (in ms), while the user is
+-  // active.
+-  intervalWhileActive: {
+-    pref: PREF_INTERVAL_ACTIVE,
+-    default: 15000 /* 15 seconds */,
+-    onUpdate: () => {
+-      // Cancel any pending runs and call runDelayed() with
+-      // zero to apply the newly configured interval.
+-      SessionSaver.cancel();
+-      SessionSaver.runDelayed(0);
+-    },
+-  },
+-  // Minimal interval between two save operations (in ms), while the user is
    // idle.
    intervalWhileIdle: { pref: PREF_INTERVAL_IDLE, default: 3600000 /* 1 h */ },
 +  // Minimal interval between two save operations (in ms) for deferrable
@@ -36,7 +70,7 @@ index 325bd818..a8239a54 100644
    // How long before we assume that the user is idle (s).
    idleDelay: {
      pref: PREF_IDLE_DELAY,
-@@ -94,6 +114,14 @@ class _SessionSaver {
+@@ -94,6 +103,14 @@ class _SessionSaver {
     */
    #timeoutID = null;
  
@@ -51,7 +85,7 @@ index 325bd818..a8239a54 100644
    /**
     * The idle callback ID referencing an active idle callback. When no idle
     * callback is pending, this is null.
-@@ -152,10 +180,12 @@ class _SessionSaver {
+@@ -152,10 +169,12 @@ class _SessionSaver {
        return;
      }
  
@@ -66,7 +100,7 @@ index 325bd818..a8239a54 100644
      delay = Math.max(this.#lastSaveTime + interval - Date.now(), delay, 0);
  
      // Schedule a state save.
-@@ -180,6 +210,48 @@ class _SessionSaver {
+@@ -180,6 +199,48 @@ class _SessionSaver {
      }, delay);
    }
  
@@ -115,7 +149,7 @@ index 325bd818..a8239a54 100644
    /**
     * Returns the timestamp that keeps track of the last time we attempted to save the session.
     */
-@@ -201,6 +273,8 @@ class _SessionSaver {
+@@ -201,6 +262,8 @@ class _SessionSaver {
    cancel() {
      clearTimeout(this.#timeoutID);
      this.#timeoutID = null;

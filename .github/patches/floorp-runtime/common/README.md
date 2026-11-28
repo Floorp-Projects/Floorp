@@ -191,8 +191,10 @@ copies the recovery file to `rotation-<epochMs>.jsonlz4` in the backups
 directory at most once per `floorp.sessionstore.rotation.interval` (default
 one hour), keeping `floorp.sessionstore.rotation.max` copies (default 48).
 Rotation copies follow the privacy model of the recovery file: they are
-removed along with it on clean shutdown when auto-restore is disabled, and
-the wipe path removes the whole backups directory on session history purge.
+removed along with it on clean shutdown when auto-restore is disabled, the
+wipe path removes the whole backups directory on session history purge, and
+a forget-this-site purge drops all rotation copies since per-domain filtering
+is impossible without rewriting them.
 Only JavaScript changes in SessionWriter; native recompilation is not
 required. The matching
 `tools/patches/browser-modules-sessionstore-time-depth-rotation.sys.patch`
