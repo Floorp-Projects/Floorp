@@ -164,10 +164,6 @@ export function onFinalUIStartup(): void {
   ChromeUtils.importESModule(
     "resource://noraneko/modules/i18n/I18n-Utils.sys.mjs",
   );
-  // Session ledger shadow recording (self-controlled by floorp.sessionledger.* prefs)
-  ChromeUtils.importESModule(
-    "resource://noraneko/modules/session-ledger/SessionLedger.sys.mjs",
-  );
   // Session generation restore UI (lists rotation copies from the time-depth patch)
   ChromeUtils.importESModule(
     "resource://noraneko/modules/session-generations/SessionGenerations.sys.mjs",
