@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import {
   createNodeBuildPlan,
   normalizeNodeBuildMode,
   PAGE_BUILDS,
 } from "./src/node_build_plan.ts";
+import { SOURCE_LINKS } from "./src/source_link_plan.ts";
 
 const baseOptions = {
-  buildid2: "build-id",
+  buildid2: "019b23c1-2278-7000-8000-000000000000",
   version: "1.2.3",
   projectRoot: "/repo",
   nodeExecutable: "/bin/node",
@@ -66,6 +70,27 @@ test("build commands contain no Deno executable or task indirection", () => {
       assert.equal(command.args.includes("task"), false);
     }
   }
+});
+
+test("source links cover chrome, i18n, and modules before compilation", () => {
+  assert.deepEqual(
+    SOURCE_LINKS.map(({ link }) => link.at(-1)),
+    ["link-features-chrome", "link-i18n", "link-modules"],
+  );
+});
+
+test("CLI rejects a non-UUIDv7 build ID before building", () => {
+  const script = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "node-build.ts",
+  );
+  const result = spawnSync(
+    process.execPath,
+    [script, "--buildid2", "nodephase1prod2"],
+    { encoding: "utf8" },
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /UUIDv7/);
 });
 
 test("mode validation rejects unsupported modes", () => {

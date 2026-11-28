@@ -20,6 +20,7 @@ import {
   PACKAGED_ASSET_MOUNTS,
 } from "./src/node_build_plan.ts";
 import { packagedQaEnabled } from "./src/packaged_qa_contract.ts";
+import { SOURCE_LINKS } from "./src/source_link_plan.ts";
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -35,7 +36,7 @@ interface CliOptions {
 
 function usage(): string {
   return [
-    "Usage: node tools/node-build.ts [--mode dev|test|stage|production] [--buildid2 <id>] [--version <version>]",
+    "Usage: node tools/node-build.ts [--mode dev|test|stage|production] [--buildid2 <uuid-v7>] [--version <version>]",
     "",
     "Builds browser feature assets with Node.js only. This is the Phase 1",
     "migration entry point; tools/feles-build.ts remains the compatibility entry.",
@@ -80,6 +81,11 @@ function generateUuidV7(now = Date.now()): string {
   return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${
     hex.slice(6, 8).join("")
   }-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
+}
+
+function isUuidV7(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    .test(value);
 }
 
 function packageVersion(): string {
@@ -145,19 +151,35 @@ function createDirectoryLink(link: string, target: string): void {
   removePath(link);
   try {
     symlinkSync(target, link);
+    return;
   } catch (error) {
     if (process.platform === "win32") {
       try {
         symlinkSync(target, link, "junction");
         return;
-      } catch {
-        // Fall through to the diagnostic below.
+      } catch (junctionError) {
+        throw new Error(
+          `Failed to create directory junction ${link} -> ${target}: ${
+            junctionError instanceof Error
+              ? junctionError.message
+              : String(junctionError)
+          }`,
+        );
       }
     }
-    console.warn(
-      `[node-build] Failed to create symlink ${link} -> ${target}: ${
+    throw new Error(
+      `Failed to create symlink ${link} -> ${target}: ${
         error instanceof Error ? error.message : String(error)
       }`,
+    );
+  }
+}
+
+function createSourceLinks(): void {
+  for (const { link, target } of SOURCE_LINKS) {
+    createDirectoryLink(
+      path.join(PROJECT_ROOT, ...link),
+      path.join(PROJECT_ROOT, ...target),
     );
   }
 }
@@ -232,6 +254,9 @@ function main(): void {
     process.env.FLOORP_QA_TEST_MODULES,
   );
   const buildid2 = options.buildid2 ?? generateUuidV7();
+  if (!isUuidV7(buildid2)) {
+    throw new Error("--buildid2 must be a UUIDv7 value.");
+  }
   const version = options.version ?? packageVersion();
   const tsdown = resolvePackageBin("tsdown");
   const plan = createNodeBuildPlan({
@@ -245,6 +270,7 @@ function main(): void {
   });
 
   console.log(`[node-build] Building features with mode=${plan.mode}`);
+  createSourceLinks();
   writeBuildid2(buildid2);
   for (const buildCommand of plan.commands) {
     runBuildCommand(buildCommand);

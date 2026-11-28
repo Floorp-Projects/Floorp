@@ -104,6 +104,7 @@
     "npm:tsdown@0.22": "0.22.0_typescript@5.9.3_unrun@0.3.0",
     "npm:typescript@^5.9.3": "5.9.3",
     "npm:unplugin-swc@^1.5.9": "1.5.9_@swc+core@1.15.40",
+    "npm:unrun@0.3": "0.3.0",
     "npm:unrun@*": "0.3.0",
     "npm:uuid@13": "13.0.2",
     "npm:vite-plugin-istanbul@^7.2.1": "7.2.1_vite@7.3.3__@types+node@25.9.1__lightningcss@1.32.0__picomatch@4.0.4_@types+node@25.9.1_lightningcss@1.32.0",

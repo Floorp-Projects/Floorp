@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "@std/path";
-import { PATHS } from "./defines.ts";
-import { Logger, exists, safeRemove, createSymlink } from "./utils.ts";
+import { PROJECT_ROOT } from "./defines.ts";
+import { SOURCE_LINKS } from "./source_link_plan.ts";
+import { createSymlink, exists, Logger, safeRemove } from "./utils.ts";
 
 const logger = new Logger("symlinker");
 
 export function run(): void {
-  const pairs: Array<[string, string]> = [
-    [
-      path.join(PATHS.loader_features, "link-features-chrome"),
-      PATHS.features_chrome,
+  const pairs: Array<[string, string]> = SOURCE_LINKS.map(
+    ({ link, target }) => [
+      path.join(PROJECT_ROOT, ...link),
+      path.join(PROJECT_ROOT, ...target),
     ],
-    [path.join(PATHS.loader_features, "link-i18n"), PATHS.i18n],
-    [path.join(PATHS.loader_modules, "link-modules"), PATHS.modules],
-  ];
+  );
 
   for (const [link, target] of pairs) {
     try {
@@ -26,7 +25,7 @@ export function run(): void {
         }
       }
       createSymlink(link, target);
-    // deno-lint-ignore no-explicit-any
+      // deno-lint-ignore no-explicit-any
     } catch (e: any) {
       console.warn(
         `Failed to create symlink ${link} -> ${target}: ${e?.message ?? e}`,
