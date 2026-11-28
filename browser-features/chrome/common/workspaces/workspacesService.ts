@@ -538,8 +538,14 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   private reassignOtherWindowsTabs(
     idMap: Map<TWorkspaceID, TWorkspaceID>,
     fallbackWorkspaceId: TWorkspaceID,
+    concurrentBaselineIds?: ReadonlySet<string>,
   ): void {
     const restoredIds = new Set<TWorkspaceID>(idMap.values());
+    // A workspace created in another window while the restore was in flight
+    // is absent from the capture-time baseline and survives the commit, so
+    // its tabs must keep their attribution instead of moving to the default.
+    const isConcurrentWorkspaceId = (id: string | null): boolean =>
+      !!id && !!concurrentBaselineIds && !concurrentBaselineIds.has(id);
     const enumerator = Services.wm.getEnumerator("navigator:browser");
     while (enumerator.hasMoreElements()) {
       const window = enumerator.getNext() as Window & {
@@ -575,7 +581,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
           const workspaceId = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
           // Unattributed tabs are claimed by that window's own visibility
           // pass once the store settles.
-          if (workspaceId && !restoredIds.has(workspaceId as TWorkspaceID)) {
+          if (
+            workspaceId && !restoredIds.has(workspaceId as TWorkspaceID) &&
+            !isConcurrentWorkspaceId(workspaceId)
+          ) {
             tab.setAttribute(
               WORKSPACE_TAB_ATTRIBUTION_ID,
               idMap.get(workspaceId as TWorkspaceID) ?? fallbackWorkspaceId,
@@ -584,7 +593,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
           // The last-shown marker references a workspace ID as well; keep it
           // only when it maps onto a restored workspace.
           const lastShown = tab.getAttribute(WORKSPACE_LAST_SHOW_ID);
-          if (lastShown && !restoredIds.has(lastShown as TWorkspaceID)) {
+          if (
+            lastShown && !restoredIds.has(lastShown as TWorkspaceID) &&
+            !isConcurrentWorkspaceId(lastShown)
+          ) {
             const mappedLastShown = idMap.get(lastShown as TWorkspaceID);
             if (mappedLastShown) {
               tab.setAttribute(WORKSPACE_LAST_SHOW_ID, mappedLastShown);
@@ -1057,18 +1069,31 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     try {
       // Unmapped tabs in other windows go to the default workspace: that is
       // the one those windows show after the store swap.
-      this.reassignOtherWindowsTabs(idMap, defaultId);
+      this.reassignOtherWindowsTabs(
+        idMap,
+        defaultId,
+        commit.concurrentBaselineIds,
+      );
     } catch (error) {
       logStepError("re-attributing other windows", error);
     }
     try {
+      const isConcurrentTabWorkspace = (id: string | null): boolean =>
+        !!id && !!commit.concurrentBaselineIds &&
+        !commit.concurrentBaselineIds.has(id);
       for (const tab of [...globalThis.gBrowser.tabs]) {
         if (restoredTabs.has(tab) || tabsToReplace.has(tab)) {
           continue;
         }
         // Preserved, exempt, and tabs opened during the restore (including
         // the settings page that started it) join the workspace shown after
-        // the restore, so they stay visible.
+        // the restore, so they stay visible. Tabs already attributed to a
+        // workspace created during the restore keep that attribution: their
+        // workspace survives the commit, and moving them would empty it.
+        const attribution = tab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID);
+        if (isConcurrentTabWorkspace(attribution)) {
+          continue;
+        }
         tab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, currentId);
       }
     } catch (error) {
