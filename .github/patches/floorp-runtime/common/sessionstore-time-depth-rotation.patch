@@ -1,8 +1,8 @@
 diff --git a/browser/components/sessionstore/SessionWriter.sys.mjs b/browser/components/sessionstore/SessionWriter.sys.mjs
-index 3b2d3088..03d0f845 100644
+index 3b2d3088..aa6b07c1 100644
 --- a/browser/components/sessionstore/SessionWriter.sys.mjs
 +++ b/browser/components/sessionstore/SessionWriter.sys.mjs
-@@ -114,6 +114,19 @@ export const SessionWriter = new (class {
+@@ -114,6 +114,21 @@ export const SessionWriter = new (class {
  
    #upgradeBackupNeeded = false;
  
@@ -19,10 +19,31 @@ index 3b2d3088..03d0f845 100644
 +   */
 +  #rotationScanned = false;
 +
++  #purgeObserverRegistered = false;
++
    /**
     * Initialize (or reinitialize) the writer.
     *
-@@ -380,6 +393,23 @@ export const SessionWriter = new (class {
+@@ -147,6 +162,18 @@ export const SessionWriter = new (class {
+     this.#maxSerializeBack = prefs.maxSerializeBack;
+     this.#maxSerializeForward = prefs.maxSerializeForward;
+     this.#upgradeBackupNeeded = paths.nextUpgradeBackup != paths.upgradeBackup;
++    // Forget-this-site purges do not wipe the backups directory, but rotation
++    // copies would retain the forgotten pages. Rotation copies cannot be
++    // filtered per-domain without rewriting them, so a domain purge drops
++    // them wholesale: privacy takes precedence over generation depth.
++    if (!this.#purgeObserverRegistered) {
++      this.#purgeObserverRegistered = true;
++      Services.obs.addObserver(() => {
++        this.#removeRotationCopies().catch(ex =>
++          console.error("SessionWriter rotation purge failed", ex)
++        );
++      }, "browser:purge-session-history-for-domain");
++    }
+     return { result: true };
+   }
+ 
+@@ -380,6 +407,23 @@ export const SessionWriter = new (class {
        }
      }
  
@@ -46,7 +67,7 @@ index 3b2d3088..03d0f845 100644
      if (options.performShutdownCleanup && !exn) {
        // During shutdown, if auto-restore is disabled, we need to
        // remove possibly sensitive data that has been stored purely
-@@ -390,6 +420,7 @@ export const SessionWriter = new (class {
+@@ -390,6 +434,7 @@ export const SessionWriter = new (class {
        // these files.
        await IOUtils.remove(this.#paths.recoveryBackup);
        await IOUtils.remove(this.#paths.recovery);
@@ -54,7 +75,7 @@ index 3b2d3088..03d0f845 100644
      }
  
      this.#state = STATE_RECOVERY;
-@@ -409,6 +440,104 @@ export const SessionWriter = new (class {
+@@ -409,6 +454,104 @@ export const SessionWriter = new (class {
      };
    }
  

@@ -164,5 +164,5 @@ Services.obs.addObserver(() => {
       },
       { once: true },
     );
-  }, "browser-window-before-created");
+  }, "domwindowopened");
 }, "sessionstore-windows-restored");
