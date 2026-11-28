@@ -1,0 +1,170 @@
+workflow,line,kind,text
+.github/workflows/assemble-release-bundle.yml,564,setup-deno,uses: denoland/setup-deno@v2
+.github/workflows/assemble-release-bundle.yml,566,other deno reference,deno-version: v2.x
+.github/workflows/assemble-release-bundle.yml,783,deno run,deno run --allow-read --allow-write \
+.github/workflows/build_installers.yml,24,setup-deno,uses: denoland/setup-deno@v2
+.github/workflows/build_installers.yml,26,other deno reference,deno-version: v2.x
+.github/workflows/collect_firefox_tests.yml,22,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/collect_firefox_tests.yml,24,other deno reference,deno-version: v2.x
+.github/workflows/collect_firefox_tests.yml,28,other deno reference,path: ~/.cache/deno
+.github/workflows/collect_firefox_tests.yml,29,other deno reference,"key: deno-firefox-tests-${{ hashFiles('deno.lock', 'floorp-runtime.lock.json') }}"
+.github/workflows/collect_firefox_tests.yml,30,other deno reference,restore-keys: deno-firefox-tests-
+.github/workflows/collect_firefox_tests.yml,32,deno install,- run: deno install
+.github/workflows/collect_firefox_tests.yml,35,deno run,run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+.github/workflows/collect_firefox_tests.yml,42,other deno reference,"repository=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.repository)"")"""
+.github/workflows/collect_firefox_tests.yml,43,other deno reference,"ref=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.ref)"")"""
+.github/workflows/collect_firefox_tests.yml,44,other deno reference,"commit=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.commit)"")"""
+.github/workflows/collect_firefox_tests.yml,45,other deno reference,"tree=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.tree)"")"""
+.github/workflows/collect_firefox_tests.yml,73,deno task,run: deno task test:firefox-tests
+.github/workflows/collect_firefox_tests.yml,80,deno task,deno task firefox-tests:collect \
+.github/workflows/collect_firefox_tests.yml,87,deno task,run: deno task firefox-tests:triage-browser
+.github/workflows/collect_firefox_tests.yml,91,other deno reference,deno eval '
+.github/workflows/colocated_runner_test.yml,42,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/colocated_runner_test.yml,44,other deno reference,deno-version: v2.9.6
+.github/workflows/colocated_runner_test.yml,45,deno install,- run: deno install
+.github/workflows/colocated_runner_test.yml,50,deno test,deno test --no-config tools/workspace-development/harness.test.ts
+.github/workflows/colocated_runner_test.yml,55,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+.github/workflows/colocated_runner_test.yml,56,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
+.github/workflows/colocated_runner_test.yml,85,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/colocated_runner_test.yml,87,other deno reference,deno-version: v2.9.6
+.github/workflows/colocated_runner_test.yml,88,deno install,- run: deno install
+.github/workflows/colocated_runner_test.yml,94,deno test,deno test --no-config tools/workspace-development/harness.test.ts tools/workspace-expanded-development/harness.test.ts tools/workspace-expanded-development/menu_cleanup.test.ts
+.github/workflows/colocated_runner_test.yml,99,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+.github/workflows/colocated_runner_test.yml,100,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
+.github/workflows/colocated_runner_test.yml,131,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/colocated_runner_test.yml,133,other deno reference,deno-version: v2.9.6
+.github/workflows/colocated_runner_test.yml,134,deno install,- run: deno install
+.github/workflows/colocated_runner_test.yml,146,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+.github/workflows/colocated_runner_test.yml,147,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts install-native
+.github/workflows/colocated_runner_test.yml,184,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/colocated_runner_test.yml,186,other deno reference,deno-version: v2.x
+.github/workflows/colocated_runner_test.yml,189,other deno reference,path: ~/.cache/deno
+.github/workflows/colocated_runner_test.yml,190,other deno reference,"key: deno-smoke-${{ hashFiles('deno.lock', 'floorp-runtime.lock.json') }}"
+.github/workflows/colocated_runner_test.yml,191,other deno reference,restore-keys: deno-smoke-
+.github/workflows/colocated_runner_test.yml,195,deno install,- run: deno install
+.github/workflows/colocated_runner_test.yml,197,deno run,run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+.github/workflows/colocated_runner_test.yml,203,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts
+.github/workflows/colocated_runner_test.yml,205,deno task,- run: deno task test:smoke
+.github/workflows/colocated_runner_test.yml,217,deno task,run: deno task test:host
+.github/workflows/colocated_runner_test.yml,219,deno task,run: deno task test:firefox-tests
+.github/workflows/colocated_runner_test.yml,221,deno test,run: deno test --allow-read --allow-write tools/runtime-lock/
+.github/workflows/colocated_runner_test.yml,257,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/colocated_runner_test.yml,259,other deno reference,deno-version: v2.x
+.github/workflows/colocated_runner_test.yml,263,other deno reference,path: ~/.cache/deno
+.github/workflows/colocated_runner_test.yml,264,other deno reference,"key: deno-native-runtime-${{ matrix.runner }}-${{ hashFiles('deno.lock', 'floorp-runtime.lock.json') }}"
+.github/workflows/colocated_runner_test.yml,265,other deno reference,restore-keys: deno-native-runtime-${{ matrix.runner }}-
+.github/workflows/colocated_runner_test.yml,274,deno install,- run: deno install
+.github/workflows/colocated_runner_test.yml,277,deno run,run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+.github/workflows/colocated_runner_test.yml,282,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts
+.github/workflows/colocated_runner_test.yml,287,deno test,deno test --allow-read --allow-write --allow-run=git
+.github/workflows/colocated_runner_test.yml,293,deno test,deno test --allow-read --allow-write --allow-run
+.github/workflows/colocated_runner_test.yml,298,deno task,run: deno task app-shim:build --test --universal
+.github/workflows/colocated_runner_test.yml,303,deno run,deno run -A tools/runtime-lock/runtime_lock_cli.ts
+.github/workflows/colocated_runner_test.yml,312,other deno reference,"repository=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.repository)"")"""
+.github/workflows/colocated_runner_test.yml,313,other deno reference,"ref=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.ref)"")"""
+.github/workflows/colocated_runner_test.yml,314,other deno reference,"commit=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.commit)"")"""
+.github/workflows/colocated_runner_test.yml,315,other deno reference,"tree=""$(deno eval ""const lock = JSON.parse(await Deno.readTextFile('floorp-runtime.lock.json')); console.log(lock.source.tree)"")"""
+.github/workflows/colocated_runner_test.yml,356,deno task,deno task firefox-tests:collect \
+.github/workflows/colocated_runner_test.yml,364,deno task,run: deno task firefox-tests:triage-browser
+.github/workflows/colocated_runner_test.yml,368,deno task,run: deno task firefox-tests:prepare-browser
+.github/workflows/colocated_runner_test.yml,376,other deno reference,deno eval '
+.github/workflows/colocated_runner_test.yml,461,deno task,deno task test \
+.github/workflows/colocated_runner_test.yml,522,deno task,deno task feles-build test > _dist/ci-feles-build-test.log 2>&1 &
+.github/workflows/colocated_runner_test.yml,547,deno run,deno run \
+.github/workflows/colocated_runner_test.yml,551,deno run,deno run \
+.github/workflows/colocated_runner_test.yml,555,deno run,deno run \
+.github/workflows/colocated_runner_test.yml,567,other deno reference,deno eval '
+.github/workflows/colocated_runner_test.yml,602,deno test,run: deno test -A tools/src/colocated_test_runner.test.ts
+.github/workflows/colocated_runner_test.yml,630,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/colocated_runner_test.yml,632,other deno reference,deno-version: v2.9.6
+.github/workflows/colocated_runner_test.yml,634,deno install,run: deno install --frozen
+.github/workflows/colocated_runner_test.yml,636,deno task,run: deno task feles-build build --phase before-mach
+.github/workflows/colocated_runner_test.yml,639,deno test,deno test --allow-read --allow-write
+.github/workflows/colocated_runner_test.yml,645,deno test,deno test --allow-read --allow-write --deny-net --deny-env
+.github/workflows/docs_pipeline.yml,12,other deno reference,"- ""deno.json"""
+.github/workflows/docs_pipeline.yml,40,other deno reference,"- ""deno.json"""
+.github/workflows/docs_pipeline.yml,79,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/docs_pipeline.yml,81,other deno reference,deno-version: v2.x
+.github/workflows/docs_pipeline.yml,84,other deno reference,path: ~/.cache/deno
+.github/workflows/docs_pipeline.yml,85,other deno reference,key: deno-docs-pipeline-${{ hashFiles('deno.lock') }}
+.github/workflows/docs_pipeline.yml,86,other deno reference,restore-keys: deno-docs-pipeline-
+.github/workflows/docs_pipeline.yml,87,deno install,- run: deno install
+.github/workflows/docs_pipeline.yml,89,deno task,run: deno task docs-pipeline:collect --out _dist/docs-pipeline/inventory.json
+.github/workflows/docs_pipeline.yml,95,deno task,deno task docs-pipeline:verify \
+.github/workflows/docs_pipeline.yml,99,deno task,deno task docs-pipeline:verify \
+.github/workflows/docs_pipeline.yml,103,deno task,run: deno task test:docs-pipeline
+.github/workflows/docs_pipeline.yml,119,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/docs_pipeline.yml,121,other deno reference,deno-version: v2.x
+.github/workflows/docs_pipeline.yml,125,other deno reference,path: ~/.cache/deno
+.github/workflows/docs_pipeline.yml,126,other deno reference,key: deno-docs-pipeline-${{ hashFiles('deno.lock') }}
+.github/workflows/docs_pipeline.yml,127,other deno reference,restore-keys: deno-docs-pipeline-
+.github/workflows/docs_pipeline.yml,129,deno install,- run: deno install
+.github/workflows/docs_pipeline.yml,171,deno task,run: deno task docs-pipeline:collect --out _dist/docs-pipeline/inventory.json
+.github/workflows/docs_pipeline.yml,180,deno task,deno task docs-pipeline:generate \
+.github/workflows/docs_pipeline.yml,199,deno task,deno task docs-pipeline:verify \
+.github/workflows/docs_pipeline.yml,215,deno task,deno task docs-pipeline:audit \
+.github/workflows/fdh-review-gate.yml,23,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/fdh-review-gate.yml,25,other deno reference,deno-version: v2.x
+.github/workflows/fdh-review-gate.yml,28,other deno reference,path: ~/.cache/deno
+.github/workflows/fdh-review-gate.yml,29,other deno reference,key: deno-fdh-review-${{ hashFiles('deno.lock') }}
+.github/workflows/fdh-review-gate.yml,30,other deno reference,restore-keys: deno-fdh-review-
+.github/workflows/fdh-review-gate.yml,31,deno install,- run: deno install
+.github/workflows/fdh-review-gate.yml,33,deno task,run: deno task test:host
+.github/workflows/fdh-review-gate.yml,35,deno task,run: deno task feles-build build --phase before-mach
+.github/workflows/fdh-trusted-review-gate.yml,82,setup-deno,uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/fdh-trusted-review-gate.yml,84,other deno reference,deno-version: v2.x
+.github/workflows/fdh-trusted-review-gate.yml,135,other deno reference,"const child = spawn(""deno"", [""run"", ""--no-config"", ""--no-lock"", ""--quiet"", ""tools/src/fdh_trusted_review_runner.ts""], { stdio: [""pipe"", ""pipe"", ""pipe""], shell: false, windowsHide: true, env: childEnv });"
+.github/workflows/firefox_runtime_candidate.yml,25,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/firefox_runtime_candidate.yml,27,other deno reference,deno-version: v2.x
+.github/workflows/firefox_runtime_candidate.yml,31,other deno reference,path: ~/.cache/deno
+.github/workflows/firefox_runtime_candidate.yml,32,other deno reference,"key: deno-firefox-runtime-tracking-${{ hashFiles('deno.lock', 'floorp-runtime.lock.json') }}"
+.github/workflows/firefox_runtime_candidate.yml,33,other deno reference,restore-keys: deno-firefox-runtime-tracking-
+.github/workflows/firefox_runtime_candidate.yml,35,deno install,- run: deno install
+.github/workflows/firefox_runtime_candidate.yml,38,deno run,run: deno run -A tools/runtime-lock/runtime_lock_cli.ts validate-lock
+.github/workflows/firefox_runtime_candidate.yml,45,other deno reference,deno eval '
+.github/workflows/firefox_runtime_candidate.yml,79,deno task,deno task firefox-tests:collect \
+.github/workflows/firefox_runtime_candidate.yml,88,deno task,deno task firefox-tests:triage-browser
+.github/workflows/firefox_runtime_candidate.yml,96,other deno reference,deno eval '
+.github/workflows/package.yml,893,setup-deno,- uses: denoland/setup-deno@v2
+.github/workflows/package.yml,895,other deno reference,deno-version: v2.x
+.github/workflows/package.yml,901,deno install,deno install --allow-scripts
+.github/workflows/package.yml,913,deno task,deno task feles-build misc writeVersion
+.github/workflows/package.yml,1337,other deno reference,"# Find the actual deno executable, resolving symlinks"
+.github/workflows/package.yml,1338,other deno reference,DENO_PATH=$(which deno)
+.github/workflows/package.yml,1341,other deno reference,# Debug: Check what's in the deno directory
+.github/workflows/package.yml,1342,other deno reference,"echo ""Contents of /opt/hostedtoolcache/deno/2.5.4/x64/:"""
+.github/workflows/package.yml,1343,other deno reference,"ls -la /opt/hostedtoolcache/deno/2.5.4/x64/ || echo ""Directory not accessible"""
+.github/workflows/package.yml,1345,other deno reference,"echo ""Looking for deno binary:"""
+.github/workflows/package.yml,1346,other deno reference,"find /opt/hostedtoolcache/deno/2.5.4/ -name ""deno"" -type f 2>/dev/null || echo ""No deno binary found"""
+.github/workflows/package.yml,1348,other deno reference,# Try to find the actual deno binary
+.github/workflows/package.yml,1351,other deno reference,/opt/hostedtoolcache/deno/2.5.4/x64/bin/deno \
+.github/workflows/package.yml,1352,other deno reference,/opt/hostedtoolcache/deno/2.5.4/x64/deno \
+.github/workflows/package.yml,1353,other deno reference,/home/runner/.deno/bin/deno \
+.github/workflows/package.yml,1358,other deno reference,"echo ""Found executable deno at: $REAL_DENO_PATH"""
+.github/workflows/package.yml,1364,other deno reference,"echo ""Error: Could not find deno binary"""
+.github/workflows/package.yml,1368,other deno reference,"echo ""Deno version: $(deno --version)"""
+.github/workflows/package.yml,1370,other deno reference,# Export the real deno path for use in TypeScript build tools
+.github/workflows/package.yml,1375,deno task,NODE_ENV='production' deno task feles-build build --phase before-mach
+.github/workflows/package.yml,1495,deno task,deno task feles-build build --phase after-mach
+.github/workflows/publish_alpha.yml,49,setup-deno,- uses: denoland/setup-deno@v2
+.github/workflows/publish_alpha.yml,51,other deno reference,deno-version: v2.x
+.github/workflows/publish_alpha.yml,88,deno run,deno run --allow-read tools/src/release_provenance.ts \
+.github/workflows/publish_alpha.yml,93,other deno reference,deno eval '
+.github/workflows/publish_release.yml,252,setup-deno,uses: denoland/setup-deno@v2
+.github/workflows/publish_release.yml,254,other deno reference,deno-version: v2.x
+.github/workflows/publish_release.yml,263,deno run,deno run --allow-read --allow-write \
+.github/workflows/qa3-source-shadow.yml,15,other deno reference,"- ""deno.json"""
+.github/workflows/qa3-source-shadow.yml,16,other deno reference,"- ""deno.lock"""
+.github/workflows/qa3-source-shadow.yml,32,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/qa3-source-shadow.yml,34,other deno reference,deno-version: v2.9.7
+.github/workflows/update_lepton.yml,78,setup-deno,- uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+.github/workflows/update_lepton.yml,80,other deno reference,deno-version: v2.x
+.github/workflows/update_lepton.yml,124,deno run,"deno run --allow-read=""$WORK"" tools/src/lepton_vendor.ts verify-assets \"
+.github/workflows/update_lepton.yml,188,deno run,"deno run --allow-read=""$WORK,browser-features/skin"" \"
+.github/workflows/update_lepton.yml,196,deno run,deno run --allow-read=browser-features/skin/lepton \
+.github/workflows/validate-runtime-provenance.yml,112,setup-deno,uses: denoland/setup-deno@v2
+.github/workflows/validate-runtime-provenance.yml,114,other deno reference,deno-version: v2.x
+.github/workflows/validate-runtime-provenance.yml,408,deno run,deno run --allow-read --allow-write \
+.github/workflows/verify-release-artifact.yml,472,setup-deno,uses: denoland/setup-deno@v2
+.github/workflows/verify-release-artifact.yml,474,other deno reference,deno-version: v2.x
+.github/workflows/verify-release-artifact.yml,1078,deno run,deno run --allow-read --allow-write `

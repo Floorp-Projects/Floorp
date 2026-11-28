@@ -1,0 +1,23 @@
+path,role,tasks,task_count,import_count,has_workspace,has_exports
+bridge/loader-features/deno.json,bridge build package,build,1,22,false,false
+bridge/loader-modules/deno.json,bridge build package,build,1,6,false,false
+bridge/startup/deno.json,bridge build package,build,1,3,false,false
+browser-features/chrome/deno.json,browser feature package boundary/dependencies,,0,22,false,true
+browser-features/modules/deno.json,browser feature package boundary/dependencies,,0,5,false,true
+browser-features/pages-aboutDialog/deno.json,page package dependency/import configuration,build,1,10,false,true
+browser-features/pages-modal-child/deno.json,page package dependency/import configuration,,0,2,false,false
+browser-features/pages-newtab/deno.json,page package dependency/import configuration,,0,2,false,false
+browser-features/pages-notes/deno.json,page package dependency/import configuration,,0,1,false,false
+browser-features/pages-profile-manager/deno.json,page package dependency/import configuration,,0,2,false,false
+browser-features/pages-settings/deno.json,page package dependency/import configuration,,0,2,false,false
+browser-features/pages-welcome/deno.json,page package dependency/import configuration,,0,1,false,false
+browser-features/pages-workflow-progress/deno.json,page package dependency/import configuration,,0,2,false,false
+browser-features/skin/deno.json,browser feature package boundary/dependencies,,0,0,false,false
+deno.json,"root workspace, command routing, shared import map",feles-build;fdh;app-shim:build;app-shim:test;act;dev-tool;design-matrix;test:design-matrix;docs-pipeline;docs-pipeline:collect;docs-pipeline:generate;docs-pipeline:generate-docs;docs-pipeline:audit;docs-pipeline:audit-verify;docs-pipeline:codex-seed;docs-pipeline:codex-seed-docs;docs-pipeline:codex-audit-schema;docs-pipeline:codex-audit-verify;docs-pipeline:verify;docs-pipeline:verify-docs;firefox-tests:collect;firefox-tests:triage-browser;firefox-tests:prepare-browser;test;test:firefox-tests;test:host;test:docs-pipeline;test:smoke;test:tab-stacks-session;test:os-api;test:os-api:wrapper;test:os-api:network-idle;test:os-api:local-page;test:os-api:effects;test:integration,35,19,true,false
+i18n/deno.json,localization package boundary,,0,0,false,true
+libs/@types/gecko/deno.json,library package boundary/dependencies,,0,0,false,true
+libs/shared/deno.json,library package boundary/dependencies,,0,4,false,false
+libs/solid-xul/deno.json,library package boundary/dependencies,,0,1,false,true
+libs/ui/deno.json,library package boundary/dependencies,,0,0,false,false
+libs/vite-plugin-disable-csp/deno.json,library package boundary/dependencies,,0,1,false,true
+libs/vite-plugin-gen-jarmn/deno.json,library package boundary/dependencies,,0,1,false,true
