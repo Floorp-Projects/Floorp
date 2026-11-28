@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import type { Manifest } from "#features-chrome/common/pwa/type.ts";
+import { isPwaUrlEligible } from "#libs/pwa/urlPolicy.ts";
 import { NativeAppRuntime } from "./NativeAppRuntime.sys.mts";
 
 const { AppConstants } = ChromeUtils.importESModule(
@@ -40,6 +41,13 @@ type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 export class SsbRunnerUtils {
   static async openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
+    if (!isPwaUrlEligible(ssb.start_url)) {
+      // Installed apps predate the install-time policy, so the shared launch
+      // boundary must refuse non-loopback plain-HTTP apps as well.
+      throw new Error(
+        `[SsbRunnerUtils] Refusing to launch ineligible PWA URL: ${ssb.start_url}`,
+      );
+    }
     // Use LastWindowClosingSurvivalArea to avoid showing empty window
     if (initialLaunch) {
       Services.startup.enterLastWindowClosingSurvivalArea();
@@ -191,19 +199,17 @@ export class SsbRunnerUtils {
       Number.isSafeInteger(ssb.userContextId) &&
       (ssb.userContextId ?? 0) > 0
     ) {
-      const { Experiments } = ChromeUtils.importESModule(
-        "resource://noraneko/modules/experiments/Experiments.sys.mjs",
+      const { PwaContainerExperiment } = ChromeUtils.importESModule(
+        "resource://noraneko/modules/pwa/PwaContainerExperiment.sys.mjs",
       );
       const { ContextualIdentityService } = ChromeUtils.importESModule(
         "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
       );
-      // Command-line startup can run before Experiments.init(). Use the same
-      // enrollment gate as PwaContainerExperiment, with the persisted assignment
-      // only while the in-memory experiment manifest is unavailable.
-      const experiment = "pwa_container_support";
-      const enrolled = Experiments.getVariant(experiment) !== null ||
-        (!Experiments.manifestAvailable &&
-          Experiments.getCachedEnrollment(experiment).variantId !== null);
+      // Share the exact experiment gate: the control variant, an explicit
+      // user disable, or a participation opt-out must all keep containerized
+      // startup off. The gate reads persisted state, so it is correct even
+      // before Experiments.init() completes during command-line startup.
+      const enrolled = PwaContainerExperiment.isEnabled();
       const exists = ContextualIdentityService.getPublicIdentities().some(
         (identity: { userContextId: number }) =>
           identity.userContextId === ssb.userContextId,

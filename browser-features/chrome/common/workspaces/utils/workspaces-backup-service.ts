@@ -744,8 +744,11 @@ export class WorkspacesBackupService {
     // A safety copy is only needed when the restore replaces existing state.
     if (destructive) {
       let capturedTabs: Set<XULElement>;
+      let safetyCopyMode: string;
       try {
-        ({ capturedTabs } = await this.captureAndWrite("pre-restore"));
+        const captured = await this.captureAndWrite("pre-restore");
+        capturedTabs = captured.capturedTabs;
+        safetyCopyMode = captured.summary.mode;
       } catch (error) {
         if (error instanceof Error && error.message === "nothing-to-back-up") {
           // Tabs can be preserved without a copy, but workspace metadata
@@ -758,6 +761,16 @@ export class WorkspacesBackupService {
         console.error(
           "WorkspacesBackupService: failed to capture pre-restore backup",
           error,
+        );
+        return { success: false, error: "pre-restore-failed" };
+      }
+      // Capture re-reads the workspaces preference after awaiting SessionStore,
+      // so a mid-restore settings change can produce a tabs-mode safety copy
+      // that carries no workspace metadata. Destructive restore must not
+      // replace the store unless the copy can actually roll it back.
+      if (safetyCopyMode !== "workspaces") {
+        console.error(
+          "WorkspacesBackupService: pre-restore backup has no workspace state",
         );
         return { success: false, error: "pre-restore-failed" };
       }

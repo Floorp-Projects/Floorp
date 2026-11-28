@@ -7,8 +7,15 @@ const readPwaContainerExperimentAssignment = (): boolean => {
     const { Experiments } = ChromeUtils.importESModule(
       "resource://noraneko/modules/experiments/Experiments.sys.mjs",
     );
-    const variant = Experiments.getVariant(PWA_CONTAINER_EXPERIMENT);
-    return variant === "enabled";
+    // getCachedEnrollment reads the persisted assignment directly, so this is
+    // correct even before Experiments.init() completes during startup. A user
+    // who disabled the experiment or opted out of participation must not get
+    // container behavior even when their assigned variant is "enabled".
+    const enrollment = Experiments.getCachedEnrollment(
+      PWA_CONTAINER_EXPERIMENT,
+    );
+    return enrollment.variantId === "enabled" && !enrollment.disabled &&
+      !enrollment.optedOut;
   } catch (error) {
     console.error(
       "[PwaContainerExperiment] Failed to check pwa_container_support experiment:",
