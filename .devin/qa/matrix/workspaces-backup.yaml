@@ -1,0 +1,603 @@
+# QA matrix: workspaces / tab backup v2
+#
+# Source spec: floorp-12.21.3-agentic-qa-candidates.md (category A + R-01..R-05)
+# Target: devin/release-12.21.3 以降のビルド (production 12.21.2 には存在しない)
+#
+# tier:       L0 unit / L1 state / L2 functional / L3 device / L4 nonfunctional
+# automation: auto(完全自動) / semi(setupに特別な仕掛け) / manual(人間の目or実機)
+# priority:   P0=release 判断に直結 / P1 / P2
+
+area: workspaces-backup
+title: Workspace / tab backup v2(データ損失・プライバシー最優先)
+target:
+  branch: devin/release-12.21.3
+  note: production 12.21.2 には未搭載。対象ブランチの worktree/ビルドで実施すること
+code:
+  service: browser-features/chrome/common/workspaces/utils/workspaces-backup-service.ts
+  controller: browser-features/chrome/common/workspaces/utils/workspaces-backup-controller.ts
+  helpers: browser-features/chrome/common/workspaces/utils/workspaces-backup-helpers.ts
+  types: browser-features/chrome/common/workspaces/utils/backup-types.ts
+  settingsUI: browser-features/pages-settings/src/app/backup/
+  welcome: browser-features/pages-welcome/src/components/BackupDisclosure.tsx
+existingL0:
+  note: release ブランチに colocated browser test が存在。先に実行し、pass した観点は L0 カバー済みとして記録すること
+  command: deno task test -- --near browser-features/chrome/common/workspaces/
+  files: browser-features/chrome/common/workspaces/test/workspacesBackup*.test.ts
+
+sharedContext: |
+  backup は <profile>/workspaces/backup/backup-YYYYMMDD-HHMMSS-<id>.jsonlz4 (UTC名・mozlz4)。
+  既定: enabled:true, 間隔15分, 保持7日, pre-restore 10件。
+  設定 UI は about:hub#/features/backup。bridge は about:hub と packaged settings にだけ公開される。
+  jsonlz4 の検査: python3 .devin/qa/tools/mozlz4.py <file> [--keys]
+
+driverHints: |
+  [production/packaged 駆動パス] Marionette が使えないビルドでは about:hub 経由:
+    os-server で about:hub (または about:hub#/features/backup) のタブを開き、
+    evaluate で window の backup bridge を呼ぶ:
+      NRWorkspacesBackupNow()          capture(manual) — Promise を返す bridge 関数
+      NRWorkspacesListBackups()        一覧
+      NRWorkspacesRestoreBackup(name)  restore
+      NRWorkspacesDeleteBackup(name) / NRWorkspacesDeleteAllBackups()
+    応答は {requestId, success, error?, data?}。evaluate が Promise を await するかは
+    ビルド依存 — await しない場合は結果を window.__qaResult に保存する script を投げ、
+    数秒後に読むポーリングパターンにする。
+    backup config 既定値: enabled:true, intervalMinutes:15, retentionDays:7, maxPreRestoreBackups:10
+    clamp 範囲: interval 1-1440, retention 1-365, preRestore 1-50 (非 finite は default へ)
+
+  [dev/stage 駆動パス] chrome context から backup 機能を直接駆動できる(dev/stage で最速):
+    await globalThis.workspacesBackupFuncs.backupNow()          capture 実行(manual)
+    await globalThis.workspacesBackupFuncs.listBackups()        一覧
+    await globalThis.workspacesBackupFuncs.restoreBackup(name)  restore
+    await globalThis.workspacesBackupFuncs.deleteBackup(name) / deleteAllBackups()
+    globalThis.workspacesBackupFuncs.isRestoreInFlight()        restore ロック状態
+  pref:  floorp.workspaces.backup.config  (JSON: enabled/intervalMinutes/retentionDays/preRestoreCap)
+         floorp.workspaces.backup.lastRun (epoch ms。過去に書き換えると overdue 再現)
+         floorp.workspaces.enabled        (workspaces 有効/無効の切替)
+  Marionette の非同期実行は qa-drive eval --async を使う(script 内で resolve(v) を呼ぶ):
+    deno run -A .devin/qa/tools/qa-drive.ts eval --async --marionette-port <port> \
+      'globalThis.workspacesBackupFuncs.backupNow().then(r=>resolve(JSON.stringify(r))).catch(reject)'
+  reject(e) は {__qaError: ...} として返る。Promise を resolve せずに終わると timeout になる。
+  backup ファイル生成は非同期なので listBackups/ファイルシステムを数秒ポーリングで確認するのも堅い。
+
+items:
+  # ---- A1. 既定値・初回導線・設定 UI ----
+  - id: A-01
+    spec: 新規 profile で backup が既定 ON (enabled:true, 15分, 7日, pre-restore 10件) であることを確認し、release 意図と一致するか確認する
+    tier: L1
+    automation: auto
+    approach: 新規プロファイルで起動し prefs.js / chrome eval で backup config 既定値を読む。release 意図との一致は人間判断事項として notes に記録
+    priority: P1
+  - id: A-02
+    spec: welcome finish 画面に backup disclosure が出ること、保存対象・保存場所・保持期間・非保存対象の説明が日本語/英語で正しいこと
+    tier: L2
+    automation: semi
+    approach: 新規プロファイル初回起動で welcome を開き ax-tree/screenshot で disclosure 検証。文言の正しさは diff ではなく原文との照合。文言の自然さ最終判断は manual
+    priority: P2
+  - id: A-03
+    spec: welcome で OFF にした場合、ブラウジング開始後に workspaces/backup が作られないか、少なくとも backup ファイルが増えないこと
+    tier: L1
+    automation: auto
+    approach: welcome で OFF → タブ操作 → プロファイル dir に backup ファイル非存在を確認
+    priority: P1
+  - id: A-04
+    spec: welcome の「バックアップ設定を開く」が about:hub#/features/backup へ正しく遷移すること
+    tier: L2
+    automation: auto
+    approach: disclosure のリンクを click し URL が about:hub#/features/backup になることを os-api で確認
+    priority: P2
+  - id: A-05
+    spec: Floorp Hub 左ナビと検索で Backup (Alpha) / バックアップ (Alpha) が見つかること
+    tier: L2
+    automation: auto
+    approach: about:hub を開き ax-tree でナビ項目と検索結果を確認
+    priority: P2
+  - id: A-06
+    spec: backup ページで enabled・間隔・保持日数が保存され、再起動後も保持されること
+    tier: L2
+    automation: auto
+    approach: 設定変更 → prefs.js 確認 → ブラウザ再起動 → UI と pref の両方で保持確認
+    priority: P1
+  - id: A-07
+    spec: 手動で異常値を pref に入れた場合、UI と service 双方で clamp/default に正規化されること
+    tier: L1
+    automation: auto
+    approach: user.js に異常値(負数・巨大数・非数)を入れて起動。service 正規化後の値を chrome eval/UI で確認
+    priority: P1
+  - id: A-08
+    spec: 間隔 select が 5/15/30分・1/6/12/24時間を正しく保存し、手動設定した非プリセット値も select に表示されること
+    tier: L2
+    automation: auto
+    approach: 各プリセットを選択し pref 保存値を確認。非プリセット値を pref 直入れし select 表示を確認
+    priority: P2
+  - id: A-09
+    spec: 保持日数入力で空入力・非数値・小数・境界値を入れたとき、保存値が破壊されず元値または clamp になること
+    tier: L2
+    automation: auto
+    approach: input に各異常値を入力し pref が壊れないことを確認
+    priority: P1
+  - id: A-10
+    spec: backup 一覧が新しい順で、kind/mode/window/workspace/tab count/file size/date が locale に沿って表示されること
+    tier: L2
+    automation: semi
+    approach: 複数 backup を生成し一覧の順序と表示項目を ax-tree 検証。locale 表示の自然さは manual
+    priority: P2
+  - id: A-11
+    spec: 100件程度の backup がある場合でも一覧描画・スクロール・操作が実用的であること
+    tier: L4
+    automation: semi
+    approach: retention 上限を外し capture をループ(or ファイル複製+rename)で100件用意。描画時間を計測
+    priority: P2
+  - id: A-12
+    spec: backup ページの全操作が operation 中に二重実行できないこと
+    tier: L2
+    automation: semi
+    approach: backup-now を連打し進行中ロックで2重実行されないことをファイル数で確認
+    priority: P1
+  - id: A-13
+    spec: restore/delete/delete-all の確認 dialog が keyboard/Escape/focus で正しく操作できること
+    tier: L2
+    automation: semi
+    approach: dialog を開き pressKey(Escape/Tab/Enter)で操作。focus 移動は ax-tree で検証
+    priority: P2
+  - id: A-14
+    spec: エラー時に role=alert で原因別メッセージが出ること(not found, invalid name, too large, in progress, private unsupported など)
+    tier: L2
+    automation: semi
+    approach: 各エラー条件を誘発し role=alert の要素と文言を ax-tree で確認。全パターンの誘発はコード精読から条件を特定
+    priority: P2
+  - id: A-15
+    spec: 27 locale すべてで生 translation key や plural placeholder が表示されないこと
+    tier: L4
+    automation: auto
+    approach: i18n リソースと UI 表示の静的スキャン。locale を切り替えて ax-tree で生キー正規表現バッチ検出も可
+    priority: P2
+
+  # ---- A2. capture の正確性とプライバシー ----
+  - id: A-16
+    spec: workspaces 有効時の backup に workspace 名・並び・default・current・container・icon が保存されること
+    tier: L1
+    automation: auto
+    approach: workspace を複数作成し capture。mozlz4.py で backup JSON を展開し workspaceState を検証
+    priority: P1
+  - id: A-17
+    spec: タブの URL/title/pinned/selected/container/history/index/inline icon が復元可能な範囲で保存されること
+    tier: L1
+    automation: auto
+    approach: fixture タブ群を開き capture JSON の tab エントリを検証
+    priority: P1
+  - id: A-18
+    spec: workspaces 無効時は mode:"tabs" となり、workspaceState も tab.workspaceId も含まれないこと
+    tier: L1
+    automation: auto
+    approach: workspaces 無効で capture JSON を検査
+    priority: P1
+  - id: A-19
+    spec: workspaces 無効でも未割当タブを含む普通のタブ backup が取れること
+    tier: L2
+    automation: auto
+    approach: workspaces 無効・タブ複数で capture 成功と tab 含有を確認
+    priority: P1
+  - id: A-20
+    spec: プライベートウィンドウのタブが backup に混入しないこと
+    tier: L1
+    automation: auto
+    approach: private window に特徴的 URL を開き capture。JSON に URL/host が含まれないことを grep レベルで確認
+    priority: P0
+    privacy: true
+  - id: A-21
+    spec: プライベートコンテナのタブが通常 window 内にあっても backup に混入しないこと
+    tier: L1
+    automation: auto
+    approach: private container タブの URL が capture JSON に無いことを確認
+    priority: P0
+    privacy: true
+  - id: A-22
+    spec: floorp-disablehistory のタブが backup に混入しないこと
+    tier: L1
+    automation: auto
+    approach: disablehistory タブを作り capture 非含有を確認
+    priority: P1
+    privacy: true
+  - id: A-23
+    spec: プライベートコンテナ判定に失敗した場合、backup が fail-closed で中止されること
+    tier: L1
+    automation: semi
+    approach: コードパスを精読し判定失敗の作り方を特定(mock/破損)。fail-closed は backup ファイルが作られないことで確認
+    priority: P0
+    privacy: true
+  - id: A-24
+    spec: formdata、session storage、typed text、scroll state、postdata、principal/CSP/referrer 情報が backup JSON に残らないこと
+    tier: L1
+    automation: auto
+    approach: fixture ページで form 入力・sessionStorage 書込み後 capture。展開 JSON 全文を既知秘密文字列・禁止キーで走査
+    priority: P0
+    privacy: true
+  - id: A-25
+    spec: backup JSON には URL が平文で入る設計。query token 付き URL がどう残るかを確認し、URL 以外の秘密情報が入らないことと、初回 disclosure がこのリスクを十分説明しているかを確認
+    tier: L1
+    automation: semi
+    approach: token 入り URL で capture し残り方を記録。disclosure 説明の十分性は人間判断にエスカレート
+    priority: P0
+    privacy: true
+  - id: A-26
+    spec: remote favicon URL ではなく inline data image だけが tab icon として保存されること
+    tier: L1
+    automation: auto
+    approach: 'capture JSON の icon フィールドが data: のみであることを検証'
+    priority: P1
+  - id: A-27
+    spec: reader view は内側 URL が http/https の場合だけ保存/復元されること
+    tier: L2
+    automation: semi
+    approach: reader view タブを作り capture/restore。内側 URL スキーム別の挙動を確認
+    priority: P2
+  - id: A-28
+    spec: javascript:, data:, chrome:, resource:, file:, view-source:, about:config などが復元対象から除外されること
+    tier: L1
+    automation: auto
+    approach: 各 scheme のタブを開き(開けるもの)capture 非含有を確認。JSON を scheme 正規表現で走査
+    priority: P0
+    security: true
+  - id: A-29
+    spec: http/https/moz-extension/about:blank/about:newtab/about:home/about:reader の許可挙動が仕様どおりであること
+    tier: L1
+    automation: auto
+    approach: 許可リスト各 scheme のタブで capture 含有/扱いを確認
+    priority: P1
+  - id: A-30
+    spec: backup は workspaces/backup に backup-YYYYMMDD-HHMMSS-<id>.jsonlz4 として UTC 名で作られること
+    tier: L1
+    automation: auto
+    approach: capture 後にファイル名 regex と UTC 性(ローカル時刻とずれる)を検証
+    priority: P1
+  - id: A-31
+    spec: ファイルが mozlz4 圧縮され、書き込み後 read-back 検証に失敗したファイルは残らないこと
+    tier: L1
+    automation: auto
+    approach: mozlz4.py で展開できること(魔数 mozLz40)。read-back 失敗はコードパス確認+破損注入テスト
+    priority: P1
+  - id: A-32
+    spec: 同一秒に 2件 backup しても名前衝突せず両方残ること
+    tier: L1
+    automation: auto
+    approach: backup-now を急速2回実行し2件とも存在することを確認
+    priority: P1
+  - id: A-33
+    spec: 書き込み失敗・読み取り専用 directory で .tmp や不完全ファイルが残らないこと
+    tier: L1
+    automation: semi
+    approach: backup dir を chmod 500 にして capture 失敗を誘発。.tmp 残存がないことを確認。終了後に権限戻す
+    priority: P1
+  - id: A-34
+    spec: 起動時に古い orphan .tmp だけが掃除され、無関係ファイルは消えないこと
+    tier: L1
+    automation: auto
+    approach: .tmp と無関係ファイルを配置して再起動。.tmp のみ削除を確認
+    priority: P1
+
+  # ---- A3. restore セマンティクス ----
+  - id: A-35
+    spec: workspaces mode 同士の destructive restore で、既存 workspace/tab が選択 backup の内容に置き換わること
+    tier: L2
+    automation: auto
+    approach: 構成Aで capture → 構成Bに変更 → restore → workspace/tab が構成Aに戻ることを os-api/workspace API で確認
+    priority: P1
+  - id: A-36
+    spec: destructive restore 前に pre-restore backup が作られ、失敗した場合は一切置き換えず中止されること
+    tier: L2
+    automation: auto
+    approach: restore 実行し pre-restore backup の存在を確認。失敗条件は権限等で誘発し非置換を確認
+    priority: P1
+  - id: A-37
+    spec: restore 後に pre-restore backup から元の workspace 名・順序・container・tab 構成へ戻せること
+    tier: L2
+    automation: auto
+    approach: A→B restore → pre-restore から B へ再 restore。構成一致を diff
+    priority: P1
+  - id: A-38
+    spec: restore 中に開いたタブ・capture 上限から漏れたタブ・復元不可タブが閉じられず、適切な workspace に避難すること
+    tier: L2
+    automation: semi
+    approach: capture 後に新規タブを開いて restore。タブ生存と workspace 帰属を確認
+    priority: P1
+  - id: A-39
+    spec: タブが1つも capture できない状態で destructive restore したとき、workspace store が失われないこと(release-blocker 候補1の直接 repro)
+    tier: L2
+    automation: auto
+    approach: 全タブを復元不可 URL にした backup を作り restore。workspace store が保持されることを確認
+    priority: P0
+    blocker: true
+  - id: A-40
+    spec: backup 内の unknown workspace / dangling reference を持つタブが、クラッシュせず fallback workspace に入ること
+    tier: L1
+    automation: semi
+    approach: backup JSON を展開→改変→再圧縮は困難なため、ブラウザ内 eval での注入か、コードパス確認+既存 L0 テストとの突合。mozlz4 再圧縮は未実装なら harness 課題として記録
+    priority: P1
+  - id: A-41
+    spec: workspaces 無効時に workspaces mode backup を restore しても、workspace store を触らず window/tab だけ復元されること
+    tier: L2
+    automation: auto
+    approach: 無効状態で workspaces backup を restore。store 非変更と tab 復元を確認
+    priority: P1
+  - id: A-42
+    spec: workspaces 有効時に tabs mode backup を restore すると、既存タブを閉じず現在/default workspace に追加されること
+    tier: L2
+    automation: auto
+    approach: tabs mode backup を有効状態で restore。既存タブ生存と追加先 workspace を確認
+    priority: P1
+  - id: A-43
+    spec: 複数 window backup で focused window は現在 window に、他 window は新規 window に復元されること
+    tier: L2
+    automation: semi
+    approach: 2 window で capture/restore。window 数と帰属を os-api で確認
+    priority: P1
+  - id: A-44
+    spec: focused flag が無い backup でも window 順が安定し、空の placeholder tab だけ残らないこと
+    tier: L2
+    automation: semi
+    approach: focused なし backup の作り方をコードから特定し再現。restore 後の tab 構成を確認
+    priority: P2
+  - id: A-45
+    spec: 複数 window を1 workspace に flatten する restore で、focused window 由来の選択タブが最終選択になること(blocker候補3)
+    tier: L2
+    automation: semi
+    approach: 2 window 各々に選択タブがある backup を flatten restore。最終選択タブを確認。R-03 と一体
+    priority: P0
+    blocker: true
+  - id: A-46
+    spec: pinned tab の順序・選択状態・container が復元後も正しいこと
+    tier: L2
+    automation: auto
+    approach: pinned タブ複数で round-trip。順序と属性を検証
+    priority: P1
+  - id: A-47
+    spec: タブの戻る/進む履歴が復元され、unsafe entry だけ除去されて index がずれないこと
+    tier: L2
+    automation: semi
+    approach: 履歴を持つタブで round-trip。session history の index と unsafe 除去を確認(chrome eval で SessionStore 検査)
+    priority: P1
+  - id: A-48
+    spec: state を持たないタブも URL から復元され、空白タブだらけにならないこと
+    tier: L2
+    automation: auto
+    approach: pending/unloaded タブで round-trip。URL 復元を確認
+    priority: P1
+  - id: A-49
+    spec: lazy/pending タブの title と icon が restore 直後に妥当であること
+    tier: L2
+    automation: auto
+    approach: lazy タブ復元直後の title/icon を ax-tree/tab 属性で確認
+    priority: P2
+  - id: A-50
+    spec: 削除済み container / 存在しない userContextId を含む backup でクラッシュや container 混線がないこと
+    tier: L2
+    automation: semi
+    approach: container 削除→その container を含む backup を restore。クラッシュなし・fallback を確認
+    priority: P1
+  - id: A-51
+    spec: SSB/PWA window や split view / tab group を含む backup を restore しても、通常 browser の状態が壊れないこと
+    tier: L2
+    automation: semi
+    approach: split view/tab group 含みで round-trip。PWA は L3 併用
+    priority: P1
+  - id: A-52
+    spec: 'moz-extension: ページが拡張ごとに正しく復元され、権限昇格や chrome page への転用がないこと'
+    tier: L2
+    automation: semi
+    approach: 拡張インストール→moz-extension タブを round-trip。復元先 principal を chrome eval で検査
+    priority: P1
+    security: true
+  - id: A-53
+    spec: tampered backup の principal/origin 情報が restore 後の document principal に反映されないこと
+    tier: L1
+    automation: semi
+    approach: 改変 backup を用意し restore。document principal を chrome eval で検査。fail-closed 確認
+    priority: P0
+    security: true
+  - id: A-54
+    spec: すべてのタブが unsafe URL の backup は restore せず、現在タブを保持すること
+    tier: L2
+    automation: auto
+    approach: unsafe のみ backup で restore 試行。拒否と現タブ保持を確認(A-39 と隣接)
+    priority: P0
+  - id: A-55
+    spec: 一部タブだけ復元失敗した場合の transactional rollback で、半分だけ workspace が置き換わらないこと
+    tier: L2
+    automation: semi
+    approach: 部分失敗条件をコードから特定し誘発。workspace 一貫性を確認
+    priority: P1
+  - id: A-56
+    spec: setTabState や addTab 失敗時に、restore 前タブ・workspace・visibility が可能な限り元に戻ること
+    tier: L1
+    automation: semi
+    approach: chrome eval でフック失敗注入(dev/stage)。rollback 確認。困難ならコードレビュー+既存 L0 突合
+    priority: P1
+  - id: A-57
+    spec: 別 window のタブを restore が誤って閉じないこと
+    tier: L2
+    automation: semi
+    approach: 2 window で片方で restore。他 window タブ生存を確認
+    priority: P1
+  - id: A-58
+    spec: 最後の1タブを閉じる処理で window 自体が不意に閉じないこと
+    tier: L2
+    automation: semi
+    approach: 1タブ構成で restore。window 生存を確認
+    priority: P1
+  - id: A-59
+    spec: 同じ backup を2回 restore しても ID 衝突・重複 workspace・破損 tab attribution がないこと
+    tier: L2
+    automation: auto
+    approach: 同一 backup を2連続 restore。workspace ID 一意性を確認
+    priority: P1
+  - id: A-60
+    spec: workspaces 有効化直後/未再起動の状態では restore が明確なエラーで拒否されること
+    tier: L2
+    automation: auto
+    approach: 有効化直後に restore 試行。エラーメッセージと非実行を確認
+    priority: P1
+  - id: A-61
+    spec: restore 実行中にもう一方の window から restore/delete/backup を実行できないこと
+    tier: L2
+    automation: semi
+    approach: 大規模 backup で restore 時間を稼ぎ、別 window から操作。ロックを確認
+    priority: P1
+  - id: A-62
+    spec: restore が 10分を超えた場合でも UI が永久に busy にならず、実処理とロック状態が矛盾しないこと
+    tier: L2
+    automation: semi
+    approach: タイムアウト経路をコードで確認し短縮値で再現可能か判断。実時間10分は非現実的なので timeout 注入
+    priority: P2
+  - id: A-63
+    spec: restore 中に設定 tab/window を閉じても actor request が解決し、timer/promise が残らないこと
+    tier: L1
+    automation: semi
+    approach: restore 中に window close。chrome eval でリーク/未解決 promise 兆候とエラーログを確認
+    priority: P2
+
+  # ---- A4. retention / scheduler / actor セキュリティ / 性能 ----
+  - id: A-64
+    spec: 自動 backup が指定間隔で1回だけ走り、複数 window で重複実行されないこと
+    tier: L1
+    automation: auto
+    approach: 間隔を最小(5分)または pref 直圧縮し、lastRun と backup ファイル生成数を観測。2 window で重複なし確認。R-01 と一体
+    priority: P0
+  - id: A-65
+    spec: 起動時に overdue なら約5秒後に実行され、以後は interval ごとになること
+    tier: L1
+    automation: semi
+    approach: lastRun を過去に書き換え(pref または user.js)て起動。約5秒後の capture を観測
+    priority: P1
+  - id: A-66
+    spec: system sleep 後の wake_notification で遅れ分が適切に再スケジュールされること
+    tier: L1
+    automation: semi
+    approach: chrome eval で wake_notification をオブザーバ発火(dev/stage)。実 sleep は非自動。再スケジュールを確認
+    priority: P2
+  - id: A-67
+    spec: 時計を過去へ戻した場合に次回 backup が無限遅延しないこと
+    tier: L1
+    automation: semi
+    approach: lastRun を未来に設定し再現(時計操作の等価)。次回実行が無限遅延しないことを確認
+    priority: P2
+  - id: A-68
+    spec: 時計を未来へ進めた場合に未来日付 backup が retention を壊さないこと
+    tier: L1
+    automation: semi
+    approach: 未来日付の backup ファイルを配置し retention cleanup 実行。破壊的削除がないことを確認
+    priority: P2
+  - id: A-69
+    spec: retention 期限切れの auto/manual は削除されるが、最新3件は残ること
+    tier: L1
+    automation: auto
+    approach: 古い日付名の backup ファイルを複数配置し retention 実行。最新3件生存を確認
+    priority: P1
+  - id: A-70
+    spec: pre-restore backup は age retention ではなく件数 cap で管理されること
+    tier: L1
+    automation: semi
+    approach: pre-restore を cap 超過まで生成。古い日付でも cap 内なら残ることを確認
+    priority: P1
+  - id: A-71
+    spec: retention 変更時に即時 cleanup が走り、新規 backup が cleanup で消えないこと
+    tier: L1
+    automation: auto
+    approach: 保持日数を縮小し即時 cleanup と新規 backup 生存を確認
+    priority: P1
+  - id: A-72
+    spec: delete / delete all が valid な backup だけ削除し、path traversal や不正名を拒否すること
+    tier: L1
+    automation: auto
+    approach: delete API/bridge に ../../ 等の不正名を送信し拒否確認。正常削除の範囲確認
+    priority: P1
+    security: true
+  - id: A-73
+    spec: corrupt/version1/unknown version/malformed JSON/oversized なファイルを一覧や restore が拒否すること
+    tier: L1
+    automation: auto
+    approach: 各種破損ファイルを配置し list/restore が拒否することを確認
+    priority: P1
+    security: true
+  - id: A-74
+    spec: v1 backup ファイルが明示的に拒否され、静黙に変換・上書きされないこと
+    tier: L1
+    automation: semi
+    approach: v1 形式ファイルを用意し拒否と非変換を確認
+    priority: P1
+  - id: A-75
+    spec: about:hub と packaged settings にだけ backup bridge が公開されること
+    tier: L1
+    automation: auto
+    approach: about:hub で bridge 存在、通常 web page で非存在を content eval で確認
+    priority: P1
+    security: true
+  - id: A-76
+    spec: 通常 web page、他の about page、spoofed about:hubfoo、余計な query/fragment で bridge が公開されないこと
+    tier: L1
+    automation: auto
+    approach: 各種ページで bridge 非存在を eval 確認。spoof はナビゲーションして検査
+    priority: P1
+    security: true
+  - id: A-77
+    spec: localhost dev port は trusted port だけ許可され、他 port/remote host は拒否されること
+    tier: L1
+    automation: semi
+    approach: コードから trusted port リストを特定し、許可/拒否を eval で確認
+    priority: P2
+    security: true
+  - id: A-78
+    spec: private window から backup-now/restore が拒否され、list/delete のみ仕様どおり扱われること
+    tier: L2
+    automation: semi
+    approach: private window で about:hub を開き各操作の拒否/許可を確認
+    priority: P1
+    privacy: true
+  - id: A-79
+    spec: actor timeout 後に parent 側で処理が継続する場合、UI の polling/list 更新と lock 解放が正しいこと
+    tier: L2
+    automation: semi
+    approach: timeout 誘発後の UI 状態整合を確認。誘発方法はコード精読
+    priority: P2
+  - id: A-80
+    spec: 500/1000 タブ規模で backup・restore・一覧・tab strip scroll が実用性能であること
+    tier: L4
+    automation: semi
+    approach: os-api でタブを大量生成(段階的に)。capture/restore 時間を計測し閾値判断は人間に提示
+    priority: P2
+
+  # ---- 重点レビュー追記 (2026-11-27) ----
+  - id: R-01
+    spec: workspace を2つ以上作り、2 window で別々の workspace を表示した状態にする。非フォーカス window 側の scheduler から自動 backup を走らせ、backup JSON の currentWorkspaceId が実行 window ではなく focused window の workspace かを確認する
+    tier: L2
+    automation: semi
+    approach: 2 window 構成を os-api で構築。非フォーカス window の timer からの capture を時間圧縮で誘発。mozlz4 展開で currentWorkspaceId を検証
+    priority: P0
+    blocker: true
+  - id: R-02
+    spec: 上記 backup を destructive restore し、focused window 由来の workspace が選択されるか、別 window 由来の workspace が選択されないかを確認する
+    tier: L2
+    automation: semi
+    approach: R-01 の backup で restore。選択 workspace を検証
+    priority: P0
+    blocker: true
+  - id: R-03
+    spec: 2 window それぞれに選択タブがある backup を destructive restore し、focused window 側の選択タブだけが eager/selected になり、非 focused window 側の選択タブで上書きされないことを確認する
+    tier: L2
+    automation: semi
+    approach: A-45 と一体。復元後の selected タブを chrome eval/os-api で検証
+    priority: P0
+    blocker: true
+  - id: R-04
+    spec: web panel ではない通常 tab / iframe / background panel / user activation なし / paste 拒否後の clipboard read が、web panel fallback を使わず拒否されることを確認する
+    tier: L2
+    automation: semi
+    approach: 各条件下で clipboard.read を eval 実行し reject を確認。web panel 領域との複合項目
+    priority: P1
+    security: true
+  - id: R-05
+    spec: web panel clipboard で text・HTML・image/binary clipboard を read/readText し、Gecko confirmation と focus chain が正しく、別 panel/別 window に misroute しないことを確認する
+    tier: L2
+    automation: semi
+    approach: web panel 開設後 clipboard 操作。confirmation 表示と misroute なしを確認
+    priority: P1
+    security: true
