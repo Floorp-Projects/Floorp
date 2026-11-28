@@ -58,8 +58,12 @@ function isPwaWindowLoad(loadInfo: nsILoadInfo): boolean {
     // deno-lint-ignore no-explicit-any
     const embedder = browsingContext?.embedderElement as any;
     const documentElement = embedder?.ownerGlobal?.document?.documentElement;
+    // createWindowArgs stamps `taskbartab` in the window property bag, and
+    // browser-init copies that property onto the chrome document element
+    // before any navigation. `ssbid` stays in the bag and never reaches the
+    // document, so it cannot be used here.
     return typeof documentElement?.getAttribute === "function" &&
-      documentElement.getAttribute("ssbid") !== null;
+      documentElement.getAttribute("taskbartab") !== null;
   } catch {
     return false;
   }
@@ -144,6 +148,64 @@ function registerPwaNavigationPolicy(): void {
     "content-policy",
     "floorp-pwa-navigation-policy",
     "@floorp/pwa-navigation-policy;1",
+    false,
+    true,
+  );
+
+  // Content policies are not consulted again when a channel is redirected,
+  // so redirect enforcement needs the channel event sink: it is invoked for
+  // every redirect and can veto the target channel.
+  const redirectSink = {
+    classDescription: "Floorp PWA redirect policy",
+    classID: Components.ID("{d91a5e2b-4c7f-4a83-b6d2-8e0f1a3c5b77}"),
+    QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink"]),
+    asyncOnChannelRedirect(
+      _oldChannel: nsIChannel,
+      newChannel: nsIChannel,
+      _flags: number,
+      callback: nsIAsyncVerifyRedirectCallback,
+    ) {
+      let verdict: number = Cr.NS_OK;
+      try {
+        const uri = newChannel.URI;
+        const loadInfo = newChannel.loadInfo;
+        if (
+          uri?.scheme === "http" &&
+          uri.host !== "localhost" &&
+          uri.host !== "127.0.0.1" &&
+          isPwaWindowLoad(loadInfo)
+        ) {
+          console.warn(
+            "[SsbRunnerUtils] Blocked redirect to non-loopback HTTP in PWA window:",
+            uri.spec,
+          );
+          verdict = Cr.NS_ERROR_ABORT;
+        }
+      } catch (error) {
+        console.error(
+          "[SsbRunnerUtils] PWA redirect policy check failed open:",
+          error,
+        );
+      }
+      callback.onRedirectVerifyCallback(verdict);
+    },
+  };
+  registrar.registerFactory(
+    redirectSink.classID,
+    redirectSink.classDescription,
+    "@floorp/pwa-redirect-policy;1",
+    {
+      // deno-lint-ignore no-explicit-any
+      createInstance: (iid: nsIID) =>
+        // deno-lint-ignore no-explicit-any
+        redirectSink.QueryInterface(iid as any) as nsQIResult<nsIID>,
+      // deno-lint-ignore no-explicit-any
+    } as any,
+  );
+  Services.catMan.addCategoryEntry(
+    "netchannel-event-sinks",
+    "floorp-pwa-redirect-policy",
+    "@floorp/pwa-redirect-policy;1",
     false,
     true,
   );
