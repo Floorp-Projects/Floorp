@@ -52,15 +52,18 @@ type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
  */
 let pwaNavigationPolicyRegistered = false;
 
-const pwaBrowsingContextIds = new Set<number>();
+const pwaWindows = new WeakSet<object>();
 
 function isPwaWindowLoad(loadInfo: nsILoadInfo): boolean {
   try {
-    const browsingContext = loadInfo.browsingContext;
-    // `taskbartab` cannot identify PWA windows: web panels stamp the same
-    // attribute on the main browser window. Track browsing contexts of tabs
-    // in windows opened through openSsbWindow instead.
-    return !!browsingContext && pwaBrowsingContextIds.has(browsingContext.id);
+    // Track the chrome window rather than browsing contexts: discarding and
+    // reinserting a tab replaces its browsing context, but the window object
+    // is stable for the window's lifetime. Web panels cannot match because
+    // their browsers live in the main browser window, which is never added.
+    // deno-lint-ignore no-explicit-any
+    const embedder = loadInfo.browsingContext?.embedderElement as any;
+    const ownerGlobal = embedder?.ownerGlobal;
+    return !!ownerGlobal && pwaWindows.has(ownerGlobal);
   } catch {
     return false;
   }
@@ -237,37 +240,26 @@ export class SsbRunnerUtils {
         BrowserWindowTracker.openWindow(options)) ??
         await BrowserWindowTracker.promiseOpenWindow(options);
 
-      // Register navigation enforcement before any redirect response can
-      // arrive: the initial start_url is validated above, and its redirect
-      // chain requires a network round trip while registration is immediate.
-      // `ssbid`/`taskbartab` document attributes cannot identify PWA windows
-      // (the former never reaches the document; web panels share the latter).
+      // The window opened on about:blank, so no navigation has happened yet:
+      // registering enforcement now still precedes the first real navigation.
       registerPwaNavigationPolicy();
-      const enforceTab = (tab: unknown) => {
-        // deno-lint-ignore no-explicit-any
-        const browser = win.gBrowser?.getBrowserForTab(tab as any);
-        if (browser?.browsingContext) {
-          pwaBrowsingContextIds.add(browser.browsingContext.id);
-        }
-      };
-      for (const tab of win.gBrowser?.tabs ?? []) {
-        enforceTab(tab);
-      }
-      // deno-lint-ignore no-explicit-any
-      win.addEventListener("TabOpen", (event: any) => {
-        enforceTab(event.target);
-      });
+      pwaWindows.add(win as object);
 
-      // Enforcement is now in place for every browsing context in this
-      // window, so the real start URL can load: any redirect it follows is
-      // already subject to the navigation policy and the redirect sink.
+      // Enforcement now covers every browsing context this window ever
+      // creates, so the real start URL can load — but only for a fresh
+      // window. NativeAppRuntime.open can instead return and focus an
+      // already-open app window, which must keep its current page.
       try {
-        const startUri = Services.io.newURI(ssb.start_url);
         // deno-lint-ignore no-explicit-any
-        (win as any).gBrowser?.selectedBrowser?.loadURI(startUri, {
-          triggeringPrincipal: Services.scriptSecurityManager
-            .getSystemPrincipal(),
-        });
+        const browser = (win as any).gBrowser?.selectedBrowser;
+        const currentSpec = browser?.currentURI?.spec as string | undefined;
+        if (!currentSpec || currentSpec === "about:blank") {
+          const startUri = Services.io.newURI(ssb.start_url);
+          browser?.loadURI(startUri, {
+            triggeringPrincipal: Services.scriptSecurityManager
+              .getSystemPrincipal(),
+          });
+        }
       } catch (error) {
         console.error(
           "[SsbRunnerUtils] Failed to load PWA start URL:",
