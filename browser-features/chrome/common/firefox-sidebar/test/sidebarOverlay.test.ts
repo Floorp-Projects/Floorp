@@ -721,7 +721,7 @@ function floorpOccupiedLeftEdge(): number {
     if (!panelElement) continue;
     const style = getComputedStyle(panelElement);
     if (
-      style.display === "none" || style.position === "absolute" ||
+      !style || style.display === "none" || style.position === "absolute" ||
       style.position === "fixed"
     ) continue;
     const rect = panelElement.getBoundingClientRect();
