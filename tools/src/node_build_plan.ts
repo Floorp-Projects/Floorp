@@ -1,32 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import * as path from "node:path";
-
-export type NodeBuildMode = "dev" | "test" | "stage" | "production";
-
-export interface NodeBuildCommand {
-  readonly name: string;
-  readonly command: string;
-  readonly args: readonly string[];
-  readonly cwd: string;
-}
-
-export interface NodeBuildPlanOptions {
-  readonly mode: string;
-  readonly buildid2: string;
-  readonly version: string;
-  readonly projectRoot: string;
-  readonly nodeExecutable: string;
-  readonly tsdownExecutable: string;
-  readonly packagedQa?: boolean;
-}
-
-export interface NodeBuildPlan {
-  readonly mode: NodeBuildMode;
-  readonly commands: readonly NodeBuildCommand[];
-  readonly usesPackagedAssets: boolean;
-  readonly packagedQa: boolean;
-}
+import type {
+  NodeBuildCommand,
+  NodeBuildMode,
+  NodeBuildPlan,
+  NodeBuildPlanOptions,
+} from "./node_build_types.ts";
 
 export const PAGE_BUILDS = [
   [
@@ -71,13 +51,7 @@ export const PACKAGED_ASSET_MOUNTS = [
   ["startup", "bridge/startup/_dist"],
   ["skin", "browser-features/skin"],
   ["resource", "bridge/loader-modules/_dist"],
-  ["pages-newtab", "browser-features/pages-newtab/_dist"],
-  ["pages-settings", "browser-features/pages-settings/_dist"],
-  ["pages-welcome", "browser-features/pages-welcome/_dist"],
-  ["pages-notes", "browser-features/pages-notes/_dist"],
-  ["pages-modal-child", "browser-features/pages-modal-child/_dist"],
-  ["pages-profile-manager", "browser-features/pages-profile-manager/_dist"],
-  ["pages-aboutDialog", "browser-features/pages-aboutDialog/_dist"],
+  ...PAGE_BUILDS.map(([name, directory]) => [name, `${directory}/_dist`]),
 ] as const;
 
 export function normalizeNodeBuildMode(mode: string): NodeBuildMode {

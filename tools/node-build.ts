@@ -16,23 +16,19 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import {
   createNodeBuildPlan,
-  type NodeBuildCommand,
   PACKAGED_ASSET_MOUNTS,
 } from "./src/node_build_plan.ts";
 import { packagedQaEnabled } from "./src/packaged_qa_contract.ts";
 import { SOURCE_LINKS } from "./src/source_link_plan.ts";
+import type {
+  NodeBuildCliOptions,
+  NodeBuildCommand,
+} from "./src/node_build_types.ts";
 
 const PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-
-interface CliOptions {
-  mode: string;
-  buildid2?: string;
-  version?: string;
-  help: boolean;
-}
 
 function usage(): string {
   return [
@@ -43,8 +39,8 @@ function usage(): string {
   ].join("\n");
 }
 
-function parseCliArgs(args: readonly string[]): CliOptions {
-  const options: CliOptions = { mode: "dev", help: false };
+function parseCliArgs(args: readonly string[]): NodeBuildCliOptions {
+  const options: NodeBuildCliOptions = { mode: "dev", help: false };
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === "--help" || arg === "-h") {
@@ -83,8 +79,9 @@ function generateUuidV7(now = Date.now()): string {
   }-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
 }
 
+/** Return whether a build ID is a lowercase UUIDv7 accepted by release provenance. */
 function isUuidV7(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
     .test(value);
 }
 
@@ -175,6 +172,7 @@ function createDirectoryLink(link: string, target: string): void {
   }
 }
 
+/** Recreate bridge source links required before any feature compilation starts. */
 function createSourceLinks(): void {
   for (const { link, target } of SOURCE_LINKS) {
     createDirectoryLink(
