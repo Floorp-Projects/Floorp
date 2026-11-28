@@ -214,7 +214,7 @@ items:
     spec: formdata、session storage、typed text、scroll state、postdata、principal/CSP/referrer 情報が backup JSON に残らないこと
     tier: L1
     automation: auto
-    approach: fixture ページで禁止クラスそれぞれに合成データを投入してから capture: form 入力値・sessionStorage・typed text(入力欄)・scroll state(大きなページでスクロール)等、確立できる全クラスを用意し、展開 JSON 全文を既知秘密文字列・禁止キーで走査。driver 上確立できないクラスは pass 扱いにせず verdict ノートで未検証として明示
+    approach: fixture ページで禁止クラスそれぞれに合成データを投入してから capture し、form 入力値・sessionStorage・typed text(入力欄)・scroll state(大きなページでスクロール)等、確立できる全クラスを用意し、展開 JSON 全文を既知秘密文字列・禁止キーで走査。driver 上確立できないクラスは pass 扱いにせず verdict ノートで未検証として明示
     priority: P0
     privacy: true
   - id: A-25
@@ -240,7 +240,7 @@ items:
     spec: javascript:, data:, chrome:, resource:, file:, view-source:, about:config などが復元対象から除外されること
     tier: L1
     automation: auto
-    approach: 各 scheme のタブを開き(開けるもの)capture 非含有を確認。JSON を scheme 正規表現で走査。加えて restore 境界の検証: レビュー済みの不活性 fixture(禁止 scheme を含む backup JSON を手作業で構築)を restore し、除外エントリが復元されないこと・既存 state が壊れないことを確認
+    approach: '各 scheme のタブを開き(開けるもの)capture 非含有を確認。JSON を scheme 正規表現で走査。加えて restore 境界の検証: レビュー済みの不活性 fixture(禁止 scheme を含む backup JSON を手作業で構築)を restore し、除外エントリが復元されないこと・既存 state が壊れないことを確認'
     priority: P0
     security: true
   - id: A-29
