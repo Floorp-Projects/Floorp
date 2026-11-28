@@ -41,17 +41,62 @@ type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 /**
  * Blocks top-level plaintext-HTTP navigation to non-loopback hosts inside PWA
- * windows. A chrome-side progress listener cannot cancel remote loads (the
- * RemoteWebProgressRequest proxy does not implement cancel), so enforcement
- * uses a content policy: shouldLoad runs in the parent process for remote
- * document loads and can genuinely reject the navigation.
+ * windows. A chrome-side progress listener cannot cancel remote loads, so
+ * enforcement uses a content policy whose shouldLoad/shouldProcess run in the
+ * parent process. shouldLoad covers initial navigations and shouldProcess
+ * covers redirect targets, which Gecko does not re-check with shouldLoad.
  *
- * The policy only restricts http: to match the install/launch policy. The set
- * of PWA browsing contexts is populated when SSB windows open; normal browser
- * navigation is unaffected.
+ * PWA windows are identified structurally: createWindowArgs stamps `ssbid` on
+ * the window's document element before any navigation starts, so enforcement
+ * has no registration race and covers replaced or newly opened tabs too.
  */
-const pwaBrowsingContexts = new Set<number>();
 let pwaNavigationPolicyRegistered = false;
+
+function isPwaWindowLoad(loadInfo: nsILoadInfo): boolean {
+  try {
+    const browsingContext = loadInfo.browsingContext;
+    // deno-lint-ignore no-explicit-any
+    const embedder = browsingContext?.embedderElement as any;
+    const documentElement = embedder?.ownerGlobal?.document?.documentElement;
+    return typeof documentElement?.getAttribute === "function" &&
+      documentElement.getAttribute("ssbid") !== null;
+  } catch {
+    return false;
+  }
+}
+
+function checkPwaNavigationPolicy(
+  contentLocation: nsIURI,
+  loadInfo: nsILoadInfo,
+): number {
+  try {
+    if (
+      loadInfo.externalContentPolicyType !== Ci.nsIContentPolicy.TYPE_DOCUMENT
+    ) {
+      return Ci.nsIContentPolicy.ACCEPT as number;
+    }
+    if (!isPwaWindowLoad(loadInfo)) {
+      return Ci.nsIContentPolicy.ACCEPT as number;
+    }
+    if (
+      contentLocation?.scheme === "http" &&
+      contentLocation.host !== "localhost" &&
+      contentLocation.host !== "127.0.0.1"
+    ) {
+      console.warn(
+        "[SsbRunnerUtils] Blocked non-loopback HTTP navigation in PWA window:",
+        contentLocation.spec,
+      );
+      return Ci.nsIContentPolicy.REJECT_REQUEST as number;
+    }
+  } catch (error) {
+    console.error(
+      "[SsbRunnerUtils] PWA navigation policy check failed open:",
+      error,
+    );
+  }
+  return Ci.nsIContentPolicy.ACCEPT as number;
+}
 
 function registerPwaNavigationPolicy(): void {
   if (pwaNavigationPolicyRegistered) {
@@ -62,43 +107,11 @@ function registerPwaNavigationPolicy(): void {
     classDescription: "Floorp PWA navigation policy",
     classID: Components.ID("{c8f47c3a-8b1d-4f41-9e1a-3f5a7b2c9d11}"),
     QueryInterface: ChromeUtils.generateQI(["nsIContentPolicy"]),
-    shouldLoad(
-      contentType: number,
-      contentLocation: nsIURI,
-      loadInfo: nsILoadInfo,
-    ) {
-      try {
-        if (contentType !== Ci.nsIContentPolicy.TYPE_DOCUMENT) {
-          return Ci.nsIContentPolicy.ACCEPT;
-        }
-        const browsingContext = loadInfo.browsingContext;
-        if (
-          !browsingContext ||
-          !pwaBrowsingContexts.has(browsingContext.id)
-        ) {
-          return Ci.nsIContentPolicy.ACCEPT;
-        }
-        if (
-          contentLocation?.scheme === "http" &&
-          contentLocation.host !== "localhost" &&
-          contentLocation.host !== "127.0.0.1"
-        ) {
-          console.warn(
-            "[SsbRunnerUtils] Blocked non-loopback HTTP navigation in PWA window:",
-            contentLocation.spec,
-          );
-          return Ci.nsIContentPolicy.REJECT_REQUEST;
-        }
-      } catch (error) {
-        console.error(
-          "[SsbRunnerUtils] PWA navigation policy check failed open:",
-          error,
-        );
-      }
-      return Ci.nsIContentPolicy.ACCEPT;
+    shouldLoad(contentLocation: nsIURI, loadInfo: nsILoadInfo) {
+      return checkPwaNavigationPolicy(contentLocation, loadInfo);
     },
-    shouldProcess() {
-      return Ci.nsIContentPolicy.ACCEPT;
+    shouldProcess(contentLocation: nsIURI, loadInfo: nsILoadInfo) {
+      return checkPwaNavigationPolicy(contentLocation, loadInfo);
     },
   };
   // Components.manager has QueryInterface at runtime that the TypeScript
@@ -120,7 +133,8 @@ function registerPwaNavigationPolicy(): void {
     policy.classDescription,
     "@floorp/pwa-navigation-policy;1",
     {
-      createInstance: (_outer: unknown, iid: nsIID) =>
+      // This runtime's nsIFactory.createInstance receives only the IID.
+      createInstance: (iid: nsIID) =>
         // deno-lint-ignore no-explicit-any
         policy.QueryInterface(iid as any) as nsQIResult<nsIID>,
       // deno-lint-ignore no-explicit-any
@@ -135,21 +149,6 @@ function registerPwaNavigationPolicy(): void {
   );
 }
 
-function enforcePwaNavigationPolicy(browser: {
-  browsingContext?: { id: number } | null;
-  ownerGlobal?: {
-    addEventListener?: (
-      type: string,
-      listener: (event: unknown) => void,
-    ) => void;
-  };
-}): void {
-  registerPwaNavigationPolicy();
-  if (browser.browsingContext) {
-    pwaBrowsingContexts.add(browser.browsingContext.id);
-  }
-}
-
 export class SsbRunnerUtils {
   static async openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
     if (!isPwaUrlEligible(ssb.start_url)) {
@@ -159,6 +158,9 @@ export class SsbRunnerUtils {
         `[SsbRunnerUtils] Refusing to launch ineligible PWA URL: ${ssb.start_url}`,
       );
     }
+    // Register before the window opens: enforcement must be in place before
+    // the first navigation, which may itself redirect.
+    registerPwaNavigationPolicy();
     // Use LastWindowClosingSurvivalArea to avoid showing empty window
     if (initialLaunch) {
       Services.startup.enterLastWindowClosingSurvivalArea();
@@ -176,27 +178,6 @@ export class SsbRunnerUtils {
       const win = await NativeAppRuntime.open(ssb, () =>
         BrowserWindowTracker.openWindow(options)) ??
         await BrowserWindowTracker.promiseOpenWindow(options);
-
-      // Enforce the launch URL policy on top-level navigations. A registered
-      // https start_url can redirect to non-loopback plain http, which would
-      // present insecure content in a window that may hide its security UI.
-      registerPwaNavigationPolicy();
-      const enforceTab = (tab: unknown) => {
-        // deno-lint-ignore no-explicit-any
-        const browser = win.gBrowser?.getBrowserForTab(tab as any);
-        if (browser?.browsingContext) {
-          pwaBrowsingContexts.add(browser.browsingContext.id);
-        }
-      };
-      for (const tab of win.gBrowser?.tabs ?? []) {
-        enforceTab(tab);
-      }
-      // Container migration can replace the initial tab, and users can open
-      // further tabs; cover every tab added to this window as well.
-      // deno-lint-ignore no-explicit-any
-      win.addEventListener("TabOpen", (event: any) => {
-        enforceTab(event.target);
-      });
 
       // Set displayMode on all tabs
       const displayMode = ssb.display || "standalone";
