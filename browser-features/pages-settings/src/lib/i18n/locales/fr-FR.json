@@ -765,7 +765,6 @@
         "items": "Éléments du menu",
         "editingIndependent": "Utilisez les boutons fléchés ou la commande Déplacer vers … pour réorganiser les éléments. Le glisser-déposer est également disponible dans le contexte actuel. Les commutateurs de visibilité s'appliquent uniquement aux éléments que Floorp peut masquer en toute sécurité dans ce profil de contexte.",
         "editingShared": "Utilisez les boutons fléchés ou la commande Déplacer vers … pour réorganiser les éléments. Le glisser-déposer est également disponible dans le contexte actuel. Les commutateurs de visibilité s'appliquent uniquement aux éléments que Floorp peut masquer en toute sécurité dans la mise en page partagée.",
-        "incompleteContainer": "Firefox n'a signalé qu'une partie de ce menu. Les éléments enregistrés non signalés seront conservés inchangés.",
         "capabilityHelp": "« Conditionnel dans Firefox » signifie que Firefox a masqué l'élément pour le dernier contexte de clic droit observé. Il reste disponible dans Tous les éléments afin que vous puissiez configurer son ordre relatif. Les éléments « Ordre fixe » restent à leur emplacement d'origine et ne peuvent être ni déplacés ni utilisés comme destinations.",
         "viewMode": "Éléments affichés",
         "viewCurrent": "Contexte actuel",
@@ -883,6 +882,25 @@
             "minResident": "Récupération uniquement lorsque l'utilisation de la mémoire excède (MB)",
             "cost": "La lecture de vidéos, les appels et le partage d'écran n'empêchent pas la récupération de mémoire. La récupération de mémoire peut mettre le navigateur en pause, y compris lorsque vous recommencez à l'utiliser. Des intervalles plus courts augmentent la fréquence de ce phénomène.",
             "saveFailed": "Impossible d'enregistrer ce paramètre. La valeur précédente a été restaurée."
+        },
+        "tabAutoUnload": {
+            "title": "Déchargement automatique d'onglet",
+            "description": "Les onglets inactifs sont automatiquement déchargés lorsque l'utilisation de la mémoire par le navigateur dépasse le seuil défini. Les onglets déchargés se rechargent lorsque vous les sélectionnez à nouveau.",
+            "enable": "Activer le déchargement automatique des onglets",
+            "memoryThreshold": "Décharger lorsque l'utilisation de la mémoire dépasse (MB)",
+            "minInactive": "Ne décharger que les onglets inactifs depuis (minutes)",
+            "exclusionsTitle": "URL exclues du déchargement",
+            "exclusionsDescription": "Les onglets correspondant à ces critères ne sont jamais déchargés automatiquement. Ils sont également exclus du mécanisme de déchargement des onglets intégré à Firefox.",
+            "patternPlaceholder": "Saisir un modèle d'URL (par exemple, exemple.com, *.google.com)",
+            "add": "Ajouter",
+            "remove": "Supprimer",
+            "examples": "Exemples de modèles",
+            "exampleDomain": "Correspond à toute URL contenant ce domaine.",
+            "exampleWildcard": "Correspond au domaine et à ses sous-domaines.",
+            "exampleFullUrl": "Correspond aux URL commençant par ce chemin.",
+            "noPatterns": "Aucune URL n'a encore été exclue.",
+            "cost": "Les onglets sélectionnés, épinglés, ceux qui diffusent du son, ceux en mode « image dans l'image », ceux générants des appels WebRTC, et ceux en mode de navigation privée ne sont pas déchargés. Un onglet avec un formulaire non enregistré ou pour lequel une invite « beforeunload » s'est affichée peut refuser d'être déchargé.",
+            "saveFailed": "Impossible d'enregistrer ce paramètre. La valeur précédente a été rétablie."
         }
     },
     "ui": {
@@ -973,7 +991,7 @@
             "workspace": "Espaces de travail",
             "floorp": "Floorp",
             "media": "Média",
-            "open-tabs": "Onglets ouverts (Recherche dynamique)",
+            "open-tabs": "Onglets ouverts",
             "switcher": "Commuter",
             "history-suggestions": "Historique (Recherche dynamique)",
             "bookmark-suggestions": "Marque-pages (Recherche Dynamique)"

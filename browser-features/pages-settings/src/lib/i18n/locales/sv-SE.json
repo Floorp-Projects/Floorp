@@ -765,7 +765,6 @@
         "items": "Menyobjekt",
         "editingIndependent": "Använd pilknapparna eller Flytta till… för att ordna om objekt. Dra finns också i nuvarande kontext. Synlighetsbrytare gäller endast objekt som Floorp säkert kan gömma i denna kontextprofil.",
         "editingShared": "Använd pilknapparna eller ”Flytta till… ” för att ändra ordningen på objekten. Det går även att dra objekten i det aktuella kontextet. Synlighetsinställningarna gäller endast objekt som Floorp säkert kan dölja i den delade layouten.",
-        "incompleteContainer": "Firefox rapporterade endast en del av denna meny. Orapporterade sparade objekt kommer att hållas oförändrade.",
         "capabilityHelp": "”Villkorligt i Firefox” innebär att Firefox har dolt objektet för det senast observerade högerklick-kontexten. Det finns fortfarande tillgängligt under ”Alla objekt”, så att du kan ställa in dess relativa ordning. Objekt med ”Fast ordning” förblir på sina ursprungliga platser och kan varken flyttas eller användas som mål.",
         "viewMode": "Objekt visas",
         "viewCurrent": "Nuvarande kontext",
@@ -883,6 +882,25 @@
             "minResident": "Återanvänd endast när minnesanvändningen överstiger (MB)",
             "cost": "Videouppspelning, samtal och skärmdelning hindrar inte återanvändning. Återanvändningen kan pausa webbläsaren, även när du återupptar användningen. Kortare intervall ökar frekvensen.",
             "saveFailed": "Kunde inte spara denna inställning. Det tidigare värdet har återställts."
+        },
+        "tabAutoUnload": {
+            "title": "Flik automatisk urladdning",
+            "description": "Ladda automatisk ur inaktiva flikar när webbläsarens minnesanvändning överskrider tröskelvärdet. Flikar som har frigjorts från minnet laddas in på nytt när du väljer dem igen.",
+            "enable": "Aktivera automatisk urladdning av flik",
+            "memoryThreshold": "Urladda när minnesanvändningen överstiger (MB)",
+            "minInactive": "Ladda endast ur flikar från minnet som varit inaktiva i (minuter)",
+            "exclusionsTitle": "Webbadresser exkluderade från urladdning",
+            "exclusionsDescription": "Flikar som matchar dessa mönster laddas aldrig bort från minnet automatiskt. De undantas även från Firefox inbyggda funktion för att ladda ur flikar från minnet.",
+            "patternPlaceholder": "Ange URL-mönster (t.ex. example.com, *.google.com)",
+            "add": "Lägg till",
+            "remove": "Ta bort",
+            "examples": "Exempel på mönster",
+            "exampleDomain": "Matchar alla URL: er som innehåller denna domän.",
+            "exampleWildcard": "Matchar domänen och dess underdomäner.",
+            "exampleFullUrl": "Matchar URL: er som börjar med denna sökväg.",
+            "noPatterns": "Inga exkluderade URL: er ännu.",
+            "cost": "Valda flikar, fästa flikar, flikar som spelar ljud, Bild-i-bild, WebRTC samtal och privata surfflikar kommer inte att laddas ur. En flik med ett osparat formulär eller innan urladdning kan vägra att laddas ur.",
+            "saveFailed": "Kunde inte spara denna inställning. Det tidigare värdet återställdes."
         }
     },
     "ui": {

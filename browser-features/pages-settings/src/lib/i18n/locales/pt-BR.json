@@ -765,7 +765,6 @@
         "items": "Itens do menu",
         "editingIndependent": "Use os botões de seta ou a opção “Mover para… ” para reordenar os itens. Também é possível arrastar itens no contexto atual. As opções de visibilidade se aplicam apenas aos itens que o Floorp pode ocultar com segurança neste perfil de contexto.",
         "editingShared": "Use os botões de seta ou a opção “Mover para… ” para reordenar os itens. Também é possível arrastar itens no contexto atual. As opções de visibilidade se aplicam apenas aos itens que o Floorp pode ocultar com segurança no layout compartilhado.",
-        "incompleteContainer": "O Firefox informou apenas parte desse menu. Os itens salvos que não foram informados permanecerão inalterados.",
         "capabilityHelp": "“Condicional no Firefox” significa que o Firefox ocultou o item no contexto do clique com o botão direito observado mais recentemente. Ele permanece disponível em “Todos os itens”, para que você possa definir sua ordem relativa. Os itens com “Ordem fixa” permanecem em suas posições originais e não podem ser movidos nem usados como destinos.",
         "viewMode": "Itens exibidos",
         "viewCurrent": "Contexto atual",
@@ -882,6 +881,25 @@
             "minInterval": "Intervalo mínimo entre as tentativas de recuperação (segundos)",
             "minResident": "Recuperar apenas quando o uso de memória exceder (MB)",
             "cost": "A reprodução de vídeos, as chamadas e o compartilhamento de tela não impedem a liberação de memória. A liberação de memória pode pausar o navegador, inclusive quando você retoma o uso dele. Intervalos mais curtos aumentam a frequência desse processo.",
+            "saveFailed": "Não foi possível salvar esta configuração. O valor anterior foi restaurado."
+        },
+        "tabAutoUnload": {
+            "title": "Descarregamento automático da guia",
+            "description": "Descarregue automaticamente as abas inativas quando o uso de memória do navegador ultrapassar o limite. As abas descarregadas são recarregadas quando você as seleciona novamente.",
+            "enable": "Ativar o descarregamento automático de abas",
+            "memoryThreshold": "Descarregar quando o uso de memória exceder (MB)",
+            "minInactive": "Apenas descarregar abas inativas por (minutos)",
+            "exclusionsTitle": "URLs excluídas do descarregamento",
+            "exclusionsDescription": "As abas que se enquadram nesses padrões nunca são descarregadas automaticamente. Elas também são excluídas do recurso integrado do Firefox para descarregar abas.",
+            "patternPlaceholder": "Insira o padrão de URL (por exemplo: example.com, *.google.com)",
+            "add": "Adicionar",
+            "remove": "Excluir",
+            "examples": "Exemplos de padrões",
+            "exampleDomain": "Corresponder a qualquer URL que contenha esse domínio.",
+            "exampleWildcard": "Corresponde ao domínio e aos seus subdomínios.",
+            "exampleFullUrl": "Corresponde a URLs que começam com esse caminho.",
+            "noPatterns": "Ainda não há URLs excluídas.",
+            "cost": "As abas selecionadas, as abas fixadas, as abas que estão reproduzindo áudio, o modo Picture-in-Picture, as chamadas WebRTC e as abas em navegação privada não são descarregadas. Uma aba com um formulário não salvo ou com um prompt “beforeunload” pode se recusar a ser descarregada.",
             "saveFailed": "Não foi possível salvar esta configuração. O valor anterior foi restaurado."
         }
     },
