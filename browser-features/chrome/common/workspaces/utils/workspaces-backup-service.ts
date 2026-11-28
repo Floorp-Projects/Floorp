@@ -586,6 +586,7 @@ export class WorkspacesBackupService {
   ): Promise<{
     summary: WorkspaceBackupSummary;
     capturedTabs: Set<XULElement>;
+    workspacesTruncated: boolean;
   }> {
     if (kind !== "pre-restore") {
       // Write the run timestamp before capturing to reduce duplicate runs
@@ -593,7 +594,8 @@ export class WorkspacesBackupService {
       writeLastRunAt(Date.now());
     }
 
-    const { file, capturedTabs } = await this.captureAllWorkspaces(kind);
+    const { file, capturedTabs, workspacesTruncated } = await this
+      .captureAllWorkspaces(kind);
     if (!isWorkspaceBackupFile(file)) {
       // Never persist a file the reader would reject. A pre-restore copy that
       // cannot be listed or restored is worse than no copy at all, because the
@@ -625,6 +627,7 @@ export class WorkspacesBackupService {
     return {
       summary: buildBackupSummary(fileName, file, fileSize),
       capturedTabs,
+      workspacesTruncated,
     };
   }
 
@@ -745,10 +748,12 @@ export class WorkspacesBackupService {
     if (destructive) {
       let capturedTabs: Set<XULElement>;
       let safetyCopyMode: string;
+      let safetyCopyTruncated = false;
       try {
         const captured = await this.captureAndWrite("pre-restore");
         capturedTabs = captured.capturedTabs;
         safetyCopyMode = captured.summary.mode;
+        safetyCopyTruncated = captured.workspacesTruncated;
       } catch (error) {
         if (error instanceof Error && error.message === "nothing-to-back-up") {
           // Tabs can be preserved without a copy, but workspace metadata
@@ -771,6 +776,14 @@ export class WorkspacesBackupService {
       if (safetyCopyMode !== "workspaces") {
         console.error(
           "WorkspacesBackupService: pre-restore backup has no workspace state",
+        );
+        return { success: false, error: "pre-restore-failed" };
+      }
+      if (safetyCopyTruncated) {
+        // A copy truncated by the workspace count limit cannot roll back the
+        // metadata of the omitted workspaces, so it is not a valid safety net.
+        console.error(
+          "WorkspacesBackupService: pre-restore backup is truncated",
         );
         return { success: false, error: "pre-restore-failed" };
       }
@@ -1330,7 +1343,7 @@ export class WorkspacesBackupService {
    */
   private captureWorkspaceState(
     focusedWindow?: BrowserWindow | null,
-  ): WorkspaceBackupState | null {
+  ): { state: WorkspaceBackupState | null; truncated: boolean } {
     const rawData: unknown = workspacesDataStore.data;
     const dataIds: TWorkspaceID[] = rawData instanceof Map
       ? [...(rawData as Map<TWorkspaceID, TWorkspace>).keys()]
@@ -1358,6 +1371,7 @@ export class WorkspacesBackupService {
     }
 
     const workspaces: WorkspaceBackupWorkspace[] = [];
+    let truncated = false;
     for (const workspaceId of candidates) {
       if (workspaces.length >= WORKSPACE_BACKUP_LIMITS.maxWorkspaces) {
         console.warn(
@@ -1367,6 +1381,7 @@ export class WorkspacesBackupService {
             kept: WORKSPACE_BACKUP_LIMITS.maxWorkspaces,
           },
         );
+        truncated = true;
         break;
       }
       const workspace = this.host.getRawWorkspace(workspaceId);
@@ -1389,19 +1404,22 @@ export class WorkspacesBackupService {
       });
     }
     if (workspaces.length === 0) {
-      return null;
+      return { state: null, truncated };
     }
     const order = workspaces.map((workspace) => workspace.workspaceId);
     const kept = new Set(order);
     const defaultCandidate = workspacesDataStore.defaultID as TWorkspaceID;
     const current = this.resolveCurrentWorkspaceId(focusedWindow);
     return {
-      workspaces,
-      order,
-      defaultID: kept.has(defaultCandidate) ? defaultCandidate : null,
-      currentWorkspaceId: current !== null && kept.has(current)
-        ? current
-        : null,
+      state: {
+        workspaces,
+        order,
+        defaultID: kept.has(defaultCandidate) ? defaultCandidate : null,
+        currentWorkspaceId: current !== null && kept.has(current)
+          ? current
+          : null,
+      },
+      truncated,
     };
   }
 
@@ -1523,7 +1541,11 @@ export class WorkspacesBackupService {
    */
   private async captureAllWorkspaces(
     kind: WorkspaceBackupKind,
-  ): Promise<{ file: WorkspaceBackupFile; capturedTabs: Set<XULElement> }> {
+  ): Promise<{
+    file: WorkspaceBackupFile;
+    capturedTabs: Set<XULElement>;
+    workspacesTruncated: boolean;
+  }> {
     const windows = this.getBrowserWindows();
     if (windows.length === 0) {
       throw new Error("no-browser-window");
@@ -1605,11 +1627,13 @@ export class WorkspacesBackupService {
       });
     }
 
-    const workspaceState = mode === "workspaces"
+    const workspaceCapture = mode === "workspaces"
       ? this.captureWorkspaceState(
         focusedIndex >= 0 ? windows[focusedIndex] : null,
       )
       : null;
+    const workspaceState = workspaceCapture?.state ?? null;
+    const workspacesTruncated = workspaceCapture?.truncated ?? false;
     if (mode === "workspaces" && !workspaceState) {
       throw new Error("workspace-state-unavailable");
     }
@@ -1635,6 +1659,7 @@ export class WorkspacesBackupService {
         workspaceState ?? undefined,
       ),
       capturedTabs,
+      workspacesTruncated,
     };
   }
 
