@@ -591,6 +591,7 @@ export class WorkspacesBackupService {
     summary: WorkspaceBackupSummary;
     capturedTabs: Set<XULElement>;
     workspacesTruncated: boolean;
+    storeFingerprint: string;
   }> {
     if (kind !== "pre-restore") {
       // Write the run timestamp before capturing to reduce duplicate runs
@@ -598,8 +599,8 @@ export class WorkspacesBackupService {
       writeLastRunAt(Date.now());
     }
 
-    const { file, capturedTabs, workspacesTruncated } = await this
-      .captureAllWorkspaces(kind);
+    const { file, capturedTabs, workspacesTruncated, storeFingerprint } =
+      await this.captureAllWorkspaces(kind);
     // Validate before writing or applying retention: a rejected pre-restore
     // copy must never enter the backup list nor evict an older usable one.
     if (validateCapture && !validateCapture({ file, workspacesTruncated })) {
@@ -637,6 +638,7 @@ export class WorkspacesBackupService {
       summary: buildBackupSummary(fileName, file, fileSize),
       capturedTabs,
       workspacesTruncated,
+      storeFingerprint,
     };
   }
 
@@ -756,6 +758,7 @@ export class WorkspacesBackupService {
     // A safety copy is only needed when the restore replaces existing state.
     if (destructive) {
       let capturedTabs: Set<XULElement>;
+      let capturedFingerprint = "";
       try {
         const captured = await this.captureAndWrite(
           "pre-restore",
@@ -767,6 +770,7 @@ export class WorkspacesBackupService {
             file.mode === "workspaces" && !workspacesTruncated,
         );
         capturedTabs = captured.capturedTabs;
+        capturedFingerprint = captured.storeFingerprint;
       } catch (error) {
         if (error instanceof Error && error.message === "nothing-to-back-up") {
           // Tabs can be preserved without a copy, but workspace metadata
@@ -800,6 +804,18 @@ export class WorkspacesBackupService {
 
     try {
       if (destructive) {
+        // The copy was validated before writing, but the live store can still
+        // change while the write and retention are awaited. A store that no
+        // longer matches the capture cannot be rolled back by it.
+        if (
+          capturedFingerprint !== "" &&
+          this.fingerprintWorkspaceStore() !== capturedFingerprint
+        ) {
+          console.error(
+            "WorkspacesBackupService: workspace store changed during pre-restore capture",
+          );
+          return { success: false, error: "pre-restore-failed" };
+        }
         await this.host.restoreWorkspaceState(file, restoreOptions);
         // restoreTabsIntoWindow skips exactly the tabs the URL allowlist
         // rejects, so the count can be derived from the file.
@@ -1336,9 +1352,37 @@ export class WorkspacesBackupService {
    * and de-duplicated), then any remaining workspaces in data order. Counts and
    * string lengths are clamped to the validator's limits.
    */
+  /**
+   * Serializes the workspace store for change detection. Destructive restore
+   * compares this before and after writing the safety copy: a user edit made
+   * during the write must abort the restore, because the copy cannot roll it
+   * back.
+   */
+  private fingerprintWorkspaceStore(): string {
+    try {
+      const rawData: unknown = workspacesDataStore.data;
+      const entries = rawData instanceof Map
+        ? [...(rawData as Map<string, unknown>).entries()]
+          .map(([id, workspace]) => [id, JSON.stringify(workspace)])
+          .sort(([a], [b]) => a.localeCompare(b))
+        : [];
+      return JSON.stringify({
+        entries,
+        order: workspacesDataStore.order,
+        defaultID: workspacesDataStore.defaultID,
+      });
+    } catch {
+      return "";
+    }
+  }
+
   private captureWorkspaceState(
     focusedWindow?: BrowserWindow | null,
-  ): { state: WorkspaceBackupState | null; truncated: boolean } {
+  ): {
+    state: WorkspaceBackupState | null;
+    truncated: boolean;
+    fingerprint: string;
+  } {
     const rawData: unknown = workspacesDataStore.data;
     const dataIds: TWorkspaceID[] = rawData instanceof Map
       ? [...(rawData as Map<TWorkspaceID, TWorkspace>).keys()]
@@ -1384,12 +1428,23 @@ export class WorkspacesBackupService {
         continue;
       }
       const icon = workspace.icon ?? null;
+      const truncatedName = truncate(
+        workspace.name,
+        WORKSPACE_BACKUP_LIMITS.maxNameLength,
+      ) ?? "";
+      // A copy that cannot recover the original name or icon is not a valid
+      // rollback for destructive restore, so count it as truncated.
+      if (truncatedName !== (workspace.name ?? "")) {
+        truncated = true;
+      }
+      if (
+        icon !== null && icon.length > WORKSPACE_BACKUP_LIMITS.maxIconLength
+      ) {
+        truncated = true;
+      }
       workspaces.push({
         workspaceId,
-        name: truncate(
-          workspace.name,
-          WORKSPACE_BACKUP_LIMITS.maxNameLength,
-        ) ?? "",
+        name: truncatedName,
         userContextId: workspace.userContextId ?? 0,
         // A cut-off icon (often a data URL) is useless; drop it instead.
         icon: icon !== null &&
@@ -1399,7 +1454,7 @@ export class WorkspacesBackupService {
       });
     }
     if (workspaces.length === 0) {
-      return { state: null, truncated };
+      return { state: null, truncated, fingerprint: "" };
     }
     const order = workspaces.map((workspace) => workspace.workspaceId);
     const kept = new Set(order);
@@ -1415,6 +1470,7 @@ export class WorkspacesBackupService {
           : null,
       },
       truncated,
+      fingerprint: this.fingerprintWorkspaceStore(),
     };
   }
 
@@ -1540,6 +1596,7 @@ export class WorkspacesBackupService {
     file: WorkspaceBackupFile;
     capturedTabs: Set<XULElement>;
     workspacesTruncated: boolean;
+    storeFingerprint: string;
   }> {
     const windows = this.getBrowserWindows();
     if (windows.length === 0) {
@@ -1629,6 +1686,7 @@ export class WorkspacesBackupService {
       : null;
     const workspaceState = workspaceCapture?.state ?? null;
     const workspacesTruncated = workspaceCapture?.truncated ?? false;
+    const storeFingerprint = workspaceCapture?.fingerprint ?? "";
     if (mode === "workspaces" && !workspaceState) {
       throw new Error("workspace-state-unavailable");
     }
@@ -1655,6 +1713,7 @@ export class WorkspacesBackupService {
       ),
       capturedTabs,
       workspacesTruncated,
+      storeFingerprint,
     };
   }
 

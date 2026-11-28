@@ -39,6 +39,66 @@ function getWindowFeatures(displayMode?: string): string {
 
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
+/**
+ * Blocks top-level plaintext-HTTP navigation to non-loopback hosts inside a
+ * PWA window. Loopback stays allowed to match the install/launch policy;
+ * other schemes (about:, chrome:, resource:, error pages) are not restricted.
+ */
+function enforcePwaNavigationPolicy(
+  browser: {
+    webProgress: {
+      addProgressListener: (listener: unknown, mask: number) => void;
+    };
+  },
+): void {
+  const listener = {
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]),
+    onStateChange(
+      _webProgress: unknown,
+      request: unknown,
+      stateFlags: number,
+    ) {
+      const documentStart = Ci.nsIWebProgressListener.STATE_START |
+        Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+      if ((stateFlags & documentStart) !== documentStart) {
+        return;
+      }
+      try {
+        const channel = (request as nsIChannel).QueryInterface(Ci.nsIChannel);
+        const uri = channel.URI;
+        if (
+          uri?.scheme === "http" &&
+          uri.host !== "localhost" &&
+          uri.host !== "127.0.0.1"
+        ) {
+          console.warn(
+            "[SsbRunnerUtils] Blocked non-loopback HTTP navigation in PWA window:",
+            uri.spec,
+          );
+          channel.cancel(Cr.NS_ERROR_ABORT);
+        }
+      } catch (error) {
+        console.error(
+          "[SsbRunnerUtils] Failed to enforce PWA navigation policy:",
+          error,
+        );
+      }
+    },
+    onProgressChange() {},
+    onLocationChange() {},
+    onStatusChange() {},
+    onSecurityChange() {},
+    onContentBlockingEvent() {},
+  };
+  browser.webProgress.addProgressListener(
+    listener,
+    Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
+  );
+}
+
 export class SsbRunnerUtils {
   static async openSsbWindow(ssb: Manifest, initialLaunch: boolean = false) {
     if (!isPwaUrlEligible(ssb.start_url)) {
@@ -65,6 +125,16 @@ export class SsbRunnerUtils {
       const win = await NativeAppRuntime.open(ssb, () =>
         BrowserWindowTracker.openWindow(options)) ??
         await BrowserWindowTracker.promiseOpenWindow(options);
+
+      // Enforce the launch URL policy on top-level navigations. A registered
+      // https start_url can redirect to non-loopback plain http, which would
+      // present insecure content in a window that may hide its security UI.
+      for (const tab of win.gBrowser?.tabs ?? []) {
+        const browser = win.gBrowser.getBrowserForTab(tab);
+        if (browser?.webProgress) {
+          enforcePwaNavigationPolicy(browser);
+        }
+      }
 
       // Set displayMode on all tabs
       const displayMode = ssb.display || "standalone";
