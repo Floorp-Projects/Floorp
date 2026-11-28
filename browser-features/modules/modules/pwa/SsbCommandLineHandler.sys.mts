@@ -197,7 +197,6 @@ function registerPwaNavigationPolicy(): void {
     redirectSink.classDescription,
     "@floorp/pwa-redirect-policy;1",
     {
-      // deno-lint-ignore no-explicit-any
       createInstance: (iid: nsIID) =>
         // deno-lint-ignore no-explicit-any
         redirectSink.QueryInterface(iid as any) as nsQIResult<nsIID>,
