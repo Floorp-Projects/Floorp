@@ -258,6 +258,23 @@ export class SsbRunnerUtils {
         enforceTab(event.target);
       });
 
+      // Enforcement is now in place for every browsing context in this
+      // window, so the real start URL can load: any redirect it follows is
+      // already subject to the navigation policy and the redirect sink.
+      try {
+        const startUri = Services.io.newURI(ssb.start_url);
+        // deno-lint-ignore no-explicit-any
+        (win as any).gBrowser?.selectedBrowser?.loadURI(startUri, {
+          triggeringPrincipal: Services.scriptSecurityManager
+            .getSystemPrincipal(),
+        });
+      } catch (error) {
+        console.error(
+          "[SsbRunnerUtils] Failed to load PWA start URL:",
+          error,
+        );
+      }
+
       // Set displayMode on all tabs
       const displayMode = ssb.display || "standalone";
       // deno-lint-ignore no-explicit-any
@@ -375,11 +392,13 @@ export class SsbRunnerUtils {
       );
     }
 
-    // Create URL argument
+    // Open on about:blank: navigation enforcement must observe the window's
+    // browsing context before the first real navigation, so the actual start
+    // URL is loaded explicitly after registration in openSsbWindow.
     const url = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString,
     );
-    url.data = ssb.start_url;
+    url.data = "about:blank";
 
     // Build args array
     const args = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
