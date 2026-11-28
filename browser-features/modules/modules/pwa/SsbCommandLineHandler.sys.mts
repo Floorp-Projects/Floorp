@@ -40,63 +40,114 @@ function getWindowFeatures(displayMode?: string): string {
 type TQueryInterface = <T extends nsIID>(aIID: T) => nsQIResult<T>;
 
 /**
- * Blocks top-level plaintext-HTTP navigation to non-loopback hosts inside a
- * PWA window. Loopback stays allowed to match the install/launch policy;
- * other schemes (about:, chrome:, resource:, error pages) are not restricted.
+ * Blocks top-level plaintext-HTTP navigation to non-loopback hosts inside PWA
+ * windows. A chrome-side progress listener cannot cancel remote loads (the
+ * RemoteWebProgressRequest proxy does not implement cancel), so enforcement
+ * uses a content policy: shouldLoad runs in the parent process for remote
+ * document loads and can genuinely reject the navigation.
+ *
+ * The policy only restricts http: to match the install/launch policy. The set
+ * of PWA browsing contexts is populated when SSB windows open; normal browser
+ * navigation is unaffected.
  */
-function enforcePwaNavigationPolicy(
-  browser: {
-    webProgress: {
-      addProgressListener: (listener: unknown, mask: number) => void;
-    };
-  },
-): void {
-  const listener = {
-    QueryInterface: ChromeUtils.generateQI([
-      "nsIWebProgressListener",
-      "nsISupportsWeakReference",
-    ]),
-    onStateChange(
-      _webProgress: unknown,
-      request: unknown,
-      stateFlags: number,
+const pwaBrowsingContexts = new Set<number>();
+let pwaNavigationPolicyRegistered = false;
+
+function registerPwaNavigationPolicy(): void {
+  if (pwaNavigationPolicyRegistered) {
+    return;
+  }
+  pwaNavigationPolicyRegistered = true;
+  const policy = {
+    classDescription: "Floorp PWA navigation policy",
+    classID: Components.ID("{c8f47c3a-8b1d-4f41-9e1a-3f5a7b2c9d11}"),
+    QueryInterface: ChromeUtils.generateQI(["nsIContentPolicy"]),
+    shouldLoad(
+      contentType: number,
+      contentLocation: nsIURI,
+      loadInfo: nsILoadInfo,
     ) {
-      const documentStart = Ci.nsIWebProgressListener.STATE_START |
-        Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
-      if ((stateFlags & documentStart) !== documentStart) {
-        return;
-      }
       try {
-        const channel = (request as nsIChannel).QueryInterface(Ci.nsIChannel);
-        const uri = channel.URI;
+        if (contentType !== Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+          return Ci.nsIContentPolicy.ACCEPT;
+        }
+        const browsingContext = loadInfo.browsingContext;
         if (
-          uri?.scheme === "http" &&
-          uri.host !== "localhost" &&
-          uri.host !== "127.0.0.1"
+          !browsingContext ||
+          !pwaBrowsingContexts.has(browsingContext.id)
+        ) {
+          return Ci.nsIContentPolicy.ACCEPT;
+        }
+        if (
+          contentLocation?.scheme === "http" &&
+          contentLocation.host !== "localhost" &&
+          contentLocation.host !== "127.0.0.1"
         ) {
           console.warn(
             "[SsbRunnerUtils] Blocked non-loopback HTTP navigation in PWA window:",
-            uri.spec,
+            contentLocation.spec,
           );
-          channel.cancel(Cr.NS_ERROR_ABORT);
+          return Ci.nsIContentPolicy.REJECT_REQUEST;
         }
       } catch (error) {
         console.error(
-          "[SsbRunnerUtils] Failed to enforce PWA navigation policy:",
+          "[SsbRunnerUtils] PWA navigation policy check failed open:",
           error,
         );
       }
+      return Ci.nsIContentPolicy.ACCEPT;
     },
-    onProgressChange() {},
-    onLocationChange() {},
-    onStatusChange() {},
-    onSecurityChange() {},
-    onContentBlockingEvent() {},
+    shouldProcess() {
+      return Ci.nsIContentPolicy.ACCEPT;
+    },
   };
-  browser.webProgress.addProgressListener(
-    listener,
-    Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT,
+  // Components.manager has QueryInterface at runtime that the TypeScript
+  // definitions do not reflect.
+  const componentManager = Components.manager as unknown as {
+    QueryInterface?: (iid: unknown) => nsIComponentRegistrar;
+  };
+  const registrar = componentManager.QueryInterface?.(
+    Ci.nsIComponentRegistrar,
   );
+  if (!registrar) {
+    console.error(
+      "[SsbRunnerUtils] Cannot register PWA navigation policy: no registrar",
+    );
+    return;
+  }
+  registrar.registerFactory(
+    policy.classID,
+    policy.classDescription,
+    "@floorp/pwa-navigation-policy;1",
+    {
+      createInstance: (_outer: unknown, iid: nsIID) =>
+        // deno-lint-ignore no-explicit-any
+        policy.QueryInterface(iid as any) as nsQIResult<nsIID>,
+      // deno-lint-ignore no-explicit-any
+    } as any,
+  );
+  Services.catMan.addCategoryEntry(
+    "content-policy",
+    "floorp-pwa-navigation-policy",
+    "@floorp/pwa-navigation-policy;1",
+    false,
+    true,
+  );
+}
+
+function enforcePwaNavigationPolicy(browser: {
+  browsingContext?: { id: number } | null;
+  ownerGlobal?: {
+    addEventListener?: (
+      type: string,
+      listener: (event: unknown) => void,
+    ) => void;
+  };
+}): void {
+  registerPwaNavigationPolicy();
+  if (browser.browsingContext) {
+    pwaBrowsingContexts.add(browser.browsingContext.id);
+  }
 }
 
 export class SsbRunnerUtils {
@@ -129,12 +180,23 @@ export class SsbRunnerUtils {
       // Enforce the launch URL policy on top-level navigations. A registered
       // https start_url can redirect to non-loopback plain http, which would
       // present insecure content in a window that may hide its security UI.
-      for (const tab of win.gBrowser?.tabs ?? []) {
-        const browser = win.gBrowser.getBrowserForTab(tab);
-        if (browser?.webProgress) {
-          enforcePwaNavigationPolicy(browser);
+      registerPwaNavigationPolicy();
+      const enforceTab = (tab: unknown) => {
+        // deno-lint-ignore no-explicit-any
+        const browser = win.gBrowser?.getBrowserForTab(tab as any);
+        if (browser?.browsingContext) {
+          pwaBrowsingContexts.add(browser.browsingContext.id);
         }
+      };
+      for (const tab of win.gBrowser?.tabs ?? []) {
+        enforceTab(tab);
       }
+      // Container migration can replace the initial tab, and users can open
+      // further tabs; cover every tab added to this window as well.
+      // deno-lint-ignore no-explicit-any
+      win.addEventListener("TabOpen", (event: any) => {
+        enforceTab(event.target);
+      });
 
       // Set displayMode on all tabs
       const displayMode = ssb.display || "standalone";

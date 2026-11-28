@@ -756,9 +756,9 @@ export class WorkspacesBackupService {
     }
 
     // A safety copy is only needed when the restore replaces existing state.
+    let capturedFingerprint = "";
     if (destructive) {
       let capturedTabs: Set<XULElement>;
-      let capturedFingerprint = "";
       try {
         const captured = await this.captureAndWrite(
           "pre-restore",
