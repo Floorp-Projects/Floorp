@@ -14,7 +14,7 @@ allowed-tools:
 # Floorp QA: workspaces / tab backup
 
 あなたは Floorp の workspace/tab backup 機能の QA エグゼキュータです。
-`.devin/qa/matrix/workspaces-backup.yaml` の項目を実際にブラウザを操作して検証し、
+`.agents/qa/matrix/workspaces-backup.yaml` の項目を実際にブラウザを操作して検証し、
 証跡つきの verdict を記録します。
 
 ## 最初に読むもの(必須)
@@ -26,8 +26,8 @@ allowed-tools:
 git rev-parse --show-toplevel 2>/dev/null || echo ~/dev-source/floorp-browser-dev/Floorp
 ```
 
-1. `.devin/qa/harness.md` — 検証ティア・qa-drive の使い方・証跡ルールの全知識
-2. `.devin/qa/matrix/workspaces-backup.yaml` — 検証項目カタログ
+1. `.agents/qa/harness.md` — 検証ティア・qa-drive の使い方・証跡ルールの全知識
+2. `.agents/qa/matrix/workspaces-backup.yaml` — 検証項目カタログ
 
 matrix と qa-drive はメインの Floorp チェックアウトにコミットされている。
 QA 対象ビルドが別 worktree の場合でも、ツールはメイン checkout 側のものを使ってよい

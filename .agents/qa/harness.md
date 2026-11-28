@@ -20,10 +20,10 @@ L2 の UI 操作でぼんやり確認しない。逆に UI 統合が本質の項
 
 ## 1. qa-drive — ハーネス CLI
 
-場所: `.devin/qa/tools/qa-drive.ts`。すべての出力は stdout の JSON。エラーは stderr + 非ゼロ終了。
+場所: `.agents/qa/tools/qa-drive.ts`。すべての出力は stdout の JSON。エラーは stderr + 非ゼロ終了。
 
 ```bash
-QA="deno run -A .devin/qa/tools/qa-drive.ts"   # 以下の例はこのエイリアス前提
+QA="deno run -A .agents/qa/tools/qa-drive.ts"   # 以下の例はこのエイリアス前提
 ```
 
 ### launch — 検証用インスタンスの起動
@@ -178,8 +178,8 @@ backup bridge(NRWorkspacesBackupNow 等)を production で直接呼ぶことは�
 ### mozlz4 展開
 
 ```bash
-python3 .devin/qa/tools/mozlz4.py <backup.jsonlz4> --keys    # 構造サマリ
-python3 .devin/qa/tools/mozlz4.py <backup.jsonlz4>           # JSON 全文
+python3 .agents/qa/tools/mozlz4.py <backup.jsonlz4> --keys    # 構造サマリ
+python3 .agents/qa/tools/mozlz4.py <backup.jsonlz4>           # JSON 全文
 ```
 
 backup JSON の検証観点例: プライベートタブ混入(A-20〜22)、formdata/session storage/
@@ -284,7 +284,7 @@ verdicts.jsonl の1行:
 ### Discord レポート
 
 ```bash
-python3 .devin/qa/tools/discord-post.py \
+python3 .agents/qa/tools/discord-post.py \
   --message "<要約 markdown>" \
   --file _dist/qa-results/<run>/report.md \
   --file _dist/qa-results/<run>/verdicts.jsonl \
@@ -292,7 +292,7 @@ python3 .devin/qa/tools/discord-post.py \
 ```
 
 - 認証情報は環境変数 `DISCORD_BOT_TOKEN`/`DISCORD_CHANNEL_ID` または
-  `.devin/qa/local.env` (gitignore・未コミット) に置く。**レポジトリに secret を書かない**
+  `.agents/qa/local.env` (gitignore・未コミット) に置く。**レポジトリに secret を書かない**
 - 未設定時は終了コード 3。QA 結果はローカルに残るので後から投稿できる
 - 要約は fail/blocked を先頭に、pass 数は集計のみ。問題点がすぐ分かる形にする
 

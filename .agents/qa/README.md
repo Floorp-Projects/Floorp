@@ -5,7 +5,7 @@ Floorp の全機能を包括的に QA するための skill + matrix + harness �
 ## 構成
 
 ```
-.devin/
+.agents/
 ├── qa/
 │   ├── README.md            このファイル
 │   ├── harness.md           検証ティア・qa-drive・証跡ルールの全知識(必読)
@@ -30,18 +30,18 @@ Floorp の全機能を包括的に QA するための skill + matrix + harness �
 ```
 
 結果は `_dist/qa-results/<timestamp>-<area>/` に verdicts.jsonl + evidence + report.md
-として残り、要約が Discord に投稿される(認証情報は `.devin/qa/local.env`)。
+として残り、要約が Discord に投稿される(認証情報は `.agents/qa/local.env`)。
 
 ## 新しい領域を追加するには(横展開の手順)
 
-1. **matrix を書く**: `.devin/qa/matrix/<area>.yaml`。
+1. **matrix を書く**: `.agents/qa/matrix/<area>.yaml`。
    `workspaces-backup.yaml` をテンプレートに、項目ごとに
    `id / spec / tier / automation / approach / priority` を定義する。
    spec は QA 候補ドキュメント(例: floorp-12.21.3-agentic-qa-candidates.md の B〜K 領域)や
    機能の実装仕様から転記し、approach は harness のティアでどう検証するかを具体化する
-2. **skill を書く**: `.devin/skills/floorp-qa-<area>/SKILL.md`。
+2. **skill を書く**: `.agents/skills/floorp-qa-<area>/SKILL.md`。
    `floorp-qa-workspaces-backup` をコピーし、matrix パスと領域固有の前提確認を差し替える
-3. **orchestrator の対応表に追加**: `.devin/skills/floorp-qa/SKILL.md` の領域テーブル
+3. **orchestrator の対応表に追加**: `.agents/skills/floorp-qa/SKILL.md` の領域テーブル
 4. 小さい項目セット(P0 相当)で試験実行し、approach の実現性を磨く
 
 ## 領域の候補(QA 候補ドキュメントの分類より)

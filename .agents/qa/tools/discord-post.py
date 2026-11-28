@@ -3,7 +3,7 @@
 
 Reads credentials from (first hit wins):
   1. environment variables DISCORD_BOT_TOKEN / DISCORD_CHANNEL_ID
-  2. an env file: --env-file <path>, default .devin/qa/local.env
+  2. an env file: --env-file <path>, default .agents/qa/local.env
 
 Usage:
   python3 discord-post.py --message "text" [--file report.md] [--file evidence.jsonl]
@@ -143,7 +143,7 @@ def main():
     if not token or not channel:
         print(
             "ERROR: Discord credentials not configured. Set DISCORD_BOT_TOKEN and "
-            "DISCORD_CHANNEL_ID in the environment or in .devin/qa/local.env",
+            "DISCORD_CHANNEL_ID in the environment or in .agents/qa/local.env",
             file=sys.stderr,
         )
         return 3

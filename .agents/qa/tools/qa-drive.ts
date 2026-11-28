@@ -9,7 +9,7 @@
 //   - Marionette chrome/content eval + screenshots (dev/test builds)
 //
 // Usage:
-//   deno run -A .devin/qa/tools/qa-drive.ts <command> [options]
+//   deno run -A .agents/qa/tools/qa-drive.ts <command> [options]
 //
 // Commands:
 //   launch   --binary <path> --profile <dir> [--os-port N] [--marionette-port N]

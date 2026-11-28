@@ -20,7 +20,7 @@ Floorp の包括的 QA を統括する。領域ごとの QA は subagent skill �
 
 | area | skill | matrix |
 |---|---|---|
-| workspaces-backup | floorp-qa-workspaces-backup | .devin/qa/matrix/workspaces-backup.yaml |
+| workspaces-backup | floorp-qa-workspaces-backup | .agents/qa/matrix/workspaces-backup.yaml |
 
 (matrix にあって skill がない領域は未実装としてユーザーに伝える)
 
@@ -28,7 +28,7 @@ Floorp の包括的 QA を統括する。領域ごとの QA は subagent skill �
 
 1. 引数を解釈する: `<area>` と任意の scope(`P0`/`P1`/`all`/ID 列)。
    引数がなければユーザーに対象を確認する
-2. `.devin/qa/harness.md` を読み、実行環境の前提(qa-drive が動くか、
+2. `.agents/qa/harness.md` を読み、実行環境の前提(qa-drive が動くか、
    対象ビルドは何か)を把握する
 3. 対象領域の subagent skill を `/floorp-qa-<area> <scope>` で呼び出す。
    複数領域なら直列で1つずつ実行する(ブラウザインスタンスの競合を避けるため並列にしない)
@@ -38,7 +38,7 @@ Floorp の包括的 QA を統括する。領域ごとの QA は subagent skill �
 5. 統合レポートを作り Discord に投稿する:
 
 ```bash
-python3 .devin/qa/tools/discord-post.py \
+python3 .agents/qa/tools/discord-post.py \
   --message "<統合要約>" \
   --file <run_dir>/report.md \
   --file <run_dir>/verdicts.jsonl \
@@ -48,7 +48,7 @@ python3 .devin/qa/tools/discord-post.py \
    - 要約は **fail/blocked を先頭に**、項目 ID と1行理由を列挙し、
      pass は集計数のみ。release-blocker 関連の発見を最上位に書く
    - 認証情報未設定(終了コード3)なら: ローカルの report.md パスを報告し、
-     `.devin/qa/local.env` に `DISCORD_BOT_TOKEN`/`DISCORD_CHANNEL_ID` が必要なことを
+     `.agents/qa/local.env` に `DISCORD_BOT_TOKEN`/`DISCORD_CHANNEL_ID` が必要なことを
      ユーザーに伝える(秘密はリポジトリに書かない)
 6. 最終報告をユーザーに返す: 集計、fail/blocked の一覧、証跡パス、Discord 投稿状況
 

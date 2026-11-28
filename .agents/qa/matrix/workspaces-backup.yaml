@@ -28,7 +28,7 @@ sharedContext: |
   backup は <profile>/workspaces/backup/backup-YYYYMMDD-HHMMSS-<id>.jsonlz4 (UTC名・mozlz4)。
   既定: enabled:true, 間隔15分, 保持7日, pre-restore 10件。
   設定 UI は about:hub#/features/backup。bridge は about:hub と packaged settings にだけ公開される。
-  jsonlz4 の検査: python3 .devin/qa/tools/mozlz4.py <file> [--keys]
+  jsonlz4 の検査: python3 .agents/qa/tools/mozlz4.py <file> [--keys]
 
 driverHints: |
   [production/packaged 駆動パス] Marionette が使えないビルドでは about:hub 経由:
@@ -54,7 +54,7 @@ driverHints: |
          floorp.workspaces.backup.lastRun (epoch ms。過去に書き換えると overdue 再現)
          floorp.workspaces.enabled        (workspaces 有効/無効の切替)
   Marionette の非同期実行は qa-drive eval --async を使う(script 内で resolve(v) を呼ぶ):
-    deno run -A .devin/qa/tools/qa-drive.ts eval --async --marionette-port <port> \
+    deno run -A .agents/qa/tools/qa-drive.ts eval --async --marionette-port <port> \
       'globalThis.workspacesBackupFuncs.backupNow().then(r=>resolve(JSON.stringify(r))).catch(reject)'
   reject(e) は {__qaError: ...} として返る。Promise を resolve せずに終わると timeout になる。
   backup ファイル生成は非同期なので listBackups/ファイルシステムを数秒ポーリングで確認するのも堅い。
