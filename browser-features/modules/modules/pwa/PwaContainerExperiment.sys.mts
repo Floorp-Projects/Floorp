@@ -8,7 +8,7 @@ const readPwaContainerExperimentAssignment = (): boolean => {
       "resource://noraneko/modules/experiments/Experiments.sys.mjs",
     );
     const variant = Experiments.getVariant(PWA_CONTAINER_EXPERIMENT);
-    return variant !== null;
+    return variant === "enabled";
   } catch (error) {
     console.error(
       "[PwaContainerExperiment] Failed to check pwa_container_support experiment:",

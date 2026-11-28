@@ -16,7 +16,11 @@ import type {
 import type { ErrorResponse } from "../_os-plugin/api-spec/types.ts";
 import type { TabManagerAPI } from "./types.ts";
 import type { ActionResponse } from "../shared/types.ts";
-import { registerCommonAutomationRoutes, safeRoute } from "../shared/routes.sys.mts";
+import {
+  automationUrlError,
+  registerCommonAutomationRoutes,
+  safeRoute,
+} from "../shared/routes.sys.mts";
 
 // Lazy import of TabManager module
 const TabManagerModule = () =>
@@ -60,6 +64,10 @@ export function registerTabRoutes(api: NamespaceBuilder): void {
         const json = ctx.json();
         if (!json?.url) {
           return { status: 400, body: { error: "url required" } };
+        }
+        const urlError = automationUrlError(json.url);
+        if (urlError) {
+          return { status: 400, body: { error: urlError } };
         }
         const { TabManagerServices } = TabManagerModule();
         const id = await TabManagerServices.createInstance(json.url, {

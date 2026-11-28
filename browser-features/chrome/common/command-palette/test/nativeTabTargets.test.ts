@@ -305,6 +305,38 @@ async function testContainerReopenPreservesNativePosition(): Promise<void> {
   }
 }
 
+async function testContainerReopenRejectsUnknownContainer(): Promise<void> {
+  await withTabs(async (tabs) => {
+    const gb = globalThis.gBrowser;
+    const target = tabs[1];
+    gb.selectedTab = target;
+    const before = Array.from(gb.tabs);
+    reopenInContainerCommand.fn(window, { container: "9999" });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const after = Array.from(gb.tabs);
+    assertEquals(
+      after.length,
+      before.length,
+      "Unknown container id must not add or remove tabs",
+    );
+    assertEquals(
+      after.every((tab, index) => tab === before[index]),
+      true,
+      "Unknown container id must not replace or reorder tabs",
+    );
+    assertEquals(
+      gb.tabs.some((tab) => tab.getAttribute("usercontextid") === "9999"),
+      false,
+      "Unknown container id must not materialize on a tab",
+    );
+    assertEquals(
+      gb.selectedTab,
+      target,
+      "Unknown container id must leave selection unchanged",
+    );
+  });
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("nativeTabTargets.test.ts", [
     {
@@ -324,6 +356,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "native container reopen preserves source position and neighbors",
       fn: testContainerReopenPreservesNativePosition,
+    },
+    {
+      name: "native container reopen rejects an unknown container",
+      fn: testContainerReopenRejectsUnknownContainer,
     },
   ]);
 }

@@ -83,6 +83,22 @@ export async function loadContainers(): Promise<CommandStepChoice[]> {
   }
 }
 
+function isValidReopenContainerId(containerId: number): boolean {
+  if (containerId === 0) return true;
+  try {
+    const { ContextualIdentityService } = ChromeUtils.importESModule(
+      "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
+    );
+    ContextualIdentityService.ensureDataReady();
+    const identity = ContextualIdentityService.getPublicIdentityFromId(
+      containerId,
+    ) as { floorpPrivateContainer?: boolean } | null;
+    return !!identity && !identity.floorpPrivateContainer;
+  } catch {
+    return false;
+  }
+}
+
 export const reopenInContainerCommand: PaletteCommand = {
   id: "floorp-reopen-in-container",
   label: i18next.t("commandPalette.reopenInContainer", {
@@ -127,7 +143,7 @@ export const reopenInContainerCommand: PaletteCommand = {
   ],
   fn: (win: Window, args?: Record<string, string>) => {
     const containerId = Number.parseInt(args?.container ?? "0");
-    if (Number.isNaN(containerId)) {
+    if (Number.isNaN(containerId) || !isValidReopenContainerId(containerId)) {
       console.error(
         "[ReopenInContainer] Invalid container ID:",
         args?.container,

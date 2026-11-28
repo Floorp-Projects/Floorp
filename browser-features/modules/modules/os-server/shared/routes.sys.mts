@@ -39,6 +39,19 @@ const MAX_TIMEOUT_MS = 60_000;
 const ALLOWED_URL_SCHEMES = new Set(["http:", "https:"]);
 const ALLOWED_EXACT_URLS = new Set(["about:blank"]);
 
+export function automationUrlError(url: string): string | null {
+  if (ALLOWED_EXACT_URLS.has(url)) return null;
+  try {
+    const parsed = new URL(url);
+    if (!ALLOWED_URL_SCHEMES.has(parsed.protocol)) {
+      return `URL scheme '${parsed.protocol}' not allowed. Only http/https are permitted.`;
+    }
+    return null;
+  } catch {
+    return "Invalid URL";
+  }
+}
+
 /**
  * Clamp a timeout value to a safe range [0, MAX_TIMEOUT_MS].
  */
@@ -173,18 +186,9 @@ export function registerCommonAutomationRoutes(
       if (!json?.url) {
         return { status: 400, body: { error: "url required" } };
       }
-      if (!ALLOWED_EXACT_URLS.has(json.url)) {
-        try {
-          const parsed = new URL(json.url);
-          if (!ALLOWED_URL_SCHEMES.has(parsed.protocol)) {
-            return {
-              status: 400,
-              body: { error: `URL scheme '${parsed.protocol}' not allowed. Only http/https are permitted.` },
-            };
-          }
-        } catch {
-          return { status: 400, body: { error: "Invalid URL" } };
-        }
+      const urlError = automationUrlError(json.url);
+      if (urlError) {
+        return { status: 400, body: { error: urlError } };
       }
       const service = getService();
       await service.navigate(ctx.params.id, json.url);
