@@ -32,6 +32,7 @@ import {
 } from "../utils/backup-types.ts";
 import type { TWorkspaceID } from "../utils/type.ts";
 import type { WorkspacesBackupFuncs } from "../utils/workspaces-backup-controller.ts";
+import { WorkspacesBackupService } from "../utils/workspaces-backup-service.ts";
 import type { TestWindow } from "./workspace-last-tab-test-types.ts";
 
 type QaWindow = TestWindow & {
@@ -1028,6 +1029,82 @@ async function testFreshPreRestoreGrace(): Promise<void> {
   });
 }
 
+// Regression: a workspace created in another window while the backup file
+// is still loading must survive the restore. The concurrency baseline has to
+// be captured before the first await of the restore operation; capturing it
+// after the load misclassifies the new workspace as pre-existing and the
+// commit drops it.
+async function testConcurrentWorkspaceDuringLoad(): Promise<void> {
+  await inWindow(async (win, open) => {
+    const { backup } = apis(win);
+    const other = await open();
+    const otherFuncs = other.workspacesFuncs as unknown as {
+      createNoNameWorkspace(): TWorkspaceID;
+    } | undefined;
+    assert(otherFuncs, "other window workspace API is available");
+    const id = newWorkspaceId();
+    const fileName = await writeFile(craftFile(
+      "manual",
+      [
+        {
+          workspaceId: id as TWorkspaceID,
+          name: "loadrace-A",
+          userContextId: 0,
+          icon: null,
+        },
+      ],
+      [{ url: `${PREFIX}/loadrace/a`, workspaceId: id, selected: true }],
+      id,
+    ));
+
+    type LoadBackupResult = { file: WorkspaceBackupFile } | { error: string };
+    type LoadBackup = (fileName: string) => Promise<LoadBackupResult>;
+    const proto = WorkspacesBackupService.prototype as unknown as {
+      loadBackup: LoadBackup;
+    };
+    const original = proto.loadBackup;
+    let entered = false;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    proto.loadBackup = function (this: unknown, name: string) {
+      entered = true;
+      return gate.then(() => original.call(this, name));
+    };
+    try {
+      const pending = backup.restoreBackup(fileName);
+      for (let i = 0; i < 200 && !entered; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      assert(entered, "restore reached the backup load");
+      const createdId = otherFuncs.createNoNameWorkspace();
+      const concurrentTab = openTab(other, `${PREFIX}/loadrace/concurrent`);
+      concurrentTab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, createdId);
+      await settle();
+      release();
+      const result = await pending;
+      assert(result.success, `restore succeeds (${result.error ?? ""})`);
+      await settle();
+      assert(
+        readStore().order.includes(createdId),
+        "workspace created during backup load survives the restore",
+      );
+      assert(
+        concurrentTab.isConnected,
+        "concurrent workspace tab is not closed",
+      );
+      assertEquals(
+        concurrentTab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID),
+        createdId,
+        "tab keeps attribution to the concurrent workspace",
+      );
+    } finally {
+      proto.loadBackup = original;
+    }
+  });
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("workspacesBackupQaG3Restore.test.ts", [
     {
@@ -1063,5 +1140,9 @@ export async function runAllTests(): Promise<void> {
     },
     { name: "J-05/J-07/J-08 pre-restore limit", fn: testPreRestoreLimit },
     { name: "J-06 fresh pre-restore grace", fn: testFreshPreRestoreGrace },
+    {
+      name: "workspace created during backup load survives",
+      fn: testConcurrentWorkspaceDuringLoad,
+    },
   ]);
 }

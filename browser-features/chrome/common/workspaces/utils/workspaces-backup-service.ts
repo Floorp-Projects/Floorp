@@ -745,6 +745,21 @@ export class WorkspacesBackupService {
   }
 
   private async runRestore(fileName: string): Promise<RestoreBackupResult> {
+    // The concurrency baseline must reflect the store as it was when the
+    // restore started: anything absent was created during the operation and
+    // has to survive the commit. It must be captured before the first await,
+    // or a workspace created while the backup file is loading is misclassified
+    // as pre-existing and dropped by the commit.
+    let restoreStartBaselineIds: Set<string> | undefined;
+    try {
+      const rawData: unknown = workspacesDataStore.data;
+      restoreStartBaselineIds = rawData instanceof Map
+        ? new Set([...(rawData as Map<string, unknown>).keys()])
+        : new Set();
+    } catch {
+      restoreStartBaselineIds = undefined;
+    }
+
     const loaded = await this.loadBackup(fileName);
     if ("error" in loaded) {
       return { success: false, error: loaded.error };
@@ -764,21 +779,6 @@ export class WorkspacesBackupService {
 
     // A safety copy is only needed when the restore replaces existing state.
     let capturedFingerprint = "";
-    // The concurrency baseline must reflect the store as it was when the
-    // restore started: anything absent was created during the operation and
-    // has to survive the commit. Deriving it from the later safety capture
-    // would misclassify workspaces added during the backup load.
-    let restoreStartBaselineIds: Set<string> | undefined;
-    if (destructive) {
-      try {
-        const rawData: unknown = workspacesDataStore.data;
-        restoreStartBaselineIds = rawData instanceof Map
-          ? new Set([...(rawData as Map<string, unknown>).keys()])
-          : new Set();
-      } catch {
-        restoreStartBaselineIds = undefined;
-      }
-    }
     if (destructive) {
       let capturedTabs: Set<XULElement>;
       try {
