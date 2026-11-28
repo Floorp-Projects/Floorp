@@ -1148,7 +1148,11 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
 
     // (c) Close this window's replaced tabs.
     try {
-      this.closeReplacedTabs(tabsToReplace, currentId);
+      this.closeReplacedTabs(
+        tabsToReplace,
+        currentId,
+        commit.concurrentBaselineIds,
+      );
     } catch (error) {
       logStepError("closing replaced tabs", error);
     }
@@ -1169,6 +1173,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   private closeReplacedTabs(
     tabsToReplace: ReadonlySet<XULElement>,
     fallbackWorkspaceId: TWorkspaceID,
+    concurrentBaselineIds?: ReadonlySet<string>,
   ): void {
     const gBrowser = globalThis.gBrowser;
     // Closing the last tab of the current workspace would otherwise make
@@ -1177,6 +1182,19 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     this.tabManagerCtx.runWithTabCloseSuppressed(() => {
       for (const tab of tabsToReplace) {
         if (!tab.isConnected) {
+          continue;
+        }
+        // tabsToReplace was fixed before tab restoration began, but the
+        // restore yields: the user can move a tab into a workspace created
+        // during the operation. That workspace survives the commit, so the
+        // tab must not be closed with the replaced ones.
+        const currentAttribution = tab.getAttribute(
+          WORKSPACE_TAB_ATTRIBUTION_ID,
+        );
+        if (
+          currentAttribution && concurrentBaselineIds &&
+          !concurrentBaselineIds.has(currentAttribution)
+        ) {
           continue;
         }
         if (gBrowser.tabs.length <= 1) {

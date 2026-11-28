@@ -764,6 +764,21 @@ export class WorkspacesBackupService {
 
     // A safety copy is only needed when the restore replaces existing state.
     let capturedFingerprint = "";
+    // The concurrency baseline must reflect the store as it was when the
+    // restore started: anything absent was created during the operation and
+    // has to survive the commit. Deriving it from the later safety capture
+    // would misclassify workspaces added during the backup load.
+    let restoreStartBaselineIds: Set<string> | undefined;
+    if (destructive) {
+      try {
+        const rawData: unknown = workspacesDataStore.data;
+        restoreStartBaselineIds = rawData instanceof Map
+          ? new Set([...(rawData as Map<string, unknown>).keys()])
+          : new Set();
+      } catch {
+        restoreStartBaselineIds = undefined;
+      }
+    }
     if (destructive) {
       let capturedTabs: Set<XULElement>;
       try {
@@ -806,21 +821,10 @@ export class WorkspacesBackupService {
         );
         return { success: false, error: "private-detection-failed" };
       }
-      let concurrentBaselineIds: Set<string> | undefined;
-      try {
-        const parsed = JSON.parse(capturedFingerprint) as {
-          entries?: [string, string][];
-        };
-        if (Array.isArray(parsed.entries)) {
-          concurrentBaselineIds = new Set(
-            parsed.entries.map(([id]) => id),
-          );
-        }
-      } catch {
-        // Without a baseline the commit cannot tell concurrent additions
-        // apart; it then keeps the historical replace-everything behavior.
-      }
-      restoreOptions = { preserveTabs, concurrentBaselineIds };
+      restoreOptions = {
+        preserveTabs,
+        concurrentBaselineIds: restoreStartBaselineIds,
+      };
     }
 
     try {

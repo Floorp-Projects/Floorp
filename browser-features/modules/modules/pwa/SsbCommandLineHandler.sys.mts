@@ -106,7 +106,6 @@ function registerPwaNavigationPolicy(): void {
   if (pwaNavigationPolicyRegistered) {
     return;
   }
-  pwaNavigationPolicyRegistered = true;
   const policy = {
     classDescription: "Floorp PWA navigation policy",
     classID: Components.ID("{c8f47c3a-8b1d-4f41-9e1a-3f5a7b2c9d11}"),
@@ -127,10 +126,9 @@ function registerPwaNavigationPolicy(): void {
     Ci.nsIComponentRegistrar,
   );
   if (!registrar) {
-    console.error(
+    throw new Error(
       "[SsbRunnerUtils] Cannot register PWA navigation policy: no registrar",
     );
-    return;
   }
   registrar.registerFactory(
     policy.classID,
@@ -210,6 +208,7 @@ function registerPwaNavigationPolicy(): void {
     false,
     true,
   );
+  pwaNavigationPolicyRegistered = true;
 }
 
 export class SsbRunnerUtils {
@@ -243,7 +242,18 @@ export class SsbRunnerUtils {
 
       // The window opened on about:blank, so no navigation has happened yet:
       // registering enforcement now still precedes the first real navigation.
-      registerPwaNavigationPolicy();
+      // Registration is fail-closed: a launch without enforcement must not
+      // proceed.
+      try {
+        registerPwaNavigationPolicy();
+      } catch (error) {
+        try {
+          win.close();
+        } catch {
+          // Best effort: the launch is already being aborted.
+        }
+        throw error;
+      }
       pwaWindows.add(win as object);
 
       // Enforcement now covers every browsing context this window ever
