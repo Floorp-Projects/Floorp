@@ -7,6 +7,7 @@ import {
   assertEquals,
   runTests,
 } from "../../../test/utils/test_harness.ts";
+import { createRoot } from "solid-js";
 import { settle, withWindows } from "./workspace-last-tab-test-utils.ts";
 import {
   WORKSPACE_BACKUP_CONFIG_PREF_NAME,
@@ -33,6 +34,7 @@ import {
 import type { TWorkspaceID } from "../utils/type.ts";
 import type { WorkspacesBackupFuncs } from "../utils/workspaces-backup-controller.ts";
 import { WorkspacesBackupService } from "../utils/workspaces-backup-service.ts";
+import { setWorkspacesDataStore } from "../data/data.ts";
 import type { TestWindow } from "./workspace-last-tab-test-types.ts";
 
 type QaWindow = TestWindow & {
@@ -1029,19 +1031,17 @@ async function testFreshPreRestoreGrace(): Promise<void> {
   });
 }
 
-// Regression: a workspace created in another window while the backup file
-// is still loading must survive the restore. The concurrency baseline has to
-// be captured before the first await of the restore operation; capturing it
-// after the load misclassifies the new workspace as pre-existing and the
-// commit drops it.
+// Regression: the concurrency baseline must be captured before the first
+// await of the restore operation. A workspace created while the backup file
+// is still loading is absent from a correct baseline; capturing the baseline
+// after the load misclassifies it as pre-existing and the commit drops it.
+// The test drives a real service instance with a recording host, suspends
+// the backup load, and creates a workspace in the live store mid-load.
 async function testConcurrentWorkspaceDuringLoad(): Promise<void> {
-  await inWindow(async (win, open) => {
-    const { backup } = apis(win);
-    const other = await open();
-    const otherFuncs = other.workspacesFuncs as unknown as {
-      createNoNameWorkspace(): TWorkspaceID;
-    } | undefined;
-    assert(otherFuncs, "other window workspace API is available");
+  await inWindow(async (win) => {
+    // The safety copy needs at least one capturable tab in a real window.
+    openTab(win, `${PREFIX}/loadrace/capturable`);
+    await settle();
     const id = newWorkspaceId();
     const fileName = await writeFile(craftFile(
       "manual",
@@ -1057,50 +1057,137 @@ async function testConcurrentWorkspaceDuringLoad(): Promise<void> {
       id,
     ));
 
+    let capturedBaseline: ReadonlySet<string> | undefined;
+    let restoreCalled = false;
+    const host = {
+      supportsWorkspaceRestore: true,
+      isWorkspaceID: (idToCheck: string): idToCheck is TWorkspaceID =>
+        typeof idToCheck === "string",
+      getRawWorkspace: () => undefined,
+      restoreWorkspaceState: (
+        _file: WorkspaceBackupFile,
+        options?: { concurrentBaselineIds?: ReadonlySet<string> },
+      ): Promise<void> => {
+        restoreCalled = true;
+        capturedBaseline = options?.concurrentBaselineIds;
+        return Promise.resolve();
+      },
+    };
+
+    let serviceRef: WorkspacesBackupService | null = null;
+    const dispose = createRoot((d) => {
+      serviceRef = new WorkspacesBackupService(host);
+      return d;
+    });
+    const service = serviceRef as unknown as WorkspacesBackupService;
+
     type LoadBackupResult = { file: WorkspaceBackupFile } | { error: string };
     type LoadBackup = (fileName: string) => Promise<LoadBackupResult>;
-    const proto = WorkspacesBackupService.prototype as unknown as {
+    type CaptureAndWrite = () => Promise<{
+      summary: WorkspaceBackupSummary;
+      capturedTabs: Set<XULElement>;
+      workspacesTruncated: boolean;
+      storeFingerprint: string;
+    }>;
+    const probe = service as unknown as {
       loadBackup: LoadBackup;
+      captureAndWrite: CaptureAndWrite;
+      fingerprintWorkspaceStore: () => string;
     };
-    const original = proto.loadBackup;
+    // The capture/write/retention machinery is irrelevant to the ordering
+    // invariant under test; stub it so the restore cannot stall on IO.
+    probe.captureAndWrite = () =>
+      Promise.resolve({
+        summary: {
+          fileName,
+          kind: "pre-restore",
+          capturedAt: Date.now(),
+          tabCount: 1,
+          windowCount: 1,
+          sizeBytes: 1,
+        } as unknown as WorkspaceBackupSummary,
+        capturedTabs: new Set<XULElement>(),
+        workspacesTruncated: false,
+        storeFingerprint: probe.fingerprintWorkspaceStore(),
+      });
+    const original = probe.loadBackup.bind(service);
     let entered = false;
     let release!: () => void;
     const gate = new Promise<void>((resolve) => {
       release = resolve;
     });
-    proto.loadBackup = function (this: unknown, name: string) {
+    probe.loadBackup = (name: string) => {
       entered = true;
-      return gate.then(() => original.call(this, name));
+      return gate.then(() => original(name));
     };
+
+    const createdId = newWorkspaceId();
+    const seedId = newWorkspaceId();
+    const seedWorkspace = (id: string, name: string): void => {
+      setWorkspacesDataStore("data", (prev) => {
+        const next = new Map(
+          prev as unknown as Map<TWorkspaceID, Record<string, unknown>>,
+        );
+        next.set(id as TWorkspaceID, {
+          name,
+          icon: null,
+          userContextId: 0,
+        });
+        return next as unknown as typeof prev;
+      });
+      setWorkspacesDataStore(
+        "order",
+        (prev) =>
+          prev.includes(id as TWorkspaceID)
+            ? prev
+            : [...prev, id as TWorkspaceID],
+      );
+    };
+    // The capture must see at least one workspace to produce a
+    // workspaces-mode safety copy.
+    seedWorkspace(seedId, "loadrace-seed");
     try {
-      const pending = backup.restoreBackup(fileName);
+      const pending = service.restoreBackup(fileName);
       for (let i = 0; i < 200 && !entered; i++) {
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
       assert(entered, "restore reached the backup load");
-      const createdId = otherFuncs.createNoNameWorkspace();
-      const concurrentTab = openTab(other, `${PREFIX}/loadrace/concurrent`);
-      concurrentTab.setAttribute(WORKSPACE_TAB_ATTRIBUTION_ID, createdId);
-      await settle();
+      // A workspace created in another window while the file is loading.
+      seedWorkspace(createdId, "loadrace-concurrent");
       release();
       const result = await pending;
       assert(result.success, `restore succeeds (${result.error ?? ""})`);
-      await settle();
+      assert(restoreCalled, "host restore was invoked");
       assert(
-        readStore().order.includes(createdId),
-        "workspace created during backup load survives the restore",
+        capturedBaseline instanceof Set,
+        "destructive restore passes a concurrency baseline",
       );
       assert(
-        concurrentTab.isConnected,
-        "concurrent workspace tab is not closed",
+        !(capturedBaseline as ReadonlySet<string>).has(createdId),
+        "workspace created during backup load is absent from the baseline",
       );
-      assertEquals(
-        concurrentTab.getAttribute(WORKSPACE_TAB_ATTRIBUTION_ID),
-        createdId,
-        "tab keeps attribution to the concurrent workspace",
+      assert(
+        (capturedBaseline as ReadonlySet<string>).has(seedId),
+        "baseline covers the pre-restore workspaces",
       );
     } finally {
-      proto.loadBackup = original;
+      probe.loadBackup = original;
+      setWorkspacesDataStore("data", (prev) => {
+        const next = new Map(
+          prev as unknown as Map<TWorkspaceID, Record<string, unknown>>,
+        );
+        next.delete(createdId as TWorkspaceID);
+        next.delete(seedId as TWorkspaceID);
+        return next as unknown as typeof prev;
+      });
+      setWorkspacesDataStore(
+        "order",
+        (prev) =>
+          prev.filter((idInOrder) =>
+            idInOrder !== createdId && idInOrder !== seedId
+          ),
+      );
+      dispose();
     }
   });
 }

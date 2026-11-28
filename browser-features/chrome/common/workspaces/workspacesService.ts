@@ -98,6 +98,32 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     return 0;
   }
 
+  /**
+   * True only for a workspace that was created while a restore was in
+   * flight: absent from the restore-start baseline, but present in the live
+   * store. An attribution that fails the store check is stale (its workspace
+   * no longer exists), not concurrent — treating it as concurrent would
+   * strand the tab on a dead workspace and skip closing it with the other
+   * replaced tabs.
+   */
+  private isLiveConcurrentWorkspaceId(
+    id: string | null,
+    concurrentBaselineIds?: ReadonlySet<string>,
+  ): boolean {
+    if (!id || !concurrentBaselineIds || concurrentBaselineIds.has(id)) {
+      return false;
+    }
+    try {
+      const data = workspacesDataStore.data as unknown as Map<
+        TWorkspaceID,
+        TWorkspace
+      >;
+      return typeof data?.has === "function" && data.has(id as TWorkspaceID);
+    } catch {
+      return false;
+    }
+  }
+
   private findFallbackWorkspaceID(
     excludeId: TWorkspaceID,
   ): TWorkspaceID | null {
@@ -545,16 +571,21 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     // is absent from the capture-time baseline and survives the commit, so
     // its tabs must keep their attribution instead of moving to the default.
     const isConcurrentWorkspaceId = (id: string | null): boolean =>
-      !!id && !!concurrentBaselineIds && !concurrentBaselineIds.has(id);
+      this.isLiveConcurrentWorkspaceId(id, concurrentBaselineIds);
     const enumerator = Services.wm.getEnumerator("navigator:browser");
     while (enumerator.hasMoreElements()) {
       const window = enumerator.getNext() as Window & {
         closed?: boolean;
         gBrowser?: { tabs: XULElement[] };
       };
+      // Compare gBrowser object identity: the enumerator returns outer
+      // windows while this module's global may be a different proxy, so
+      // comparing the window objects themselves can miss the restoring
+      // window and re-attribute the very tabs the restore is replacing.
       if (
         !window || window.closed ||
-        (window as unknown) === (globalThis as unknown)
+        (window.gBrowser && window.gBrowser ===
+            (globalThis as unknown as { gBrowser?: unknown }).gBrowser)
       ) {
         continue;
       }
@@ -1079,8 +1110,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     }
     try {
       const isConcurrentTabWorkspace = (id: string | null): boolean =>
-        !!id && !!commit.concurrentBaselineIds &&
-        !commit.concurrentBaselineIds.has(id);
+        this.isLiveConcurrentWorkspaceId(id, commit.concurrentBaselineIds);
       for (const tab of [...globalThis.gBrowser.tabs]) {
         if (restoredTabs.has(tab) || tabsToReplace.has(tab)) {
           continue;
@@ -1152,6 +1182,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         tabsToReplace,
         currentId,
         commit.concurrentBaselineIds,
+        new Set<TWorkspaceID>(idMap.values()),
       );
     } catch (error) {
       logStepError("closing replaced tabs", error);
@@ -1174,6 +1205,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     tabsToReplace: ReadonlySet<XULElement>,
     fallbackWorkspaceId: TWorkspaceID,
     concurrentBaselineIds?: ReadonlySet<string>,
+    restoredIds?: ReadonlySet<TWorkspaceID>,
   ): void {
     const gBrowser = globalThis.gBrowser;
     // Closing the last tab of the current workspace would otherwise make
@@ -1191,9 +1223,16 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
         const currentAttribution = tab.getAttribute(
           WORKSPACE_TAB_ATTRIBUTION_ID,
         );
+        // A restored workspace is never a concurrently created one: if the
+        // tab's attribution points at a restored copy, the tab was caught by
+        // re-attribution and must still be closed with the replaced ones.
         if (
-          currentAttribution && concurrentBaselineIds &&
-          !concurrentBaselineIds.has(currentAttribution)
+          currentAttribution &&
+          !restoredIds?.has(currentAttribution as TWorkspaceID) &&
+          this.isLiveConcurrentWorkspaceId(
+            currentAttribution,
+            concurrentBaselineIds,
+          )
         ) {
           continue;
         }

@@ -206,7 +206,9 @@ export class PwaWindowSupport {
   ): Promise<void> {
     document?.getElementById("ssb-container-toolbar")?.remove();
 
-    const allIndicators = document?.querySelectorAll("#ssb-container-indicator");
+    const allIndicators = document?.querySelectorAll(
+      "#ssb-container-indicator",
+    );
     if (allIndicators && allIndicators.length > 1) {
       for (let i = 1; i < allIndicators.length; i++) {
         allIndicators[i].remove();
@@ -274,6 +276,20 @@ export class PwaWindowSupport {
     return 0;
   }
 
+  private getStartUrlFromArgs(): string | null {
+    try {
+      const args =
+        (window as { arguments?: [unknown, nsIPropertyBag2] }).arguments;
+      if (args?.[1] && args[1].hasKey("floorp-ssb-start-url")) {
+        const val = args[1].getPropertyAsAString("floorp-ssb-start-url");
+        return val.length > 0 ? val : null;
+      }
+    } catch {
+      // If we can't read the args, keep the copied URL.
+    }
+    return null;
+  }
+
   private applyUserContext(userContextId: number): void {
     const { ContextualIdentityService } = ChromeUtils.importESModule(
       "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
@@ -310,7 +326,14 @@ export class PwaWindowSupport {
 
     for (const tab of tabsToMigrate) {
       const browser = globalThis.gBrowser.getBrowserForTab(tab);
-      const url = browser?.currentURI?.spec ?? "about:blank";
+      let url = browser?.currentURI?.spec ?? "about:blank";
+      if (!url || url === "about:blank") {
+        // The window opens on about:blank and its start navigation is
+        // deferred, so it can still be in flight while this migration runs.
+        // Copying about:blank would close the tab carrying that navigation
+        // and leave the app blank; load the start URL instead.
+        url = this.getStartUrlFromArgs() ?? url;
+      }
 
       const newTab = globalThis.gBrowser.addTrustedTab(url, {
         userContextId,

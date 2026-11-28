@@ -387,6 +387,11 @@ export class SsbRunnerUtils {
     // Set taskbartab attribute to leverage SessionStore's existing handling
     // This excludes PWA windows from session restore and treats them like TaskBarTabs
     extraOptions.setPropertyAsAString("taskbartab", ssb.id);
+    // Container migration on non-Linux platforms copies the initial tab's
+    // URL into a replacement tab. If that happens while the deferred start
+    // navigation is still in flight, the copy would be about:blank and the
+    // navigation target would be lost; the migration falls back to this URL.
+    extraOptions.setPropertyAsAString("floorp-ssb-start-url", ssb.start_url);
 
     if (ssb.userContextId && ssb.userContextId > 0) {
       extraOptions.setPropertyAsAString(
