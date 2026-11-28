@@ -170,6 +170,8 @@ function registerPwaNavigationPolicy(): void {
         const uri = newChannel.URI;
         const loadInfo = newChannel.loadInfo;
         if (
+          loadInfo.externalContentPolicyType ===
+            Ci.nsIContentPolicy.TYPE_DOCUMENT &&
           uri?.scheme === "http" &&
           uri.host !== "localhost" &&
           uri.host !== "127.0.0.1" &&

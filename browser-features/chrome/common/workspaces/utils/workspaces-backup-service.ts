@@ -404,6 +404,13 @@ export interface RestoreWorkspaceStateOptions {
    * cover them. They are parked on a restored workspace instead of closed.
    */
   preserveTabs?: ReadonlySet<XULElement>;
+  /**
+   * Workspace ids present in the live store when the safety copy was
+   * captured. The commit step uses them to tell pre-restore workspaces
+   * (dropped on purpose) apart from ones created while the restore was in
+   * flight (preserved, because the safety copy never covered them).
+   */
+  concurrentBaselineIds?: ReadonlySet<string>;
 }
 
 export interface WorkspacesBackupHost {
@@ -799,7 +806,21 @@ export class WorkspacesBackupService {
         );
         return { success: false, error: "private-detection-failed" };
       }
-      restoreOptions = { preserveTabs };
+      let concurrentBaselineIds: Set<string> | undefined;
+      try {
+        const parsed = JSON.parse(capturedFingerprint) as {
+          entries?: [string, string][];
+        };
+        if (Array.isArray(parsed.entries)) {
+          concurrentBaselineIds = new Set(
+            parsed.entries.map(([id]) => id),
+          );
+        }
+      } catch {
+        // Without a baseline the commit cannot tell concurrent additions
+        // apart; it then keeps the historical replace-everything behavior.
+      }
+      restoreOptions = { preserveTabs, concurrentBaselineIds };
     }
 
     try {

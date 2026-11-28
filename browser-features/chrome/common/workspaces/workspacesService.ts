@@ -688,7 +688,10 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
    */
   public async restoreWorkspaceState(
     file: WorkspaceBackupFile,
-    options?: { preserveTabs?: ReadonlySet<XULElement> },
+    options?: {
+      preserveTabs?: ReadonlySet<XULElement>;
+      concurrentBaselineIds?: ReadonlySet<string>;
+    },
   ): Promise<void> {
     const state = file.workspaceState;
     if (!state) {
@@ -1008,6 +1011,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
     this.commitRestoredWorkspaces({
       idMap,
       restoredOrder,
+      concurrentBaselineIds: options?.concurrentBaselineIds,
       defaultBackupId: state.defaultID,
       currentBackupId: state.currentWorkspaceId,
       restoredTabs: new Set(
@@ -1024,6 +1028,7 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
   private commitRestoredWorkspaces(commit: {
     idMap: Map<TWorkspaceID, TWorkspaceID>;
     restoredOrder: TWorkspaceID[];
+    concurrentBaselineIds?: ReadonlySet<string>;
     defaultBackupId: TWorkspaceID | null;
     currentBackupId: TWorkspaceID | null;
     restoredTabs: ReadonlySet<XULElement>;
@@ -1084,11 +1089,31 @@ export class WorkspacesService implements WorkspacesDataManagerBase {
             nextData.set(id, workspace);
           }
         }
+        // The restore yields while recreating tabs, so another window can
+        // create a workspace before this commit. The safety copy predates it,
+        // so dropping it would be unrecoverable data loss. Anything absent
+        // from the capture-time baseline was created concurrently and is
+        // preserved after the restored workspaces.
+        const concurrentIds: TWorkspaceID[] = [];
+        if (commit.concurrentBaselineIds) {
+          for (const [id, workspace] of current) {
+            if (
+              !commit.concurrentBaselineIds.has(id) &&
+              !nextData.has(id)
+            ) {
+              nextData.set(id, workspace);
+              concurrentIds.push(id);
+            }
+          }
+        }
         setWorkspacesDataStore(
           "data",
           () => nextData as unknown as TWorkspacesStoreData["data"],
         );
-        setWorkspacesDataStore("order", () => [...restoredOrder]);
+        setWorkspacesDataStore(
+          "order",
+          () => [...restoredOrder, ...concurrentIds],
+        );
         setWorkspacesDataStore("defaultID", defaultId);
         this.dataManagerCtx.setCurrentWorkspaceID(currentId);
       });
