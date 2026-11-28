@@ -1,0 +1,161 @@
+diff --git a/browser/components/sessionstore/SessionWriter.sys.mjs b/browser/components/sessionstore/SessionWriter.sys.mjs
+index 3b2d3088..03d0f845 100644
+--- a/browser/components/sessionstore/SessionWriter.sys.mjs
++++ b/browser/components/sessionstore/SessionWriter.sys.mjs
+@@ -114,6 +114,19 @@ export const SessionWriter = new (class {
+ 
+   #upgradeBackupNeeded = false;
+ 
++  /**
++   * Timestamp of the latest time-depth rotation copy, in milliseconds.
++   * Rotation copies protect against logically corrupted but well-formed
++   * states overwriting every generation of the regular fallback chain.
++   */
++  #lastRotationMs = 0;
++
++  /**
++   * Whether the backups directory has been scanned for pre-existing
++   * rotation copies in this process.
++   */
++  #rotationScanned = false;
++
+   /**
+    * Initialize (or reinitialize) the writer.
+    *
+@@ -380,6 +393,23 @@ export const SessionWriter = new (class {
+       }
+     }
+ 
++    // Time-depth rotation: keep generations of the recovery file so that
++    // a logically corrupted but well-formed state does not overwrite every
++    // available copy within minutes. Rotation copies share the privacy
++    // model of the recovery file: they are removed on clean shutdown when
++    // auto-restore is disabled, and wiped with the backups directory on
++    // session history purge.
++    if (sessionWritten && !options.isFinalWrite && !exn) {
++      try {
++        await this.#maybeRotateRecovery();
++      } catch (ex) {
++        lazy.sessionStoreLogger.warn(
++          "SessionWriter.write, exception during time-depth rotation:",
++          ex
++        );
++      }
++    }
++
+     if (options.performShutdownCleanup && !exn) {
+       // During shutdown, if auto-restore is disabled, we need to
+       // remove possibly sensitive data that has been stored purely
+@@ -390,6 +420,7 @@ export const SessionWriter = new (class {
+       // these files.
+       await IOUtils.remove(this.#paths.recoveryBackup);
+       await IOUtils.remove(this.#paths.recovery);
++      await this.#removeRotationCopies();
+     }
+ 
+     this.#state = STATE_RECOVERY;
+@@ -409,6 +440,104 @@ export const SessionWriter = new (class {
+     };
+   }
+ 
++  /**
++   * Copy the recovery file to a timestamped rotation copy if enough time
++   * has passed since the latest copy, then prune old copies.
++   * Controlled by `floorp.sessionstore.rotation.interval` (default one
++   * hour) and `floorp.sessionstore.rotation.max` (default 48 copies).
++   */
++  async #maybeRotateRecovery() {
++    const ROTATION_PREFIX = "rotation-";
++    let interval = Services.prefs.getIntPref(
++      "floorp.sessionstore.rotation.interval",
++      3600000
++    );
++    let maxCopies = Services.prefs.getIntPref(
++      "floorp.sessionstore.rotation.max",
++      48
++    );
++    if (interval <= 0 || maxCopies <= 0) {
++      return;
++    }
++
++    let children;
++    try {
++      children = await IOUtils.getChildren(this.#paths.backups);
++    } catch (ex) {
++      // The backups directory may not be listable yet; rotations can
++      // resume at the next write.
++      return;
++    }
++    let copies = children.filter(path =>
++      PathUtils.filename(path).startsWith(ROTATION_PREFIX)
++    );
++
++    if (!this.#rotationScanned) {
++      this.#rotationScanned = true;
++      for (let copy of copies) {
++        let ts = parseInt(
++          PathUtils.filename(copy).slice(ROTATION_PREFIX.length, -".jsonlz4".length),
++          10
++        );
++        if (!isNaN(ts) && ts > this.#lastRotationMs) {
++          this.#lastRotationMs = ts;
++        }
++      }
++    }
++
++    let now = Date.now();
++    if (now - this.#lastRotationMs < interval) {
++      return;
++    }
++
++    let target = PathUtils.join(
++      this.#paths.backups,
++      `${ROTATION_PREFIX}${now}.jsonlz4`
++    );
++    await IOUtils.copy(this.#paths.recovery, target);
++    this.#lastRotationMs = now;
++    copies.push(target);
++
++    if (copies.length > maxCopies) {
++      copies.sort();
++      for (let i = 0; i < copies.length - maxCopies; i++) {
++        try {
++          await IOUtils.remove(copies[i]);
++        } catch (ex) {
++          lazy.sessionStoreLogger.warn(
++            "SessionWriter rotation, exception on removing old copy",
++            ex
++          );
++        }
++      }
++    }
++  }
++
++  /**
++   * Remove all time-depth rotation copies, following the privacy model of
++   * the recovery file they are duplicated from.
++   */
++  async #removeRotationCopies() {
++    let children;
++    try {
++      children = await IOUtils.getChildren(this.#paths.backups);
++    } catch (ex) {
++      return;
++    }
++    for (let entry of children) {
++      if (PathUtils.filename(entry).startsWith("rotation-")) {
++        try {
++          await IOUtils.remove(entry);
++        } catch (ex) {
++          lazy.sessionStoreLogger.warn(
++            "SessionWriter rotation cleanup, exception on remove",
++            ex
++          );
++        }
++      }
++    }
++  }
++
+   /**
+    * Wipes all files holding session data from disk.
+    */

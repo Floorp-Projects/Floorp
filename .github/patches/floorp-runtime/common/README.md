@@ -164,3 +164,36 @@ an invalid nested-context setter that aborted registration and later cleanup.
 The extracted `moz-src` patch has a parity test; native embedded-chrome regressions
 cover both opening orders in `pictureInPictureActivity.test.ts`. This changes
 JavaScript only and requires no native rebuild.
+
+`sessionstore-write-scheduling.patch` classifies session writes by
+criticality and shortens critical latency. Updates carrying only scroll
+position, form data or session storage changes are batched on a deferrable
+timer controlled by `floorp.sessionstore.interval.deferrable` (default 10
+minutes); navigation, typing, tab and window operations stay on the critical
+timer, now controlled by `floorp.sessionstore.interval.critical` (default 5
+seconds, down from the historical 15) so that tab closures and navigations are
+persisted quickly. Because deferrable updates no longer share the critical
+timer, the shorter critical interval does not multiply write frequency during
+scroll-only browsing: full-session rewrites drop from every 15 seconds to at
+most one per deferrable interval in those periods. Every save writes the full
+session state, so critical saves pick up pending deferrable data. Only
+JavaScript changes in SessionSaver and SessionStore; native recompilation is
+not required. The matching
+`tools/patches/browser-modules-sessionstore-write-scheduling.sys.patch` covers
+extracted development builds.
+
+`sessionstore-time-depth-rotation.patch` keeps timestamped generations of the
+recovery session file. The regular fallback chain (recovery, recovery.baklz4,
+previous) has no time depth: a logically corrupted but well-formed state -
+for example an empty session written over a healthy one - propagates to every
+generation within minutes. After each successful runtime write, the writer
+copies the recovery file to `rotation-<epochMs>.jsonlz4` in the backups
+directory at most once per `floorp.sessionstore.rotation.interval` (default
+one hour), keeping `floorp.sessionstore.rotation.max` copies (default 48).
+Rotation copies follow the privacy model of the recovery file: they are
+removed along with it on clean shutdown when auto-restore is disabled, and
+the wipe path removes the whole backups directory on session history purge.
+Only JavaScript changes in SessionWriter; native recompilation is not
+required. The matching
+`tools/patches/browser-modules-sessionstore-time-depth-rotation.sys.patch`
+covers extracted development builds.
