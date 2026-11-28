@@ -148,12 +148,25 @@ def main():
         )
         return 3
 
-    parts = chunks(opts["message"] or "")
+    parts = chunks(opts["message"]) if opts["message"] else []
+    attachments = []
+    for fpath in opts["files"]:
+        with open(fpath, "rb") as f:
+            attachments.append((os.path.basename(fpath), f.read()))
+
     target_channel = channel
     thread_id = None
 
-    first = api(token, "POST", f"/channels/{target_channel}/messages",
-                {"content": parts[0]})
+    # Discord rejects messages with neither content nor attachments, so when
+    # there is no text the first attachment must ride on the initial message.
+    if parts:
+        first = api(token, "POST", f"/channels/{target_channel}/messages",
+                    {"content": parts[0]})
+        parts = parts[1:]
+    else:
+        first_file, attachments = attachments[:1], attachments[1:]
+        first = api(token, "POST", f"/channels/{target_channel}/messages",
+                    payload={}, files=first_file)
     first_id = first.get("id")
 
     if opts["thread_name"] and first_id:
@@ -164,15 +177,13 @@ def main():
         if thread_id:
             target_channel = thread_id
 
-    for part in parts[1:]:
+    for part in parts:
         api(token, "POST", f"/channels/{target_channel}/messages",
             {"content": part})
 
-    for fpath in opts["files"]:
-        with open(fpath, "rb") as f:
-            data = f.read()
+    for fname, data in attachments:
         api(token, "POST", f"/channels/{target_channel}/messages",
-            payload={}, files=[(os.path.basename(fpath), data)])
+            payload={}, files=[(fname, data)])
 
     print(json.dumps({
         "posted": True,

@@ -15,12 +15,12 @@
 //   launch   --binary <path> --profile <dir> [--os-port N] [--marionette-port N]
 //            [--token T] [--pref name=value]... [--system-access] [--no-marionette]
 //   stop     --profile <dir>
-//   status   [--os-port N] [--marionette-port N]
+//   status   [--os-port N] [--marionette-port N] [--token T|--profile <dir>]
 //   os       <METHOD> <path> [--data <json>] [--os-port N] [--token T|--profile <dir>]
 //   os-token --profile <dir>
-//   eval     <js> [--marionette-port N] [--context chrome|content]
+//   eval     <js> [--marionette-port N] [--context chrome|content] [--async] [--timeout ms]
 //   shot     [--out <path>] [--marionette-port N]
-//   wait     [--os-port N] [--marionette-port N] [--timeout <sec>]
+//   wait     [--os-port N] [--timeout <sec>] [--token T|--profile <dir>]
 //
 // All output is JSON on stdout so calling agents can parse it reliably.
 // Errors go to stderr and produce a non-zero exit code.
@@ -30,7 +30,9 @@ import { MarionetteClient } from "../../../tools/src/browser_connector.ts";
 type JsonValue = Record<string, unknown> | string | number | boolean | null;
 
 function out(value: JsonValue): void {
-  console.log(typeof value === "string" ? value : JSON.stringify(value));
+  // Always JSON-encode, including strings, so callers can parse stdout reliably
+  // (a bare string like "true" would otherwise be misread as another type).
+  console.log(JSON.stringify(value));
 }
 
 function fail(message: string, detail?: unknown): never {
@@ -44,6 +46,10 @@ function fail(message: string, detail?: unknown): never {
 }
 
 // -- arg parsing ---------------------------------------------------------------
+
+// Switches that never take a value. Without this list, `eval --async 'script'`
+// would swallow the script as the value of --async.
+const BOOLEAN_OPTS = new Set(["async", "system-access", "no-marionette"]);
 
 function parseArgs(argv: string[]): {
   cmd: string | undefined;
@@ -64,6 +70,10 @@ function parseArgs(argv: string[]): {
     const a = argv[i];
     if (a.startsWith("--")) {
       const key = a.slice(2);
+      if (BOOLEAN_OPTS.has(key)) {
+        opts[key] = true;
+        continue;
+      }
       const next = argv[i + 1];
       if (next !== undefined && !next.startsWith("--")) {
         if (key === "pref") {
@@ -97,15 +107,44 @@ function strOpt(opts: Record<string, string | boolean>, key: string): string | u
 
 // -- os-server helpers ----------------------------------------------------------
 
+function extractToken(prefsText: string): string | undefined {
+  const m = prefsText.match(/user_pref\("floorp\.os\.server\.token",\s*"([^"]+)"/);
+  return m?.[1];
+}
+
 async function readTokenFromProfile(profileDir: string): Promise<string> {
-  try {
-    const prefs = await Deno.readTextFile(`${profileDir}/prefs.js`);
-    const m = prefs.match(/user_pref\("floorp\.os\.server\.token",\s*"([^"]+)"/);
-    if (m) return m[1];
-  } catch {
-    // fall through
+  // user.js always carries the token for qa-drive-launched instances, even
+  // before Firefox has flushed prefs.js.
+  for (const name of ["prefs.js", "user.js"]) {
+    try {
+      const text = await Deno.readTextFile(`${profileDir}/${name}`);
+      const token = extractToken(text);
+      if (token) return token;
+    } catch {
+      // try next file
+    }
   }
-  fail(`os-server token not found in ${profileDir}/prefs.js — is floorp.os.enabled=true and the browser running?`);
+  fail(`os-server token not found in ${profileDir} — is floorp.os.enabled=true and the browser running?`);
+}
+
+// Best-effort token resolution for status/wait. Returns "" when unavailable;
+// an empty token still proves liveness via a 401 response.
+async function resolveOsToken(opts: Record<string, string | boolean>): Promise<string> {
+  const explicit = strOpt(opts, "token");
+  if (explicit) return explicit;
+  const profile = strOpt(opts, "profile");
+  if (profile) {
+    for (const name of ["prefs.js", "user.js"]) {
+      try {
+        const text = await Deno.readTextFile(`${profile}/${name}`);
+        const token = extractToken(text);
+        if (token) return token;
+      } catch {
+        // try next file
+      }
+    }
+  }
+  return "";
 }
 
 async function osCall(
@@ -138,6 +177,10 @@ async function osCall(
 // NOTE: never probe the os-server with bare TCP connect/close — each probe is an
 // incomplete HTTP request on the server side and produces socket errors / stuck
 // handlers on some versions. Readiness is checked with real HTTP GETs instead.
+//
+// When a token is supplied, readiness means HTTP 200: a 401 proves *some* other
+// instance owns the port but cannot serve our token. With an empty token a 401
+// is accepted as unauthenticated liveness evidence only.
 async function waitForOsServer(
   port: number,
   token: string,
@@ -147,7 +190,8 @@ async function waitForOsServer(
   while (Date.now() < deadline) {
     try {
       const res = await osCall(port, token, "GET", "/tabs/list", undefined, 4000);
-      if (res.status === 200 || res.status === 401) return true;
+      if (res.status === 200) return true;
+      if (!token && res.status === 401) return true;
     } catch {
       // not up yet
     }
@@ -178,11 +222,23 @@ function typedPrefValue(raw: string): string {
   return JSON.stringify(raw);
 }
 
+async function writePrivate(path: string, content: string): Promise<void> {
+  // QA profiles live under shared /tmp; the bearer token inside must not be
+  // readable by other local users. mode only applies at creation, so remove
+  // any pre-existing file first.
+  try {
+    await Deno.remove(path);
+  } catch {
+    // did not exist
+  }
+  await Deno.writeTextFile(path, content, { mode: 0o600 });
+}
+
 async function cmdLaunch(opts: Record<string, string | boolean>, multi: Record<string, string[]>): Promise<void> {
   const binary = strOpt(opts, "binary") ??
     "/Applications/Floorp.app/Contents/MacOS/floorp";
   let profile = strOpt(opts, "profile") ?? fail("--profile is required");
-  await Deno.mkdir(profile, { recursive: true });
+  await Deno.mkdir(profile, { recursive: true, mode: 0o700 });
   // Normalize symlinks (macOS /tmp -> /private/tmp) so the process command line
   // matches the path used for later stop/status operations.
   try {
@@ -216,7 +272,7 @@ async function cmdLaunch(opts: Record<string, string | boolean>, multi: Record<s
     if (eq < 1) fail(`--pref must be name=value, got: ${p}`);
     prefLines.push(`user_pref(${JSON.stringify(p.slice(0, eq))}, ${typedPrefValue(p.slice(eq + 1))});`);
   }
-  await Deno.writeTextFile(`${profile}/user.js`, prefLines.join("\n") + "\n");
+  await writePrivate(`${profile}/user.js`, prefLines.join("\n") + "\n");
 
   const args = [
     "--no-remote",
@@ -244,6 +300,21 @@ async function cmdLaunch(opts: Record<string, string | boolean>, multi: Record<s
   // Detach: unref so this CLI can exit while the browser keeps running.
   child.unref();
 
+  // Record instance identity before waiting so stop can target this exact
+  // process instead of matching command-line substrings.
+  await writePrivate(
+    `${profile}/qa-instance.json`,
+    JSON.stringify({
+      pid: child.pid,
+      profile,
+      osPort,
+      marionettePort: useMarionette ? marionettePort : null,
+      token,
+      binary,
+      launchedAt: new Date().toISOString(),
+    }, null, 2) + "\n",
+  );
+
   const osReady = await waitForOsServer(osPort, token, 40);
   const result: Record<string, unknown> = {
     launched: true,
@@ -259,28 +330,106 @@ async function cmdLaunch(opts: Record<string, string | boolean>, multi: Record<s
   }
   if (!osReady) {
     result.warning =
-      "os-server port did not open within 30s — check floorp.os.enabled pref and binary path";
+      "os-server did not answer an authenticated request within 40s — the port may be owned by another instance, or floorp.os.enabled is not active";
   }
   out(result as JsonValue);
 }
 
-async function cmdStop(opts: Record<string, string | boolean>): Promise<void> {
-  const profile = strOpt(opts, "profile") ?? fail("--profile is required");
-  // macOS resolves /tmp to /private/tmp in the process command line, so match
-  // both the literal and resolved variants of the unique profile path.
-  const variants = [profile];
-  if (profile.startsWith("/tmp/")) variants.push(`/private${profile}`);
-  let stopped = false;
-  for (const variant of variants) {
-    const proc = new Deno.Command("pkill", {
-      args: ["-f", "--", `-profile ${variant}`],
-      stdout: "null",
+// -- stop -----------------------------------------------------------------------
+//
+// Never use pkill -f with a profile substring: it matches this CLI's own
+// --profile argument (since "-profile" is a substring of "--profile") and any
+// browser whose profile path merely shares a prefix. Instead the launch
+// command records the child PID in qa-instance.json and stop verifies the
+// process identity before signaling it.
+
+async function processAlive(pid: number): Promise<string | undefined> {
+  try {
+    const res = await new Deno.Command("/bin/ps", {
+      args: ["-p", String(pid), "-o", "command="],
+      stdout: "piped",
       stderr: "null",
-    });
-    const status = await proc.output();
-    stopped = stopped || status.code === 0;
+    }).output();
+    if (res.code !== 0) return undefined;
+    const cmdline = new TextDecoder().decode(res.stdout).trim();
+    return cmdline || undefined;
+  } catch {
+    return undefined;
   }
-  out({ stopped, profile });
+}
+
+async function cmdStop(opts: Record<string, string | boolean>): Promise<void> {
+  let profile = strOpt(opts, "profile") ?? fail("--profile is required");
+  try {
+    profile = await Deno.realPath(profile);
+  } catch {
+    // keep literal path
+  }
+  const metaPath = `${profile}/qa-instance.json`;
+  let meta: { pid?: number; profile?: string };
+  try {
+    meta = JSON.parse(await Deno.readTextFile(metaPath));
+  } catch {
+    fail(
+      `no qa-instance.json in ${profile} — refusing to guess processes. ` +
+        `Only instances launched by "qa-drive launch" can be stopped safely.`,
+    );
+  }
+  const pid = meta.pid;
+  if (typeof pid !== "number" || pid <= 0) {
+    fail(`qa-instance.json in ${profile} has no valid pid`);
+  }
+
+  const cmdline = await processAlive(pid);
+  if (cmdline === undefined) {
+    try {
+      await Deno.remove(metaPath);
+    } catch {
+      // best effort
+    }
+    out({ stopped: false, alreadyExited: true, pid, profile });
+    return;
+  }
+  const metaProfile = typeof meta.profile === "string" ? meta.profile : profile;
+  const verified = cmdline.includes("-profile") &&
+    cmdline.includes(metaProfile) &&
+    /floorp/i.test(cmdline);
+  if (!verified) {
+    fail(
+      `pid ${pid} does not look like the Floorp instance for ${metaProfile} — refusing to signal it`,
+      { cmdline },
+    );
+  }
+
+  try {
+    Deno.kill(pid, "SIGTERM");
+  } catch (e) {
+    fail(`failed to signal pid ${pid}: ${(e as Error).message}`);
+  }
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    if ((await processAlive(pid)) === undefined) break;
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  let killed = false;
+  if ((await processAlive(pid)) !== undefined) {
+    try {
+      Deno.kill(pid, "SIGKILL");
+      killed = true;
+    } catch {
+      // already gone
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  const gone = (await processAlive(pid)) === undefined;
+  if (gone) {
+    try {
+      await Deno.remove(metaPath);
+    } catch {
+      // best effort
+    }
+  }
+  out({ stopped: gone, pid, sigkill: killed, profile });
 }
 
 // -- main -----------------------------------------------------------------------
@@ -299,20 +448,7 @@ switch (cmd) {
   case "status": {
     const osPort = numOpt(opts, "os-port", 58262);
     const marionettePort = numOpt(opts, "marionette-port", 28292);
-    let token = strOpt(opts, "token") ?? "";
-    if (!token) {
-      const profile = strOpt(opts, "profile");
-      if (profile) {
-        try {
-          const prefs = await Deno.readTextFile(`${profile}/prefs.js`);
-          const m = prefs.match(/user_pref\("floorp\.os\.server\.token",\s*"([^"]+)"/);
-          if (m) token = m[1];
-        } catch {
-          // no token available — a 401 still proves the server is up
-        }
-      }
-    }
-    // os-server readiness is only meaningful with a token; a 401 still proves the server is up.
+    const token = await resolveOsToken(opts);
     const osOpen = await waitForOsServer(osPort, token, 4);
     const marionetteOpen = await waitForTcp(marionettePort, 1);
     out({ osPort, osOpen, marionettePort, marionetteOpen });
@@ -327,7 +463,7 @@ switch (cmd) {
     let token = strOpt(opts, "token");
     if (!token) {
       const profile = strOpt(opts, "profile");
-      if (!profile) fail("os: provide --token or --profile (to read token from prefs.js)");
+      if (!profile) fail("os: provide --token or --profile (to read token from the profile)");
       token = await readTokenFromProfile(profile);
     }
     let data: unknown;
@@ -356,14 +492,17 @@ switch (cmd) {
     if (!script) fail("usage: eval <js> [--marionette-port N] [--context chrome|content] [--async] [--timeout ms]");
     const marionettePort = numOpt(opts, "marionette-port", 28292);
     const context = strOpt(opts, "context") === "content" ? "content" : "chrome";
+    const timeoutMs = numOpt(opts, "timeout", 30000);
     const client = await MarionetteClient.connect(marionettePort);
     try {
       await client.setContext(context);
+      // The session's own script timeout defaults to ~30s in the browser;
+      // without this, --timeout only extends the client-side socket deadline.
+      await client.send("WebDriver:SetTimeouts", { script: timeoutMs });
       if (opts.async === true) {
         // WebDriver:ExecuteAsyncScript — the script body's last argument is a
         // finish callback. The script is wrapped so the user writes a body that
         // ends by calling resolve(value) or reject(error).
-        const timeoutMs = numOpt(opts, "timeout", 30000);
         const wrapped =
           `const resolve = arguments[arguments.length - 1];\n` +
           `const reject = (e) => resolve({__qaError: String((e && e.message) || e)});\n` +
@@ -402,7 +541,10 @@ switch (cmd) {
   case "wait": {
     const timeoutSec = numOpt(opts, "timeout", 30);
     const osPort = numOpt(opts, "os-port", 58262);
-    const ready = await waitForTcp(osPort, timeoutSec);
+    // Real HTTP readiness — a bare TCP probe can wedge the os-server on some
+    // builds (see harness.md) and does not prove the API answers.
+    const token = await resolveOsToken(opts);
+    const ready = await waitForOsServer(osPort, token, timeoutSec);
     out({ osPort, ready });
     if (!ready) Deno.exit(2);
     break;
@@ -413,3 +555,7 @@ switch (cmd) {
       `unknown command: ${cmd ?? "(none)"}. Expected: launch|stop|status|os|os-token|eval|shot|wait`,
     );
 }
+
+// MarionetteClient leaves socket-read timers referenced even after close();
+// exiting explicitly keeps successful eval/shot commands from stalling ~30s.
+Deno.exit(0);
