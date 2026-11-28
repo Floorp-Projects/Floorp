@@ -15,10 +15,10 @@ import {
 } from "../../../test/utils/test_harness.ts";
 
 /**
- * Test-local handle on the private `checkSiteCanBeInstall` method.
+ * Test-local handle on `checkSiteCanBeInstall`.
  *
- * Pulled off the prototype with a cast-to-unknown because the method is
- * `private` in TypeScript. Skipping `new SiteSpecificBrowserManager(...)`
+ * Pulled off the prototype with a cast-to-unknown to skip
+ * `new SiteSpecificBrowserManager(...)`
  * because that constructor wires up `gBrowser.addTabsProgressListener` and
  * two `Services.obs.addObserver` calls — running it here would leak
  * listeners across the test session. `checkSiteCanBeInstall` does not read
@@ -362,6 +362,51 @@ const tests: TestCase[] = [
         assertEquals(threw, undefined, `${spec} must not throw`);
         assertEquals(result, false, `${spec} must return false`);
       }
+    },
+  },
+  {
+    name: "non-loopback http install command fails closed",
+    async fn() {
+      const browser = makeBrowser("http://172.16.255.2/app/");
+      let installedChecks = 0;
+      let manifestReads = 0;
+      let installs = 0;
+      let launches = 0;
+      const managerLike = {
+        getEffectiveUserContextId(): number {
+          return 0;
+        },
+        checkPageIsInstalledForContainer(): Promise<boolean> {
+          installedChecks++;
+          return Promise.resolve(false);
+        },
+        createFromBrowser(): Promise<Manifest> {
+          manifestReads++;
+          return Promise.resolve(makeManifest("http://172.16.255.2/app/"));
+        },
+        install(): Promise<void> {
+          installs++;
+          return Promise.resolve();
+        },
+        scheduleRunSsbByUrl(): void {
+          launches++;
+        },
+      };
+
+      await installOrRunWithManagerLike(managerLike, browser);
+
+      assertEquals(
+        installedChecks,
+        0,
+        "ineligible page must not check installation",
+      );
+      assertEquals(
+        manifestReads,
+        0,
+        "ineligible page must not read a manifest",
+      );
+      assertEquals(installs, 0, "ineligible page must not be installed");
+      assertEquals(launches, 0, "ineligible page must not be launched");
     },
   },
   {

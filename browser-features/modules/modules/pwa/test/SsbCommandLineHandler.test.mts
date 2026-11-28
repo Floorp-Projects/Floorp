@@ -200,7 +200,7 @@ async function testLinuxWindowsKeepDistinctLauncherClasses(): Promise<void> {
   const apps = ["Alpha", "Beta"].map((name) => ({
     id: Services.uuid.generateUUID().toString(),
     name: `Window Class Test ${name}`,
-    start_url: "about:blank",
+    start_url: "https://example.com/",
     icon: "",
   }));
   const windows: Awaited<ReturnType<typeof SsbRunnerUtils.openSsbWindow>>[] =
@@ -253,7 +253,7 @@ async function testLinuxLegacyIdsKeepFallbackWindowClasses(): Promise<void> {
     const app = {
       id,
       name,
-      start_url: "about:blank",
+      start_url: "https://example.com/",
       icon: "",
     } as unknown as Parameters<typeof SsbRunnerUtils.openSsbWindow>[0];
     const win = await SsbRunnerUtils.openSsbWindow(app);
@@ -315,7 +315,7 @@ async function testLinuxPwaStartupKeepsOrdinaryBrowserIdentity(): Promise<
     const app = {
       id: Services.uuid.generateUUID().toString(),
       name: "Browser Identity Regression",
-      start_url: "about:blank",
+      start_url: "https://example.com/",
       icon: "",
     };
     const pwa = await SsbRunnerUtils.openSsbWindow(app);
@@ -341,6 +341,45 @@ export async function runAllTests(): Promise<void> {
     );
     return;
   }
+
+  async function testLaunchRejectsIneligibleUrls(): Promise<void> {
+    const { SsbRunnerUtils } = ChromeUtils.importESModule(
+      "resource://noraneko/modules/pwa/SsbCommandLineHandler.sys.mjs",
+    ) as typeof import("../SsbCommandLineHandler.sys.mts");
+    const assertRejects = async (startUrl: string): Promise<void> => {
+      let threw = false;
+      try {
+        await SsbRunnerUtils.openSsbWindow({
+          id: Services.uuid.generateUUID().toString(),
+          name: "Ineligible URL Test",
+          start_url: startUrl,
+          icon: "",
+        });
+      } catch {
+        threw = true;
+      }
+      assertEquals(threw, true, `Launch is rejected for ${startUrl}`);
+    };
+    await assertRejects("about:blank");
+    await assertRejects("http://example.com/");
+    await assertRejects("file:///etc/passwd");
+    const win = await SsbRunnerUtils.openSsbWindow({
+      id: Services.uuid.generateUUID().toString(),
+      name: "Eligible URL Test",
+      start_url: "https://example.com/",
+      icon: "",
+    });
+    try {
+      assertEquals(
+        typeof win.close,
+        "function",
+        "An eligible https URL still launches",
+      );
+    } finally {
+      win.close();
+    }
+  }
+
   await runTests("SsbCommandLineHandler.test.mts", [{
     name:
       "the first Linux PWA request uses its container before experiment initialization",
@@ -359,5 +398,8 @@ export async function runAllTests(): Promise<void> {
   }, {
     name: "Linux launcher repair is not gated by the taskbar rollout",
     fn: testLinuxLauncherRepairIgnoresRollout,
+  }, {
+    name: "the launch boundary rejects ineligible PWA URLs",
+    fn: testLaunchRejectsIneligibleUrls,
   }]);
 }

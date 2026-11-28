@@ -6,6 +6,7 @@
 import { createRootHMR, render } from "@nora/solid-xul";
 import { createEffect, createSignal, onCleanup, untrack } from "solid-js";
 import { panelSidebarConfig } from "../panel-sidebar/data/data";
+import { FLOORP_PANEL_SIDEBAR_POSITION_CHANGED_EVENT } from "./events.ts";
 import hoverStyle from "./hover-offset.css?inline";
 
 type Orders = {
@@ -59,6 +60,9 @@ export namespace gFlexOrder {
         floorpSidebarSplitter: -1,
       });
     }
+    document.dispatchEvent(
+      new CustomEvent(FLOORP_PANEL_SIDEBAR_POSITION_CHANGED_EVENT),
+    );
     updateHoverOffset();
     scheduleHoverOffsetUpdate();
   }

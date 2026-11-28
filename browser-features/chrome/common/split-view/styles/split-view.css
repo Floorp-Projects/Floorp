@@ -763,6 +763,16 @@
   min-width: var(--floorp-tab-min-width) !important;
 }
 
+/* Stack members stay collapsed to the chip even while a split view exists;
+ * the selector above would otherwise force each hidden member to the full
+ * configured minimum width. */
+#TabsToolbar[splitview-multibar]
+  #tabbrowser-tabs:not([orient="vertical"])
+  tab-group[data-floorp-stack]
+  > .tabbrowser-tab:not([pinned]):not([data-floorp-split-tab]) {
+  min-width: 0 !important;
+}
+
 
 /* Prevent user text selection during splitter drag */
 #tabbrowser-tabpanels[data-floorp-dragging] {

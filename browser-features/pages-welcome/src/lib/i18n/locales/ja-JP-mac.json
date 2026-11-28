@@ -10,6 +10,11 @@
     "actualScreenshot": "An actual Floorp screenshot. Appearance varies with your version and settings."
   },
   "setupV5": {
+    "backupTitle": "タブとワークスペースのバックアップ",
+    "backupDescription": "Floorp は開いているタブとワークスペースを定期的に保存し、後から復元できます。既定で有効です。",
+    "backupEnable": "タブとワークスペースを自動的にバックアップする",
+    "backupDetails": "保存されるのはタブの URL・タイトル・ピン留め・コンテナ・履歴で、プロファイル内の workspaces/backup に保存されます。フォームの入力内容やセッションストレージは保存されません。保持期間を過ぎたバックアップは自動的に削除されます。設定はいつでも変更できます。",
+    "backupOpenSettings": "バックアップ設定を開く",
     "back": "戻る",
     "supportLabels": {
       "disabled": "自動で開かない",

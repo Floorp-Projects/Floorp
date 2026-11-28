@@ -5,7 +5,11 @@ import {
   CardTitle,
 } from "@/components/common/card.tsx";
 import { Switch } from "@/components/common/switch.tsx";
-import { useInterfaceDesigns } from "@/app/design/useInterfaceDesigns.ts";
+import {
+  isDeprecatedInterfaceDesign,
+  RECOMMENDED_INTERFACE_DESIGN,
+  useInterfaceDesigns,
+} from "@/app/design/useInterfaceDesigns.ts";
 import { useTranslation } from "react-i18next";
 import { useFormContext, useWatch } from "react-hook-form";
 import type { DesignFormData } from "@/types/pref.ts";
@@ -18,6 +22,11 @@ export function Interface() {
   const design = useWatch({ control, name: "design" });
   const faviconColor = useWatch({ control, name: "faviconColor" });
   const options = useInterfaceDesigns();
+  const recommendedTitle = options.find((option) =>
+    option.value === RECOMMENDED_INTERFACE_DESIGN
+  )?.title;
+  const selectedTitle = options.find((option) => option.value === design)
+    ?.title;
   return (
     <Card className={styles.section}>
       <CardHeader>
@@ -45,7 +54,25 @@ export function Interface() {
                   checked={design === option.value}
                   onChange={() => setValue("design", option.value)}
                 />
-                <span>{option.title}</span>
+                <span className={styles.choiceTitle}>
+                  <span>{option.title}</span>
+                  {option.deprecated && (
+                    <span
+                      className={styles.choiceBadge}
+                      data-kind="deprecated"
+                    >
+                      {t("design.deprecated")}
+                    </span>
+                  )}
+                  {option.recommended && (
+                    <span
+                      className={styles.choiceBadge}
+                      data-kind="recommended"
+                    >
+                      {t("design.recommended")}
+                    </span>
+                  )}
+                </span>
                 <span className={styles.choiceIndicator} aria-hidden="true">
                   {design === option.value && (
                     <Check size={14} strokeWidth={2.5} />
@@ -55,6 +82,29 @@ export function Interface() {
             </label>
           ))}
         </fieldset>
+        {isDeprecatedInterfaceDesign(design) && (
+          <div
+            className={`floorp-notice floorp-notice-warning ${styles.deprecationNotice}`}
+            role="note"
+            data-testid="design-deprecation-notice"
+          >
+            <span className="text-sm">
+              {t("design.deprecatedDesignWarning", {
+                design: selectedTitle,
+                recommended: recommendedTitle,
+              })}
+            </span>
+            <button
+              type="button"
+              className={styles.deprecationAction}
+              onClick={() => setValue("design", RECOMMENDED_INTERFACE_DESIGN)}
+            >
+              {t("design.switchToRecommendedDesign", {
+                recommended: recommendedTitle,
+              })}
+            </button>
+          </div>
+        )}
         <div className={styles.extra}>
           <h3>{t("design.otherInterfaceSettings")}</h3>
           <div className={styles.row}>

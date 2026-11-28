@@ -11,7 +11,7 @@ index 9392b42..8256216 100644
 +     * * [STATUS_BAR]
 +     * * START
 +     */
-+     if (area !== "statusBar") {
++     if (area !== "statusBar" && area !== "nora-statusbar") {
        let type = CustomizableUI.getAreaType(area);
        if (type == CustomizableUI.TYPE_TOOLBAR) {
          let node = document.getElementById(area);

@@ -167,7 +167,11 @@ export async function runAllTests(): Promise<void> {
           release();
           await queued;
           await repair;
-          assertEquals(repaired, true, "repair completes once the queue drains");
+          assertEquals(
+            repaired,
+            true,
+            "repair completes once the queue drains",
+          );
           assertEquals(
             await IOUtils.readUTF8(files.desktop),
             current,
@@ -419,6 +423,15 @@ export async function runAllTests(): Promise<void> {
           );
           const overrides = [
             { target: Experiments, key: "getVariant", value: () => "enabled" },
+            {
+              target: Experiments,
+              key: "getCachedEnrollment",
+              value: () => ({
+                variantId: "enabled",
+                disabled: false,
+                optedOut: false,
+              }),
+            },
             {
               target: ContextualIdentityService,
               key: "getPublicIdentities",

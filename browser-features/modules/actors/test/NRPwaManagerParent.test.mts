@@ -80,6 +80,9 @@ async function withSandbox(
   const oldDataHome = Services.env.get("XDG_DATA_HOME");
   const restorers: Array<() => void> = [];
   const originalGetVariant = Experiments.getVariant.bind(Experiments);
+  const originalGetCachedEnrollment = Experiments.getCachedEnrollment.bind(
+    Experiments,
+  );
   try {
     restorers.push(override(DataStoreProvider, "getDataManager", () => store));
     restorers.push(
@@ -91,6 +94,16 @@ async function withSandbox(
         "getVariant",
         (key: string) =>
           key === "pwa_container_support" ? "enabled" : originalGetVariant(key),
+      ),
+    );
+    restorers.push(
+      override(
+        Experiments,
+        "getCachedEnrollment",
+        (key: string) =>
+          key === "pwa_container_support"
+            ? { variantId: "enabled", disabled: false, optedOut: false }
+            : originalGetCachedEnrollment(key),
       ),
     );
     restorers.push(
@@ -385,6 +398,11 @@ export async function runAllTests(): Promise<void> {
             "getVariant",
             () => null,
           );
+          const restoreEnrollment = override(
+            Experiments,
+            "getCachedEnrollment",
+            () => ({ variantId: null, disabled: false, optedOut: false }),
+          );
           try {
             assertEquals(
               await setContainer(actor, 1),
@@ -393,6 +411,7 @@ export async function runAllTests(): Promise<void> {
             );
           } finally {
             restoreVariant();
+            restoreEnrollment();
           }
           assertEquals(
             await snapshot(root),

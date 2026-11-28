@@ -41,12 +41,12 @@ function withIntPrefs(prefs: [string, number][], fn: () => void): void {
 // Tests — getOldInterfaceConfig
 // ---------------------------------------------------------------------------
 
-function testInterfaceDefaultLepton(): void {
+function testInterfaceDefaultProton(): void {
   withIntPref("floorp.browser.user.interface", 0, () => {
     assertEquals(
       getOldInterfaceConfig(),
-      "lepton",
-      "default (0) should return lepton",
+      "proton",
+      "default (0) should return proton for fresh profiles",
     );
   });
 }
@@ -201,12 +201,12 @@ function testTabbarPositionBottomWindow(): void {
 // Tests — edge cases (invalid / unknown values)
 // ---------------------------------------------------------------------------
 
-function testInterfaceInvalidValueReturnsLepton(): void {
+function testInterfaceInvalidValueReturnsProton(): void {
   withIntPref("floorp.browser.user.interface", 99, () => {
     assertEquals(
       getOldInterfaceConfig(),
-      "lepton",
-      "invalid interface value should default to lepton",
+      "proton",
+      "invalid interface value should fall back to the fresh-profile default (proton)",
     );
   });
 }
@@ -253,7 +253,7 @@ function testTabbarPositionInvalidValueReturnsDefault(): void {
 
 export function runAllTests(): void {
   const tests: TestCase[] = [
-    { name: "interface default → lepton", fn: testInterfaceDefaultLepton },
+    { name: "interface default → proton", fn: testInterfaceDefaultProton },
     {
       name: "interface 3+0 → lepton",
       fn: testInterfaceCase3DefaultLepton,
@@ -277,8 +277,8 @@ export function runAllTests(): void {
     },
     // Edge cases
     {
-      name: "interface invalid → lepton",
-      fn: testInterfaceInvalidValueReturnsLepton,
+      name: "interface invalid → proton",
+      fn: testInterfaceInvalidValueReturnsProton,
     },
     {
       name: "interface 3+invalid → lepton",

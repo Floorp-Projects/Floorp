@@ -165,7 +165,9 @@ export const getOldInterfaceConfig = () => {
       return "fluerial";
   }
 
-  return "lepton";
+  // No legacy design pref: fresh profile. Default to Proton, the supported
+  // design; the Lepton family is deprecated.
+  return "proton";
 };
 
 export const getOldTabbarStyleConfig = () => {

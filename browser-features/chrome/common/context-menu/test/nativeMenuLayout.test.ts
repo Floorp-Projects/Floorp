@@ -74,10 +74,13 @@ function assertNativePositions(popup: Element, mode: NativeMenuMode): void {
     alternate ? "closeTabOptions" : "tabContextMenu",
     "Close Duplicate Tabs follows the native layout's submenu relocation",
   );
+  // Firefox 161 flattened the tab-group entries into the "Add to Group"
+  // submenu instead of "Move Tab to"; New Group stays in place in both
+  // layouts (its alt parent is hidden by per-show logic).
   assertEquals(
     item(popup, "context_moveTabToGroupNewGroup").parentElement?.id,
-    alternate ? "moveTabOptionsMenu" : "context_moveTabToGroupPopupMenu",
-    "New Group returns to its native parent when switching back to classic",
+    "context_moveTabToGroupPopupMenu",
+    "New Group keeps its native parent across layout switches",
   );
   assertEquals(
     item(popup, "context_reloadTab").getAttribute("data-l10n-id"),

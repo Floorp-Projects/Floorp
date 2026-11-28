@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Floorp chrome-extras: iconMenu on Linux without GTK CSD */
+@media (-moz-platform: linux) and (not (-moz-gtk-csd-available)) {
+  :root {
+    --context-menu-background-padding-default: 6px;
+    --context-menu-text-padding: 21px;
+  }
+  .menu-icon {
+    display: unset !important;
+  }
+  #main-menubar > menu > .menu-icon {
+    display: none !important;
+  }
+}

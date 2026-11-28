@@ -10,9 +10,15 @@ import type { Manifest } from "#features-chrome/common/pwa/type.ts";
 import type {
   RestartEntry,
   SsbRestartDependencies,
+  SsbWindow,
 } from "../SsbRestart.sys.mts";
 
-const { SsbRestartManager, restartUrl, parseRestartEntries } = ChromeUtils
+const {
+  SsbRestartManager,
+  restartUrl,
+  parseRestartEntries,
+  inPrivateContainer,
+} = ChromeUtils
   .importESModule(
     "resource://noraneko/modules/pwa/SsbRestart.sys.mjs",
   ) as typeof import("../SsbRestart.sys.mts");
@@ -225,6 +231,38 @@ function testInvalidDataAndCrossOrigin(): void {
   );
 }
 
+function testPrivateContainerWindowsAreDetected(): void {
+  const privateIds = new Set([7]);
+  const fakeWindow = (tabContext: number, argContext?: string) => {
+    const bag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+      Ci.nsIWritablePropertyBag2,
+    );
+    if (argContext !== undefined) {
+      bag.setPropertyAsAString("userContextId", argContext);
+    }
+    return {
+      arguments: [null, bag],
+      gBrowser: { selectedTab: { userContextId: tabContext } },
+    } as unknown as SsbWindow;
+  };
+  assert(
+    inPrivateContainer(fakeWindow(7), privateIds),
+    "a tab in the private container is excluded",
+  );
+  assert(
+    inPrivateContainer(fakeWindow(0, "7"), privateIds),
+    "a private container app is excluded before its tab migrates",
+  );
+  assert(
+    !inPrivateContainer(fakeWindow(3, "3"), privateIds),
+    "ordinary container apps remain restorable",
+  );
+  assert(
+    !inPrivateContainer(fakeWindow(0), privateIds),
+    "apps without a container remain restorable",
+  );
+}
+
 export async function runAllTests(): Promise<void> {
   await runTests("SsbRestart.test.mts", [
     {
@@ -250,6 +288,10 @@ export async function runAllTests(): Promise<void> {
     {
       name: "invalid state and external URLs are rejected",
       fn: testInvalidDataAndCrossOrigin,
+    },
+    {
+      name: "private container windows are never queued",
+      fn: testPrivateContainerWindowsAreDetected,
     },
   ]);
 }

@@ -123,6 +123,8 @@ export const ALLOWED_UNREAD_DEFS: Record<string, string> = {
   "--autocomplete-popup-highlight-background": GONE_GECKO,
   "--autocomplete-popup-highlight-color": GONE_GECKO,
   "--autocomplete-popup-hover-background": GONE_GECKO,
+  "--panel-banner-item-info-icon-bgcolor":
+    "Gecko token Lepton overrides; Gecko 161 removed its last reader (panelUI/downloads)",
   "--panel-disabled-color": GONE_GECKO,
   "--panel-shortcut-color": GONE_GECKO,
   "--panel-description-color": GONE_GECKO,

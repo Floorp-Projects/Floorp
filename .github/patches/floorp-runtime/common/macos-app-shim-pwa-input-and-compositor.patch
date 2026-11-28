@@ -233,7 +233,7 @@ index 4916c301f8b..d5d465bdf91 100644
 +  RefPtr<MacWebAppWidget> self(this);
 +  if (Destroyed()) return;
 +  if (mSwipeTracker &&
-+      mSwipeTracker->ProcessEvent(aEvent) == nsEventStatus_eConsumeNoDefault)
++      mSwipeTracker->ProcessEvent(aEvent, SwipeInputSource::Touchpad) == nsEventStatus_eConsumeNoDefault)
 +    return;
 +  if (Destroyed()) return;
 +  if (mAPZC) {

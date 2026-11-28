@@ -47,6 +47,9 @@ export class PwaService {
   }
 
   checkBrowserCanBeInstallAsPwa(browser: Browser) {
+    if (!this.ssbManager.checkSiteCanBeInstall(browser.currentURI)) {
+      return Promise.resolve(false);
+    }
     return this.manifestProcesser.checkBrowserCanBeInstallAsPwa(browser);
   }
 

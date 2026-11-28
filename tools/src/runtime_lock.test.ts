@@ -119,15 +119,15 @@ Deno.test("canonical Runtime lock pins the complete reviewed source closure", ()
   }, {
     "repository": "Floorp-Projects/Floorp-Runtime",
     "trackingRef": "nora-0.2.0",
-    "ref": "daily-1180",
-    "commit": "741c4537e89b550b0297ed7ea493026506930d4d",
-    "tree": "37acac42c286b043f83c0f7d76cbaf340c27c8d6",
+    "ref": "daily-1188",
+    "commit": "accff142bc844dc5b38c39cea2895e441f146031",
+    "tree": "aa40af9f73935f2774482cb8ca93670eb432cdab",
     "release": {
-      "id": 443518288,
+      "id": 457462766,
       "immutable": false,
     },
     "materialsCount": 54,
-    "materialBytes": 220178,
+    "materialBytes": 218029,
     "testsCount": 9,
     "totalTasks": 17,
     "supportDependencyEdges": 100,
@@ -160,51 +160,51 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   const expected = [
     {
       "tuple": "linux/aarch64",
-      "assetId": 741113423,
-      "assetSize": 79762680,
+      "assetId": 789294431,
+      "assetSize": 80241964,
       "assetSha":
-        "a5000b78ced031b655e035e0373c630bc6f9da4ad2adb217a900d62a7e84ef20",
-      "iniId": 741113424,
-      "iniSize": 535,
+        "99ca3f4b863d09ed9cd08db0541504a553b39c42cebfd38c66b54c7fd254e927",
+      "iniId": 789294417,
+      "iniSize": 534,
       "iniSha":
-        "ee4e299cf15bd3166b516492c22b9461a4b850d023a6975dffa12609a56e9f2e",
-      "buildId": "20261112140843",
+        "cddc36cf02feddfe7d9216d2a367d9844d6d8f95f7b3762e32b2215c4e27a7e6",
+      "buildId": "20261124142337",
     },
     {
       "tuple": "linux/x86_64",
-      "assetId": 741113420,
-      "assetSize": 87953056,
+      "assetId": 789294419,
+      "assetSize": 88445636,
       "assetSha":
-        "556e7bc6871ed7af2dc3cdc5d0c1d57b442ce6a596a32c55a98f139787661751",
-      "iniId": 741113426,
-      "iniSize": 535,
+        "97aa7f653afd8dbfdc1e95f3ecf7eead2f4662c897ac5a63a18d9d7b149b9b1d",
+      "iniId": 789294429,
+      "iniSize": 534,
       "iniSha":
-        "59540708180df5ea4d32966dd1995ffa58a52bcb9b8df27eb8b67185925a9f72",
-      "buildId": "20261112140843",
+        "b94cf95ed497a37e79f380095dfabaa00be2f073c70800644ea3d4de3c4c60f4",
+      "buildId": "20261124142337",
     },
     {
       "tuple": "macos/universal",
-      "assetId": 741113432,
-      "assetSize": 199074582,
+      "assetId": 789294424,
+      "assetSize": 199823067,
       "assetSha":
-        "1999940772ef5899f01e926543e6d0b41bc0cdeccbaca9d471ae128ce9556158",
-      "iniId": 741113430,
-      "iniSize": 535,
+        "f1173da4ea03f1853e16a86be276aa26bfcd885ad3f524e5681d7ade4c82f776",
+      "iniId": 789294426,
+      "iniSize": 534,
       "iniSha":
-        "02de57989f615d77b37aa65006f26661240ce3bf0828d0937d2aa2cdd8a4e11d",
-      "buildId": "20261112140843",
+        "c796c79d1fa7187bafadfbbae8f4d7fe123788a6f6d5d05219a5623cb12bc092",
+      "buildId": "20261124142337",
     },
     {
       "tuple": "windows/x86_64",
-      "assetId": 741113422,
-      "assetSize": 142118367,
+      "assetId": 789294415,
+      "assetSize": 142803244,
       "assetSha":
-        "ea676e956136b8a1a2ff189294e028a3d6477a6b8c3e255250da139506e5523e",
-      "iniId": 741113427,
-      "iniSize": 535,
+        "0cea7b163947f7085cf77dc6648007d503aa247e7aa7419d33065c37415b3a36",
+      "iniId": 789294423,
+      "iniSize": 534,
       "iniSha":
-        "edc5efc3e92ecac38167635371d59049d41e94d0df7b9234512600f8881bfd6e",
-      "buildId": "20261112140843",
+        "24e338af8722ef978770d8ae613b8cf07674e1a9f3606f83303cdc239d8602d0",
+      "buildId": "20261124142337",
     },
   ];
 
@@ -223,7 +223,7 @@ Deno.test("canonical Runtime lock pins each platform's own binary identity", () 
   );
   assertEquals(
     canonicalLock.artifacts.map((entry) => entry.version),
-    ["160.0.1", "160.0.1", "160.0.1", "160.0.1"],
+    ["161.0", "161.0", "161.0", "161.0"],
   );
   assertEquals(
     artifact(canonicalLock, "windows", "x86_64").extractionPolicy,

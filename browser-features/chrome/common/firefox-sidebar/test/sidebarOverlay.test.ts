@@ -9,6 +9,19 @@ import {
 import { firefoxSidebarOverlay } from "../index.ts";
 import type { NativeSidebarController } from "../types.ts";
 import {
+  isFloating,
+  isPanelSidebarEnabled,
+  panelSidebarConfig,
+  panelSidebarData,
+  selectedPanelId,
+  setIsFloating,
+  setIsPanelSidebarEnabled,
+  setPanelSidebarConfig,
+  setPanelSidebarData,
+} from "../../panel-sidebar/data/data.ts";
+import { PanelNavigator } from "../../panel-sidebar/panel-navigator.ts";
+import { gFlexOrder } from "../../flex-order/flex-order.tsx";
+import {
   assert,
   assertEquals,
   runTests,
@@ -695,6 +708,99 @@ async function testFailedOpenWaitsForNewGesture(): Promise<void> {
   });
 }
 
+function floorpOccupiedLeftEdge(): number {
+  let edge = element("browser").getBoundingClientRect().left;
+  for (
+    const id of [
+      "panel-sidebar-select-box",
+      "panel-sidebar-box",
+      "panel-sidebar-splitter",
+    ]
+  ) {
+    const panelElement = document.getElementById(id);
+    if (!panelElement) continue;
+    const style = getComputedStyle(panelElement);
+    if (
+      !style || style.display === "none" || style.position === "absolute" ||
+      style.position === "fixed"
+    ) continue;
+    const rect = panelElement.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) edge = Math.max(edge, rect.right);
+  }
+  return edge;
+}
+
+async function testGeometryFollowsFloorpSidebarPositionMove(): Promise<void> {
+  const panelId = "firefox-sidebar-overlay-position-move";
+  await withSidebar(async () => {
+    const controller = PanelNavigator.gPanelSidebar;
+    assert(controller, "panel sidebar should be initialized");
+    const panelConfig = panelSidebarConfig();
+    const panels = panelSidebarData();
+    const selected = selectedPanelId();
+    const floating = isFloating();
+    const enabled = isPanelSidebarEnabled();
+    try {
+      controller.closePanel();
+      setIsFloating(false);
+      setIsPanelSidebarEnabled(true);
+      setPanelSidebarConfig({
+        ...panelConfig,
+        overlay: false,
+        openOnHover: false,
+        position_start: true,
+      });
+      setPanelSidebarData([...panels, {
+        id: panelId,
+        type: "web",
+        url: "about:blank",
+        width: 400,
+        icon: undefined,
+        userContextId: undefined,
+        zoomLevel: undefined,
+        userAgent: undefined,
+        extensionId: undefined,
+      }]);
+      controller.openPanel(panelId);
+      Services.prefs.setBoolPref("sidebar.position_start", true);
+      native.setPosition();
+      await setModes(true, true);
+      await native.showInitially("viewBookmarksSidebar");
+      await settle();
+
+      setPanelSidebarConfig({
+        ...panelSidebarConfig(),
+        position_start: false,
+      });
+      gFlexOrder.applyFlexOrder(false);
+      await settle();
+
+      const occupiedEdge = floorpOccupiedLeftEdge();
+      const nativePanel = element("sidebar-box").getBoundingClientRect();
+      const trigger = element("floorp-firefox-sidebar-edge-toggle")
+        .getBoundingClientRect();
+      assert(
+        nativePanel.left >= occupiedEdge - 1,
+        `native overlay should follow Floorp sidebar to the left: panel x=${nativePanel.left}, Floorp edge=${occupiedEdge}`,
+      );
+      assert(
+        trigger.left >= occupiedEdge - 1,
+        `native edge trigger should follow Floorp sidebar to the left: trigger x=${trigger.left}, Floorp edge=${occupiedEdge}`,
+      );
+    } finally {
+      controller.closePanel();
+      controller.unloadPanel(panelId);
+      setPanelSidebarData(panels);
+      setPanelSidebarConfig(panelConfig);
+      gFlexOrder.applyFlexOrder(panelConfig.position_start);
+      setIsPanelSidebarEnabled(enabled);
+      if (selected) controller.openPanel(selected);
+      setIsFloating(floating);
+      await settle();
+    }
+  });
+}
+
 async function testWindowActivationHoverLifecycle(): Promise<void> {
   await withSidebar(async () => {
     native.lastOpenedId = "viewBookmarksSidebar";
@@ -738,12 +844,17 @@ async function testWindowActivationHoverLifecycle(): Promise<void> {
 export async function runAllTests(): Promise<void> {
   await runTests("sidebarOverlay.test.ts", [
     {
-      name: "internal focus changes preserve hover and window deactivation closes it",
+      name:
+        "internal focus changes preserve hover and window deactivation closes it",
       fn: testWindowActivationHoverLifecycle,
     },
     {
       name: "native overlay and resize preserve the viewport on both sides",
       fn: testOverlayGeometry,
+    },
+    {
+      name: "native overlay follows Floorp sidebar position moves",
+      fn: testGeometryFollowsFloorpSidebarPositionMove,
     },
     {
       name:

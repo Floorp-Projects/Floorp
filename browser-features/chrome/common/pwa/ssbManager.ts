@@ -214,6 +214,9 @@ export class SiteSpecificBrowserManager {
     asPwa: boolean,
     installUserContextId?: number,
   ): Promise<{ url: string; userContextId?: number } | null> {
+    if (!this.checkSiteCanBeInstall(browser.currentURI)) {
+      return null;
+    }
     const effectiveUserContextId = this.getEffectiveUserContextId(
       browser,
       installUserContextId,
@@ -348,7 +351,7 @@ export class SiteSpecificBrowserManager {
    * loopback hosts (`localhost`, `127.0.0.1`). Every other scheme returns
    * `false`.
    */
-  private checkSiteCanBeInstall(uri: nsIURI): boolean {
+  public checkSiteCanBeInstall(uri: nsIURI): boolean {
     if (uri.scheme === "https") {
       return true;
     }

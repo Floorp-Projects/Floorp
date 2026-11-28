@@ -54,6 +54,7 @@ export interface SplitViewGBrowser {
   moveTabBefore(tab: SplitViewTab, beforeTab: SplitViewTab | null): void;
   moveTabToSplitView(tab: SplitViewTab, wrapper: SplitViewWrapper | null): void;
   addTrustedTab(url: string): SplitViewTab;
+  removeTab(tab: SplitViewTab): void;
   /** Create a split view wrapper, move tabs into it, and activate. */
   addTabSplitView(
     tabs: SplitViewTab[],

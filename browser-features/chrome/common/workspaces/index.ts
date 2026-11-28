@@ -22,6 +22,10 @@ import { WORKSPACES_INIT_OBSERVER_TOPIC } from "./utils/workspaces-static-names.
 import { WorkspacesLinkContextMenu } from "./link-context-menu.tsx";
 import { WorkspacesSyncController } from "./workspacesSync.ts";
 import {
+  WorkspacesBackupController,
+  type WorkspacesBackupFuncs,
+} from "./utils/workspaces-backup-controller.ts";
+import {
   canInitializeWorkspace,
   waitForWorkspaceWindow,
 } from "./window-ready.ts";
@@ -41,11 +45,37 @@ export default class Workspaces extends NoraComponentBase {
   }
 
   init(): void {
+    const owner = getOwner();
+    // Backup must keep working while workspaces are disabled, so the backup
+    // controller is initialized before the feature's enabled gate. It
+    // delegates to WorkspacesService once that exists and otherwise captures/
+    // restores tabs through a detached backup host.
+    const backupController = new WorkspacesBackupController(() =>
+      Workspaces.windowWorkspacesMap.get(window) ?? null
+    );
+    const backupFuncsHost = globalThis as typeof globalThis & {
+      workspacesBackupFuncs?: WorkspacesBackupFuncs;
+    };
+    backupFuncsHost.workspacesBackupFuncs = {
+      backupNow: () => backupController.backupNow(),
+      listBackups: () => backupController.listBackups(),
+      restoreBackup: (fileName: string) =>
+        backupController.restoreBackup(fileName),
+      deleteBackup: (fileName: string) =>
+        backupController.deleteBackup(fileName),
+      deleteAllBackups: () => backupController.deleteAllBackups(),
+      isRestoreInFlight: () => backupController.isRestoreInFlight(),
+    };
+    onCleanup(() => backupController.dispose());
+
     if (!enabled()) {
+      // Workspaces are disabled, but backup must still run. Start the detached
+      // service now so the scheduler does not depend on the Hub page being
+      // opened first.
+      backupController.ensureStarted();
       return;
     }
 
-    const owner = getOwner();
     const startup = new AbortController();
     onCleanup(() => startup.abort());
     migrateWorkspacesData().then(async () => {
@@ -69,6 +99,10 @@ export default class Workspaces extends NoraComponentBase {
         const tabCtx = new WorkspacesTabManager(iconCtx, dataManagerCtx);
         const ctx = new WorkspacesService(tabCtx, iconCtx, dataManagerCtx);
         Workspaces.windowWorkspacesMap.set(window, ctx);
+        // A Hub request that arrived before migration finished may have
+        // started a detached backup service; hand over to the real one now
+        // so two schedulers and observers do not run in this window.
+        backupController.ensureStarted();
         ctx.syncController = new WorkspacesSyncController(ctx);
 
         const observer = {

@@ -348,6 +348,16 @@ function testProtonExcludesBothLayers(): void {
   );
 }
 
+function testPhotonSelectedContextLineIsRestored(): void {
+  const selector =
+    /#tabbrowser-tabs \.tabbrowser-tab:is\(\[selected\], \[multiselected\]\) > \.tab-stack > \.tab-background > \.tab-context-line \{[^}]*opacity:\s*1\s*!important;[^}]*transform:\s*none\s*!important;/s;
+  assert(
+    selector.test(LEPTON_CONTAINER_INDICATOR_CSS),
+    "Photon compat must counteract the inactive-line animation for tabs " +
+      'using the current Gecko selected="" representation',
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Tests — the compat layer uses robust, Gecko-152-safe detection
 // ---------------------------------------------------------------------------
@@ -993,6 +1003,10 @@ export async function runAllTests(): Promise<void> {
       fn: testAllSkinnedThemesIncludeColorFix,
     },
     { name: "proton excludes both layers", fn: testProtonExcludesBothLayers },
+    {
+      name: "photon selected context line is restored",
+      fn: testPhotonSelectedContextLineIsRestored,
+    },
     // robust detection
     {
       name: "compat avoids brittle selectors",

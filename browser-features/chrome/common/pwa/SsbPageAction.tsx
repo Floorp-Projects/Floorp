@@ -7,7 +7,11 @@ import { createSignal, onCleanup } from "solid-js";
 import type { JSX } from "solid-js";
 import { render } from "@nora/solid-xul";
 import type { PwaService } from "./pwaService.ts";
-import type { Browser } from "./type.ts";
+import type {
+  Browser,
+  TabsProgressBrowser,
+  TabsProgressListener,
+} from "./type.ts";
 import {
   getUserContextIdForBrowser,
   isContainerExperimentEnabled,
@@ -63,6 +67,20 @@ export class SsbPageAction {
       // window loading a page must not refetch this window's selected manifest.
       if (subject === globalThis.gBrowser.selectedBrowser) onManifestCheck();
     };
+    const tabBrowser = globalThis.gBrowser as unknown as TabsProgressBrowser;
+    const SAME_DOCUMENT = Ci.nsIWebProgressListener
+      .LOCATION_CHANGE_SAME_DOCUMENT as number;
+    const progressListener: TabsProgressListener = {
+      onLocationChange: (browser, webProgress, _request, _location, flags) => {
+        if (
+          browser !== tabBrowser.selectedBrowser || !webProgress.isTopLevel ||
+          flags & SAME_DOCUMENT
+        ) return;
+        // Non-web documents never send the manifest notification, so the
+        // previous document's state must not survive the navigation.
+        this.resetPageActionState();
+      },
+    };
     onCleanup(() => {
       this.disposed = true;
       this.manifestCheckGeneration++;
@@ -74,6 +92,7 @@ export class SsbPageAction {
         );
       }
       tabContainer.removeEventListener("TabSelect", onManifestCheck);
+      tabBrowser.removeTabsProgressListener(progressListener);
       if (this.popupHideFrame !== null) {
         globalThis.cancelAnimationFrame(this.popupHideFrame);
         this.popupHideFrame = null;
@@ -92,6 +111,7 @@ export class SsbPageAction {
     );
     manifestObserverRegistered = true;
     tabContainer.addEventListener("TabSelect", onManifestCheck);
+    tabBrowser.addTabsProgressListener(progressListener);
 
     addI18nObserver(() => {
       this.translations[1]({
@@ -129,6 +149,14 @@ export class SsbPageAction {
     this.isInstalled[1](isInstalled);
     this.shouldShowPageAction[1](canBeInstallAsPwa || isInstalled);
     this.pwaService.updateUIElements(isInstalled);
+  }
+
+  private resetPageActionState() {
+    if (this.disposed || window.closed) return;
+    this.manifestCheckGeneration++;
+    this.canBeInstallAsPwa[1](false);
+    this.isInstalled[1](false);
+    this.shouldShowPageAction[1](false);
   }
 
   private async updatePanelInstallState(

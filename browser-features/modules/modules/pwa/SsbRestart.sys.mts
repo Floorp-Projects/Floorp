@@ -7,6 +7,10 @@ const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 );
 
+const { ContextualIdentityService } = ChromeUtils.importESModule(
+  "moz-src:///toolkit/components/contextualidentity/ContextualIdentityService.sys.mjs",
+);
+
 const RESTART_PREF = "floorp.ssb.restart.pending";
 
 export interface RestartEntry {
@@ -44,10 +48,39 @@ export function parseRestartEntries(value: string): RestartEntry[] {
   }
 }
 
-type SsbWindow = Window & {
+export type SsbWindow = Window & {
   arguments?: ArrayLike<unknown>;
-  gBrowser?: { selectedBrowser?: { currentURI?: { spec?: string } } };
+  gBrowser?: {
+    selectedBrowser?: { currentURI?: { spec?: string } };
+    selectedTab?: { userContextId?: number };
+  };
 };
+
+function privateContainerIds(): Set<number> {
+  const identities: Array<
+    { userContextId: number; floorpPrivateContainer?: boolean }
+  > = ContextualIdentityService.getPublicIdentities();
+  return new Set(
+    identities.filter((identity) => identity.floorpPrivateContainer === true)
+      .map((identity) => identity.userContextId),
+  );
+}
+
+export function inPrivateContainer(
+  window: SsbWindow,
+  privateIds: Set<number>,
+): boolean {
+  if (privateIds.has(window.gBrowser?.selectedTab?.userContextId ?? 0)) {
+    return true;
+  }
+  try {
+    const bag = window.arguments?.[1] as nsIPropertyBag2 | undefined;
+    return !!bag?.hasKey("userContextId") &&
+      privateIds.has(Number(bag.getPropertyAsAString("userContextId")));
+  } catch {
+    return false;
+  }
+}
 
 function ssbId(window: SsbWindow): string | null {
   try {
@@ -65,9 +98,13 @@ function ssbId(window: SsbWindow): string | null {
 
 function currentWindows(): RestartEntry[] {
   const entries: RestartEntry[] = [];
+  const privateIds = privateContainerIds();
   for (const value of Services.wm.getEnumerator("navigator:browser")) {
     const window = value as unknown as SsbWindow;
-    if (window.closed || PrivateBrowsingUtils.isWindowPrivate(window)) continue;
+    if (
+      window.closed || PrivateBrowsingUtils.isWindowPrivate(window) ||
+      inPrivateContainer(window, privateIds)
+    ) continue;
     const id = ssbId(window);
     if (id) {
       entries.push({

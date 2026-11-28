@@ -964,6 +964,111 @@ export async function runPageTests() {
     },
   });
   tests.push({
+    name: "Memory seconds keep Home and End as caret keys",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 500,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(() => target.value === "500" && !target.disabled, "Ready");
+      target.focus();
+      try {
+        for (const key of ["Home", "End"]) {
+          const event = new KeyboardEvent("keydown", {
+            bubbles: true,
+            cancelable: true,
+            key,
+          });
+          target.dispatchEvent(event);
+          await pause(80);
+          assertEquals(event.defaultPrevented, false, `${key} was suppressed`);
+          assertEquals(target.value, "500", `${key} replaced the value`);
+        }
+        target.setSelectionRange(0, 0);
+        assert(
+          document.execCommand("insertText", false, "7"),
+          "Text insertion failed",
+        );
+        await pause(80);
+        assertEquals(target.value, "7500", "Digit not inserted at start");
+        assertEquals(valueAt(MEMORY, "idleThresholdSec"), 500, "Draft saved");
+      } finally {
+        target.blur();
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
+    name: "Memory stepper buttons repeat while held",
+    fn: async () => {
+      prefs.set(
+        MEMORY,
+        JSON.stringify({
+          enabled: true,
+          idleThresholdSec: 300,
+          pollIntervalSec: 60,
+          minIntervalSec: 300,
+          minResidentMB: 400,
+        }),
+      );
+      const selector = "#idle-memory-reclaim-idle-threshold";
+      await route("features/performance", selector);
+      const target = element<HTMLInputElement>(selector);
+      await until(() => target.value === "300" && !target.disabled, "Ready");
+      const press = async (part: string, holdMs: number) => {
+        const control = target.parentElement?.querySelector(
+          `[data-part="${part}"]`,
+        );
+        assert(control, `Stepper ${part} missing`);
+        control.dispatchEvent(
+          new PointerEvent("pointerdown", { bubbles: true, button: 0 }),
+        );
+        await pause(holdMs);
+        control.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+        control.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        await pause(80);
+      };
+      target.focus();
+      try {
+        await press("increment-trigger", 700);
+        const held = Number(target.value);
+        assert(held > 302, `Held plus stepped only to ${held}`);
+        assertEquals(
+          valueAt(MEMORY, "idleThresholdSec"),
+          held,
+          "Held steps not saved",
+        );
+        await pause(200);
+        assertEquals(
+          Number(target.value),
+          held,
+          "Stepping continued after release",
+        );
+        await press("decrement-trigger", 700);
+        assert(
+          Number(target.value) < held - 2,
+          "Held minus did not repeat",
+        );
+        await press("increment-trigger", 0);
+        const tapped = Number(target.value);
+        await press("increment-trigger", 0);
+        assertEquals(Number(target.value), tapped + 1, "Tap stepped twice");
+      } finally {
+        target.blur();
+        await pause(80);
+      }
+    },
+  });
+  tests.push({
     name: "Memory fields commit, clamp and reload",
     fn: async () => {
       await route("features/performance", "#idle-memory-reclaim-enabled");
